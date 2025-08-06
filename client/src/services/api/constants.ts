@@ -1,0 +1,1 @@
+export const DIGILOCKER_EAADHAAR_REDIRECT_URI = `${window.location.origin}/aadhaar?digilocker_callback=1`; 

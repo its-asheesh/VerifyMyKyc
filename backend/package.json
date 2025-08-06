@@ -1,0 +1,36 @@
+{
+  "name": "verifymykyc-backend",
+  "version": "1.0.0",
+  "description": "Backend API for VerifyMyKyc",
+  "main": "server.ts",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "nodemon server.ts",
+    "build": "tsc",
+    "seed-users": "ts-node src/modules/auth/seed-users.ts",
+    "seed-orders": "ts-node src/modules/orders/seed-orders.ts",
+    "seed-carousel": "ts-node src/modules/carousel/seed-carousel.ts",
+    "seed-locations": "ts-node src/modules/auth/seed-users-location.ts",
+    "seed-analytics": "node seed-analytics-data.js"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.9.36",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^20.5.0",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
