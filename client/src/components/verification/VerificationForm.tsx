@@ -16,6 +16,9 @@ import {
   FileText,
   Link,
   RotateCcw,
+  Building,
+  Mail,
+  Phone,
 } from "lucide-react"
 
 interface FormField {
@@ -144,6 +147,231 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
 
   const renderFormattedResult = () => {
     if (!result || !showResult) return null
+
+    // Format result based on service type
+    if (serviceKey === "gstin-lite") {
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">GSTIN Lite Verification</h2>
+                <p className="text-blue-100 mt-1">Basic GSTIN details and verification</p>
+              </div>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">GSTIN Verified Successfully</h4>
+              </div>
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Verify Another
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-200">
+              <div className="space-y-6">
+                {/* Business Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Legal Name */}
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm font-medium text-blue-800 mb-1">Legal Name</p>
+                    <p className="text-lg font-bold text-blue-900">{result.legal_name || 'Not available'}</p>
+                  </div>
+
+                  {/* Trade Name */}
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="text-sm font-medium text-purple-800 mb-1">Trade Name</p>
+                    <p className="text-lg font-bold text-purple-900">{result.trade_name || 'Not available'}</p>
+                  </div>
+                </div>
+
+                {/* Document Information */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* GSTIN */}
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-1">GSTIN</p>
+                    <p className="font-mono font-bold text-gray-900">{result.document_id || 'Not available'}</p>
+                  </div>
+
+                  {/* PAN */}
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-1">PAN</p>
+                    <p className="font-mono font-bold text-gray-900">{result.pan || 'Not available'}</p>
+                  </div>
+
+                  {/* Status */}
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Status</p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      result.status?.toLowerCase() === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {result.status || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Additional Details */}
+                <div className="space-y-4">
+                  <h5 className="font-semibold text-gray-800">Additional Details</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Registration Date */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Registration Date</p>
+                      <p className="text-gray-900">{result.date_of_registration || 'Not available'}</p>
+                    </div>
+
+                    {/* Taxpayer Type */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Taxpayer Type</p>
+                      <p className="text-gray-900">{result.taxpayer_type || 'Not available'}</p>
+                    </div>
+
+                    {/* Constitution of Business */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Business Type</p>
+                      <p className="text-gray-900">{result.constitution_of_business || 'Not available'}</p>
+                    </div>
+
+                    {/* Jurisdiction */}
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Jurisdiction</p>
+                      <p className="text-gray-900">
+                        {[result.center_jurisdiction, result.state_jurisdiction]
+                          .filter(Boolean)
+                          .join(' / ')}
+                        {!result.center_jurisdiction && !result.state_jurisdiction && 'Not available'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address */}
+                {result.principal_address && (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Principal Address</p>
+                    <p className="text-gray-900 whitespace-pre-line">{result.principal_address}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )
+    }
+
+    // Format result based on service type
+    if (serviceKey === "gstin-contact") {
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Success Result */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">GSTIN Verified Successfully</h4>
+              </div>
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Verify Another
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-200">
+              <div className="space-y-6">
+                {/* Document Type */}
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 mb-1">Document Type</p>
+                    <p className="text-lg font-bold text-blue-900">{result.document_type || 'GSTIN'}</p>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-800 mb-1">Email</p>
+                    {result.email ? (
+                      <a 
+                        href={`mailto:${result.email}`}
+                        className="text-lg font-bold text-purple-900 hover:underline"
+                      >
+                        {result.email}
+                      </a>
+                    ) : (
+                      <p className="text-lg font-medium text-gray-500">Not available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile */}
+                <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-green-800 mb-1">Mobile</p>
+                    {result.mobile ? (
+                      <a 
+                        href={`tel:${result.mobile}`}
+                        className="text-lg font-bold text-green-900 hover:underline"
+                      >
+                        {result.mobile}
+                      </a>
+                    ) : (
+                      <p className="text-lg font-medium text-gray-500">Not available</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )
+    }
 
     // Format result based on service type
     if (serviceKey === "father-name") {
@@ -317,6 +545,321 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
         </div>
       )
     }
+
+    if (serviceKey === "cin-by-pan") {
+      const data = result.data || result
+      const cinDetails = data.cin_details || []
+      const cinList = data.cin_list || []
+
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <Building className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Success Result */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">CIN Details Retrieved</h4>
+              </div>
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Verify Another
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-200">
+              <div className="space-y-6">
+                {/* PAN Number */}
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 mb-1">PAN Number</p>
+                    <p className="text-lg font-bold text-blue-900 font-mono">{formData.pan_number}</p>
+                  </div>
+                </div>
+
+                {/* CIN List */}
+                {cinList.length > 0 && (
+                  <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Building className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-purple-800 mb-1">CIN Numbers</p>
+                      <div className="space-y-1">
+                        {cinList.map((cin: string, index: number) => (
+                          <p key={index} className="text-lg font-bold text-purple-900 font-mono">{cin}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Company Details */}
+                {cinDetails.length > 0 && (
+                  <div className="space-y-4">
+                    <h5 className="font-semibold text-gray-800">Company Details</h5>
+                    {cinDetails.map((company: any, index: number) => (
+                      <div key={index} className="flex items-center gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Building className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-green-800 mb-1">Company Name</p>
+                          <p className="text-lg font-bold text-green-900">{company.entity_name}</p>
+                          {company.cin && (
+                            <p className="text-sm text-green-700 font-mono mt-1">CIN: {company.cin}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* No CIN Found */}
+                {cinDetails.length === 0 && cinList.length === 0 && (
+                  <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-6 h-6 text-yellow-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-800 mb-1">No CIN Found</p>
+                      <p className="text-lg font-bold text-yellow-900">No CIN is associated with this PAN number</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )
+    }
+
+    if (serviceKey === "din-by-pan") {
+      const data = result.data || result
+      const dinDetails = data.din_details || null
+      const message = data.message || "No DIN found"
+
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Success Result */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">DIN Details Retrieved</h4>
+              </div>
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Verify Another
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-200">
+              <div className="space-y-6">
+                {/* PAN Number */}
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 mb-1">PAN Number</p>
+                    <p className="text-lg font-bold text-blue-900 font-mono">{formData.pan_number}</p>
+                  </div>
+                </div>
+
+                {/* Status Message */}
+                <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-800 mb-1">Status</p>
+                    <p className="text-lg font-bold text-purple-900">{message}</p>
+                  </div>
+                </div>
+
+                {/* DIN Details */}
+                {dinDetails ? (
+                  <div className="space-y-4">
+                    <h5 className="font-semibold text-gray-800">Director Details</h5>
+                    <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <User className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-green-800 mb-1">Director Name</p>
+                        <p className="text-lg font-bold text-green-900">{dinDetails.name}</p>
+                        {dinDetails.din && (
+                          <p className="text-sm text-green-700 font-mono mt-1">DIN: {dinDetails.din}</p>
+                        )}
+                        {dinDetails.pan && (
+                          <p className="text-sm text-green-700 font-mono mt-1">PAN: {dinDetails.pan}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-6 h-6 text-yellow-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-800 mb-1">No DIN Found</p>
+                      <p className="text-lg font-bold text-yellow-900">No DIN is associated with this PAN number</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )
+    }
+    if (serviceKey === "gstin-by-pan") {
+      const data = result.data || result
+      const results = data.results || []
+      const message = data.message || "No GSTIN found"
+    
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+    
+          {/* Success Result */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">GSTIN Details Retrieved</h4>
+              </div>
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Verify Another
+              </button>
+            </div>
+    
+            <div className="bg-white rounded-lg p-6 border border-green-200">
+              <div className="space-y-6">
+                {/* PAN Number */}
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800 mb-1">PAN Number</p>
+                    <p className="text-lg font-bold text-blue-900 font-mono">{formData.pan_number}</p>
+                  </div>
+                </div>
+    
+                {/* Status Message */}
+                <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <User className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-800 mb-1">Status</p>
+                    <p className="text-lg font-bold text-purple-900">{message}</p>
+                  </div>
+                </div>
+    
+                {/* GSTIN Results List */}
+                {results.length > 0 ? (
+                  <div className="space-y-4">
+                    <h5 className="font-semibold text-gray-800">GSTIN Records</h5>
+                    {results.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col gap-1 p-4 bg-green-50 rounded-lg border border-green-200"
+                      >
+                        <p className="text-sm text-green-700 font-mono">
+                          <strong>Document ID:</strong> {item.document_id}
+                        </p>
+                        <p className="text-sm text-green-700">
+                          <strong>Status:</strong> {item.status}
+                        </p>
+                        <p className="text-sm text-green-700">
+                          <strong>State:</strong> {item.state} ({item.state_code})
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-6 h-6 text-yellow-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-yellow-800 mb-1">No GSTIN Found</p>
+                      <p className="text-lg font-bold text-yellow-900">No GSTIN is associated with this PAN number</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )
+    }
+    
 
     // Default clean display for other services - extract key information only
     const data = result.data || result

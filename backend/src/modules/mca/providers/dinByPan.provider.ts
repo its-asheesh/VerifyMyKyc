@@ -4,20 +4,26 @@ import { DinByPanRequest, DinByPanResponse } from '../../../common/types/pan';
 
 export async function fetchDinByPanProvider(payload: DinByPanRequest): Promise<DinByPanResponse> {
   try {
+    // Transform payload to match external API format
+    const externalPayload = {
+      pan: payload.pan_number,
+      consent: payload.consent
+    };
+
     console.log('DIN by PAN API Request:', {
       url: '/mca-api/fetch-din-by-pan',
-      payload,
+      payload: externalPayload,
       baseURL: process.env.GRIDLINES_BASE_URL
     });
     
-    const response = await apiClient.post('/mca-api/fetch-din-by-pan', payload);
+    const response = await apiClient.post('/mca-api/fetch-din-by-pan', externalPayload);
     
     console.log('DIN by PAN API Response:', {
       status: response.status,
       data: response.data
     });
     
-    return response.data;
+    return response.data as DinByPanResponse;
   } catch (error: any) {
     console.error('DIN by PAN API Error:', {
       message: error.message,
@@ -47,6 +53,15 @@ export async function fetchDinByPanProvider(payload: DinByPanRequest): Promise<D
     } else if (error.response?.status === 429) {
       errorMessage = 'Rate limit exceeded. Please try again later.';
       statusCode = 429;
+    } else if (error.response?.status === 500) {
+      // Handle external API 500 errors (government source issues)
+      if (error.response?.data?.error?.code === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
+        errorMessage = 'Government source temporarily unavailable. Please try again in a few minutes.';
+        statusCode = 503;
+      } else {
+        errorMessage = 'External API server error. Please try again.';
+        statusCode = 502;
+      }
     } else if (error.response?.data?.message) {
       errorMessage = error.response.data.message;
       statusCode = error.response.status || 500;

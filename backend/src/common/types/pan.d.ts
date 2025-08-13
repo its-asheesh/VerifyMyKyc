@@ -62,13 +62,25 @@ export interface DigilockerFetchDocumentResponse {
 
 // GSTIN
 export interface GstinByPanRequest {
-  pan: string;
+  pan_number: string;
+  consent: string;
 }
 export interface GstinByPanResponse {
-  status: string;
-  message: string;
-  gstin_details?: any;
-  [key: string]: any;
+  request_id: string;
+  status: number;
+  data: {
+    code: string;
+    message: string;
+    results?: Array<{
+      document_type: string;
+      document_id: string;
+      status: string;
+      state: string;
+      state_code: string;
+    }>;
+  };
+  timestamp: number;
+  path: string;
 }
 export interface GstinLiteRequest {
   gstin: string;
@@ -85,15 +97,14 @@ export interface GstinContactRequest {
   consent: string;
 }
 export interface GstinContactResponse {
-  status: string;
-  message: string;
-  contact_details?: any;
-  [key: string]: any;
+  email: string;
+  mobile: string;
 }
 
 // MCA
 export interface DinByPanRequest {
-  pan: string;
+  pan_number: string;
+  consent: string;
 }
 export interface DinByPanResponse {
   status: string;

@@ -137,11 +137,21 @@ export const PanVerificationForm: React.FC<PanVerificationFormProps> = ({ servic
         case "aadhaar-link":
           response = await panApi.checkAadhaarLink(payload)
           break
+        case "cin-by-pan":
+          response = await panApi.fetchCinByPan(payload)
+          break
+        case "din-by-pan":
+          response = await panApi.fetchDinByPan(payload)
+          break
+        case "gstin-by-pan":
+          response = await panApi.fetchGstinByPan(payload)
+          break
         default:
           response = await panApi.post(service.apiEndpoint, payload)
       }
       setResult(response)
     } catch (err: any) {
+      console.error("GSTIN by PAN error:", err); // Added for debugging
       setError(err?.message || "Verification failed")
     } finally {
       setLoading(false)

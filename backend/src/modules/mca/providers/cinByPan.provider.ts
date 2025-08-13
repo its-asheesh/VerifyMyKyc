@@ -17,7 +17,7 @@ export async function fetchCinByPanProvider(payload: CinByPanRequest): Promise<C
       data: response.data
     });
     
-    return response.data;
+    return response.data as CinByPanResponse;
   } catch (error: any) {
     console.error('CIN by PAN API Error:', {
       message: error.message,

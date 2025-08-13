@@ -11,6 +11,7 @@ import orderRouter from './modules/orders/order.router';
 import analyticsRouter from './modules/analytics/analytics.router';
 import carouselRouter from './modules/carousel/carousel.router';
 import couponRouter from './modules/coupons/coupon.router';
+import bankAccountRouter from './modules/bankaccount/bankaccount.router';
 
 const router = Router();
 
@@ -37,5 +38,6 @@ router.use('/mca', mcaRouter);
 router.use('/drivinglicense', drivingLicenseRouter);
 router.use('/echallan', echallanRouter);
 router.use('/pricing', pricingRouter);
+router.use('/bankaccount', bankAccountRouter);
 
 export default router;

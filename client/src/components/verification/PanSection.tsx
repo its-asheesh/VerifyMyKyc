@@ -128,6 +128,15 @@ export const PanSection: React.FC = () => {
         case "aadhaar-link":
           response = await panApi.checkAadhaarLink(formData)
           break
+        case "cin-by-pan":
+          response = await panApi.fetchCinByPan(formData)
+          break
+        case "din-by-pan":
+          response = await panApi.fetchDinByPan(formData)
+          break
+        case "gstin-by-pan":
+          response = await panApi.fetchGstinByPan(formData)
+          break
         default:
           response = await panApi.post(selectedService.apiEndpoint, formData)
       }

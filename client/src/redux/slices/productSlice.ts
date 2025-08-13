@@ -27,6 +27,29 @@ const initialState: ProductState = {
 // Mock data for development - replace with actual API calls
 export const mockProducts: Product[] = [
   {
+    id: "gstin-contact",
+    title: "GSTIN Contact Details",
+    description: "Fetch contact information for businesses using their GSTIN number",
+    category: {
+      id: "business",
+      name: "Business Verification",
+      slug: "business",
+      description: "Business and company verification services",
+    },
+    features: ["Email and phone verification", "Official GSTIN data", "Real-time lookup", "High accuracy"],
+    pricing: {
+      free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
+      basic: { price: 399, requests: 100, features: ["Advanced verification", "Priority support"], support: "Chat" },
+      premium: { price: 999, requests: 1000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
+    },
+    documentation: "Complete API documentation for GSTIN contact details verification",
+    isActive: true,
+    icon: "/gstin.png",
+    image: "/gstin.png",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
     id: "1",
     title: "PAN Card Verification",
     description: "Instantly verify PAN card details against government databases",
@@ -121,6 +144,12 @@ export const mockProducts: Product[] = [
 ]
 
 const mockCategories: ProductCategory[] = [
+  { 
+    id: "business", 
+    name: "Business Verification", 
+    slug: "business", 
+    description: "Business and company verification services" 
+  },
   { id: "identity", name: "Identity Verification", slug: "identity", description: "Government ID verification" },
   { id: "document", name: "Document Verification", slug: "document", description: "Official document verification" },
   {
@@ -136,45 +165,55 @@ export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (params?: { category?: string; search?: string }) => {
     try {
-      // For now, return mock data. Replace with actual API call:
-      // const response = await productApi.getProducts(params)
-      // return response.data
-
-      let filteredProducts = [...mockProducts]
-
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Apply filters to mock data
+      let filteredProducts = [...mockProducts];
+      
       if (params?.category) {
-        filteredProducts = filteredProducts.filter((p) => p.category.id === params.category)
-      }
-
-      if (params?.search) {
-        const searchLower = params.search.toLowerCase()
         filteredProducts = filteredProducts.filter(
-          (p) => p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower),
-        )
+          product => product.category.id === params.category
+        );
       }
-
-      return filteredProducts
+      
+      if (params?.search) {
+        const searchLower = params.search.toLowerCase();
+        filteredProducts = filteredProducts.filter(
+          product => 
+            product.title.toLowerCase().includes(searchLower) ||
+            product.description.toLowerCase().includes(searchLower) ||
+            product.category.name.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return filteredProducts;
     } catch (error) {
-      throw new Error("Failed to fetch products")
+      throw new Error('Failed to fetch products');
     }
-  },
-)
-
-export const fetchProductById = createAsyncThunk("products/fetchProductById", async (id: string) => {
-  try {
-    // For now, return mock data. Replace with actual API call:
-    // const response = await productApi.getProductById(id)
-    // return response.data
-
-    const product = mockProducts.find((p) => p.id === id)
-    if (!product) {
-      throw new Error("Product not found")
-    }
-    return product
-  } catch (error) {
-    throw new Error("Failed to fetch product")
   }
-})
+);
+
+export const fetchProductById = createAsyncThunk(
+  "products/fetchProductById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Find product in mock data
+      const product = mockProducts.find(p => p.id === id);
+      
+      if (!product) {
+        return rejectWithValue('Product not found');
+      }
+      
+      return product;
+    } catch (error) {
+      return rejectWithValue('Failed to fetch product');
+    }
+  }
+);
 
 export const fetchCategories = createAsyncThunk("products/fetchCategories", async () => {
   try {

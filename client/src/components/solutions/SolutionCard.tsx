@@ -3,7 +3,7 @@
 import type React from "react"
 import { motion } from "framer-motion"
 import { ArrowRight, Building, CheckCircle, Users } from "lucide-react"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import type { Solution } from "../../types/solution"
 
 interface SolutionCardProps {
@@ -11,6 +11,7 @@ interface SolutionCardProps {
 }
 
 export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
+  const navigate = useNavigate();
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -79,13 +80,22 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
         </div>
 
         {/* CTA Button */}
-        <Link
-          to={`/solutions/${solution.id}`}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const solutionId = solution.id;
+            console.log('Learn More clicked for solution:', solutionId);
+            const targetUrl = `/solutions/${solutionId}`;
+            console.log('Navigating to:', targetUrl);
+            navigate(targetUrl, { replace: false });
+          }}
           className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 group/btn w-full justify-center"
+          aria-label={`Learn more about ${solution.title}`}
         >
           Learn More
           <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-        </Link>
+        </button>
       </div>
     </motion.div>
   )

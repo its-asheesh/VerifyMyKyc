@@ -1,4 +1,106 @@
-export const fetchGstinContactProvider = async (payload: any) => {
-  // TODO: Implement actual logic
-  return { message: "Stub: fetchGstinContactProvider called", payload };
-}; 
+import apiClient from '../../../common/http/apiClient';
+import { HTTPError } from '../../../common/http/error';
+import { GstinContactRequest, GstinContactResponse } from '../../../common/types/pan';
+
+export async function fetchGstinContactProvider(payload: GstinContactRequest): Promise<GstinContactResponse> {
+  try {
+    // Transform payload to match external API format
+    const externalPayload = {
+      gstin: payload.gstin,
+      consent: payload.consent
+    };
+
+    const requestUrl = `${process.env.GRIDLINES_BASE_URL}/gstin-api/fetch-contact-details`;
+    console.log('GSTIN Contact API Request:', {
+      method: 'POST',
+      url: requestUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': process.env.GRIDLINES_API_KEY ? '***' : 'MISSING',
+        'X-Auth-Type': 'API-Key'
+      },
+      data: externalPayload
+    });
+    
+    const startTime = Date.now();
+    let response;
+    try {
+      response = await apiClient.post('/gstin-api/fetch-contact-details', externalPayload, {
+        timeout: 30000,
+        headers: {
+          'X-Reference-ID': `ref_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+        }
+      });
+      
+      console.log(`GSTIN Contact API Response (${Date.now() - startTime}ms):`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        data: response.data
+      });
+      
+      if (response.data && response.data.status === 200 && response.data.data) {
+        if (response.data.data.code === '1013') {
+          return {
+            email: response.data.data.gstin_data?.email || '',
+            mobile: response.data.data.gstin_data?.mobile || ''
+          } as GstinContactResponse;
+        } else {
+          throw new HTTPError(
+            response.data.data.message || 'Failed to fetch GSTIN contact details',
+            response.status,
+            { code: response.data.data.code }
+          );
+        }
+      } else {
+        throw new HTTPError('Invalid response format from GSTIN contact details API', 500);
+      }
+    } catch (error: any) {
+      console.error('GSTIN Contact API Error:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL,
+          headers: error.config?.headers
+        }
+      });
+      
+      // Provide more specific error messages
+      let errorMessage = 'Fetch GSTIN Contact Details failed';
+      let statusCode = 500;
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        errorMessage = 'Request to Gridlines API timed out. Please try again.';
+        statusCode = 408;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid API key or authentication failed';
+        statusCode = 401;
+      } else if (error.response?.status === 404) {
+        errorMessage = 'GSTIN contact details not found';
+        statusCode = 404;
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || 'Invalid request parameters';
+        statusCode = 400;
+      } else if (error.response?.data) {
+        errorMessage = error.response.data.message || errorMessage;
+        statusCode = error.response.status || statusCode;
+      }
+      
+      throw new HTTPError(errorMessage, statusCode, {
+        code: error.code,
+        response: error.response?.data,
+        request: {
+          method: error.config?.method,
+          url: error.config?.url,
+          data: error.config?.data
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Unexpected error in fetchGstinContactProvider:', error);
+    throw new HTTPError('An unexpected error occurred while processing your request', 500);
+  }
+}

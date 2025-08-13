@@ -84,17 +84,22 @@ export const VerificationCard: FC<VerificationCardProps & { link?: string }> = (
             <Typography variant="h6" className="text-orange-600">
               ₹{price}
             </Typography>
-            {link ? (
-              <Link to={link}>
-                <Button variant="contained" size="small" className="bg-blue-600 hover:bg-blue-700">
-                  Get Started
-                </Button>
-              </Link>
-            ) : (
-            <Button variant="contained" size="small" className="bg-blue-600 hover:bg-blue-700">
+            <Button 
+              variant="contained" 
+              size="small" 
+              className="bg-blue-600 hover:bg-blue-700"
+              component={link ? Link : 'button'}
+              to={link}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                if (!link) {
+                  e.preventDefault();
+                  return;
+                }
+                // Let the Link component handle navigation
+              }}
+            >
               Get Started
             </Button>
-            )}
           </div>
         </CardContent>
       </Card>

@@ -7,6 +7,8 @@ import type { Product } from "../../types/product"
 import { AadhaarSection } from "../verification/AadhaarSection"
 import { PanSection } from "../verification/PanSection"
 import { DrivingLicenseSection } from "../verification/DrivingLicenseSection"
+import { BankingSection } from "../verification/BankingSection"
+import { GstinSection } from "../verification/GstinSection"
 
 interface ProductOverviewProps {
   product: Product
@@ -16,14 +18,26 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false)
   const [panModalOpen, setPanModalOpen] = useState(false)
   const [drivingLicenseModalOpen, setDrivingLicenseModalOpen] = useState(false)
-  const isAadhaarProduct = product.title.toLowerCase().includes("aadhaar") || product.category.name.toLowerCase().includes("aadhaar")
-  const isPanProduct = product.title.toLowerCase().includes("pan") || product.category.name.toLowerCase().includes("pan")
-  const isDrivingLicenseProduct = product.title.toLowerCase().includes("driving") || product.category.name.toLowerCase().includes("driving")
+  const [bankingModalOpen, setBankingModalOpen] = useState(false)
+  const [gstinModalOpen, setGstinModalOpen] = useState(false)
+  const categoryName = product.category?.name || '';
+  const isAadhaarProduct = product.title.toLowerCase().includes("aadhaar") || categoryName.toLowerCase().includes("aadhaar");
+  const isPanProduct = product.title.toLowerCase().includes("pan") || categoryName.toLowerCase().includes("pan");
+  const isDrivingLicenseProduct = product.title.toLowerCase().includes("driving") || categoryName.toLowerCase().includes("driving");
+  const isBankingProduct =
+    product.title.toLowerCase().includes("bank") ||
+    product.title.toLowerCase().includes("finance") ||
+    categoryName.toLowerCase().includes("bank") ||
+    categoryName.toLowerCase().includes("finance")
+
+  const isGstinProduct = product.title.toLowerCase().includes("gstin") || categoryName.toLowerCase().includes("gstin");
 
   const handleTryDemo = () => {
     if (isAadhaarProduct) setAadhaarModalOpen(true)
     else if (isPanProduct) setPanModalOpen(true)
     else if (isDrivingLicenseProduct) setDrivingLicenseModalOpen(true)
+    else if (isBankingProduct) setBankingModalOpen(true)
+    else if (isGstinProduct) setGstinModalOpen(true)
   }
 
   return (
@@ -66,10 +80,12 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         className="space-y-6"
       >
         {/* Category Badge */}
-        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
-          <Shield className="w-4 h-4" />
-          {product.category.name}
-        </div>
+        {product.category?.name && (
+          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
+            <Shield className="w-4 h-4" />
+            {product.category.name}
+          </div>
+        )}
 
         {/* Description */}
         <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p>
@@ -126,7 +142,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
           <button
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
             onClick={handleTryDemo}
-            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct}
+            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isBankingProduct && !isGstinProduct}
           >
             Try Demo
           </button>
@@ -167,6 +183,32 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
                 &times;
               </button>
               <DrivingLicenseSection />
+            </div>
+          </div>
+        )}
+        {bankingModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setBankingModalOpen(false)}
+              >
+                &times;
+              </button>
+              <BankingSection />
+            </div>
+          </div>
+        )}
+        {gstinModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setGstinModalOpen(false)}
+              >
+                &times;
+              </button>
+              <GstinSection />
             </div>
           </div>
         )}

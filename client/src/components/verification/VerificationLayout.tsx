@@ -5,21 +5,9 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import Footer from "../layout/Footer"
-interface Service {
-  key: string
-  name: string
-  description: string
-  icon?: React.ElementType
-}
+import type { Service, VerificationLayoutProps } from "../../types/verification"
 
-interface VerificationLayoutProps {
-  title: string
-  description: string
-  services: Service[]
-  selectedService: Service
-  onServiceChange: (service: Service) => void
-  children: React.ReactNode
-}
+export type { Service }
 
 export const VerificationLayout: React.FC<VerificationLayoutProps> = ({
   title,

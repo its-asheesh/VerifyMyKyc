@@ -66,6 +66,20 @@ export const verificationServices = [
     reviews: 90,
     link: "/products/4",
   },
+  {
+    id: 5,
+    category: "finance",
+    title: "Bank Account Verification",
+    image: "/pan.png",
+    demand: "Trending",
+    demandLevel: "high",
+    verifications: 25,
+    duration: "Instant",
+    price: 199,
+    rating: 4.7,
+    reviews: 140,
+    link: "/solutions/bank-account-verification",  // Pointing to the bank account verification solution
+  },
 ]
 
 export const verificationFeatures = [

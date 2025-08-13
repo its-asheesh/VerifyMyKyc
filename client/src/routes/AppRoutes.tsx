@@ -1,5 +1,5 @@
 import type React from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { Provider } from "react-redux"
 import { store } from "../redux/store"
 import { AppProvider } from "../context/AppContext"
@@ -15,6 +15,7 @@ import Home from "../pages/Home"
 import ProductsPage from "../pages/products/ProductsPage"
 import ProductDetailPage from "../pages/products/ProductDetailPage"
 import SolutionsPage from "../pages/solutions/SolutionsPage"
+import SolutionDetailPage from "../pages/solutions/SolutionDetailPage"
 import ResourcesPage from "../pages/resources/ResourcesPage"
 import AboutPage from "../pages/company/AboutPage"
 import ContactPage from "../pages/company/ContactPage"
@@ -22,6 +23,8 @@ import CareersPage from "../pages/company/CareersPage"
 import AadhaarPage from "../pages/aadhaar"
 import PanPage from "../pages/pan"
 import DrivingLicensePage from "../pages/drivinglicense"
+import BankingPage from "../pages/banking"
+import GstinLitePage from "../pages/gstin-lite"
 import CustomPricingPage from "../pages/CustomPricingPage"
 import CheckoutPage from "../pages/CheckoutPage"
 
@@ -65,7 +68,7 @@ const AppRoutes: React.FC = () => {
                 
                 {/* Solutions */}
                 <Route path="/solutions" element={<SolutionsPage />} />
-                <Route path="/solutions/:id" element={<div>Solution Detail Page</div>} />
+                <Route path="/solutions/:id" element={<SolutionDetailPage />} />
                 
                 {/* Resources */}
                 <Route path="/resources" element={<ResourcesPage />} />
@@ -78,6 +81,8 @@ const AppRoutes: React.FC = () => {
                 <Route path="/aadhaar" element={<AadhaarPage />} />
                 <Route path="/pan" element={<PanPage />} />
                 <Route path="/drivinglicense" element={<DrivingLicensePage />} />
+                <Route path="/banking" element={<BankingPage />} />
+                <Route path="/gstin-lite" element={<GstinLitePage />} />
                 
                 {/* Pricing */}
                 <Route path="/custom-pricing" element={<CustomPricingPage />} />

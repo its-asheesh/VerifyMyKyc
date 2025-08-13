@@ -10,6 +10,7 @@ export interface Solution extends BaseEntity {
   caseStudies: CaseStudy[]
   isActive: boolean
   image: string
+  link?: string
 }
 
 export interface Industry {
