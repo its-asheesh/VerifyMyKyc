@@ -7,6 +7,7 @@
     "start": "node dist/server.js",
     "dev": "nodemon server.ts",
     "build": "tsc",
+    "seed-pricing": "ts-node src/modules/pricing/seed-pricing.ts",
     "seed-users": "ts-node src/modules/auth/seed-users.ts",
     "seed-orders": "ts-node src/modules/orders/seed-orders.ts",
     "seed-carousel": "ts-node src/modules/carousel/seed-carousel.ts",

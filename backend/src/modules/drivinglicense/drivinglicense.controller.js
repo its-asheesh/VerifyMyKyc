@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchDrivingLicenseDetailsHandler = exports.drivingLicenseOcrHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const drivinglicense_service_1 = require("./drivinglicense.service");
+const quota_service_1 = require("../orders/quota.service");
 const service = new drivinglicense_service_1.DrivingLicenseService();
 // POST /api/drivinglicense/ocr
 exports.drivingLicenseOcrHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -25,11 +26,21 @@ exports.drivingLicenseOcrHandler = (0, asyncHandler_1.default)((req, res) => __a
     const file_back = (_b = files === null || files === void 0 ? void 0 : files.file_back) === null || _b === void 0 ? void 0 : _b[0];
     if (!file_front)
         throw new Error('file_front is required');
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'drivinglicense');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.ocr(file_front.buffer, file_front.originalname, consent, file_back === null || file_back === void 0 ? void 0 : file_back.buffer, file_back === null || file_back === void 0 ? void 0 : file_back.originalname);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));
 // POST /api/drivinglicense/fetch-details
 exports.fetchDrivingLicenseDetailsHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'drivinglicense');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchDetails(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));

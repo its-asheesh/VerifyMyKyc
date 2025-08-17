@@ -26,17 +26,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.digilockerFetchDocumentHandler = exports.digilockerPullHandler = exports.digilockerInitHandler = exports.checkPanAadhaarLinkHandler = exports.fetchFatherNameHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const pan_service_1 = require("./pan.service");
+const quota_service_1 = require("../orders/quota.service");
 const service = new pan_service_1.PanService();
 // POST /api/pan/father-name
 // Expects body: { pan_number: string, consent: string }
 exports.fetchFatherNameHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchFatherName(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));
 // POST /api/pan/aadhaar-link
 // Expects body: { pan_number: string, aadhaar_number: string, consent: string }
 exports.checkPanAadhaarLinkHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.checkPanAadhaarLink(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));
 // POST /api/pan/digilocker-init
@@ -55,6 +66,11 @@ exports.digilockerPullHandler = (0, asyncHandler_1.default)((req, res) => __awai
 // POST /api/pan/digilocker-fetch-document
 // Expects body: { document_uri: string, transaction_id: string }
 exports.digilockerFetchDocumentHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.digilockerFetchDocument(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));

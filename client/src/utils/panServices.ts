@@ -3,12 +3,19 @@ import type {
   PanAadhaarLinkRequest,
   DigilockerInitRequest,
   PanDigilockerPullRequest,
-  DigilockerFetchDocumentRequest,
-  GstinByPanRequest
+  DigilockerFetchDocumentRequest
 } from "../types/kyc"
-import { CreditCard, Link, Download, FileText, Building, User } from "lucide-react"
+import { CreditCard, Link, Download, FileText } from "lucide-react"
 
-export type PanServiceKey = "father-name" | "aadhaar-link" | "digilocker-init" | "digilocker-pull" | "digilocker-fetch-document" | "cin-by-pan" | "din-by-pan" | "gstin-by-pan"
+export type PanServiceKey =
+  | "father-name"
+  | "aadhaar-link"
+  | "digilocker-init"
+  | "digilocker-pull"
+  | "digilocker-fetch-document"
+  | "gstin-by-pan"
+  | "din-by-pan"
+  | "cin-by-pan"
 
 export interface PanServiceMeta {
   key: PanServiceKey
@@ -16,10 +23,11 @@ export interface PanServiceMeta {
   description: string
   apiEndpoint: string
   formFields: {
-    name: keyof PanFatherNameRequest | keyof PanAadhaarLinkRequest | keyof DigilockerInitRequest | keyof PanDigilockerPullRequest | keyof DigilockerFetchDocumentRequest | keyof GstinByPanRequest | string
+    name: keyof PanFatherNameRequest | keyof PanAadhaarLinkRequest | keyof DigilockerInitRequest | keyof PanDigilockerPullRequest | keyof DigilockerFetchDocumentRequest | string
     label: string
-    type: "text" | "json"
+    type: "text" | "json" | "radio"
     required: boolean
+    options?: { label: string; value: string }[]
   }[]
   icon?: React.ElementType
 }
@@ -31,18 +39,72 @@ export const panServices: PanServiceMeta[] = [
     key: "father-name",
     name: "Fetch Father's Name by PAN",
     description: "Get the father's name associated with a PAN number.",
-    apiEndpoint: "/api/pan/father-name",
+    apiEndpoint: "/pan/father-name",
+    formFields: [
+      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      {
+        name: "consent",
+        label: "Consent",
+        type: "radio",
+        required: true,
+        options: [
+          { label: "Yes", value: "Y" },
+          { label: "No", value: "N" },
+        ],
+      },
+    ],
+    icon: CreditCard,
+  },
+  {
+    key: "gstin-by-pan",
+    name: "Fetch GSTIN by PAN",
+    description: "Fetch all GSTINs associated with a PAN.",
+    // Backend canonical endpoint lives under the GSTIN module
+    apiEndpoint: "/gstin/fetch-by-pan",
     formFields: [
       { name: "pan_number", label: "PAN Number", type: "text", required: true },
       { name: "consent", label: "Consent", type: "text", required: true },
     ],
-    icon: CreditCard,
+    icon: FileText,
+  },
+  {
+    key: "din-by-pan",
+    name: "Fetch DIN by PAN",
+    description: "Fetch Director Identification Numbers linked to a PAN.",
+    // Use MCA module endpoint
+    apiEndpoint: "/mca/din-by-pan",
+    formFields: [
+      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      { name: "consent", label: "Consent", type: "text", required: true },
+    ],
+    icon: FileText,
+  },
+  {
+    key: "cin-by-pan",
+    name: "Fetch CIN by PAN",
+    description: "Fetch Company Identification Numbers linked to a PAN.",
+    // Use MCA module endpoint
+    apiEndpoint: "/mca/cin-by-pan",
+    formFields: [
+      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      {
+        name: "consent",
+        label: "Consent",
+        type: "radio",
+        required: true,
+        options: [
+          { label: "Yes", value: "Y" },
+          { label: "No", value: "N" },
+        ],
+      },
+    ],
+    icon: FileText,
   },
   {
     key: "aadhaar-link",
     name: "Check PAN-Aadhaar Link",
     description: "Check if a PAN is linked to an Aadhaar number.",
-    apiEndpoint: "/api/pan/aadhaar-link",
+    apiEndpoint: "/pan/aadhaar-link",
     formFields: [
       { name: "pan_number", label: "PAN Number", type: "text", required: true },
       { name: "aadhaar_number", label: "Aadhaar Number", type: "text", required: true },
@@ -50,44 +112,11 @@ export const panServices: PanServiceMeta[] = [
     ],
     icon: Link,
   },
-  {
-    key: "cin-by-pan",
-    name: "Fetch CIN by PAN",
-    description: "Get the Company Identification Number (CIN) and company name associated with a PAN.",
-    apiEndpoint: "/api/mca/cin-by-pan",
-    formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
-    ],
-    icon: Building,
-  },
-  {
-    key: "din-by-pan",
-    name: "Fetch DIN by PAN",
-    description: "Get the Director Identification Number (DIN) and director details associated with a PAN.",
-    apiEndpoint: "/api/mca/din-by-pan",
-    formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
-    ],
-    icon: User,
-  },
-  {
-    key: "gstin-by-pan",
-    name: "Fetch GSTIN by PAN",
-    description: "Get the Goods and Services Tax Identification Number (GSTIN) and business details associated with a PAN.",
-    apiEndpoint: "/api/gstin/fetch-by-pan",
-    formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
-    ],
-    icon: FileText,
-  },
   // {
   //   key: "digilocker-init",
   //   name: "Digilocker Init",
   //   description: "Initiate Digilocker flow for PAN.",
-  //   apiEndpoint: "/api/pan/digilocker-init",
+  //   apiEndpoint: "/pan/digilocker-init",
   //   formFields: [
   //     { name: "redirect_uri", label: "Redirect URI", type: "text", required: true },
   //     { name: "consent", label: "Consent", type: "text", required: true },
@@ -97,7 +126,7 @@ export const panServices: PanServiceMeta[] = [
     key: "digilocker-pull",
     name: "Digilocker Pull PAN",
     description: "Pull PAN document from Digilocker.",
-    apiEndpoint: "/api/pan/digilocker-pull",
+    apiEndpoint: "/pan/digilocker-pull",
     formFields: [
       { name: "panno", label: "PAN Number", type: "text", required: true },
       { name: "PANFullName", label: "PAN Full Name", type: "text", required: true },
@@ -109,7 +138,7 @@ export const panServices: PanServiceMeta[] = [
     key: "digilocker-fetch-document",
     name: "Digilocker Fetch Document",
     description: "Fetch PAN document from Digilocker using document URI.",
-    apiEndpoint: "/api/pan/digilocker-fetch-document",
+    apiEndpoint: "/pan/digilocker-fetch-document",
     formFields: [
       { name: "document_uri", label: "Document URI", type: "text", required: true },
       { name: "transaction_id", label: "Transaction ID", type: "text", required: true },

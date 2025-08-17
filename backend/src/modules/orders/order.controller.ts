@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Order, IOrder } from './order.model';
 import { Coupon } from '../coupons/coupon.model';
 import asyncHandler from '../../common/middleware/asyncHandler';
+import { VerificationPricing } from '../pricing/pricing.model';
 
 // Create new order
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -32,6 +33,43 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
 
   console.log('Generated orderId:', orderId);
 
+  // Prepare verification quota if this is a verification order
+  let verificationQuota: {
+    totalAllowed: number;
+    used: number;
+    remaining: number;
+    validityDays: number;
+  } | undefined = undefined;
+
+  if (orderType === 'verification' && serviceDetails?.verificationType) {
+    try {
+      const pricing = await VerificationPricing.findOne({ verificationType: serviceDetails.verificationType });
+      if (pricing) {
+        let quotaCfg: { count: number; validityDays: number } | undefined;
+        switch (billingPeriod) {
+          case 'monthly':
+            quotaCfg = pricing.monthlyQuota as any;
+            break;
+          case 'yearly':
+            quotaCfg = pricing.yearlyQuota as any;
+            break;
+          default:
+            quotaCfg = pricing.oneTimeQuota as any;
+        }
+        if (quotaCfg && typeof quotaCfg.count === 'number') {
+          verificationQuota = {
+            totalAllowed: quotaCfg.count,
+            used: 0,
+            remaining: quotaCfg.count,
+            validityDays: quotaCfg.validityDays || 0,
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load verification pricing for quota initialization:', e);
+    }
+  }
+
   const orderData: any = {
     userId,
     orderId,
@@ -45,6 +83,10 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     paymentStatus: 'pending',
     startDate: new Date() // Add this to ensure startDate is set
   };
+
+  if (verificationQuota) {
+    orderData.verificationQuota = verificationQuota;
+  }
 
   // Add coupon information if provided
   if (couponApplied) {
@@ -102,6 +144,34 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
   order.transactionId = transactionId;
   order.status = 'active';
   order.startDate = new Date();
+
+  // Recompute end date using quota validity if available, otherwise by billing period
+  try {
+    const start = order.startDate ? new Date(order.startDate) : new Date();
+    let newEnd = new Date(start);
+    if (order.orderType === 'verification' && order.verificationQuota?.validityDays) {
+      newEnd.setDate(newEnd.getDate() + order.verificationQuota.validityDays);
+      order.endDate = newEnd;
+      if (order.verificationQuota) {
+        order.verificationQuota.expiresAt = newEnd;
+      }
+    } else {
+      switch (order.billingPeriod) {
+        case 'one-time':
+          newEnd.setFullYear(newEnd.getFullYear() + 1);
+          break;
+        case 'monthly':
+          newEnd.setMonth(newEnd.getMonth() + 1);
+          break;
+        case 'yearly':
+          newEnd.setFullYear(newEnd.getFullYear() + 1);
+          break;
+      }
+      order.endDate = newEnd;
+    }
+  } catch (err) {
+    console.error('Failed to recompute endDate on payment:', err);
+  }
   
   await order.save();
 

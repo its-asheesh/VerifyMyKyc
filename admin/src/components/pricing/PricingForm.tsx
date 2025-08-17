@@ -24,6 +24,10 @@ interface FormData {
   oneTimeFeatures: string[]
   monthlyFeatures: string[]
   yearlyFeatures: string[]
+  // Per-tier verification quotas
+  oneTimeQuota: { count: number; validityDays: number }
+  monthlyQuota: { count: number; validityDays: number }
+  yearlyQuota: { count: number; validityDays: number }
   highlighted: boolean
   popular: boolean
   color: string
@@ -56,6 +60,10 @@ const PricingForm: React.FC<PricingFormProps> = ({
     oneTimeFeatures: [''],
     monthlyFeatures: [''],
     yearlyFeatures: [''],
+    // Per-tier verification quotas defaults
+    oneTimeQuota: { count: 0, validityDays: 365 },
+    monthlyQuota: { count: 0, validityDays: 30 },
+    yearlyQuota: { count: 0, validityDays: 365 },
     highlighted: false,
     popular: false,
     color: '',
@@ -88,6 +96,10 @@ const PricingForm: React.FC<PricingFormProps> = ({
           oneTimeFeatures: verificationData.oneTimeFeatures || [''],
           monthlyFeatures: verificationData.monthlyFeatures || [''],
           yearlyFeatures: verificationData.yearlyFeatures || [''],
+          // quotas (fallback to sensible defaults)
+          oneTimeQuota: verificationData.oneTimeQuota || { count: 0, validityDays: 365 },
+          monthlyQuota: verificationData.monthlyQuota || { count: 0, validityDays: 30 },
+          yearlyQuota: verificationData.yearlyQuota || { count: 0, validityDays: 365 },
           highlighted: verificationData.highlighted || false,
           popular: verificationData.popular || false,
           color: verificationData.color || '',
@@ -112,6 +124,10 @@ const PricingForm: React.FC<PricingFormProps> = ({
           oneTimeFeatures: [''],
           monthlyFeatures: homepageData.features || [''],
           yearlyFeatures: [''],
+          // quotas unused for homepage; keep defaults
+          oneTimeQuota: { count: 0, validityDays: 365 },
+          monthlyQuota: { count: 0, validityDays: 30 },
+          yearlyQuota: { count: 0, validityDays: 365 },
           highlighted: homepageData.highlighted || false,
           popular: homepageData.popular || false,
           color: homepageData.color || '',
@@ -135,6 +151,10 @@ const PricingForm: React.FC<PricingFormProps> = ({
         oneTimeFeatures: [''],
         monthlyFeatures: [''],
         yearlyFeatures: [''],
+        // reset quotas to defaults
+        oneTimeQuota: { count: 0, validityDays: 365 },
+        monthlyQuota: { count: 0, validityDays: 30 },
+        yearlyQuota: { count: 0, validityDays: 365 },
         highlighted: false,
         popular: false,
         color: '',
@@ -189,6 +209,9 @@ const PricingForm: React.FC<PricingFormProps> = ({
           oneTimeFeatures: formData.oneTimeFeatures.filter(f => f.trim() !== ''),
           monthlyFeatures: formData.monthlyFeatures.filter(f => f.trim() !== ''),
           yearlyFeatures: formData.yearlyFeatures.filter(f => f.trim() !== ''),
+          oneTimeQuota: formData.oneTimeQuota,
+          monthlyQuota: formData.monthlyQuota,
+          yearlyQuota: formData.yearlyQuota,
           highlighted: formData.highlighted,
           popular: formData.popular,
           color: formData.color
@@ -309,6 +332,84 @@ const PricingForm: React.FC<PricingFormProps> = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
+                </div>
+              </div>
+
+              {/* Verification quotas per tier */}
+              <div className="mt-2 space-y-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Verification Quotas
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">One-time</div>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.oneTimeQuota.count}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, oneTimeQuota: { ...prev.oneTimeQuota, count: Number(e.target.value) } }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Count"
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      value={formData.oneTimeQuota.validityDays}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, oneTimeQuota: { ...prev.oneTimeQuota, validityDays: Number(e.target.value) } }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Validity (days)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Monthly</div>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.monthlyQuota.count}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, monthlyQuota: { ...prev.monthlyQuota, count: Number(e.target.value) } }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Count"
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      value={formData.monthlyQuota.validityDays}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, monthlyQuota: { ...prev.monthlyQuota, validityDays: Number(e.target.value) } }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Validity (days)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Yearly</div>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.yearlyQuota.count}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, yearlyQuota: { ...prev.yearlyQuota, count: Number(e.target.value) } }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Count"
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      value={formData.yearlyQuota.validityDays}
+                      onChange={(e) =>
+                        setFormData(prev => ({ ...prev, yearlyQuota: { ...prev.yearlyQuota, validityDays: Number(e.target.value) } }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Validity (days)"
+                    />
+                  </div>
                 </div>
               </div>
             </>

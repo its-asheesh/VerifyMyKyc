@@ -100,100 +100,26 @@ export interface DigilockerFetchDocumentResponse {
   [key: string]: any;
 }
 
-// GSTIN: Common Types
-interface GstinAddress {
-  address: string;
-  [key: string]: any;
-}
-
-interface GstinHsnData {
-  services: Array<{
-    // Add HSN service item fields as needed
-    [key: string]: any;
-  }>;
-}
-
-// GSTIN: Lite Request
-export interface GstinLiteRequest {
-  gstin: string;
-  include_hsn_data?: boolean;
-  include_filing_data?: boolean;
-  include_filing_frequency?: boolean;
-  consent: 'Y' | 'N';
-}
-
 // GSTIN: Contact Details
 export interface GstinContactRequest {
   gstin: string;
-  consent: 'Y' | 'N';
+  consent: string;
 }
-
-// GSTIN: Common Response
-export interface GstinBaseResponse {
-  request_id: string;
-  status: number;
-  data: {
-    code: string;
-    message: string;
-    gstin_data: {
-      document_type: string;
-      document_id: string;
-      status: string;
-      pan: string;
-      legal_name: string;
-      trade_name: string;
-      center_jurisdiction: string;
-      state_jurisdiction: string;
-      constitution_of_business: string;
-      taxpayer_type: string;
-      aadhaar_verified: boolean;
-      ekyc_verified: boolean;
-      field_visit_conducted: boolean;
-      date_of_registration: string;
-      principal_address: GstinAddress;
-      hsn_data?: GstinHsnData;
-      // Include other fields from the API response
-      [key: string]: any;
-    };
-  };
-  timestamp: number;
-  path: string;
-}
-
 export interface GstinContactResponse {
-  document_type: string;
-  email: string;
-  mobile: string;
+  status: string;
+  message: string;
+  data?: any;
   [key: string]: any;
 }
 
-// GSTIN: Fetch by PAN
-export interface GstinByPanRequest {
-  pan_number: string;
+// GSTIN: Lite Details
+export interface GstinLiteRequest {
+  gstin: string;
   consent: string;
 }
-export interface GstinByPanResponse {
-  request_id: string;
-  transaction_id: string;
-  reference_id: string;
-  status: number;
-  data: {
-    code: string;
-    message: string;
-    gstin_list: string[];
-    gstin_details: Array<{
-      gstin: string;
-      legal_name: string;
-      trade_name: string;
-      registration_date: string;
-      constitution_of_business: string;
-      taxpayer_type: string;
-      gstin_status: string;
-      last_update_date: string;
-      cancellation_date?: string;
-    }>;
-  };
-  timestamp: number;
-  path: string;
+export interface GstinLiteResponse {
+  status: string;
+  message: string;
+  data?: any;
   [key: string]: any;
 }

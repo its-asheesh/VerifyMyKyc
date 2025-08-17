@@ -12,6 +12,10 @@ export interface IVerificationPricing extends Document {
   oneTimeFeatures?: string[]
   monthlyFeatures?: string[]
   yearlyFeatures?: string[]
+  // Per-tier verification quotas
+  oneTimeQuota?: { count: number; validityDays: number }
+  monthlyQuota?: { count: number; validityDays: number }
+  yearlyQuota?: { count: number; validityDays: number }
   highlighted?: boolean
   popular?: boolean
   color?: string
@@ -48,6 +52,19 @@ const VerificationPricingSchema = new Schema<IVerificationPricing>(
     oneTimeFeatures: { type: [String], default: [] },
     monthlyFeatures: { type: [String], default: [] },
     yearlyFeatures: { type: [String], default: [] },
+    // Per-tier verification quotas
+    oneTimeQuota: {
+      count: { type: Number, default: 0 },
+      validityDays: { type: Number, default: 365 }
+    },
+    monthlyQuota: {
+      count: { type: Number, default: 0 },
+      validityDays: { type: Number, default: 30 }
+    },
+    yearlyQuota: {
+      count: { type: Number, default: 0 },
+      validityDays: { type: Number, default: 365 }
+    },
     highlighted: { type: Boolean, default: false },
     popular: { type: Boolean, default: false },
     color: { type: String },
@@ -76,4 +93,5 @@ const HomepagePlanSchema = new Schema<IHomepagePlan>(
 HomepagePlanSchema.index({ planType: 1, planName: 1 }, { unique: true })
 
 export const VerificationPricing = mongoose.model<IVerificationPricing>("VerificationPricing", VerificationPricingSchema)
-export const HomepagePlan = mongoose.model<IHomepagePlan>("HomepagePlan", HomepagePlanSchema) 
+export const HomepagePlan = mongoose.model<IHomepagePlan>("HomepagePlan", HomepagePlanSchema)
+ 

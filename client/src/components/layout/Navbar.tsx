@@ -20,6 +20,7 @@ import {
   BookOpen,
   HelpCircle,
   User,
+  Briefcase,
 } from "lucide-react"
 
 // Enhanced Button Component
@@ -197,6 +198,12 @@ const navItems = [
         description: "Confirm residential addresses",
         href: "/products?category=address",
       },
+      {
+        label: "Business Verification",
+        icon: Briefcase,
+        description: "Verify business registries (GSTIN, CIN)",
+        href: "/products?category=business",
+      },
     ],
   },
   {
@@ -207,25 +214,25 @@ const navItems = [
         label: "Banking & Finance",
         icon: CreditCard,
         description: "KYC for financial institutions",
-            href: "/solutions?industry=banking-finance",
+        href: "/solutions?industry=banking",
       },
       {
         label: "Government Services",
         icon: Building,
         description: "Citizen verification solutions",
-            href: "/solutions?industry=government",
+        href: "/solutions?industry=government",
       },
       {
         label: "Healthcare",
         icon: Shield,
         description: "Patient identity verification",
-            href: "/solutions?industry=healthcare",
+        href: "/solutions?industry=healthcare",
       },
       {
         label: "E-commerce",
         icon: Zap,
         description: "Customer onboarding solutions",
-            href: "/solutions?industry=ecommerce",
+        href: "/solutions?industry=ecommerce",
       },
     ],
   },

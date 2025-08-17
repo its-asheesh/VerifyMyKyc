@@ -18,7 +18,7 @@ const error_1 = require("../../../common/http/error");
 const form_data_1 = __importDefault(require("form-data"));
 function aadhaarOcrV2Provider(file_front, file_front_name, consent, file_back, file_back_name) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         try {
             const form = new form_data_1.default();
             form.append('file_front', file_front, file_front_name);
@@ -33,7 +33,8 @@ function aadhaarOcrV2Provider(file_front, file_front_name, consent, file_back, f
             return response.data;
         }
         catch (error) {
-            throw new error_1.HTTPError(((_b = (_a = error.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || 'Aadhaar OCR V2 failed', ((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) || 500, (_d = error.response) === null || _d === void 0 ? void 0 : _d.data);
+            console.error('Aadhaar OCR V2 error details:', (_a = error.response) === null || _a === void 0 ? void 0 : _a.data);
+            throw new error_1.HTTPError(((_c = (_b = error.response) === null || _b === void 0 ? void 0 : _b.data) === null || _c === void 0 ? void 0 : _c.message) || 'Aadhaar OCR V2 failed', ((_d = error.response) === null || _d === void 0 ? void 0 : _d.status) || 500, (_e = error.response) === null || _e === void 0 ? void 0 : _e.data);
         }
     });
 }

@@ -1,0 +1,426 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.login = exports.register = void 0;
+const auth_model_1 = require("./auth.model");
+const jwt_1 = require("../../common/utils/jwt");
+const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
+// Register new user
+exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, password, company, phone, location } = req.body;
+    // Check if user already exists
+    const existingUser = yield auth_model_1.User.findOne({ email });
+    if (existingUser) {
+        return res.status(400).json({ message: 'User with this email already exists' });
+    }
+    // Create new user with location data if provided
+    const userData = {
+        name,
+        email,
+        password,
+        company,
+        phone,
+        role: 'user' // Default role
+    };
+    // Add location data if provided
+    if (location) {
+        userData.location = location;
+    }
+    const user = yield auth_model_1.User.create(userData);
+    // Generate token
+    const token = (0, jwt_1.generateToken)(user);
+    // Update last login
+    user.lastLogin = new Date();
+    yield user.save();
+    res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        data: {
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                location: user.location,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            },
+            token
+        }
+    });
+}));
+// Login user
+exports.login = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password, location } = req.body;
+    // Find user and include password for comparison
+    const user = yield auth_model_1.User.findOne({ email }).select('+password');
+    if (!user) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    if (!user.isActive) {
+        return res.status(401).json({ message: 'Account is deactivated' });
+    }
+    // Check password
+    const isPasswordValid = yield user.comparePassword(password);
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    // Update location data if provided
+    if (location) {
+        user.location = location;
+    }
+    // Generate token
+    const token = (0, jwt_1.generateToken)(user);
+    // Update last login
+    user.lastLogin = new Date();
+    yield user.save();
+    res.json({
+        success: true,
+        message: 'Login successful',
+        data: {
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                location: user.location,
+                lastLogin: user.lastLogin,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            },
+            token
+        }
+    });
+}));
+// Get current user profile
+exports.getProfile = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield auth_model_1.User.findById(req.user._id);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+        success: true,
+        data: {
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                avatar: user.avatar,
+                lastLogin: user.lastLogin,
+                emailVerified: user.emailVerified,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }
+        }
+    });
+}));
+// Update user profile
+exports.updateProfile = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, email, company, phone } = req.body;
+    // Check if email is being changed and if it's already taken
+    if (email && email !== req.user.email) {
+        const existingUser = yield auth_model_1.User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email is already taken' });
+        }
+    }
+    // Update user
+    const updatedUser = yield auth_model_1.User.findByIdAndUpdate(req.user._id, {
+        name,
+        email,
+        company,
+        phone
+    }, { new: true, runValidators: true });
+    if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+        success: true,
+        message: 'Profile updated successfully',
+        data: {
+            user: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                company: updatedUser.company,
+                phone: updatedUser.phone,
+                avatar: updatedUser.avatar,
+                lastLogin: updatedUser.lastLogin,
+                emailVerified: updatedUser.emailVerified,
+                createdAt: updatedUser.createdAt,
+                updatedAt: updatedUser.updatedAt
+            }
+        }
+    });
+}));
+// Change password
+exports.changePassword = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { currentPassword, newPassword } = req.body;
+    // Get user with password
+    const user = yield auth_model_1.User.findById(req.user._id).select('+password');
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    // Verify current password
+    const isCurrentPasswordValid = yield user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+    // Update password
+    user.password = newPassword;
+    yield user.save();
+    res.json({
+        success: true,
+        message: 'Password changed successfully'
+    });
+}));
+// Logout (client-side token removal, but we can track it)
+exports.logout = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // In a more advanced setup, you might want to blacklist the token
+    // For now, we'll just return success
+    res.json({
+        success: true,
+        message: 'Logged out successfully'
+    });
+}));
+// Admin: Get all users (admin only)
+exports.getAllUsers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const users = yield auth_model_1.User.find({}).select('-password');
+    res.json({
+        success: true,
+        data: {
+            users: users.map(user => ({
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                isActive: user.isActive,
+                lastLogin: user.lastLogin,
+                emailVerified: user.emailVerified,
+                location: user.location,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }))
+        }
+    });
+}));
+// Admin: Update user role (admin only)
+exports.updateUserRole = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const { role } = req.body;
+    if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role' });
+    }
+    const user = yield auth_model_1.User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    user.role = role;
+    yield user.save();
+    res.json({
+        success: true,
+        message: 'User role updated successfully',
+        data: { user }
+    });
+}));
+// Admin: Toggle user active status (admin only)
+exports.toggleUserStatus = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const user = yield auth_model_1.User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    // Prevent admin from deactivating themselves
+    if (user._id.toString() === req.user._id.toString()) {
+        return res.status(400).json({ message: 'Cannot deactivate your own account' });
+    }
+    user.isActive = !user.isActive;
+    yield user.save();
+    res.json({
+        success: true,
+        message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+        data: { user }
+    });
+}));
+// Admin: Get user statistics
+exports.getUserStats = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const totalUsers = yield auth_model_1.User.countDocuments();
+    const activeUsers = yield auth_model_1.User.countDocuments({ isActive: true });
+    const inactiveUsers = yield auth_model_1.User.countDocuments({ isActive: false });
+    const adminUsers = yield auth_model_1.User.countDocuments({ role: 'admin' });
+    const regularUsers = yield auth_model_1.User.countDocuments({ role: 'user' });
+    // Get new users this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const newUsersThisMonth = yield auth_model_1.User.countDocuments({
+        createdAt: { $gte: startOfMonth }
+    });
+    res.json({
+        success: true,
+        data: {
+            totalUsers,
+            activeUsers,
+            inactiveUsers,
+            adminUsers,
+            regularUsers,
+            newUsersThisMonth
+        }
+    });
+}));
+// Get user location analytics for admin
+exports.getUserLocationAnalytics = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Get location statistics
+    const locationStats = yield auth_model_1.User.aggregate([
+        {
+            $match: {
+                'location.country': { $exists: true, $ne: null }
+            }
+        },
+        {
+            $group: {
+                _id: '$location.country',
+                count: { $sum: 1 },
+                cities: { $addToSet: '$location.city' },
+                regions: { $addToSet: '$location.region' }
+            }
+        },
+        {
+            $project: {
+                country: '$_id',
+                userCount: '$count',
+                cityCount: { $size: '$cities' },
+                regionCount: { $size: '$regions' },
+                cities: { $slice: ['$cities', 5] }, // Top 5 cities
+                regions: { $slice: ['$regions', 5] } // Top 5 regions
+            }
+        },
+        {
+            $sort: { userCount: -1 }
+        }
+    ]);
+    // Get total users with location data
+    const totalUsersWithLocation = yield auth_model_1.User.countDocuments({
+        'location.country': { $exists: true, $ne: null }
+    });
+    // Get top cities
+    const topCities = yield auth_model_1.User.aggregate([
+        {
+            $match: {
+                'location.city': { $exists: true, $ne: null }
+            }
+        },
+        {
+            $group: {
+                _id: '$location.city',
+                count: { $sum: 1 },
+                country: { $first: '$location.country' }
+            }
+        },
+        {
+            $sort: { count: -1 }
+        },
+        {
+            $limit: 10
+        }
+    ]);
+    // Get recent location activity (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentLocationActivity = yield auth_model_1.User.aggregate([
+        {
+            $match: {
+                createdAt: { $gte: thirtyDaysAgo },
+                'location.country': { $exists: true, $ne: null }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    country: '$location.country',
+                    date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+                },
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: { '_id.date': -1 }
+        }
+    ]);
+    res.json({
+        success: true,
+        data: {
+            locationStats,
+            totalUsersWithLocation,
+            topCities,
+            recentLocationActivity
+        }
+    });
+}));
+// Update user location (called during login/registration)
+exports.updateUserLocation = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const { country, city, region, timezone, ipAddress } = req.body;
+    const user = yield auth_model_1.User.findByIdAndUpdate(userId, {
+        location: {
+            country,
+            city,
+            region,
+            timezone,
+            ipAddress
+        }
+    }, { new: true, runValidators: true });
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+        success: true,
+        message: 'User location updated successfully',
+        data: { user }
+    });
+}));
+// Get users with location details for analytics
+exports.getUsersWithLocation = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const users = yield auth_model_1.User.find({}).select('-password').sort({ createdAt: -1 });
+    const usersWithLocation = users.map(user => ({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+        phone: user.phone,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        emailVerified: user.emailVerified,
+        location: user.location || null,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+    }));
+    res.json({
+        success: true,
+        data: {
+            users: usersWithLocation
+        }
+    });
+}));

@@ -22,6 +22,13 @@ export interface IOrder extends Document {
   status: 'active' | 'expired' | 'cancelled';
   startDate: Date;
   endDate: Date;
+  verificationQuota?: {
+    totalAllowed: number;
+    used: number;
+    remaining: number;
+    validityDays: number;
+    expiresAt?: Date;
+  };
   couponApplied?: {
     couponId: mongoose.Types.ObjectId;
     code: string;
@@ -31,6 +38,12 @@ export interface IOrder extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  // Instance methods
+  isExpired(): boolean;
+  getRemainingDays(): number;
+  getDiscountAmount(): number;
+  canUseVerification(): boolean;
+  useVerification(): Promise<void>;
 }
 
 const orderSchema = new Schema<IOrder>({
@@ -106,6 +119,13 @@ const orderSchema = new Schema<IOrder>({
   endDate: {
     type: Date
   },
+  verificationQuota: {
+    totalAllowed: { type: Number, default: 0 },
+    used: { type: Number, default: 0 },
+    remaining: { type: Number, default: 0 },
+    validityDays: { type: Number, default: 0 },
+    expiresAt: { type: Date }
+  },
   couponApplied: {
     couponId: {
       type: Schema.Types.ObjectId,
@@ -130,9 +150,10 @@ orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ endDate: 1 });
 orderSchema.index({ 'couponApplied.couponId': 1 });
+orderSchema.index({ 'verificationQuota.expiresAt': 1 });
 
 // Generate order number
-orderSchema.pre('save', function(next) {
+orderSchema.pre('save', function(this: any, next) {
   if (this.isNew && !this.orderNumber) {
     const timestamp = Date.now().toString().slice(-8);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -144,36 +165,43 @@ orderSchema.pre('save', function(next) {
     this.finalAmount = this.totalAmount;
   }
   
-  // Calculate end date based on billing period
+  // Calculate end date based on quota validity or billing period
   if (this.isNew) {
     const startDate = this.startDate || new Date();
     let endDate = new Date(startDate);
-    
-    switch (this.billingPeriod) {
-      case 'one-time':
-        // One-time purchases are valid for 1 year
-        endDate.setFullYear(endDate.getFullYear() + 1);
-        break;
-      case 'monthly':
-        endDate.setMonth(endDate.getMonth() + 1);
-        break;
-      case 'yearly':
-        endDate.setFullYear(endDate.getFullYear() + 1);
-        break;
+
+    // If verification order has a quota validity, prefer that
+    if (this.orderType === 'verification' && this.verificationQuota && this.verificationQuota.validityDays) {
+      endDate.setDate(endDate.getDate() + this.verificationQuota.validityDays);
+      this.verificationQuota.expiresAt = endDate;
+    } else {
+      // Fallback to billing period-based expiry
+      switch (this.billingPeriod) {
+        case 'one-time':
+          // One-time purchases are valid for 1 year
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
+        case 'monthly':
+          endDate.setMonth(endDate.getMonth() + 1);
+          break;
+        case 'yearly':
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
+      }
     }
-    
+
     this.endDate = endDate;
   }
   next();
 });
 
 // Method to check if order is expired
-orderSchema.methods.isExpired = function(): boolean {
+orderSchema.methods.isExpired = function(this: any): boolean {
   return new Date() > this.endDate;
 };
 
 // Method to get remaining days
-orderSchema.methods.getRemainingDays = function(): number {
+orderSchema.methods.getRemainingDays = function(this: any): number {
   const now = new Date();
   const end = new Date(this.endDate);
   const diffTime = end.getTime() - now.getTime();
@@ -182,8 +210,27 @@ orderSchema.methods.getRemainingDays = function(): number {
 };
 
 // Method to get discount amount
-orderSchema.methods.getDiscountAmount = function(): number {
+orderSchema.methods.getDiscountAmount = function(this: any): number {
   return this.totalAmount - this.finalAmount;
 };
 
-export const Order = mongoose.model<IOrder>('Order', orderSchema); 
+// Verification quota helpers
+orderSchema.methods.canUseVerification = function(this: any): boolean {
+  if (this.orderType !== 'verification') return false;
+  if (!this.verificationQuota) return false;
+  const now = new Date();
+  if (this.verificationQuota.expiresAt && now > this.verificationQuota.expiresAt) return false;
+  return (this.verificationQuota.remaining || 0) > 0 && this.status === 'active';
+};
+
+orderSchema.methods.useVerification = async function(this: any): Promise<void> {
+  if (!this.canUseVerification()) {
+    throw new Error('Verification quota exhausted or expired');
+  }
+  this.verificationQuota.used = (this.verificationQuota.used || 0) + 1;
+  const total = this.verificationQuota.totalAllowed || 0;
+  this.verificationQuota.remaining = Math.max(0, total - this.verificationQuota.used);
+  await this.save();
+};
+
+export const Order = mongoose.model<IOrder>('Order', orderSchema);

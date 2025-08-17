@@ -3,9 +3,10 @@ import { fetchGstinLiteProvider } from './providers/fetchLite.provider';
 import { fetchGstinContactProvider } from './providers/fetchContact.provider';
 import { 
   GstinByPanRequest, 
-  GstinLiteRequest, 
   GstinContactRequest 
 } from '../../common/types/pan';
+
+import { FetchGstinLiteRequest } from '../../common/types/gst';
 
 export class GstinService {
   // Fetch GSTIN by PAN
@@ -14,7 +15,7 @@ export class GstinService {
   }
 
   // Fetch GSTIN Lite
-  async fetchLite(payload: GstinLiteRequest) {
+  async fetchLite(payload: FetchGstinLiteRequest) {
     return fetchGstinLiteProvider(payload);
   }
 

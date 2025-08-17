@@ -9,6 +9,10 @@ import {
   PanDigilockerPullRequest,
   DigilockerInitRequest 
 } from '../../common/types/pan';
+import { fetchDinByPanProvider } from '../mca/providers/dinByPan.provider';
+import { fetchCinByPanProvider } from '../mca/providers/cinByPan.provider';
+import { fetchGstinByPanProvider } from '../gstin/providers/fetchByPan.provider';
+import type { DinByPanRequest, CinByPanRequest, GstinByPanRequest } from '../../common/types/pan';
 
 export class PanService {
   // Fetch Father's Name by PAN
@@ -34,5 +38,20 @@ export class PanService {
   // Digilocker Fetch Document
   async digilockerFetchDocument(payload: DigilockerFetchDocumentRequest) {
     return digilockerFetchDocumentProvider(payload);
+  }
+
+  // DIN By PAN (MCA)
+  async fetchDinByPan(payload: DinByPanRequest) {
+    return fetchDinByPanProvider(payload);
+  }
+
+  // CIN By PAN (MCA)
+  async fetchCinByPan(payload: CinByPanRequest) {
+    return fetchCinByPanProvider(payload);
+  }
+
+  // GSTIN By PAN (GSTIN)
+  async fetchGstinByPan(payload: GstinByPanRequest) {
+    return fetchGstinByPanProvider(payload);
   }
 }

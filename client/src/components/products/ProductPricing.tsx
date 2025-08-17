@@ -51,6 +51,9 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     if (title.includes('aadhaar')) return 'aadhaar'
     if (title.includes('driving license') || title.includes('drivinglicense')) return 'drivinglicense'
     if (title.includes('gstin')) return 'gstin'
+    if (title.includes('company') || title.includes('mca')) return 'company'
+    if (title.includes('voter')) return 'voterid'
+    if (title.includes('bank account') || title.includes('bankaccount') || title.includes('banking')) return 'bankaccount'
     return ''
   }
 
@@ -82,7 +85,12 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     {
       name: "One-time",
       price: verificationPricing.oneTimePrice,
-      requests: "Single verification",
+      requests: (() => {
+        const c = verificationPricing.oneTimeQuota?.count
+        const v = verificationPricing.oneTimeQuota?.validityDays
+        const base = c ? `Includes ${c} verification${c > 1 ? 's' : ''}` : 'Single verification'
+        return v && v > 0 ? `${base} • valid ${v} days` : base
+      })(),
       features: verificationPricing.oneTimeFeatures || [],
       color: "blue" as const, // Changed from gray to blue since PricingCard doesn't support gray
       support: "Email support",
@@ -93,7 +101,12 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     {
       name: "Monthly",
       price: verificationPricing.monthlyPrice,
-      requests: "Unlimited verifications",
+      requests: (() => {
+        const c = verificationPricing.monthlyQuota?.count
+        const v = verificationPricing.monthlyQuota?.validityDays
+        const base = c ? `Includes ${c} verification${c > 1 ? 's' : ''}` : 'Unlimited verifications'
+        return v && v > 0 ? `${base} • valid ${v} days` : base
+      })(),
       features: verificationPricing.monthlyFeatures || [],
       color: "blue" as const,
       support: "Priority support",
@@ -104,7 +117,12 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     {
       name: "Yearly",
       price: verificationPricing.yearlyPrice,
-      requests: "Unlimited verifications",
+      requests: (() => {
+        const c = verificationPricing.yearlyQuota?.count
+        const v = verificationPricing.yearlyQuota?.validityDays
+        const base = c ? `Includes ${c} verification${c > 1 ? 's' : ''}` : 'Unlimited verifications'
+        return v && v > 0 ? `${base} • valid ${v} days` : base
+      })(),
       features: verificationPricing.yearlyFeatures || [],
       color: "purple" as const,
       support: "24/7 support",

@@ -17,11 +17,13 @@ const apiClient_1 = __importDefault(require("../../../common/http/apiClient"));
 const error_1 = require("../../../common/http/error");
 function fetchCinByPanProvider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         try {
+            // Mask PAN for logging (show only last 4)
+            const maskedPan = (payload === null || payload === void 0 ? void 0 : payload.pan) ? `******${payload.pan.slice(-4)}` : undefined;
             console.log('CIN by PAN API Request:', {
                 url: '/mca-api/cin-by-pan',
-                payload,
+                pan: maskedPan,
                 baseURL: process.env.GRIDLINES_BASE_URL
             });
             const response = yield apiClient_1.default.post('/mca-api/cin-by-pan', payload);
@@ -39,11 +41,10 @@ function fetchCinByPanProvider(payload) {
                 config: {
                     url: (_c = error.config) === null || _c === void 0 ? void 0 : _c.url,
                     method: (_d = error.config) === null || _d === void 0 ? void 0 : _d.method,
-                    baseURL: (_e = error.config) === null || _e === void 0 ? void 0 : _e.baseURL,
-                    headers: (_f = error.config) === null || _f === void 0 ? void 0 : _f.headers
+                    baseURL: (_e = error.config) === null || _e === void 0 ? void 0 : _e.baseURL
                 }
             });
-            throw new error_1.HTTPError(((_h = (_g = error.response) === null || _g === void 0 ? void 0 : _g.data) === null || _h === void 0 ? void 0 : _h.message) || 'Fetch CIN by PAN failed', ((_j = error.response) === null || _j === void 0 ? void 0 : _j.status) || 500, (_k = error.response) === null || _k === void 0 ? void 0 : _k.data);
+            throw new error_1.HTTPError(((_g = (_f = error.response) === null || _f === void 0 ? void 0 : _f.data) === null || _g === void 0 ? void 0 : _g.message) || 'Fetch CIN by PAN failed', ((_h = error.response) === null || _h === void 0 ? void 0 : _h.status) || 500, (_j = error.response) === null || _j === void 0 ? void 0 : _j.data);
         }
     });
 }

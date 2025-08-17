@@ -1,77 +1,100 @@
 "use client"
 
-import React, { useState } from "react"
+import type React from "react"
+import { useState } from "react"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
+import { gstinServices } from "../../utils/gstinServices"
 import { gstinApi } from "../../services/api/gstinApi"
-import type { Service } from "../../types/verification"
-
-const services: Service[] = [
-  {
-    key: 'gstin-contact',
-    name: 'GSTIN Contact Details',
-    description: 'Verify contact information for any business using their GSTIN number'
-  }
-];
 
 export const GstinSection: React.FC = () => {
+  const [selectedService, setSelectedService] = useState(gstinServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
-  const [selectedService, setSelectedService] = useState<Service>(services[0])
-  
-  // Remove unused error state since we're not using it
-  // const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const formFields = [
-    {
-      name: "gstin",
-      label: "GSTIN Number",
-      type: "text" as const,
-      required: true,
-      placeholder: "Enter 15-digit GSTIN number",
-      pattern: "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$",
-      title: "Please enter a valid 15-digit GSTIN number"
-    },
-    {
-      name: "consent",
-      label: "I consent to verify this information",
-      type: "radio" as const,
-      required: true,
-      options: [
-        { label: "Yes", value: "Y" },
-        { label: "No", value: "N" }
-      ]
-    }
-  ]
+  const handleServiceChange = (service: any) => {
+    setSelectedService(service)
+    setResult(null)
+    setError(null)
+  }
+
+  const getFormFields = (service: any) => {
+    return service.formFields.map((field: any) => {
+      if (field.name === "consent") {
+        return {
+          ...field,
+          type: "radio" as const,
+          options: [
+            { label: "Yes", value: "Y" },
+            { label: "No", value: "N" },
+          ],
+        }
+      }
+      return field
+    })
+  }
 
   const handleSubmit = async (formData: any) => {
-    if (formData.consent !== "Y") {
-      console.error("Consent is required to fetch GSTIN details")
-      return
-    }
-
     setIsLoading(true)
+    setError(null)
+    setResult(null)
+
     try {
-      const response = await gstinApi.fetchContact({
-        gstin: formData.gstin,
-        consent: formData.consent
-      })
-      
-      // Format the response to match the expected structure
-      if (response.gstin_data) {
-        setResult({
-          document_type: response.gstin_data.document_type,
-          email: response.gstin_data.email,
-          mobile: response.gstin_data.mobile
-        })
-      } else {
-        setResult(response)
+      // Normalize payload
+      const payload: any = { ...formData }
+      if (typeof payload.consent === "boolean") {
+        payload.consent = payload.consent ? "Y" : "N"
       }
+      if (payload.gstin) {
+        payload.gstin = String(payload.gstin).toUpperCase().trim()
+      }
+
+      let response: any
+      switch (selectedService.key) {
+        case "contact":
+          response = await gstinApi.contact(payload)
+          break
+        case "lite":
+          response = await gstinApi.fetchLite(payload)
+          break
+        default:
+          // Fallback to direct post using service metadata endpoint
+          response = await gstinApi.post(selectedService.apiEndpoint, payload)
+      }
+
+      // Transform response for generic renderer in VerificationForm
+      const raw = response?.data || response
+      const inner = raw?.data || raw
+
+      const derivedName =
+        inner?.legal_name ||
+        inner?.trade_name ||
+        inner?.business_name ||
+        inner?.legalName ||
+        inner?.tradeName ||
+        inner?.businessName ||
+        inner?.name
+
+      const derivedDocNum =
+        inner?.gstin ||
+        payload?.gstin ||
+        inner?.document_number ||
+        inner?.documentNumber ||
+        inner?.number ||
+        inner?.id
+
+      const derivedStatus = response?.status || raw?.status || response?.message || raw?.message
+
+      const transformed: any = { data: { ...inner } }
+      if (derivedName && !transformed.data.name) transformed.data.name = derivedName
+      if (derivedDocNum && !transformed.data.document_number) transformed.data.document_number = derivedDocNum
+      if (derivedStatus && !transformed.data.status) transformed.data.status = derivedStatus
+
+      setResult(transformed)
     } catch (err: any) {
-      console.error('Error fetching GSTIN details:', err)
-      setResult({
-        error: err.message || 'Failed to fetch GSTIN details. Please try again.'
-      })
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message
+      setError(backendMsg || err?.message || "An error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -79,24 +102,22 @@ export const GstinSection: React.FC = () => {
 
   return (
     <VerificationLayout
-      title="GSTIN Verification"
-      description="Verify GSTIN contact details"
-      services={services}
+      title="GSTIN Verification Services"
+      description="Verify business GSTIN details and contact information"
+      services={gstinServices}
       selectedService={selectedService}
-      onServiceChange={setSelectedService}
+      onServiceChange={handleServiceChange}
     >
       <VerificationForm
-        fields={formFields}
+        fields={getFormFields(selectedService)}
         onSubmit={handleSubmit}
         isLoading={isLoading}
         result={result}
-        error={result?.error || null}
-        serviceKey="gstin-contact"
-        serviceName="GSTIN Contact Details"
-        serviceDescription="Verify contact information for any business using their GSTIN number"
+        error={error}
+        serviceKey={selectedService.key}
+        serviceName={selectedService.name}
+        serviceDescription={selectedService.description}
       />
     </VerificationLayout>
   )
 }
-
-export default GstinSection

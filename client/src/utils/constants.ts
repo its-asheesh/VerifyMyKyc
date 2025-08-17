@@ -2,6 +2,7 @@ import { Users, Zap, Shield } from "lucide-react"
 
 export const categories = [
   { label: "Personal", value: "personal" },
+  { label: "Identity", value: "identity" },
   { label: "Business", value: "business" },
   { label: "Finance & Banking", value: "finance" },
   { label: "Government", value: "government" },
@@ -68,17 +69,17 @@ export const verificationServices = [
   },
   {
     id: 5,
-    category: "finance",
-    title: "Bank Account Verification",
-    image: "/pan.png",
+    category: "identity",
+    title: "Voter ID Verification",
+    image: "/voter.png",
     demand: "Trending",
-    demandLevel: "high",
-    verifications: 25,
-    duration: "Instant",
-    price: 199,
-    rating: 4.7,
-    reviews: 140,
-    link: "/solutions/bank-account-verification",  // Pointing to the bank account verification solution
+    demandLevel: "medium",
+    verifications: 20,
+    duration: "7 days",
+    price: 275,
+    rating: 4.6,
+    reviews: 80,
+    link: "/products/voterid",
   },
 ]
 

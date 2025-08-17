@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.McaService = void 0;
 const dinByPan_provider_1 = require("./providers/dinByPan.provider");
 const cinByPan_provider_1 = require("./providers/cinByPan.provider");
+const fetchCompany_provider_1 = require("./providers/fetchCompany.provider");
 class McaService {
     // Fetch DIN by PAN
     fetchDinByPan(payload) {
@@ -23,6 +24,12 @@ class McaService {
     fetchCinByPan(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, cinByPan_provider_1.fetchCinByPanProvider)(payload);
+        });
+    }
+    // Fetch Company by Company ID (CIN/FCRN/LLPIN)
+    fetchCompany(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, fetchCompany_provider_1.fetchCompanyProvider)(payload);
         });
     }
 }

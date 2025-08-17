@@ -150,6 +150,83 @@ const seedPricingData = async () => {
         highlighted: false,
         popular: false,
         color: 'orange'
+      },
+      {
+        verificationType: 'voterid',
+        monthlyPrice: 349,
+        yearlyPrice: 3499,
+        oneTimePrice: 99,
+        title: 'Voter ID Verification',
+        description: 'Voter verification with direct, captcha, and OCR flows',
+        oneTimeFeatures: [
+          'Direct Fetch (Boson)',
+          'Captcha Flow (Meson)',
+          'OCR Data Extraction',
+          'Email Support'
+        ],
+        monthlyFeatures: [
+          'Direct Fetch (Boson)',
+          'Captcha Flow (Meson)',
+          'OCR Data Extraction',
+          'API Access',
+          'Priority Support',
+          'Bulk Processing'
+        ],
+        yearlyFeatures: [
+          'Direct Fetch (Boson)',
+          'Captcha Flow (Meson)',
+          'OCR Data Extraction',
+          'API Access',
+          '24/7 Support',
+          'Bulk Processing',
+          'Custom Integration',
+          'Dedicated Account Manager'
+        ],
+        // Quotas for display in UI
+        oneTimeQuota: { count: 1, validityDays: 30 },
+        monthlyQuota: { count: 100, validityDays: 30 },
+        yearlyQuota: { count: 1200, validityDays: 365 },
+        highlighted: false,
+        popular: true,
+        color: 'indigo'
+      },
+      {
+        verificationType: 'company',
+        monthlyPrice: 499,
+        yearlyPrice: 4999,
+        oneTimePrice: 149,
+        title: 'Company Verification',
+        description: 'MCA company verification with CIN and DIN lookups',
+        oneTimeFeatures: [
+          'MCA Company Details',
+          'CIN Lookup',
+          'Directors (DIN) Lookup',
+          'Email Support'
+        ],
+        monthlyFeatures: [
+          'MCA Company Details',
+          'CIN Lookup',
+          'Directors (DIN) Lookup',
+          'API Access',
+          'Priority Support',
+          'Bulk Processing'
+        ],
+        yearlyFeatures: [
+          'MCA Company Details',
+          'CIN Lookup',
+          'Directors (DIN) Lookup',
+          'API Access',
+          '24/7 Support',
+          'Bulk Processing',
+          'Custom Integration',
+          'Dedicated Account Manager'
+        ],
+        oneTimeQuota: { count: 1, validityDays: 30 },
+        monthlyQuota: { count: 200, validityDays: 30 },
+        yearlyQuota: { count: 2400, validityDays: 365 },
+        highlighted: false,
+        popular: false,
+        color: 'emerald'
       }
     ]
     

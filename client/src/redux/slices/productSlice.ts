@@ -27,29 +27,6 @@ const initialState: ProductState = {
 // Mock data for development - replace with actual API calls
 export const mockProducts: Product[] = [
   {
-    id: "gstin-contact",
-    title: "GSTIN Contact Details",
-    description: "Fetch contact information for businesses using their GSTIN number",
-    category: {
-      id: "business",
-      name: "Business Verification",
-      slug: "business",
-      description: "Business and company verification services",
-    },
-    features: ["Email and phone verification", "Official GSTIN data", "Real-time lookup", "High accuracy"],
-    pricing: {
-      free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 399, requests: 100, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 999, requests: 1000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
-    documentation: "Complete API documentation for GSTIN contact details verification",
-    isActive: true,
-    icon: "/gstin.png",
-    image: "/gstin.png",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
     id: "1",
     title: "PAN Card Verification",
     description: "Instantly verify PAN card details against government databases",
@@ -141,15 +118,93 @@ export const mockProducts: Product[] = [
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
+  {
+    id: "voterid",
+    title: "Voter ID Verification",
+    description: "Verify voter details via direct fetch, captcha flow, or OCR scan.",
+    category: {
+      id: "identity",
+      name: "Identity Verification",
+      slug: "identity",
+      description: "Government ID verification",
+    },
+    features: [
+      "Direct API fetch (Boson)",
+      "Captcha-based fetch (Meson)",
+      "OCR extraction from card images",
+      "Quota-aware billing",
+    ],
+    pricing: {
+      free: { price: 0, requests: 20, features: ["Basic verification", "Email support"], support: "Email" },
+      basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
+      premium: { price: 999, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
+    },
+    documentation: "Complete API documentation for Voter ID verification",
+    isActive: true,
+    icon: "/voter.png",
+    image: "/voter.png",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
+  },
+  {
+    id: "gstin",
+    title: "GSTIN Verification",
+    description: "Verify business GSTIN details and contact information.",
+    category: {
+      id: "business",
+      name: "Business Verification",
+      slug: "business",
+      description: "Business registry verification",
+    },
+    features: [
+      "Contact details via GSTIN",
+      "Lite GSTIN fetch",
+      "High accuracy",
+      "API integration",
+    ],
+    pricing: {
+      free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
+      basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
+      premium: { price: 999, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
+    },
+    documentation: "Complete API documentation for GSTIN verification",
+    isActive: true,
+    icon: "/placeholder.svg",
+    image: "/placeholder.svg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
+  },
+  {
+    id: "company",
+    title: "Company Verification",
+    description: "MCA company verification with CIN and DIN lookups.",
+    category: {
+      id: "business",
+      name: "Business Verification",
+      slug: "business",
+      description: "Business registry verification",
+    },
+    features: [
+      "Fetch company details by CIN/FCRN/LLPIN",
+      "Clean, structured UI results",
+      "API integration",
+      "Quota-aware billing",
+    ],
+    pricing: {
+      free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
+      basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
+      premium: { price: 999, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
+    },
+    documentation: "Complete API documentation for Company (MCA) verification",
+    isActive: true,
+    icon: "/placeholder.svg",
+    image: "/placeholder.svg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
+  },
 ]
 
 const mockCategories: ProductCategory[] = [
-  { 
-    id: "business", 
-    name: "Business Verification", 
-    slug: "business", 
-    description: "Business and company verification services" 
-  },
   { id: "identity", name: "Identity Verification", slug: "identity", description: "Government ID verification" },
   { id: "document", name: "Document Verification", slug: "document", description: "Official document verification" },
   {
@@ -159,61 +214,52 @@ const mockCategories: ProductCategory[] = [
     description: "Face and fingerprint verification",
   },
   { id: "address", name: "Address Verification", slug: "address", description: "Residential address verification" },
+  { id: "business", name: "Business Verification", slug: "business", description: "Business registry verification" },
 ]
 
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (params?: { category?: string; search?: string }) => {
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Apply filters to mock data
-      let filteredProducts = [...mockProducts];
-      
-      if (params?.category) {
-        filteredProducts = filteredProducts.filter(
-          product => product.category.id === params.category
-        );
-      }
-      
-      if (params?.search) {
-        const searchLower = params.search.toLowerCase();
-        filteredProducts = filteredProducts.filter(
-          product => 
-            product.title.toLowerCase().includes(searchLower) ||
-            product.description.toLowerCase().includes(searchLower) ||
-            product.category.name.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      return filteredProducts;
-    } catch (error) {
-      throw new Error('Failed to fetch products');
-    }
-  }
-);
+      // For now, return mock data. Replace with actual API call:
+      // const response = await productApi.getProducts(params)
+      // return response.data
 
-export const fetchProductById = createAsyncThunk(
-  "products/fetchProductById",
-  async (id: string, { rejectWithValue }) => {
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Find product in mock data
-      const product = mockProducts.find(p => p.id === id);
-      
-      if (!product) {
-        return rejectWithValue('Product not found');
+      let filteredProducts = [...mockProducts]
+
+      if (params?.category) {
+        filteredProducts = filteredProducts.filter((p) => p.category.id === params.category)
       }
-      
-      return product;
+
+      if (params?.search) {
+        const searchLower = params.search.toLowerCase()
+        filteredProducts = filteredProducts.filter(
+          (p) => p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower),
+        )
+      }
+
+      return filteredProducts
     } catch (error) {
-      return rejectWithValue('Failed to fetch product');
+      throw new Error("Failed to fetch products")
     }
+  },
+)
+
+export const fetchProductById = createAsyncThunk("products/fetchProductById", async (id: string) => {
+  try {
+    // For now, return mock data. Replace with actual API call:
+    // const response = await productApi.getProductById(id)
+    // return response.data
+
+    const product = mockProducts.find((p) => p.id === id)
+    if (!product) {
+      throw new Error("Product not found")
+    }
+    return product
+  } catch (error) {
+    throw new Error("Failed to fetch product")
   }
-);
+})
 
 export const fetchCategories = createAsyncThunk("products/fetchCategories", async () => {
   try {

@@ -10,9 +10,14 @@ export async function fetchDinByPanProvider(payload: DinByPanRequest): Promise<D
       consent: payload.consent
     };
 
+    // Mask PAN for logging (show only last 4)
+    const maskedPan = externalPayload.pan
+      ? `******${externalPayload.pan.slice(-4)}`
+      : undefined;
     console.log('DIN by PAN API Request:', {
       url: '/mca-api/fetch-din-by-pan',
-      payload: externalPayload,
+      pan: maskedPan,
+      consent: externalPayload.consent,
       baseURL: process.env.GRIDLINES_BASE_URL
     });
     
@@ -32,8 +37,7 @@ export async function fetchDinByPanProvider(payload: DinByPanRequest): Promise<D
       config: {
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL,
-        headers: error.config?.headers
+        baseURL: error.config?.baseURL
       }
     });
     

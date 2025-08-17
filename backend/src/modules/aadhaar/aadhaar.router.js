@@ -6,14 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const multer_1 = __importDefault(require("multer"));
 const aadhaar_controller_1 = require("./aadhaar.controller");
+const auth_1 = require("../../common/middleware/auth");
 const router = (0, express_1.Router)();
 const upload = (0, multer_1.default)();
 // Aadhaar OCR V1 (base64 image)
-router.post('/ocr-v1', aadhaar_controller_1.aadhaarOcrV1Handler);
+router.post('/ocr-v1', auth_1.authenticate, auth_1.requireUser, aadhaar_controller_1.aadhaarOcrV1Handler);
 // Aadhaar OCR V2 (file upload)
-router.post('/ocr-v2', upload.fields([
+router.post('/ocr-v2', auth_1.authenticate, auth_1.requireUser, upload.fields([
     { name: 'file_front', maxCount: 1 },
     { name: 'file_back', maxCount: 1 },
 ]), aadhaar_controller_1.aadhaarOcrV2Handler);
-router.post('/fetch-eaadhaar', aadhaar_controller_1.fetchEAadhaarHandler);
+router.post('/fetch-eaadhaar', auth_1.authenticate, auth_1.requireUser, aadhaar_controller_1.fetchEAadhaarHandler);
 exports.default = router;

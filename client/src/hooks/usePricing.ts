@@ -46,6 +46,10 @@ export interface VerificationPricing {
   oneTimeFeatures?: string[]
   monthlyFeatures?: string[]
   yearlyFeatures?: string[]
+  // Per-tier quotas (as defined by admin)
+  oneTimeQuota?: { count?: number; validityDays?: number }
+  monthlyQuota?: { count?: number; validityDays?: number }
+  yearlyQuota?: { count?: number; validityDays?: number }
   highlighted?: boolean
   popular?: boolean
   color?: string

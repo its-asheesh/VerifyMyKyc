@@ -15,21 +15,37 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchGstinContactHandler = exports.fetchGstinLiteHandler = exports.fetchGstinByPanHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const gstin_service_1 = require("./gstin.service");
+const quota_service_1 = require("../orders/quota.service");
 const service = new gstin_service_1.GstinService();
 // POST /api/gstin/fetch-by-pan
 exports.fetchGstinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'gstin');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchByPan(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));
 // POST /api/gstin/fetch-lite
 // Expects body: { gstin: string, consent: string }
 exports.fetchGstinLiteHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'gstin');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchLite(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));
 // POST /api/gstin/fetch-contact
 // Expects body: { gstin: string, consent: string }
 exports.fetchGstinContactHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'gstin');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchContact(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));

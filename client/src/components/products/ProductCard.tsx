@@ -3,21 +3,17 @@
 import type React from "react"
 import { motion } from "framer-motion"
 import { ArrowRight, Star, Users, Zap } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import type { Product } from "../../types/product"
 
 interface ProductCardProps {
-  product: Product | any
+  product: Product
   viewMode?: "grid" | "list"
-  /** Optional override for learn-more link (default uses /products/:id) */
-  linkTo?: string
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "grid", linkTo }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "grid" }) => {
   const isListView = viewMode === "list"
 
-  const navigate = useNavigate()
-  
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -52,7 +48,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
             {/* Category */}
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                {product.category?.name || product.industry?.name || "General"}
+                {product.category.name}
               </span>
             </div>
 
@@ -64,14 +60,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
             {/* Description */}
             <p className={`text-gray-600 leading-relaxed ${isListView ? "mb-0" : "mb-4"}`}>{product.description}</p>
 
-            {/* Features - Only show in grid view or first 3 in list view; for solutions we may not have features */}
+            {/* Features - Only show in grid view or first 3 in list view */}
             <div className={`flex flex-wrap gap-2 ${isListView ? "mt-3" : "mb-4"}`}>
-              {(product.features || []).slice(0, isListView ? 3 : 4).map((feature: string, index: number) => (
+              {product.features.slice(0, isListView ? 3 : 4).map((feature, index) => (
                 <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                   {feature}
                 </span>
               ))}
-              {product.features && product.features.length > (isListView ? 3 : 4) && (
+              {product.features.length > (isListView ? 3 : 4) && (
                 <span className="text-xs text-gray-500">+{product.features.length - (isListView ? 3 : 4)} more</span>
               )}
             </div>
@@ -79,17 +75,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
 
           {/* Pricing and CTA */}
           <div className={`${isListView ? "text-right" : "space-y-4"}`}>
-            {/* Pricing (only when pricing exists) */}
+            {/* Pricing */}
             <div className={isListView ? "mb-4" : ""}>
-              {product.pricing?.free?.price !== undefined && (
-                <>
-                  <div className="text-sm text-gray-500 mb-1">Starting from</div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    ₹{product.pricing.free.price}
-                    <span className="text-sm font-normal text-gray-500">/month</span>
-                  </div>
-                </>
-              )}
+              <div className="text-sm text-gray-500 mb-1">Starting from</div>
+              <div className="text-2xl font-bold text-gray-900">
+                ₹{product.pricing.free.price}
+                <span className="text-sm font-normal text-gray-500">/month</span>
+              </div>
             </div>
 
             {/* Stats */}
@@ -109,20 +101,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
             </div>
 
             {/* CTA Button */}
-            <button
-              onClick={(e) => {
-                console.log('Learn More button clicked', { productId: product.id, linkTo });
-                e.preventDefault();
-                e.stopPropagation();
-                const targetUrl = linkTo || `/products/${product.id}`;
-                console.log('Navigating to:', targetUrl);
-                navigate(targetUrl);
-              }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 group/btn w-full justify-center"
+            <Link
+              to={`/products/${product.id}`}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 group/btn"
             >
               Learn More
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

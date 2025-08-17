@@ -170,7 +170,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
 
   // Determine the price and label based on billingPeriod
   let displayPrice = price
-  let periodLabel = billingPeriod === 'yearly' ? '/year' : '/month'
+  let periodLabel = billingPeriod === 'yearly' ? '/year' : billingPeriod === 'custom' ? '' : '/month'
   
   return (
     <motion.div
