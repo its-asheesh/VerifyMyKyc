@@ -81,7 +81,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
           {/* Image Section */}
           <motion.div variants={imageVariants} className={`relative ${reverse ? "lg:col-start-2" : ""}`}>
             <motion.div
-              whileHover={{ scale: 1.05, rotate: 2 }}
+              whileHover={{ scale: 1.05, rotate: 0 }}
               transition={{ duration: 0.4 }}
               className="relative group"
             >

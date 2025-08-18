@@ -75,19 +75,20 @@ export const fetchDinByPanHandler = asyncHandler(async (req: AuthenticatedReques
 });
 
 // POST /api/pan/cin-by-pan
-// Expects body: { pan: string }
+// Expects body: { pan_number: string, consent: 'Y' | 'N' } (also accepts { pan: string } for backward compatibility)
 export const fetchCinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user._id;
-  const pan = req.body?.pan || req.body?.pan_number;
-  if (!pan) {
-    return res.status(400).json({ message: 'pan is required' });
+  const pan_number = req.body?.pan_number || req.body?.pan;
+  const consent = req.body?.consent;
+  if (!pan_number || !consent) {
+    return res.status(400).json({ message: 'pan_number and consent are required' });
   }
-  console.log('PAN CIN-by-PAN Controller: incoming request', { userId, pan });
+  console.log('PAN CIN-by-PAN Controller: incoming request', { userId, pan_number });
   // Prefer company quota (MCA), fallback to pan
   let order = await ensureVerificationQuota(userId, 'company');
   if (!order) order = await ensureVerificationQuota(userId, 'pan');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-  const result = await service.fetchCinByPan({ pan });
+  const result = await service.fetchCinByPan({ pan_number, consent });
   await consumeVerificationQuota(order);
   res.json(result);
 });

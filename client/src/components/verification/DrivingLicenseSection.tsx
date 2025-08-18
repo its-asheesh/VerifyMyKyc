@@ -8,7 +8,7 @@ import { drivingLicenseServices } from "../../utils/drivingLicenseServices"
 import { drivingLicenseApi } from "../../services/api/drivingLicenseApi"
 import { usePricingContext } from "../../context/PricingContext"
 
-export const DrivingLicenseSection: React.FC = () => {
+export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [selectedService, setSelectedService] = useState(drivingLicenseServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -132,6 +132,7 @@ export const DrivingLicenseSection: React.FC = () => {
         serviceKey={selectedService.key}
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
+        productId={productId}
       />
     </VerificationLayout>
   )

@@ -101,3 +101,30 @@ export interface FetchContactDetailsByDinResponse {
   path?: string;
   [key: string]: any;
 }
+
+// CIN by PAN
+export interface CinByPanRequest {
+  pan_number: string;
+  consent: 'Y' | 'N' | string;
+}
+
+export interface CinByPanResponse {
+  request_id?: string;
+  transaction_id?: string;
+  reference_id?: string;
+  status: number | string;
+  data?: {
+    code?: string;
+    message?: string;
+    cin_list?: string[];
+    cin_details?: Array<{
+      cin: string;
+      entity_name?: string;
+      [key: string]: any;
+    }>;
+    [key: string]: any;
+  };
+  timestamp?: number;
+  path?: string;
+  [key: string]: any;
+}

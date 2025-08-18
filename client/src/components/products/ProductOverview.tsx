@@ -46,6 +46,13 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     else if (isPanProduct) setPanModalOpen(true)
   }
 
+  const handleBuyNow = () => {
+    const section = document.getElementById('pricing')
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       {/* Left: Product Image */}
@@ -56,7 +63,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         className="relative"
       >
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 shadow-lg">
-          <img src={product.image || "/placeholder.svg"} alt={product.title} className="w-full h-64 object-contain" />
+          <img src={product.image || "/placeholder.svg"} alt={product.title} className="w-full h-56 object-contain" />
         </div>
 
         {/* Floating Stats */}
@@ -83,7 +90,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="space-y-6"
+        className="space-y-4"
       >
         {/* Category Badge */}
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
@@ -92,7 +99,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         </div>
 
         {/* Description */}
-        <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p>
+        {/* <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p> */}
 
         {/* Key Features */}
         <div className="space-y-3">
@@ -140,15 +147,15 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
 
         {/* CTA Buttons */}
         <div className="flex gap-4 pt-6">
-          <button className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
-            Get Started
+          <button className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300" onClick={handleBuyNow}>
+            Buy Now
           </button>
           <button
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
             onClick={handleTryDemo}
             disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isVoterProduct && !isGstinProduct && !isCompanyProduct}
           >
-            Try Demo
+            Start Verification
           </button>
         </div>
         {aadhaarModalOpen && (
@@ -160,7 +167,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               >
                 &times;
               </button>
-              <AadhaarSection />
+              <AadhaarSection productId={product.id} />
             </div>
           </div>
         )}
@@ -173,7 +180,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               >
                 &times;
               </button>
-              <PanSection />
+              <PanSection productId={product.id} />
             </div>
           </div>
         )}
@@ -186,7 +193,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               >
                 &times;
               </button>
-              <DrivingLicenseSection />
+              <DrivingLicenseSection productId={product.id} />
             </div>
           </div>
         )}
@@ -199,7 +206,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               >
                 &times;
               </button>
-              <VoterSection />
+              <VoterSection productId={product.id} />
             </div>
           </div>
         )}
@@ -212,7 +219,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               >
                 &times;
               </button>
-              <GstinSection />
+              <GstinSection productId={product.id} />
             </div>
           </div>
         )}
@@ -225,7 +232,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               >
                 &times;
               </button>
-              <CompanySection />
+              <CompanySection productId={product.id} />
             </div>
           </div>
         )}

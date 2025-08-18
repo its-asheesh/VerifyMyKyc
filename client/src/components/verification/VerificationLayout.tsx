@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
-import Footer from "../layout/Footer"
+ 
 interface Service {
   key: string
   name: string
@@ -183,7 +183,7 @@ export const VerificationLayout: React.FC<VerificationLayoutProps> = ({
           <div className="w-full h-full p-4 sm:p-6 lg:p-8">{children}</div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   )
 }

@@ -17,6 +17,9 @@ type VerificationCardProps = {
   price: number
   rating: number
   reviews: number
+  remaining?: number
+  expiresAt?: string
+  link?: string
 }
 
 const gradientMap = {
@@ -25,7 +28,7 @@ const gradientMap = {
   low: "bg-gradient-to-r from-gray-400 to-gray-600",
 }
 
-export const VerificationCard: FC<VerificationCardProps & { link?: string }> = ({
+export const VerificationCard: FC<VerificationCardProps> = ({
   title,
   image,
   demand,
@@ -36,7 +39,10 @@ export const VerificationCard: FC<VerificationCardProps & { link?: string }> = (
   rating,
   reviews,
   link,
+  remaining,
+  expiresAt,
 }) => {
+  const formattedExpiry = expiresAt ? new Date(expiresAt).toLocaleDateString() : null
   return (
     <motion.div
       whileHover={{ y: -6, scale: 1.02 }}
@@ -59,6 +65,21 @@ export const VerificationCard: FC<VerificationCardProps & { link?: string }> = (
             label={demand}
             className={`text-white text-xs font-semibold ${gradientMap[demandLevel]} !rounded-full`}
           />
+
+          {(typeof remaining === 'number' || formattedExpiry) && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {typeof remaining === 'number' && (
+                <Chip
+                  label={`Remaining: ${remaining}`}
+                  color={remaining === 0 ? "error" : "success"}
+                  size="small"
+                />
+              )}
+              {formattedExpiry && (
+                <Chip label={`Expires: ${formattedExpiry}`} size="small" />
+              )}
+            </div>
+          )}
 
           <Typography variant="h6" fontWeight={600} className="text-gray-800">
             {title}

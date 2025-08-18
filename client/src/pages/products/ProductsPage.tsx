@@ -30,6 +30,12 @@ const ProductsPage: React.FC = () => {
   // Handle URL parameters on page load
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category')
+    if (categoryFromUrl === 'all') {
+      if (filters.category !== '') {
+        dispatch(setFilters({ category: '' }))
+      }
+      return
+    }
     if (categoryFromUrl && categoryFromUrl !== filters.category) {
       dispatch(setFilters({ category: categoryFromUrl }))
     }
@@ -44,18 +50,19 @@ const ProductsPage: React.FC = () => {
   }
 
   const handleCategoryChange = (category: string) => {
-    dispatch(setFilters({ category }))
-    // Update URL to reflect the category change
-    if (category) {
-      navigate(`/products?category=${category}`)
-    } else {
+    // Use 'all' as the special id for no filter
+    if (category === 'all') {
+      dispatch(setFilters({ category: '' }))
       navigate('/products')
+      return
     }
+    dispatch(setFilters({ category }))
+    navigate(`/products?category=${category}`)
   }
 
   // Ensure categories is an array before mapping
   const categoryTabs = [
-    { id: "", label: "All Products", count: mockProducts.length }, // Total count of all products
+    { id: "all", label: "All Products", count: mockProducts.length }, // Total count of all products
     ...(categories || []).map((cat) => ({
       id: cat.id,
       label: cat.name,
@@ -125,7 +132,7 @@ const ProductsPage: React.FC = () => {
         <div className="mb-8 space-y-6">
           {/* Only show filter tabs if categories are loaded */}
           {categories && categories.length > 0 && (
-            <FilterTabs tabs={categoryTabs} activeTab={filters?.category || ""} onTabChange={handleCategoryChange} />
+            <FilterTabs tabs={categoryTabs} activeTab={filters?.category || "all"} onTabChange={handleCategoryChange} />
           )}
         </div>
 

@@ -15,6 +15,9 @@ const linkCheck_provider_1 = require("./providers/linkCheck.provider");
 const digilockerPull_provider_1 = require("./providers/digilockerPull.provider");
 const digilockerInit_provider_1 = require("./providers/digilockerInit.provider");
 const digilockerFetchDocument_provider_1 = require("./providers/digilockerFetchDocument.provider");
+const dinByPan_provider_1 = require("../mca/providers/dinByPan.provider");
+const cinByPan_provider_1 = require("../mca/providers/cinByPan.provider");
+const fetchByPan_provider_1 = require("../gstin/providers/fetchByPan.provider");
 class PanService {
     // Fetch Father's Name by PAN
     fetchFatherName(payload) {
@@ -44,6 +47,24 @@ class PanService {
     digilockerFetchDocument(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, digilockerFetchDocument_provider_1.digilockerFetchDocumentProvider)(payload);
+        });
+    }
+    // DIN By PAN (MCA)
+    fetchDinByPan(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, dinByPan_provider_1.fetchDinByPanProvider)(payload);
+        });
+    }
+    // CIN By PAN (MCA)
+    fetchCinByPan(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, cinByPan_provider_1.fetchCinByPanProvider)(payload);
+        });
+    }
+    // GSTIN By PAN (GSTIN)
+    fetchGstinByPan(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, fetchByPan_provider_1.fetchGstinByPanProvider)(payload);
         });
     }
 }

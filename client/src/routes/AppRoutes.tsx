@@ -9,6 +9,7 @@ import { AdminRoute, UserRoute, AnyRoleRoute } from "../components/auth/Protecte
 // Layout
 import Navbar from "../components/layout/Navbar"
 import Footer from "../components/layout/Footer"
+import ScrollToTop from "../components/common/ScrollToTop"
 
 // Pages
 import Home from "../pages/Home"
@@ -34,6 +35,7 @@ import UnauthorizedPage from "../pages/UnauthorizedPage"
 // Admin Pages
 import AdminDashboard from "../pages/admin/AdminDashboard"
 import AdminPricing from "../pages/admin/AdminPricing"
+import AdminReviews from "../pages/admin/AdminReviews"
 
 // Payment Pages
 import PaymentSuccessPage from "../pages/PaymentSuccessPage"
@@ -54,6 +56,7 @@ const AppRoutes: React.FC = () => {
       <Provider store={store}>
         <AppProvider>
           <Router>
+            <ScrollToTop />
             <Layout>
               <Routes>
                 {/* Public Routes */}
@@ -119,6 +122,14 @@ const AppRoutes: React.FC = () => {
                   element={
                     <AdminRoute>
                       <AdminPricing />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/admin/reviews"
+                  element={
+                    <AdminRoute>
+                      <AdminReviews />
                     </AdminRoute>
                   }
                 />

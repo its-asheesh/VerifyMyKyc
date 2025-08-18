@@ -59,8 +59,8 @@ export const panServices: PanServiceMeta[] = [
     key: "gstin-by-pan",
     name: "Fetch GSTIN by PAN",
     description: "Fetch all GSTINs associated with a PAN.",
-    // Backend canonical endpoint lives under the GSTIN module
-    apiEndpoint: "/gstin/fetch-by-pan",
+    // Route via PAN module to consume PAN quota first (fallback to company if needed)
+    apiEndpoint: "/pan/gstin-by-pan",
     formFields: [
       { name: "pan_number", label: "PAN Number", type: "text", required: true },
       { name: "consent", label: "Consent", type: "text", required: true },
@@ -71,8 +71,8 @@ export const panServices: PanServiceMeta[] = [
     key: "din-by-pan",
     name: "Fetch DIN by PAN",
     description: "Fetch Director Identification Numbers linked to a PAN.",
-    // Use MCA module endpoint
-    apiEndpoint: "/mca/din-by-pan",
+    // Route via PAN module to consume PAN quota first (fallback to company if needed)
+    apiEndpoint: "/pan/din-by-pan",
     formFields: [
       { name: "pan_number", label: "PAN Number", type: "text", required: true },
       { name: "consent", label: "Consent", type: "text", required: true },
@@ -83,8 +83,8 @@ export const panServices: PanServiceMeta[] = [
     key: "cin-by-pan",
     name: "Fetch CIN by PAN",
     description: "Fetch Company Identification Numbers linked to a PAN.",
-    // Use MCA module endpoint
-    apiEndpoint: "/mca/cin-by-pan",
+    // Route via PAN module to consume PAN quota first (fallback to company if needed)
+    apiEndpoint: "/pan/cin-by-pan",
     formFields: [
       { name: "pan_number", label: "PAN Number", type: "text", required: true },
       {

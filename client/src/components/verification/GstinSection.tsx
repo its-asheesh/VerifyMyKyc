@@ -7,7 +7,7 @@ import { VerificationForm } from "./VerificationForm"
 import { gstinServices } from "../../utils/gstinServices"
 import { gstinApi } from "../../services/api/gstinApi"
 
-export const GstinSection: React.FC = () => {
+export const GstinSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [selectedService, setSelectedService] = useState(gstinServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -117,6 +117,7 @@ export const GstinSection: React.FC = () => {
         serviceKey={selectedService.key}
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
+        productId={productId}
       />
     </VerificationLayout>
   )

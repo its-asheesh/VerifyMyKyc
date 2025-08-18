@@ -20,9 +20,13 @@ const service = new gstin_service_1.GstinService();
 // POST /api/gstin/fetch-by-pan
 exports.fetchGstinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.user._id;
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'gstin');
+    // Prefer GSTIN quota, but allow PAN quota fallback so the same feature works from either module
+    let order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'gstin');
+    if (!order) {
+        order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+    }
     if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
+        return res.status(403).json({ message: 'Verification quota exhausted or expired for gstin or pan' });
     const result = yield service.fetchByPan(req.body);
     yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);

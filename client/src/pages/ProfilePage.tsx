@@ -336,6 +336,16 @@ const ProfilePage: React.FC = () => {
                                     {getRemainingDays(plan.endDate) === 0 ? 'Expired' : `${getRemainingDays(plan.endDate)} days`}
                                   </span>
                                 </div>
+                                {plan.verificationQuota?.totalAllowed ? (
+                                  <div className="flex justify-between">
+                                    <span>Usage:</span>
+                                    <span
+                                      className={`font-medium ${((Number(plan.verificationQuota?.remaining ?? (Number(plan.verificationQuota?.totalAllowed ?? 0) - Number(plan.verificationQuota?.used ?? 0))) <= 0) || (Number(plan.verificationQuota?.used ?? 0) >= Number(plan.verificationQuota?.totalAllowed ?? 0))) ? 'text-red-600' : ''}`}
+                                    >
+                                      {Number(plan.verificationQuota?.used ?? 0)}/{Number(plan.verificationQuota?.totalAllowed ?? 0)}
+                                    </span>
+                                  </div>
+                                ) : null}
                               </div>
                               {plan.serviceDetails.features && (
                                 <div className="mt-3 pt-3 border-t border-gray-100">
@@ -395,6 +405,16 @@ const ProfilePage: React.FC = () => {
                                     {getRemainingDays(verification.endDate) === 0 ? 'Expired' : `${getRemainingDays(verification.endDate)} days`}
                                   </span>
                                 </div>
+                                {verification.verificationQuota?.totalAllowed ? (
+                                  <div className="flex justify-between">
+                                    <span>Usage:</span>
+                                    <span
+                                      className={`font-medium ${((Number(verification.verificationQuota?.remaining ?? (Number(verification.verificationQuota?.totalAllowed ?? 0) - Number(verification.verificationQuota?.used ?? 0))) <= 0) || (Number(verification.verificationQuota?.used ?? 0) >= Number(verification.verificationQuota?.totalAllowed ?? 0))) ? 'text-red-600' : ''}`}
+                                    >
+                                      {Number(verification.verificationQuota?.used ?? 0)}/{Number(verification.verificationQuota?.totalAllowed ?? 0)}
+                                    </span>
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                           ))}

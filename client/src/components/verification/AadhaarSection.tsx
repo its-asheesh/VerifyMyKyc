@@ -10,7 +10,7 @@ import { panApi } from "../../services/api/panApi"
 import { DIGILOCKER_EAADHAAR_REDIRECT_URI } from "../../services/api/constants"
 import { usePricingContext } from "../../context/PricingContext"
 
-export const AadhaarSection: React.FC = () => {
+export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [selectedService, setSelectedService] = useState(aadhaarServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -180,6 +180,7 @@ export const AadhaarSection: React.FC = () => {
         serviceKey={selectedService.key}
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
+        productId={productId}
       />
     </VerificationLayout>
   )

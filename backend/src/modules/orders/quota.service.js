@@ -13,6 +13,7 @@ exports.findEligibleVerificationOrder = findEligibleVerificationOrder;
 exports.ensureVerificationQuota = ensureVerificationQuota;
 exports.consumeVerificationQuota = consumeVerificationQuota;
 const order_model_1 = require("./order.model");
+const error_1 = require("../../common/http/error");
 /**
  * Find an eligible verification order for a user and verification type.
  * Prefers the order that expires sooner to minimize waste.
@@ -51,6 +52,15 @@ function consumeVerificationQuota(order) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!order)
             throw new Error('Order not provided');
-        yield order.useVerification();
+        try {
+            yield order.useVerification();
+        }
+        catch (err) {
+            // Normalize quota errors to 403 instead of generic 500
+            if (typeof (err === null || err === void 0 ? void 0 : err.message) === 'string' && err.message.includes('Verification quota exhausted')) {
+                throw new error_1.HTTPError('Verification quota exhausted or expired', 403);
+            }
+            throw err;
+        }
     });
 }

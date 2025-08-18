@@ -27,7 +27,7 @@ const initialState: ProductState = {
 // Mock data for development - replace with actual API calls
 export const mockProducts: Product[] = [
   {
-    id: "1",
+    id: "pan",
     title: "PAN Card Verification",
     description: "Instantly verify PAN card details against government databases",
     category: {
@@ -36,7 +36,7 @@ export const mockProducts: Product[] = [
       slug: "identity",
       description: "Government ID verification",
     },
-    features: ["Real-time verification", "Government database check", "99.9% accuracy", "API integration"],
+    features: ["Real-time verification", "Government database check", "99.9% accuracy"],
     pricing: {
       free: { price: 0, requests: 100, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 299, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -50,7 +50,7 @@ export const mockProducts: Product[] = [
     updatedAt: "2024-01-01",
   },
   {
-    id: "2",
+    id: "aadhaar",
     title: "Aadhaar Verification",
     description: "Secure Aadhaar card verification with OTP validation",
     category: {
@@ -73,7 +73,7 @@ export const mockProducts: Product[] = [
     updatedAt: "2024-01-01",
   },
   {
-    id: "3",
+    id: "passport",
     title: "Passport Verification",
     description: "International passport verification and validation",
     category: {
@@ -96,7 +96,7 @@ export const mockProducts: Product[] = [
     updatedAt: "2024-01-01",
   },
   {
-    id: "4",
+    id: "drivinglicense",
     title: "Driving License Verification",
     description: "Verify Driving License details from RTO records.",
     category: {
@@ -105,7 +105,7 @@ export const mockProducts: Product[] = [
       slug: "identity",
       description: "Government ID verification",
     },
-    features: ["Real-time verification", "Official RTO data", "High accuracy", "API integration"],
+    features: ["Real-time verification", "Official RTO data", "High accuracy"],
     pricing: {
       free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 499, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -160,7 +160,6 @@ export const mockProducts: Product[] = [
       "Contact details via GSTIN",
       "Lite GSTIN fetch",
       "High accuracy",
-      "API integration",
     ],
     pricing: {
       free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
@@ -187,7 +186,6 @@ export const mockProducts: Product[] = [
     features: [
       "Fetch company details by CIN/FCRN/LLPIN",
       "Clean, structured UI results",
-      "API integration",
       "Quota-aware billing",
     ],
     pricing: {
@@ -207,12 +205,12 @@ export const mockProducts: Product[] = [
 const mockCategories: ProductCategory[] = [
   { id: "identity", name: "Identity Verification", slug: "identity", description: "Government ID verification" },
   { id: "document", name: "Document Verification", slug: "document", description: "Official document verification" },
-  {
-    id: "biometric",
-    name: "Biometric Verification",
-    slug: "biometric",
-    description: "Face and fingerprint verification",
-  },
+  // {
+  //   id: "biometric",
+  //   name: "Biometric Verification",
+  //   slug: "biometric",
+  //   description: "Face and fingerprint verification",
+  // },
   { id: "address", name: "Address Verification", slug: "address", description: "Residential address verification" },
   { id: "business", name: "Business Verification", slug: "business", description: "Business registry verification" },
 ]

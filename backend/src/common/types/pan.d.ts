@@ -112,15 +112,6 @@ export interface DinByPanResponse {
   din_details?: any;
   [key: string]: any;
 }
-export interface CinByPanRequest {
-  pan: string;
-}
-export interface CinByPanResponse {
-  status: string;
-  message: string;
-  cin_details?: any;
-  [key: string]: any;
-}
 
 // Digilocker Issued Files
 export interface DigilockerIssuedFilesRequest {

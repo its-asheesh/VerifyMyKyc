@@ -18,6 +18,7 @@ const carousel_router_1 = __importDefault(require("./modules/carousel/carousel.r
 const coupon_router_1 = __importDefault(require("./modules/coupons/coupon.router"));
 const bankaccount_router_1 = __importDefault(require("./modules/bankaccount/bankaccount.router"));
 const voter_router_1 = __importDefault(require("./modules/voter/voter.router"));
+const review_router_1 = __importDefault(require("./modules/reviews/review.router"));
 const router = (0, express_1.Router)();
 // Auth routes
 router.use('/auth', auth_router_1.default);
@@ -39,4 +40,5 @@ router.use('/echallan', echallan_router_1.default);
 router.use('/pricing', pricing_router_1.default);
 router.use('/bankaccount', bankaccount_router_1.default);
 router.use('/voter', voter_router_1.default);
+router.use('/reviews', review_router_1.default);
 exports.default = router;

@@ -2,7 +2,7 @@
 
 "use client"
 
-import React, { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Box, Typography, Button, Chip } from "@mui/material"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material"

@@ -1,7 +1,8 @@
 import { fetchDinByPanProvider } from './providers/dinByPan.provider';
 import { fetchCinByPanProvider } from './providers/cinByPan.provider';
 import { fetchCompanyProvider } from './providers/fetchCompany.provider';
-import { DinByPanRequest, CinByPanRequest } from '../../common/types/pan';
+import { DinByPanRequest } from '../../common/types/pan';
+import { CinByPanRequest } from '../../common/types/mca';
 import { FetchCompanyRequest } from '../../common/types/mca';
 
 export class McaService {

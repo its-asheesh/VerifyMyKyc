@@ -10,6 +10,7 @@ import { LoadingSpinner } from "../../components/common/LoadingSpinner"
 import { ProductOverview } from "../../components/products/ProductOverview"
 import { ProductFeatures } from "../../components/products/ProductFeatures"
 import { ProductPricing } from "../../components/products/ProductPricing"
+import { ProductReviews } from "../../components/reviews/ProductReviews"
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -46,12 +47,20 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader title={selectedProduct.title} subtitle={selectedProduct.description} showBackButton />
+      <PageHeader
+      title={selectedProduct.title}
+      subtitle={selectedProduct.description}
+      showBackButton
+      className="py-6 md:py-8"
+      />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
         <ProductOverview product={selectedProduct} />
-        <ProductPricing product={selectedProduct} />
+        <div id="pricing">
+          <ProductPricing product={selectedProduct} />
+        </div>
         <ProductFeatures product={selectedProduct} />
+        <ProductReviews productId={selectedProduct.id} showList={true} showStats={true} showForm={false} />
 
       </div>
     </div>

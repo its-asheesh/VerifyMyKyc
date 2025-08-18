@@ -8,7 +8,7 @@ import { companyServices } from "../../utils/companyServices"
 import { mcaApi } from "../../services/api/mcaApi"
  
 
-export const CompanySection: React.FC = () => {
+export const CompanySection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [selectedService, setSelectedService] = useState(companyServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -83,6 +83,7 @@ export const CompanySection: React.FC = () => {
         serviceKey={selectedService.key}
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
+        productId={productId}
       />
     </VerificationLayout>
   )

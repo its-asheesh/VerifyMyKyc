@@ -22,6 +22,14 @@ export interface Order {
   status: 'active' | 'expired' | 'cancelled'
   startDate: string
   endDate: string
+  // Present for verification orders; mirrors backend order.model.ts
+  verificationQuota?: {
+    totalAllowed: number
+    used: number
+    remaining: number
+    validityDays: number
+    expiresAt?: string
+  }
   couponApplied?: {
     couponId: string
     code: string

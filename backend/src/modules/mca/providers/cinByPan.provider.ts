@@ -1,20 +1,29 @@
 import apiClient from '../../../common/http/apiClient';
 import { HTTPError } from '../../../common/http/error';
-import { CinByPanRequest, CinByPanResponse } from '../../../common/types/pan';
+import { CinByPanRequest, CinByPanResponse } from '../../../common/types/mca';
 
 export async function fetchCinByPanProvider(payload: CinByPanRequest): Promise<CinByPanResponse> {
   try {
-    // Accept either `pan` or `pan_number` from upstream layers and pass consent if provided
+    // Validate required inputs as per MCA docs: pan_number and consent are required
+    if (!payload?.pan_number) {
+      throw new HTTPError('pan_number is required', 400);
+    }
+    if (!payload?.consent) {
+      throw new HTTPError('consent is required', 400);
+    }
+
     const externalPayload: any = {
-      pan: (payload as any).pan || (payload as any).pan_number,
-      consent: (payload as any).consent, // optional, some providers may require it
+      pan_number: payload.pan_number,
+      consent: payload.consent,
+      // Some providers require human-readable consent text
+      //consent_text: payload.consent_text || 'User consented to fetch CIN by PAN for verification.',
     };
 
     // Mask PAN for logging (show only last 4)
-    const maskedPan = externalPayload?.pan ? `******${externalPayload.pan.slice(-4)}` : undefined;
+    const maskedPan = externalPayload?.pan_number ? `******${externalPayload.pan_number.slice(-4)}` : undefined;
     console.log('CIN by PAN API Request:', {
       url: '/mca-api/cin-by-pan',
-      pan: maskedPan,
+      pan_number: maskedPan,
       consent: externalPayload.consent,
       baseURL: process.env.GRIDLINES_BASE_URL
     });
@@ -50,6 +59,17 @@ export async function fetchCinByPanProvider(payload: CinByPanRequest): Promise<C
     } else if (error.response?.status === 401) {
       errorMessage = 'Invalid API key or authentication failed';
       statusCode = 401;
+    } else if (error.response?.status === 400) {
+      // Bubble up provider's reason when available
+      const providerMsg = error.response?.data?.error?.message || error.response?.data?.message;
+      const providerType = error.response?.data?.error?.type;
+      if (providerMsg) errorMessage = providerMsg;
+      // If docs link includes a clearer snippet (e.g., "Consent not provided"), include it
+      if (!providerMsg && typeof providerType === 'string') {
+        const note = providerType.split('Consent not provided').length > 1 ? 'Consent not provided.' : undefined;
+        if (note) errorMessage = note;
+      }
+      statusCode = 400;
     } else if (error.response?.status === 404) {
       errorMessage = 'CIN API endpoint not found';
       statusCode = 404;

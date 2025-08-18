@@ -7,7 +7,7 @@ import { VerificationForm } from "./VerificationForm"
 import { voterServices } from "../../utils/voterServices"
 import { voterApi } from "../../services/api/voterApi"
 
-export const VoterSection: React.FC = () => {
+export const VoterSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [selectedService, setSelectedService] = useState(voterServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -147,6 +147,7 @@ export const VoterSection: React.FC = () => {
         serviceKey={selectedService.key}
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
+        productId={productId}
       />
     </VerificationLayout>
   )

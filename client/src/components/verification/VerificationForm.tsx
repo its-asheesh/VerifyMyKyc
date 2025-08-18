@@ -18,6 +18,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import ShareActions from "./ShareActions"
+import { ProductReviews } from "../reviews/ProductReviews"
 
 interface FormField {
   name: string
@@ -40,6 +41,7 @@ interface VerificationFormProps {
   serviceKey?: string
   serviceName?: string
   serviceDescription?: string
+  productId?: string
 }
 
 export const VerificationForm: React.FC<VerificationFormProps> = ({
@@ -51,6 +53,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
   serviceKey,
   serviceName,
   serviceDescription,
+  productId,
 }) => {
   const [formData, setFormData] = useState<any>({})
   const [showResult, setShowResult] = useState(false)
@@ -2016,6 +2019,13 @@ if (
         </AnimatePresence>
 
         {renderFormattedResult()}
+
+        {productId && (
+          <div className="mt-6">
+            <div className="my-6 border-t border-gray-200"></div>
+            <ProductReviews productId={productId} showList={false} showStats={false} showForm={true} />
+          </div>
+        )}
       </div>
     )
   }

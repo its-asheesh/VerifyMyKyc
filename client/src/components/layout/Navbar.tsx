@@ -186,12 +186,12 @@ const navItems = [
         description: "Authenticate official documents",
         href: "/products?category=document",
       },
-      {
-        label: "Biometric Verification",
-        icon: Users,
-        description: "Face matching & liveness detection",
-        href: "/products?category=biometric",
-      },
+      // {
+      //   label: "Biometric Verification",
+      //   icon: Users,
+      //   description: "Face matching & liveness detection",
+      //   href: "/products?category=biometric",
+      // },
       {
         label: "Address Verification",
         icon: Building,
@@ -201,7 +201,7 @@ const navItems = [
       {
         label: "Business Verification",
         icon: Briefcase,
-        description: "Verify business registries (GSTIN, CIN)",
+        description: "Verify business registries",
         href: "/products?category=business",
       },
     ],

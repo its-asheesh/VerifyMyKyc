@@ -13,6 +13,7 @@ import carouselRouter from './modules/carousel/carousel.router';
 import couponRouter from './modules/coupons/coupon.router';
 import bankAccountRouter from './modules/bankaccount/bankaccount.router';
 import voterRouter from './modules/voter/voter.router';
+import reviewsRouter from './modules/reviews/review.router';
 
 const router = Router();
 
@@ -41,5 +42,6 @@ router.use('/echallan', echallanRouter);
 router.use('/pricing', pricingRouter);
 router.use('/bankaccount', bankAccountRouter);
 router.use('/voter', voterRouter);
+router.use('/reviews', reviewsRouter);
 
 export default router;

@@ -12,7 +12,8 @@ import {
 import { fetchDinByPanProvider } from '../mca/providers/dinByPan.provider';
 import { fetchCinByPanProvider } from '../mca/providers/cinByPan.provider';
 import { fetchGstinByPanProvider } from '../gstin/providers/fetchByPan.provider';
-import type { DinByPanRequest, CinByPanRequest, GstinByPanRequest } from '../../common/types/pan';
+import type { DinByPanRequest, GstinByPanRequest } from '../../common/types/pan';
+import type { CinByPanRequest } from '../../common/types/mca';
 
 export class PanService {
   // Fetch Father's Name by PAN

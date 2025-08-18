@@ -30,15 +30,15 @@ class PanApi extends BaseApi {
   }
   // GSTIN by PAN (GSTIN module)
   async fetchGstinByPan(data: any): Promise<any> {
-    return this.post("/gstin/fetch-by-pan", data)
+    return this.post("/pan/gstin-by-pan", data)
   }
   // DIN by PAN (MCA module)
   async fetchDinByPan(data: any): Promise<any> {
-    return this.post("/mca/din-by-pan", data)
+    return this.post("/pan/din-by-pan", data)
   }
   // CIN by PAN (MCA module)
   async fetchCinByPan(data: any): Promise<any> {
-    return this.post("/mca/cin-by-pan", data)
+    return this.post("/pan/cin-by-pan", data)
   }
   // Expose a public post method for generic use
   public async post<T>(url: string, data?: any, config?: any): Promise<T> {
