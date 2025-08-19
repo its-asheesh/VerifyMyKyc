@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React, { useMemo } from "react"
 import { motion } from "framer-motion"
 import { Star, Quote, CheckCircle } from "lucide-react"
 
@@ -12,6 +12,9 @@ interface ReviewCardProps {
   position?: string
   company?: string
   verified?: boolean
+  showReadMore?: boolean
+  onReadMore?: () => void
+  email?: string
 }
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({
@@ -22,7 +25,17 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   position,
   company,
   verified = true,
+  showReadMore,
+  onReadMore,
+  email,
 }) => {
+  const initial = useMemo(() => {
+    if (email && typeof email === "string") {
+      const local = email.split("@")[0]
+      return (local?.[0] || email[0] || "?").toUpperCase()
+    }
+    return (name?.[0] || "?").toUpperCase()
+  }, [email, name])
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -33,16 +46,31 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
         y: -8,
         transition: { duration: 0.3 },
       }}
-      className="bg-white/95 backdrop-blur-sm border border-white/20 p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 relative group min-h-[280px] flex flex-col"
+      className="bg-white/95 backdrop-blur-sm border border-white/20 p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 relative group h-[320px] md:h-[340px] flex flex-col"
     >
       {/* Quote Icon */}
       <div className="absolute top-4 right-4 text-blue-500/30 group-hover:text-blue-500/50 transition-colors duration-300">
         <Quote className="w-8 h-8" />
       </div>
 
-      {/* Review Text */}
-      <div className="flex-grow mb-6">
-        <p className="text-gray-700 leading-relaxed text-sm md:text-base font-medium">"{text}"</p>
+      {/* Review Text (truncated) */}
+      <div className="mb-6">
+        <div className="relative h-[120px] md:h-[140px] overflow-hidden">
+          <p className="text-gray-700 leading-relaxed text-sm md:text-base font-medium whitespace-pre-line">"{text}"</p>
+          {/* Fade gradient (only when truncated) */}
+          {showReadMore && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent" />
+          )}
+        </div>
+        {showReadMore && (
+          <button
+            type="button"
+            onClick={onReadMore}
+            className="mt-2 text-blue-600 hover:text-blue-700 font-semibold text-sm underline"
+          >
+            Read more
+          </button>
+        )}
       </div>
 
       {/* Stars */}
@@ -63,11 +91,13 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
       {/* User Info */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <img
-            src={image || "/placeholder.svg?height=48&width=48"}
-            alt={name}
-            className="w-12 h-12 rounded-full object-cover border-3 border-blue-100 shadow-md"
-          />
+          <div
+            className="w-12 h-12 rounded-full border-2 border-blue-100 shadow-md bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-blue-700 font-bold text-base select-none"
+            aria-label={`Avatar of ${name}`}
+            title={email || name}
+          >
+            {initial}
+          </div>
           {verified && (
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
               <CheckCircle className="w-3 h-3 text-white" />

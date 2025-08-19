@@ -19,6 +19,15 @@ const service = new bankaccount_service_1.BankAccountService();
 // POST /api/bankaccount/verify
 // Body: { account_number: string, ifsc: string, consent: 'Y' | 'N' }
 exports.verifyBankAccountHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const { account_number, ifsc, consent } = (req.body || {});
+    const maskedAcc = typeof account_number === 'string' ? account_number.replace(/.(?=.{4})/g, 'X') : undefined;
+    console.info('[BankAccount] Incoming verify request', { account_number: maskedAcc, ifsc, consent });
     const result = yield service.verify(req.body);
+    console.info('[BankAccount] Provider response', {
+        status: result === null || result === void 0 ? void 0 : result.status,
+        code: (_a = result === null || result === void 0 ? void 0 : result.data) === null || _a === void 0 ? void 0 : _a.code,
+        message: (_b = result === null || result === void 0 ? void 0 : result.data) === null || _b === void 0 ? void 0 : _b.message,
+    });
     res.json(result);
 }));

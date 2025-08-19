@@ -122,3 +122,33 @@ export const adminDeleteReview = async (req: Request, res: Response) => {
     return res.status(500).json({ message: err.message || 'Failed to delete review' })
   }
 }
+
+// Public: list approved reviews across all products (all categories)
+export const getPublicReviews = async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1)
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20))
+    const skip = (page - 1) * limit
+
+    const [items, total, ratingAgg] = await Promise.all([
+      Review.find({ status: 'approved' })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('userId', 'name email')
+        .lean(),
+      Review.countDocuments({ status: 'approved' }),
+      Review.aggregate([
+        { $match: { status: 'approved' } },
+        { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+      ]),
+    ])
+
+    const avgRating = ratingAgg[0]?.avgRating || 0
+    const count = ratingAgg[0]?.count || 0
+
+    return res.json({ items, pagination: { page, limit, total }, stats: { avgRating, count } })
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message || 'Failed to fetch reviews' })
+  }
+}

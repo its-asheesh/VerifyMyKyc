@@ -10,6 +10,9 @@ import { DrivingLicenseSection } from "../verification/DrivingLicenseSection"
 import { VoterSection } from "../verification/VoterSection"
 import { GstinSection } from "../verification/GstinSection"
 import { CompanySection } from "../verification/CompanySection"
+import { BankAccountSection } from "../verification/BankAccountSection"
+import { useQuery } from "@tanstack/react-query"
+import { reviewApi } from "../../services/api/reviewApi"
 
 interface ProductOverviewProps {
   product: Product
@@ -22,6 +25,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const [voterModalOpen, setVoterModalOpen] = useState(false)
   const [gstinModalOpen, setGstinModalOpen] = useState(false)
   const [companyModalOpen, setCompanyModalOpen] = useState(false)
+  const [bankModalOpen, setBankModalOpen] = useState(false)
   const title = product.title.toLowerCase()
   const categoryName = product.category.name.toLowerCase()
   const isAadhaarProduct = title.includes("aadhaar") || categoryName.includes("aadhaar")
@@ -36,6 +40,15 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     title.includes("mca") ||
     title.includes("cin") ||
     title.includes("din")
+  const isBankProduct =
+    title.includes("bank") ||
+    categoryName.includes("bank") ||
+    title.includes("bank account") ||
+    categoryName.includes("bank account") ||
+    title.includes("bankaccount") ||
+    categoryName.includes("bankaccount") ||
+    title.includes("ifsc") ||
+    title.includes("upi")
 
   const handleTryDemo = () => {
     if (isAadhaarProduct) setAadhaarModalOpen(true)
@@ -43,6 +56,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     else if (isVoterProduct) setVoterModalOpen(true)
     else if (isGstinProduct) setGstinModalOpen(true)
     else if (isCompanyProduct) setCompanyModalOpen(true)
+    else if (isBankProduct) setBankModalOpen(true)
     else if (isPanProduct) setPanModalOpen(true)
   }
 
@@ -52,6 +66,16 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
       section.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
+
+  // Fetch reviews stats (avg rating and count)
+  const { data } = useQuery({
+    queryKey: ["product-reviews", product.id],
+    queryFn: () => reviewApi.getProductReviews(product.id, { page: 1, limit: 1 }),
+    staleTime: 30_000,
+  })
+  const avg = data?.stats?.avgRating ?? 0
+  const count = data?.stats?.count ?? 0
+  const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0"
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -126,8 +150,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-2">
               <Star className="w-6 h-6 text-yellow-600" />
             </div>
-            <div className="text-2xl font-bold text-gray-900">4.8</div>
-            <div className="text-sm text-gray-600">Rating</div>
+            <div className="text-2xl font-bold text-gray-900">{avgDisplay}</div>
+            <div className="text-sm text-gray-600">Rating{count > 0 ? ` • ${count} reviews` : ""}</div>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
@@ -153,11 +177,24 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
           <button
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
             onClick={handleTryDemo}
-            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isVoterProduct && !isGstinProduct && !isCompanyProduct}
+            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isVoterProduct && !isGstinProduct && !isCompanyProduct && !isBankProduct}
           >
             Start Verification
           </button>
         </div>
+        {bankModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setBankModalOpen(false)}
+              >
+                &times;
+              </button>
+              <BankAccountSection productId={product.id} />
+            </div>
+          </div>
+        )}
         {aadhaarModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">

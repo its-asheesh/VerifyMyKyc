@@ -54,11 +54,31 @@ const solutionSlice = createSlice({
         state.isLoading = false
         state.error = action.error.message || "Failed to fetch solutions"
       })
+      .addCase(fetchSolutionById.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+        state.selectedSolution = null
+      })
       .addCase(fetchSolutionById.fulfilled, (state, action) => {
+        state.isLoading = false
         state.selectedSolution = action.payload
       })
+      .addCase(fetchSolutionById.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.error.message || "Failed to fetch solution"
+        state.selectedSolution = null
+      })
+      .addCase(fetchIndustries.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
       .addCase(fetchIndustries.fulfilled, (state, action) => {
+        state.isLoading = false
         state.industries = action.payload
+      })
+      .addCase(fetchIndustries.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.error.message || "Failed to fetch industries"
       })
   },
 })

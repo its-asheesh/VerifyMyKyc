@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminDeleteReview = exports.adminUpdateReview = exports.adminListReviews = exports.createReview = exports.getProductReviews = void 0;
+exports.getPublicReviews = exports.adminDeleteReview = exports.adminUpdateReview = exports.adminListReviews = exports.createReview = exports.getProductReviews = void 0;
 const review_model_1 = require("./review.model");
 // Public: list approved reviews for a product with basic stats
 const getProductReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -138,3 +138,32 @@ const adminDeleteReview = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.adminDeleteReview = adminDeleteReview;
+// Public: list approved reviews across all products (all categories)
+const getPublicReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    try {
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+        const skip = (page - 1) * limit;
+        const [items, total, ratingAgg] = yield Promise.all([
+            review_model_1.Review.find({ status: 'approved' })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate('userId', 'name email')
+                .lean(),
+            review_model_1.Review.countDocuments({ status: 'approved' }),
+            review_model_1.Review.aggregate([
+                { $match: { status: 'approved' } },
+                { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+            ]),
+        ]);
+        const avgRating = ((_a = ratingAgg[0]) === null || _a === void 0 ? void 0 : _a.avgRating) || 0;
+        const count = ((_b = ratingAgg[0]) === null || _b === void 0 ? void 0 : _b.count) || 0;
+        return res.json({ items, pagination: { page, limit, total }, stats: { avgRating, count } });
+    }
+    catch (err) {
+        return res.status(500).json({ message: err.message || 'Failed to fetch reviews' });
+    }
+});
+exports.getPublicReviews = getPublicReviews;

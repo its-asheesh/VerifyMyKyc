@@ -10,17 +10,22 @@ import { SearchInput } from "../../components/common/SearchInput"
 import { FilterTabs } from "../../components/common/FilterTabs"
 import { LoadingSpinner } from "../../components/common/LoadingSpinner"
 import { SolutionCard } from "../../components/solutions/SolutionCard"
+import { useSearchParams } from "react-router-dom"
 
 const SolutionsPage: React.FC = () => {
   const dispatch = useAppDispatch()
   const { solutions, industries, isLoading, error } = useAppSelector((state) => state.solutions)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedIndustry, setSelectedIndustry] = useState("")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const industryParam = searchParams.get("industry") || ""
+  const [selectedIndustry, setSelectedIndustry] = useState(industryParam)
 
   useEffect(() => {
-    dispatch(fetchSolutions())
+    // Initialize from URL and load data (with client fallback if backend 404s)
+    dispatch(fetchSolutions(industryParam || undefined))
     dispatch(fetchIndustries())
-  }, [dispatch])
+    setSelectedIndustry(industryParam)
+  }, [dispatch, industryParam])
 
   const filteredSolutions = solutions.filter((solution) => {
     const matchesSearch =
@@ -38,6 +43,16 @@ const SolutionsPage: React.FC = () => {
       count: solutions.filter((s) => s.industry.id === industry.id).length,
     })),
   ]
+
+  const handleTabChange = (id: string) => {
+    setSelectedIndustry(id)
+    const next = new URLSearchParams(searchParams)
+    if (id) next.set("industry", id)
+    else next.delete("industry")
+    setSearchParams(next, { replace: true })
+    // Optionally re-fetch solutions for server-side filtering; client fallback still filters in UI
+    dispatch(fetchSolutions(id || undefined))
+  }
 
   if (error) {
     return (
@@ -62,7 +77,7 @@ const SolutionsPage: React.FC = () => {
         <div className="mb-8 space-y-6">
           <SearchInput placeholder="Search solutions..." onSearch={setSearchQuery} className="max-w-md" />
 
-          <FilterTabs tabs={industryTabs} activeTab={selectedIndustry} onTabChange={setSelectedIndustry} />
+          <FilterTabs tabs={industryTabs} activeTab={selectedIndustry} onTabChange={handleTabChange} />
         </div>
 
         {/* Solutions Grid */}

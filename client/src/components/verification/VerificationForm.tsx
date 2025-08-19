@@ -297,32 +297,161 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       )
     }
 
-    // Driving License services: prefer unmasked fields and handle both fetch-details and OCR
-// Detect via serviceName including "driving license" or presence of DL-specific fields
-if (
-  (serviceName && serviceName.toLowerCase().includes("driving license")) ||
-  (result && (result.license_details || result.driving_license_data || (result.data && (result.data.license_details || result.data.driving_license_data))))
-) {
-  const data = (result as any).data || result
-  const dl = data.license_details || data.driving_license_data || data.dl_data || data.ocr_data || data // ✅ added driving_license_data
+    // Bank Account Verification: show all fields from bank_account_data
+    if (
+      serviceKey === "account-verify" ||
+      (result && (((result as any).data && (result as any).data.bank_account_data) || (result as any).bank_account_data))
+    ) {
+      const payload: any = (result as any).data || result
+      const data: any = payload // transformed result already sets result.data = inner
+      const bank: any = data.bank_account_data || data
+      const status = data.message || data.status || data.code || (result as any).message
+      const requestId = data.request_id || payload.request_id
+      const transactionId = data.transaction_id || payload.transaction_id
+      const referenceId = bank.reference_id || data.reference_id || payload.reference_id
 
-  // Extract tolerant fields, preferring unmasked variants
-  const status = data.status || data.verification_status || data.message || data.code
-  const name =
-    dl.full_name_unmasked || dl.name_unmasked || dl.full_name || dl.name || dl.holder_name
-  const dlNumber =
-    dl.dl_number || dl.license_number || dl.licence_number || formData?.driving_license_number
-  const relation =
-    dl.father_name_unmasked || dl.father_name || dl.dependent_name || dl.spouse_name || dl.guardian_name // ✅ added dependent_name
-  const dob = dl.date_of_birth || dl.dob
-  const gender = dl.gender || dl.sex
-  const address = dl.address_full || dl.address || dl.present_address || dl.permanent_address
-  const issueDate =
-    dl.issue_date || dl.issued_on || dl.date_of_issue || dl.validity?.non_transport?.issue_date // ✅ added nested
-  const expiryDate =
-    dl.expiry_date || dl.valid_till || dl.valid_upto || dl.validity?.non_transport?.expiry_date // ✅ added nested
-  const stateVal = dl.state || dl.rto_state || dl.rto_details?.state // ✅ added nested
-  const rto = dl.rto || dl.rto_office || dl.issuing_authority || dl.rto_details?.authority // ✅ added nested
+      const name = bank.name
+      const bankName = bank.bank_name || bank.bankName
+      const branch = bank.branch
+      const city = bank.city
+      const ifsc = bank.ifsc
+      const micr = bank.micr
+      const utr = bank.utr
+      const accountNumber = bank.account_number
+
+      const details: { label: string; value?: any }[] = []
+      if (name) details.push({ label: "Account Holder", value: name })
+      if (bankName) details.push({ label: "Bank Name", value: bankName })
+      if (branch) details.push({ label: "Branch", value: branch })
+      if (city) details.push({ label: "City", value: city })
+      if (ifsc) details.push({ label: "IFSC", value: ifsc })
+      if (micr) details.push({ label: "MICR", value: micr })
+      if (utr) details.push({ label: "UTR", value: utr })
+      if (accountNumber) details.push({ label: "Account Number", value: accountNumber })
+      if (referenceId) details.push({ label: "Reference ID", value: referenceId })
+
+      // Build a flat list of all key/value pairs for full data view
+      const allEntries = Object.entries(bank || {}) as [string, any][]
+
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Success Result */}
+          <motion.div
+            ref={shareTargetRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">Verification Successful</h4>
+                {typeof status === "string" && status && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                    {status}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <ShareActions
+                  targetRef={shareTargetRef}
+                  serviceName={serviceName || (serviceKey ?? "Verification")}
+                  fileName={`${(serviceName || "verification").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+                  result={result}
+                />
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Verify Another
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
+              {(requestId || transactionId || referenceId) && (
+                <div className="mb-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {requestId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Request ID</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">{requestId}</p>
+                    </div>
+                  )}
+                  {transactionId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Transaction ID</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">{transactionId}</p>
+                    </div>
+                  )}
+                  {referenceId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Reference ID</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">{referenceId}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+{allEntries.length > 0 && (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {allEntries.map(([k, v]) => (
+      <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+        <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{k}</div>
+        <div className="mt-1 font-medium text-gray-900 break-words">
+          {typeof v === "object" ? JSON.stringify(v) : String(v)}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+            </div>
+          </motion.div>
+        </div>
+      )
+    }
+
+    // Driving License services: prefer unmasked fields and handle both fetch-details and OCR
+    // Detect via serviceName including "driving license" or presence of DL-specific fields
+    if (
+      (serviceName && serviceName.toLowerCase().includes("driving license")) ||
+      (result && (result.license_details || result.driving_license_data || (result.data && (result.data.license_details || result.data.driving_license_data))))
+    ) {
+      const data = (result as any).data || result
+      const dl = data.license_details || data.driving_license_data || data.dl_data || data.ocr_data || data // 
+
+      // Extract tolerant fields, preferring unmasked variants
+      const status = data.status || data.verification_status || data.message || data.code
+      const name =
+        dl.full_name_unmasked || dl.name_unmasked || dl.full_name || dl.name || dl.holder_name
+      const dlNumber =
+        dl.dl_number || dl.license_number || dl.licence_number || formData?.driving_license_number
+      const relation =
+        dl.father_name_unmasked || dl.father_name || dl.dependent_name || dl.spouse_name || dl.guardian_name // 
+      const dob = dl.date_of_birth || dl.dob
+      const gender = dl.gender || dl.sex
+      const address = dl.address_full || dl.address || dl.present_address || dl.permanent_address
+      const issueDate =
+        dl.issue_date || dl.issued_on || dl.date_of_issue || dl.validity?.non_transport?.issue_date // 
+      const expiryDate =
+        dl.expiry_date || dl.valid_till || dl.valid_upto || dl.validity?.non_transport?.expiry_date // 
+      const stateVal = dl.state || dl.rto_state || dl.rto_details?.state // 
+      const rto = dl.rto || dl.rto_office || dl.issuing_authority || dl.rto_details?.authority // 
+ 
 
   const details: { label: string; value?: any; icon: React.ReactNode; bgColor: string; borderColor: string; textColor: string; valueColor: string }[] = []
   if (status) {

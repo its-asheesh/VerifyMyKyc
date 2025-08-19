@@ -2,9 +2,14 @@ import BaseApi from "./baseApi"
 import type { Review, ReviewListResponse, ReviewStatus } from "../../types/review"
 
 class ReviewApi extends BaseApi {
+  // Public: approved reviews across all products
+  async getPublicReviews(params?: { page?: number; limit?: number }) {
+    return this.get<ReviewListResponse>(`/reviews/public`, { params, skipAuth: true })
+  }
+
   // Public: approved reviews for a product
   async getProductReviews(productId: string, params?: { page?: number; limit?: number }) {
-    return this.get<ReviewListResponse>(`/reviews/product/${productId}`, { params })
+    return this.get<ReviewListResponse>(`/reviews/product/${productId}`, { params, skipAuth: true })
   }
 
   // Auth: create review

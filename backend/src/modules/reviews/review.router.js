@@ -9,6 +9,8 @@ const review_controller_1 = require("./review.controller");
 const router = express_1.default.Router();
 // Public: list approved reviews for a product
 router.get('/product/:productId', review_controller_1.getProductReviews);
+// Public: list approved reviews across all products (all categories)
+router.get('/public', review_controller_1.getPublicReviews);
 // Authenticated user: create a review
 router.post('/', auth_1.authenticate, review_controller_1.createReview);
 // Admin routes

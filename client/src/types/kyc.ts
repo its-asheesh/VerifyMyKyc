@@ -123,3 +123,58 @@ export interface GstinLiteResponse {
   data?: any;
   [key: string]: any;
 }
+
+// Bank: Account Verification
+export interface BankAccountVerifyRequest {
+  account_number: string;
+  ifsc: string;
+  consent: 'Y' | 'N';
+}
+export interface BankAccountData {
+  name?: string;
+  account_number?: string;
+  bank_name?: string;
+  branch?: string;
+  ifsc?: string;
+  micr?: string;
+  city?: string;
+  utr?: string;
+  reference_id?: string;
+  [key: string]: any;
+}
+export interface BankAccountVerifyResponse {
+  status: number; // e.g., 200
+  data: {
+    code: string; // e.g., "1000"
+    message: string;
+    bank_account_data?: BankAccountData;
+    [key: string]: any;
+  };
+  timestamp?: number;
+  path?: string;
+  [key: string]: any;
+}
+
+// Bank: IFSC Validate
+export interface IfscValidateRequest {
+  ifsc: string;
+  consent: string;
+}
+export interface IfscValidateResponse {
+  status?: string;
+  message?: string;
+  data?: any;
+  [key: string]: any;
+}
+
+// Bank: UPI Verify
+export interface UpiVerifyRequest {
+  vpa: string; // UPI ID
+  consent: string;
+}
+export interface UpiVerifyResponse {
+  status?: string;
+  message?: string;
+  data?: any;
+  [key: string]: any;
+}

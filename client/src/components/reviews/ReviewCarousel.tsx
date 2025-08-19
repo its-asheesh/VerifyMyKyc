@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
 import { ReviewCard } from "./ReviewCard"
+import { Modal } from "../common/Modal"
 
 interface Review {
   text: string
@@ -14,6 +15,7 @@ interface Review {
   position?: string
   company?: string
   verified?: boolean
+  email?: string
 }
 
 interface ReviewCarouselProps {
@@ -78,6 +80,8 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isHovering, setIsHovering] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalContent, setModalContent] = useState<{ name: string; text: string; stars: number } | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -168,7 +172,14 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
         <div ref={scrollRef} className="flex gap-6 overflow-x-auto py-4 px-8 scrollbar-hide">
           {reviews.map((review, index) => (
             <div key={index} className="min-w-[350px] max-w-[350px] flex-shrink-0">
-              <ReviewCard {...review} />
+              <ReviewCard
+                {...review}
+                showReadMore={(review.text || "").length > 220}
+                onReadMore={() => {
+                  setModalContent({ name: review.name, text: review.text, stars: review.stars })
+                  setModalOpen(true)
+                }}
+              />
             </div>
           ))}
         </div>
@@ -209,7 +220,16 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
           {/* Single Review Card */}
           <div className="px-16">
             <AnimatePresence mode="wait">
-              <ReviewCard key={currentIndex} {...reviews[currentIndex]} />
+              <ReviewCard
+                key={currentIndex}
+                {...reviews[currentIndex]}
+                showReadMore={(reviews[currentIndex]?.text || "").length > 220}
+                onReadMore={() => {
+                  const r = reviews[currentIndex]
+                  setModalContent({ name: r.name, text: r.text, stars: r.stars })
+                  setModalOpen(true)
+                }}
+              />
             </AnimatePresence>
           </div>
         </div>
@@ -227,6 +247,20 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
           ))}
         </div>
       </div>
+      {/* Full Review Modal */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={modalContent ? `${modalContent.name}'s Review` : 'Review'}>
+        {modalContent && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} className={`inline-block w-3 h-3 rounded-full ${i < modalContent.stars ? 'bg-yellow-400' : 'bg-gray-200'}`} />
+              ))}
+              <span className="text-sm text-gray-600 font-medium">{modalContent.stars}.0</span>
+            </div>
+            <p className="text-gray-800 whitespace-pre-line leading-relaxed">{modalContent.text}</p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

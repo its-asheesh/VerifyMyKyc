@@ -6,6 +6,8 @@ import { motion } from "framer-motion"
 import { Clock, CheckCircle, Star } from "lucide-react"
 import type { FC } from "react"
 import { Link } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { reviewApi } from "../../services/api/reviewApi"
 
 type VerificationCardProps = {
   title: string
@@ -17,6 +19,7 @@ type VerificationCardProps = {
   price: number
   rating: number
   reviews: number
+  productId?: string
   remaining?: number
   expiresAt?: string
   link?: string
@@ -38,11 +41,29 @@ export const VerificationCard: FC<VerificationCardProps> = ({
   price,
   rating,
   reviews,
+  productId,
   link,
   remaining,
   expiresAt,
 }) => {
   const formattedExpiry = expiresAt ? new Date(expiresAt).toLocaleDateString() : null
+
+  // Fetch rating stats when productId is provided; fall back to props otherwise
+  const { data } = useQuery({
+    queryKey: ["product-reviews", productId],
+    queryFn: () => reviewApi.getProductReviews(productId as string, { page: 1, limit: 1 }),
+    enabled: !!productId,
+    staleTime: 30_000,
+  })
+  const apiAvg = data?.stats?.avgRating
+  const apiCount = data?.stats?.count
+  const useApi = !!productId
+  const avgDisplay = useApi
+    ? (typeof apiCount === 'number' && apiCount > 0 ? (apiAvg ?? 0).toFixed(1) : "0.0")
+    : (typeof rating === 'number' ? rating.toFixed(1) : String(rating))
+  const countDisplay = useApi
+    ? (typeof apiCount === 'number' && apiCount > 0 ? apiCount : 0)
+    : reviews
   return (
     <motion.div
       whileHover={{ y: -6, scale: 1.02 }}
@@ -87,7 +108,7 @@ export const VerificationCard: FC<VerificationCardProps> = ({
 
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            {rating} ({reviews} reviews)
+            {avgDisplay} ({countDisplay} reviews)
           </div>
 
           <div className="flex justify-between text-sm text-gray-600">

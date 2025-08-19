@@ -18,9 +18,12 @@ class BaseApi {
     // Request interceptor
     this.api.interceptors.request.use(
       (config: any) => {
-        const token = localStorage.getItem("token")
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
+        // Allow callers to skip auth for public endpoints
+        if (!(config as any)?.skipAuth) {
+          const token = localStorage.getItem("token")
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
         }
         return config
       },
@@ -32,8 +35,20 @@ class BaseApi {
       (response: any) => response,
       (error: any) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem("token")
-          window.location.href = "/login"
+          const cfg = (error as any)?.config || {}
+          const skipAuth = !!(cfg as any)?.skipAuth
+          const requireAuth = !!(cfg as any)?.requireAuth
+          const sentAuthHeader = !!cfg?.headers?.Authorization
+          const method = (cfg?.method || 'get').toLowerCase()
+          // Force logout only when request required auth, or it sent auth header and wasn't a public/GET
+          if (requireAuth || (!skipAuth && sentAuthHeader && method !== 'get')) {
+            localStorage.removeItem("token")
+            if (window.location.pathname !== "/login") {
+              window.location.href = "/login"
+            }
+            return Promise.reject(error)
+          }
+          // For public/unauthenticated requests, surface the error to the caller without redirect
         }
         // Prefer backend-provided message if available
         const backendMessage =

@@ -16,6 +16,7 @@ import Home from "../pages/Home"
 import ProductsPage from "../pages/products/ProductsPage"
 import ProductDetailPage from "../pages/products/ProductDetailPage"
 import SolutionsPage from "../pages/solutions/SolutionsPage"
+import SolutionDetailPage from "../pages/solutions/SolutionDetailPage"
 import ResourcesPage from "../pages/resources/ResourcesPage"
 import AboutPage from "../pages/company/AboutPage"
 import ContactPage from "../pages/company/ContactPage"
@@ -69,7 +70,7 @@ const AppRoutes: React.FC = () => {
                 
                 {/* Solutions */}
                 <Route path="/solutions" element={<SolutionsPage />} />
-                <Route path="/solutions/:id" element={<div>Solution Detail Page</div>} />
+                <Route path="/solutions/:id" element={<SolutionDetailPage />} />
                 
                 {/* Resources */}
                 <Route path="/resources" element={<ResourcesPage />} />

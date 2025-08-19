@@ -5,9 +5,41 @@ import { motion } from "framer-motion"
 import { Users, MessageCircle } from "lucide-react"
 import { ReviewCarousel } from "../../components/reviews/ReviewCarousel"
 import { ReviewStats } from "../../components/reviews/ReviewStats"
-import { customerReviews, reviewStats } from "../../utils/constants"
+import { reviewStats } from "../../utils/constants"
+import { usePublicReviews } from "../../hooks/useReviews"
+import type { Review } from "../../types/review"
 
 const ReviewsSection: React.FC = () => {
+  // Fetch approved reviews across all categories
+  const { data, isLoading, isError } = usePublicReviews({ page: 1, limit: 20 })
+
+  // Map backend reviews to ReviewCarousel card props
+  const mappedReviews = (data?.items || []).map((r: Review) => {
+    const userName = typeof r.userId === "string" ? "Verified User" : r.userId?.name || "Verified User"
+    const userEmail = typeof r.userId === "string" ? undefined : r.userId?.email
+    return {
+      text: r.comment || r.title || "",
+      name: userName,
+      image: "", // ReviewCard will fallback to placeholder
+      stars: r.rating || 5,
+      position: undefined,
+      company: undefined,
+      verified: true,
+      email: userEmail,
+    }
+  })
+
+  // Compose stats: override first two with API values when available
+  const apiAvg = data?.stats?.avgRating
+  const apiCount = data?.stats?.count
+  const statsToShow = apiAvg != null && apiCount != null
+    ? [
+        { value: Number(apiAvg.toFixed(1)), label: "Average Rating", suffix: "/5", decimals: 1 },
+        { value: apiCount, label: "Happy Customers", suffix: "+" },
+        ...reviewStats.slice(2),
+      ]
+    : reviewStats
+
   return (
     <section className="relative py-16 md:py-20 px-4 md:px-8 overflow-hidden">
       {/* Background Gradient */}
@@ -75,11 +107,17 @@ const ReviewsSection: React.FC = () => {
           viewport={{ once: true }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          <ReviewCarousel reviews={customerReviews} autoPlay={true} autoPlayInterval={4000} />
+          {isLoading ? (
+            <div className="text-center text-blue-100 py-8">Loading reviews…</div>
+          ) : mappedReviews.length > 0 ? (
+            <ReviewCarousel reviews={mappedReviews} autoPlay={true} autoPlayInterval={4000} />
+          ) : (
+            <div className="text-center text-blue-100 py-8">No reviews yet. Be the first to share your experience!</div>
+          )}
         </motion.div>
 
         {/* Stats */}
-        <ReviewStats stats={reviewStats} />
+        <ReviewStats stats={statsToShow} />
 
         {/* Call to Action */}
         <motion.div

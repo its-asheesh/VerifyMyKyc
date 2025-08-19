@@ -90,6 +90,7 @@ const VerificationSection = () => {
                   price={item.price}
                   rating={item.rating}
                   reviews={item.reviews}
+                  productId={item.id}
                   link={item.link}
                 />
               </motion.div>

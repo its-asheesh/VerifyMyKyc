@@ -30,7 +30,7 @@ function fetchCinByPanProvider(payload) {
                 pan_number: payload.pan_number,
                 consent: payload.consent,
                 // Some providers require human-readable consent text
-                consent_text: payload.consent_text || 'User consented to fetch CIN by PAN for verification.',
+                //consent_text: payload.consent_text || 'User consented to fetch CIN by PAN for verification.',
             };
             // Mask PAN for logging (show only last 4)
             const maskedPan = (externalPayload === null || externalPayload === void 0 ? void 0 : externalPayload.pan_number) ? `******${externalPayload.pan_number.slice(-4)}` : undefined;

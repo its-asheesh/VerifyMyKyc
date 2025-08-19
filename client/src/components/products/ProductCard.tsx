@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import { ArrowRight, Star, Users, Zap } from "lucide-react"
 import { Link } from "react-router-dom"
 import type { Product } from "../../types/product"
+import { useQuery } from "@tanstack/react-query"
+import { reviewApi } from "../../services/api/reviewApi"
 
 interface ProductCardProps {
   product: Product
@@ -13,6 +15,17 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "grid" }) => {
   const isListView = viewMode === "list"
+
+  // Fetch reviews stats (avg rating and count)
+  const { data } = useQuery({
+    queryKey: ["product-reviews", product.id],
+    queryFn: () => reviewApi.getProductReviews(product.id, { page: 1, limit: 1 }),
+    staleTime: 30_000,
+  })
+
+  const avg = data?.stats?.avgRating ?? 0
+  const count = data?.stats?.count ?? 0
+  const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0"
 
   return (
     <motion.div
@@ -105,7 +118,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
           >
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <span>4.8</span>
+              {/* <span>{avgDisplay}{count > 0 ? ` (${count})` : ""}</span> */}
+              <span>{avgDisplay}</span>
             </div>
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />

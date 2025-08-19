@@ -60,7 +60,7 @@ const ProductDetailPage: React.FC = () => {
           <ProductPricing product={selectedProduct} />
         </div>
         <ProductFeatures product={selectedProduct} />
-        <ProductReviews productId={selectedProduct.id} showList={true} showStats={true} showForm={false} />
+        <ProductReviews productId={selectedProduct.id} showList={true} showStats={true} showForm={false} limit={1000} />
 
       </div>
     </div>

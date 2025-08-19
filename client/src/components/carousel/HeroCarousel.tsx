@@ -121,6 +121,20 @@ const HeroCarousel: React.FC = () => {
                 </p>
               </motion.div>
 
+              {/* Mobile Image (between title/subtitle and description) */}
+              <div className="block lg:hidden">
+                <div className="relative flex justify-center my-4">
+                  <img
+                    src={currentSlideData.imageUrl}
+                    alt={currentSlideData.title}
+                    className="w-full max-w-[360px] h-auto object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/400x250?text=Image+Not+Found"
+                    }}
+                  />
+                </div>
+              </div>
+
               {/* Description */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -156,7 +170,7 @@ const HeroCarousel: React.FC = () => {
               initial={{ opacity: 0, scale: 0.8, x: 50 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-              className="relative flex justify-center lg:justify-end"
+              className="hidden lg:flex relative justify-center lg:justify-end"
             >
               <div className="relative">
                 {/* Glow Effect */}
@@ -213,7 +227,7 @@ const HeroCarousel: React.FC = () => {
         </AnimatePresence>
 
         {/* Navigation Controls */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-6">
+        <div className="mt-6 flex items-center justify-center gap-6 lg:absolute lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2">
           {/* Slide Indicators */}
           <div className="flex gap-2">
             {slides.map((_, index) => (
