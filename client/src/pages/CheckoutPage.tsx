@@ -5,12 +5,14 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Check, CreditCard, Shield, Clock, Users } from "lucide-react"
 import CouponInput from "../components/common/CouponInput"
 import type { CouponValidationResponse } from "../services/api/couponApi"
+import { useAppSelector } from "../redux/hooks"
 
 interface CheckoutPageProps {}
 
 const CheckoutPage: React.FC<CheckoutPageProps> = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAuthenticated } = useAppSelector((state) => state.auth)
   
   // Get data from navigation state
   const {
@@ -33,6 +35,19 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
   
   // Combine selectedVerifications and selectedServices
   const allSelectedServices = [...selectedVerifications, ...selectedServices]
+
+  // Route guard: redirect unauthenticated users to login with intended state
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', {
+        state: {
+          message: 'Please login to continue to checkout',
+          redirectTo: '/checkout',
+          nextState: location.state || {}
+        }
+      })
+    }
+  }, [isAuthenticated, navigate, location.state])
 
   // Set initial state based on passed data
   const [billingPeriod, setBillingPeriod] = useState<'one-time' | 'monthly' | 'yearly'>(
@@ -108,7 +123,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
       let category = 'personal' // default category
       
       // Map verification types to categories
-      if (['gstin', 'mca'].includes(serviceType)) {
+      if (['gstin', 'mca', 'company'].includes(serviceType)) {
         category = 'business'
       } else if (['aadhaar', 'pan', 'drivinglicense'].includes(serviceType)) {
         category = 'personal'
@@ -121,6 +136,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
       // Extract verification type from product title
       const getVerificationType = (productTitle: string): string => {
         const title = productTitle.toLowerCase()
+        // Important: detect company/MCA first to avoid matching 'pan' inside 'company'
+        if (title.includes('company') || title.includes('mca') || title.includes('cin') || title.includes('din')) return 'company'
         if (title.includes('pan')) return 'pan'
         if (title.includes('aadhaar')) return 'aadhaar'
         if (title.includes('driving license') || title.includes('drivinglicense')) return 'drivinglicense'
@@ -131,7 +148,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
       const serviceType = getVerificationType(productInfo.title)
       if (serviceType) {
         let category = 'personal'
-        if (['gstin', 'mca'].includes(serviceType)) {
+        if (['gstin', 'mca', 'company'].includes(serviceType)) {
           category = 'business'
         } else if (['aadhaar', 'pan', 'drivinglicense'].includes(serviceType)) {
           category = 'personal'
@@ -148,7 +165,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
         let category = 'personal' // default category
         
         // Map verification types to categories
-        if (['gstin', 'mca'].includes(serviceType)) {
+        if (['gstin', 'mca', 'company'].includes(serviceType)) {
           category = 'business'
         } else if (['aadhaar', 'pan', 'drivinglicense'].includes(serviceType)) {
           category = 'personal'
@@ -305,6 +322,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
         return '🚗'
       case 'gstin':
         return '🏢'
+      case 'company':
+        return '🏢'
       default:
         return '📄'
     }
@@ -320,6 +339,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
         return 'Driving License Verification'
       case 'gstin':
         return 'GSTIN Verification'
+      case 'company':
+        return 'Company Verification'
       default:
         return verificationType
     }

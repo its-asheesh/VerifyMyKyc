@@ -13,6 +13,7 @@ import ScrollToTop from "../components/common/ScrollToTop"
 
 // Pages
 import Home from "../pages/Home"
+import ReviewsPage from "../pages/ReviewsPage"
 import ProductsPage from "../pages/products/ProductsPage"
 import ProductDetailPage from "../pages/products/ProductDetailPage"
 import SolutionsPage from "../pages/solutions/SolutionsPage"
@@ -62,6 +63,7 @@ const AppRoutes: React.FC = () => {
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
+                <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/unauthorized" element={<UnauthorizedPage />} />
                 
                 {/* Products */}

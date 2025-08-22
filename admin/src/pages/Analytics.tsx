@@ -4,7 +4,7 @@ import {
   TrendingUp, 
   TrendingDown, 
   Users, 
-  DollarSign, 
+  IndianRupee, 
   Activity,
   Calendar,
   BarChart3,
@@ -89,7 +89,7 @@ const Analytics: React.FC = () => {
       value: formatCurrency(metrics.totalRevenue),
       change: formatPercentage(metrics.revenueChange),
       changeType: metrics.revenueChange >= 0 ? 'increase' : 'decrease',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'bg-green-500'
     },
     {

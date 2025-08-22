@@ -1723,6 +1723,625 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       )
     }
 
+    // Fastag (RC): fetch-fastag — show structured fastag details
+if (serviceKey === "fastag-fetch-detailed") {
+  const data = (result as any).data || result
+  console.log("result", result)
+  const fastagData = data.vehicle_fastag_data || {}
+
+  const rcNumber = fastagData.rc_number
+  const activeTagAge = fastagData.active_tag_age
+  const tagsSummary = fastagData.tags_summary || {}
+  const fastagRecords = fastagData.fastag_records || []
+
+  const detailRows: { label: string; value?: any }[] = [
+    { label: "RC Number", value: rcNumber },
+    { label: "Active Tag Age", value: activeTagAge },
+    { label: "Total Tags", value: tagsSummary.total_tags },
+    { label: "Active Tags", value: tagsSummary.active_tags },
+    { label: "Inactive Tags", value: tagsSummary.inactive_tags },
+  ].filter((r) => r.value !== undefined && r.value !== null && r.value !== "")
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Service Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">{serviceName}</h2>
+            <p className="text-blue-100 mt-1">{serviceDescription}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Result */}
+      <motion.div
+        ref={shareTargetRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-500" />
+            <h4 className="font-semibold text-green-800 text-lg">Verification Successful</h4>
+            {typeof data.message === "string" && data.message && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                {data.message}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareActions
+              targetRef={shareTargetRef}
+              serviceName={serviceName || (serviceKey ?? "Verification")}
+              fileName={`${(serviceName || "verification").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+              result={result}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Verify Another
+            </button>
+          </div>
+        </div>
+
+        {/* Main Details */}
+        <div className="bg-white rounded-lg p-6 border border-green-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {detailRows.map((row, idx) => (
+              <div key={idx} className="p-4 rounded-xl border bg-white border-gray-200">
+                <div className="text-sm text-gray-500">{row.label}</div>
+                <div className="mt-1 font-medium text-gray-900 break-words">{String(row.value)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Fastag Records */}
+          {Array.isArray(fastagRecords) && fastagRecords.length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">FASTag Records</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {fastagRecords.map((rec: any, i: number) => (
+                  <div key={i} className="p-4 rounded-xl border bg-white border-gray-200 space-y-2">
+                    <div>
+                      <div className="text-sm text-gray-500">Tag ID</div>
+                      <div className="font-medium text-gray-900 break-all">{rec.tag_id}</div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-sm text-gray-500">Status</div>
+                        <div className="text-gray-900">{rec.tag_status}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-500">Vehicle Class</div>
+                        <div className="text-gray-900">{rec.vehicle_class}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">Issuer Bank</div>
+                      <div className="text-gray-900">{rec.issuer_bank}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">Issue Date</div>
+                      <div className="text-gray-900">{rec.issue_date}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">Action</div>
+                      <div className="text-gray-900">{rec.action}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// RC Lite (Vehicle RC): fetch-lite — show RC, owner, insurance, PUCC, vehicle details
+if (serviceKey === "fetch-lite") {
+  const data = (result as any).data || result
+  const rc = data.rc_data || {}
+
+  const owner = rc.owner_data || {}
+  const pucc = rc.pucc_data || {}
+  const insurance = rc.insurance_data || {}
+  const vehicle = rc.vehicle_data || {}
+
+  const detailRows: { label: string; value?: any }[] = [
+    { label: "Document Type", value: rc.document_type },
+    { label: "RC Number", value: rc.document_id },
+    { label: "Owner Name", value: owner.name },
+    { label: "Present Address", value: owner.present_address },
+    { label: "Permanent Address", value: owner.permanent_address },
+    { label: "Issue Date", value: rc.issue_date },
+    { label: "Expiry Date", value: rc.expiry_date },
+    { label: "Registered At", value: rc.registered_at },
+    { label: "Status", value: rc.status },
+    { label: "Blacklist Status", value: rc.blacklist_status },
+    { label: "Norms Type", value: rc.norms_type },
+    { label: "Tax End Date", value: rc.tax_end_date },
+    { label: "Is Commercial", value: String(rc.is_commercial) },
+  ].filter((r) => r.value !== undefined && r.value !== null && r.value !== "")
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Service Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">{serviceName}</h2>
+            <p className="text-blue-100 mt-1">{serviceDescription}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Result */}
+      <motion.div
+        ref={shareTargetRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-500" />
+            <h4 className="font-semibold text-green-800 text-lg">Verification Successful</h4>
+            {typeof data.message === "string" && data.message && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                {data.message}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareActions
+              targetRef={shareTargetRef}
+              serviceName={serviceName || (serviceKey ?? "Verification")}
+              fileName={`${(serviceName || "verification").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+              result={result}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Verify Another
+            </button>
+          </div>
+        </div>
+
+        {/* RC Lite Details */}
+        <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {detailRows.map((row, idx) => (
+              <div key={idx} className="p-4 rounded-xl border bg-white border-gray-200">
+                <div className="text-sm text-gray-500">{row.label}</div>
+                <div className="mt-1 font-medium text-gray-900 break-words">{String(row.value)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* PUCC Section */}
+          {Object.keys(pucc).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">PUCC Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border bg-white border-gray-200">
+                  <div className="text-sm text-gray-500">PUCC Number</div>
+                  <div className="mt-1 font-medium text-gray-900">{pucc.pucc_number}</div>
+                </div>
+                <div className="p-4 rounded-xl border bg-white border-gray-200">
+                  <div className="text-sm text-gray-500">Expiry Date</div>
+                  <div className="mt-1 font-medium text-gray-900">{pucc.expiry_date}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Insurance Section */}
+          {Object.keys(insurance).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">Insurance Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border bg-white border-gray-200">
+                  <div className="text-sm text-gray-500">Policy Number</div>
+                  <div className="mt-1 font-medium text-gray-900">{insurance.policy_number}</div>
+                </div>
+                <div className="p-4 rounded-xl border bg-white border-gray-200">
+                  <div className="text-sm text-gray-500">Company</div>
+                  <div className="mt-1 font-medium text-gray-900">{insurance.company}</div>
+                </div>
+                <div className="p-4 rounded-xl border bg-white border-gray-200">
+                  <div className="text-sm text-gray-500">Expiry Date</div>
+                  <div className="mt-1 font-medium text-gray-900">{insurance.expiry_date}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Vehicle Section */}
+          {Object.keys(vehicle).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">Vehicle Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(vehicle).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// RC Detailed Verification: fetch-detailed — show all RC, owner, insurance, PUCC, vehicle details
+if (serviceKey === "fetch-detailed") {
+  const data = (result as any).data || result
+  const rc = data.rc_data || {}
+
+  const owner = rc.owner_data || {}
+  const pucc = rc.pucc_data || {}
+  const insurance = rc.insurance_data || {}
+  const vehicle = rc.vehicle_data || {}
+
+  const detailRows: { label: string; value?: any }[] = [
+    { label: "Document Type", value: rc.document_type },
+    { label: "RC Number", value: rc.document_id },
+    { label: "Owner Name", value: owner.name },
+    { label: "Serial", value: owner.serial },
+    { label: "Present Address", value: owner.present_address },
+    { label: "Permanent Address", value: owner.permanent_address },
+    { label: "Issue Date", value: rc.issue_date },
+    { label: "Expiry Date", value: rc.expiry_date },
+    { label: "Registered At", value: rc.registered_at },
+    { label: "Status", value: rc.status },
+    { label: "Blacklist Status", value: rc.blacklist_status },
+    { label: "Norms Type", value: rc.norms_type },
+    { label: "Tax End Date", value: rc.tax_end_date },
+    { label: "Is Commercial", value: String(rc.is_commercial) },
+  ].filter((r) => r.value !== undefined && r.value !== null && r.value !== "")
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Service Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">{serviceName}</h2>
+            <p className="text-blue-100 mt-1">{serviceDescription}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Result */}
+      <motion.div
+        ref={shareTargetRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-500" />
+            <h4 className="font-semibold text-green-800 text-lg">Verification Successful</h4>
+            {typeof data.message === "string" && data.message && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                {data.message}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareActions
+              targetRef={shareTargetRef}
+              serviceName={serviceName || (serviceKey ?? "Verification")}
+              fileName={`${(serviceName || "verification").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+              result={result}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Verify Another
+            </button>
+          </div>
+        </div>
+
+        {/* RC Detailed Information */}
+        <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
+          {/* Owner & RC Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {detailRows.map((row, idx) => (
+              <div key={idx} className="p-4 rounded-xl border bg-white border-gray-200">
+                <div className="text-sm text-gray-500">{row.label}</div>
+                <div className="mt-1 font-medium text-gray-900 break-words">{String(row.value)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* PUCC Details */}
+          {Object.keys(pucc).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">PUCC Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(pucc).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Insurance Details */}
+          {Object.keys(insurance).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">Insurance Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(insurance).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Vehicle Details */}
+          {Object.keys(vehicle).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">Vehicle Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(vehicle).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// RC Detailed Verification: fetch-detailed-challan — show all RC, owner, insurance, PUCC, vehicle details
+if (serviceKey === "fetch-detailed-challan") {
+  const data = (result as any).data || result
+  const rc = data.rc_data || {}
+
+  const owner = rc.owner_data || {}
+  const pucc = rc.pucc_data || {}
+  const insurance = rc.insurance_data || {}
+  const vehicle = rc.vehicle_data || {}
+
+  const detailRows: { label: string; value?: any }[] = [
+    { label: "Document Type", value: rc.document_type },
+    { label: "RC Number", value: rc.document_id },
+    { label: "Owner Name", value: owner.name },
+    { label: "Serial", value: owner.serial },
+    { label: "Present Address", value: owner.present_address },
+    { label: "Permanent Address", value: owner.permanent_address },
+    { label: "Issue Date", value: rc.issue_date },
+    { label: "Expiry Date", value: rc.expiry_date },
+    { label: "Registered At", value: rc.registered_at },
+    { label: "Status", value: rc.status },
+    { label: "Norms Type", value: rc.norms_type },
+    { label: "Tax End Date", value: rc.tax_end_date },
+    { label: "Financed", value: String(rc.financed) },
+  ].filter((r) => r.value !== undefined && r.value !== null && r.value !== "")
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Service Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">{serviceName}</h2>
+            <p className="text-blue-100 mt-1">{serviceDescription}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Result */}
+      <motion.div
+        ref={shareTargetRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-500" />
+            <h4 className="font-semibold text-green-800 text-lg">Verification Successful</h4>
+            {typeof data.message === "string" && data.message && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                {data.message}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareActions
+              targetRef={shareTargetRef}
+              serviceName={serviceName || (serviceKey ?? "Verification")}
+              fileName={`${(serviceName || "verification").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+              result={result}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Verify Another
+            </button>
+          </div>
+        </div>
+
+        {/* RC Detailed Information */}
+        <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
+          {/* Owner & RC Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {detailRows.map((row, idx) => (
+              <div key={idx} className="p-4 rounded-xl border bg-white border-gray-200">
+                <div className="text-sm text-gray-500">{row.label}</div>
+                <div className="mt-1 font-medium text-gray-900 break-words">{String(row.value)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* PUCC Details */}
+          {Object.keys(pucc).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">PUCC Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(pucc).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Insurance Details */}
+          {Object.keys(insurance).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">Insurance Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(insurance).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Vehicle Details */}
+          {Object.keys(vehicle).length > 0 && (
+            <div className="space-y-3 mt-6">
+              <h4 className="text-lg font-semibold text-gray-900">Vehicle Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(vehicle).map(([k, v]) => (
+                  <div key={k} className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-sm text-gray-500">{k.replace(/_/g, " ")}</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{String(v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// RC Registration Number by Chassis: fetch-reg-num-by-chassis
+if (serviceKey === "fetch-reg-num-by-chassis") {
+  const data = (result as any).data || result
+  const vehicles: any[] = data.vehicle_details || []
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Service Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">{serviceName}</h2>
+            <p className="text-blue-100 mt-1">{serviceDescription}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Result */}
+      <motion.div
+        ref={shareTargetRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-500" />
+            <h4 className="font-semibold text-green-800 text-lg">Verification Successful</h4>
+            {typeof data.message === "string" && data.message && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                {data.message}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareActions
+              targetRef={shareTargetRef}
+              serviceName={serviceName || (serviceKey ?? "Verification")}
+              fileName={`${(serviceName || "verification").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+              result={result}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Verify Another
+            </button>
+          </div>
+        </div>
+
+        {/* Vehicle Details */}
+        {vehicles.length > 0 ? (
+          <div className="bg-white rounded-lg p-6 border border-green-200">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Details</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {vehicles.map((v, idx) => (
+                <div key={idx} className="p-4 rounded-xl border bg-white border-gray-200">
+                  <div className="text-sm text-gray-500">RC Registration Number</div>
+                  <div className="mt-1 font-medium text-gray-900 break-words">{v.rc_registration_number}</div>
+                  <div className="text-sm text-gray-500 mt-2">Chassis Number</div>
+                  <div className="mt-1 font-medium text-gray-900 break-words">{v.chassis_number}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500">No vehicle details found.</p>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
     if (serviceKey === "aadhaar-link") {
       const data = result.data || result
       const message = data.message || data.status || "Linked Successfully"

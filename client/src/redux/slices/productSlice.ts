@@ -200,6 +200,51 @@ export const mockProducts: Product[] = [
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
+  {
+    id: "vehicle",
+    title: "RC Verification",
+    description: "Verify vehicle Registration Certificate (RC) details including owner, insurance, PUC, and challans.",
+    category: {
+      id: "vehicle",
+      name: "Vehicle Verification",
+      slug: "vehicle",
+      description: "Vehicle and transport document verification",
+    },
+    features: [
+      "Fetch RC Lite & Detailed",
+      "Chassis-to-RC lookup",
+      "E-Challan integration",
+      "FASTag details",
+      "Real-time RTO data",
+      "Quota-aware billing",
+    ],
+    pricing: {
+      free: { 
+        price: 0, 
+        requests: 10, 
+        features: ["Basic RC fetch", "Email support"], 
+        support: "Email" 
+      },
+      basic: { 
+        price: 399, 
+        requests: 500, 
+        features: ["Detailed RC + challan", "Priority support"], 
+        support: "Chat" 
+      },
+      premium: { 
+        price: 1299, 
+        requests: 5000, 
+        features: ["Enterprise access", "24/7 support", "FASTag & eChallan"], 
+        support: "Phone" 
+      },
+    },
+    documentation: "Complete API documentation for RC verification",
+    isActive: true,
+    icon: "/rc.png", // Add your icon
+    image: "/rc.png", // Add your image
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01",
+  },
 ]
 
 const mockCategories: ProductCategory[] = [
@@ -213,6 +258,8 @@ const mockCategories: ProductCategory[] = [
   // },
   { id: "address", name: "Address Verification", slug: "address", description: "Residential address verification" },
   { id: "business", name: "Business Verification", slug: "business", description: "Business registry verification" },
+  { id: "vehicle", name: "Vehicle Verification", slug: "vehicle", description: "Vehicle and transport document verification" },
+
 ]
 
 export const fetchProducts = createAsyncThunk(

@@ -66,34 +66,35 @@ const FeaturesSection: React.FC = () => {
 
           {/* Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-4xl mx-auto"
-          >
-            {[
-              { icon: Target, value: "99.9%", label: "Accuracy Rate" },
-              { icon: Zap, value: "3s", label: "Avg. Verification Time" },
-              { icon: Sparkles, value: "24/7", label: "Support Available" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.7 + index * 0.1, duration: 0.6 }}
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/80 backdrop-blur-sm border border-white/50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mb-4 mx-auto">
-                  <stat.icon className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ delay: 0.6, duration: 0.8 }}
+  className="grid grid-cols-3 gap-4 mt-12 max-w-4xl mx-auto"
+>
+  {[
+    { icon: Target, value: "99.9%", label: "Accuracy Rate" },
+    { icon: Zap, value: "3s", label: "Avg. Verification Time" },
+    { icon: Sparkles, value: "24/7", label: "Support Available" },
+  ].map((stat, index) => (
+    <motion.div
+      key={stat.label}
+      initial={{ opacity: 0, scale: 0.8 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.7 + index * 0.1, duration: 0.6 }}
+      whileHover={{ scale: 1.05 }}
+      className="bg-white/80 backdrop-blur-sm border border-white/50 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+    >
+      <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl mb-3 sm:mb-4 mx-auto">
+        <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      </div>
+      <div className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">{stat.value}</div>
+      <div className="text-xs sm:text-base text-gray-600 font-medium">{stat.label}</div>
+    </motion.div>
+  ))}
+</motion.div>
+
         </motion.div>
 
         {/* Feature Cards */}

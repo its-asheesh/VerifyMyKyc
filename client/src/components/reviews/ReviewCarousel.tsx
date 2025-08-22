@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
 import { ReviewCard } from "./ReviewCard"
 import { Modal } from "../common/Modal"
+import { Link } from "react-router-dom"
 
 interface Review {
   text: string
@@ -16,6 +17,7 @@ interface Review {
   company?: string
   verified?: boolean
   email?: string
+  isMoreCard?: boolean
 }
 
 interface ReviewCarouselProps {
@@ -85,6 +87,23 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Compute display list: limit to 8 + "Show all" card
+  const maxCards = 8
+  const hasMore = reviews.length > maxCards
+  const displayReviews: Review[] = hasMore
+    ? [
+        ...reviews.slice(0, maxCards),
+        {
+          text: "",
+          name: "Show all reviews",
+          image: "",
+          stars: 5,
+          verified: true,
+          isMoreCard: true,
+        },
+      ]
+    : reviews
+
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
       const { scrollLeft, clientWidth } = scrollRef.current
@@ -97,11 +116,11 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
   }
 
   const nextReview = () => {
-    setCurrentIndex((prev) => (prev + 1) % reviews.length)
+    setCurrentIndex((prev) => (prev + 1) % displayReviews.length)
   }
 
   const prevReview = () => {
-    setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length)
+    setCurrentIndex((prev) => (prev - 1 + displayReviews.length) % displayReviews.length)
   }
 
   const goToReview = (index: number) => {
@@ -170,16 +189,30 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
 
         {/* Reviews Container */}
         <div ref={scrollRef} className="flex gap-6 overflow-x-auto py-4 px-8 scrollbar-hide">
-          {reviews.map((review, index) => (
+          {displayReviews.map((review, index) => (
             <div key={index} className="min-w-[350px] max-w-[350px] flex-shrink-0">
-              <ReviewCard
-                {...review}
-                showReadMore={(review.text || "").length > 220}
-                onReadMore={() => {
-                  setModalContent({ name: review.name, text: review.text, stars: review.stars })
-                  setModalOpen(true)
-                }}
-              />
+              {review.isMoreCard ? (
+                <Link to="/reviews" className="block h-full">
+                  <motion.div
+                    whileHover={{ y: -8 }}
+                    className="bg-white/95 backdrop-blur-sm border border-white/20 p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 h-[320px] md:h-[340px] flex flex-col items-center justify-center text-center"
+                  >
+                    <div className="text-5xl mb-3">✨</div>
+                    <h3 className="text-lg font-bold text-gray-900">Show all reviews</h3>
+                    <p className="text-gray-600 mt-1 text-sm">Read more experiences from our customers</p>
+                    <span className="mt-4 inline-flex items-center gap-2 text-blue-600 font-semibold">Browse all</span>
+                  </motion.div>
+                </Link>
+              ) : (
+                <ReviewCard
+                  {...review}
+                  showReadMore={(review.text || "").length > 220}
+                  onReadMore={() => {
+                    setModalContent({ name: review.name, text: review.text, stars: review.stars })
+                    setModalOpen(true)
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -220,23 +253,41 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
           {/* Single Review Card */}
           <div className="px-16">
             <AnimatePresence mode="wait">
-              <ReviewCard
-                key={currentIndex}
-                {...reviews[currentIndex]}
-                showReadMore={(reviews[currentIndex]?.text || "").length > 220}
-                onReadMore={() => {
-                  const r = reviews[currentIndex]
-                  setModalContent({ name: r.name, text: r.text, stars: r.stars })
-                  setModalOpen(true)
-                }}
-              />
+              {displayReviews[currentIndex]?.isMoreCard ? (
+                <Link to="/reviews" className="block">
+                  <motion.div
+                    key="more-mobile"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="mx-auto bg-white/95 backdrop-blur-sm border border-white/20 p-6 rounded-2xl shadow-xl h-[320px] flex flex-col items-center justify-center text-center"
+                  >
+                    <div className="text-5xl mb-3">✨</div>
+                    <h3 className="text-lg font-bold text-gray-900">Show all reviews</h3>
+                    <p className="text-gray-600 mt-1 text-sm">Read more experiences from our customers</p>
+                    <span className="mt-4 inline-flex items-center gap-2 text-blue-600 font-semibold">Browse all</span>
+                  </motion.div>
+                </Link>
+              ) : (
+                <ReviewCard
+                  key={currentIndex}
+                  {...displayReviews[currentIndex]}
+                  showReadMore={(displayReviews[currentIndex]?.text || "").length > 220}
+                  onReadMore={() => {
+                    const r = displayReviews[currentIndex]
+                    setModalContent({ name: r.name, text: r.text, stars: r.stars })
+                    setModalOpen(true)
+                  }}
+                />
+              )}
             </AnimatePresence>
           </div>
         </div>
 
         {/* Dots Indicator */}
         <div className="flex justify-center gap-2 mt-6">
-          {reviews.map((_, index) => (
+          {displayReviews.map((_, index) => (
             <button
               key={index}
               onClick={() => goToReview(index)}

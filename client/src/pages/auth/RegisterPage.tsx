@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../redux/hooks'
 import { registerUser, clearError } from '../../redux/slices/authSlice'
 import { Eye, EyeOff, Mail, Lock, User, Building, Phone, Loader2 } from 'lucide-react'
+import { useToast } from '../../components/common/ToastProvider'
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useAppDispatch()
   const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth)
+  const { showToast } = useToast()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -25,9 +28,23 @@ const RegisterPage: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/profile')
+      const redirectTo = (location.state as any)?.redirectTo
+      const nextState = (location.state as any)?.nextState
+      if (redirectTo) {
+        navigate(redirectTo, { state: nextState })
+      } else {
+        navigate('/')
+      }
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, location.state])
+
+  // Show toast if redirected with a message
+  useEffect(() => {
+    const message = (location.state as any)?.message
+    if (message) {
+      showToast(message, { type: 'info' })
+    }
+  }, [location.state, showToast])
 
   // Clear error when component unmounts
   useEffect(() => {
@@ -324,6 +341,7 @@ const RegisterPage: React.FC = () => {
                 Already have an account?{' '}
                 <Link
                   to="/login"
+                  state={location.state as any}
                   className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
                   Sign in

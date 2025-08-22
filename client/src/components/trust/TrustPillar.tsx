@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 interface TrustPillarProps {
   title: string
   icon: string
-  brandLogo: string
+  brandLogo?: string
   index: number
 }
 
@@ -54,16 +54,16 @@ export const TrustPillar: React.FC<TrustPillarProps> = ({ title, icon, brandLogo
       </div>
 
       {/* Brand Logo */}
-      <motion.img
+      {/* <motion.img
         src={brandLogo}
         alt="VerifyMyKyc"
         className="w-16 md:w-20 opacity-80 group-hover:opacity-100 transition-opacity duration-300"
         whileHover={{ scale: 1.1 }}
-      />
+      /> */}
 
       {/* Title */}
       <motion.p
-        className="text-lg md:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300"
+        className="text-sm md:text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300"
         whileHover={{ scale: 1.05 }}
       >
         {title}

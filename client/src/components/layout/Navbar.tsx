@@ -308,6 +308,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [logoAvailable, setLogoAvailable] = useState(true)
   const menuTimeouts = useRef<{ [key: number]: NodeJS.Timeout }>({})
 
   // Handle scroll effect
@@ -421,27 +422,31 @@ export default function Navbar() {
           : "bg-white shadow-sm border-b-2 border-blue-500"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 ">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Brand */}
+          {/* Logo and Brand */}
           <motion.div
-            className="flex items-center min-w-[200px] cursor-pointer"
+            className="flex items-center cursor-pointer pl-2 md:pl-4"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
             onClick={() => navigate("/")}
           >
-            <div className="font-bold text-2xl tracking-tight">
-              <span className="text-blue-600">Verify</span>
-              <span className="text-orange-500">MyKyc</span>
+          {logoAvailable ? (
+            <img
+              src="/verifymykyclogo.svg"
+              alt="VerifyMyKyc"
+              className="h-12 md:h-12 w-auto"
+              onError={() => setLogoAvailable(false)}
+            />
+          ) : (
+            <div className="font-extrabold tracking-tight leading-none flex items-baseline">
+              <span className="text-2xl md:text-3xl bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Verify</span>
+              <span className="ml-1 text-2xl md:text-3xl bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">MyKyc</span>
             </div>
-            <motion.div
-              className="ml-3 px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-semibold rounded-full"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            >
-              Trusted
-            </motion.div>
-          </motion.div>
+          )}
+        </motion.div>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">

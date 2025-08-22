@@ -33,13 +33,13 @@ const TrustSection: React.FC = () => {
         </motion.div>
 
         {/* Trust Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-20 md:mb-24">
+        <div className="grid grid-cols-3 gap-4 md:gap-12 mb-20 md:mb-24">
           {trustPillars.map((pillar, index) => (
             <TrustPillar
               key={pillar.title}
               title={pillar.title}
               icon={pillar.icon}
-              brandLogo={pillar.brandLogo}
+              // brandLogo={pillar.brandLogo}
               index={index}
             />
           ))}
@@ -50,7 +50,7 @@ const TrustSection: React.FC = () => {
           {/* Left Section: Partner Logos + Featured Card */}
           <div className="lg:col-span-2 space-y-10 md:space-y-12">
             {/* Partner Logos */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -64,10 +64,10 @@ const TrustSection: React.FC = () => {
                   <PartnerLogo key={index} src={logo.src} alt={logo.alt} index={index} />
                 ))}
               </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Featured Card */}
-            <div className="flex justify-center md:justify-start">
+            {/* <div className="flex justify-center md:justify-start">
               <FeaturedCard
                 badge={featuredContent.badge}
                 title={featuredContent.title}
@@ -75,18 +75,18 @@ const TrustSection: React.FC = () => {
                 ctaText={featuredContent.ctaText}
                 ctaLink={featuredContent.ctaLink}
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Right Section: Expert Recognition */}
-          <div className="lg:col-span-1 flex items-center justify-center">
+          {/* <div className="lg:col-span-1 flex items-center justify-center">
             <ExpertSection
               title={expertContent.title}
               description={expertContent.description}
               ctaText={expertContent.ctaText}
               ctaLink={expertContent.ctaLink}
             />
-          </div>
+          </div> */}
         </div>
       </div>
 

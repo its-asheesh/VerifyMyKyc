@@ -22,6 +22,7 @@ const AdminPricing: React.FC = () => {
 
   const [showVoterForm, setShowVoterForm] = useState(false)
   const [showCompanyForm, setShowCompanyForm] = useState(false)
+  const [showRcForm, setShowRcForm] = useState(false)
 
   // Voter ID form state (defaults can be adjusted)
   const [form, setForm] = useState({
@@ -103,6 +104,42 @@ const AdminPricing: React.FC = () => {
     color: "emerald",
   })
 
+  // RC form state
+  const [rcForm, setRcForm] = useState({
+    verificationType: "vehicle",
+    title: "RC Verification",
+    description: "Vehicle RC, eChallan and FASTag verification",
+    oneTimePrice: 99,
+    monthlyPrice: 399,
+    yearlyPrice: 3999,
+    oneTimeQuota: { count: 10, validityDays: 30 },
+    monthlyQuota: { count: 500, validityDays: 30 },
+    yearlyQuota: { count: 5000, validityDays: 365 },
+    oneTimeFeatures: [
+      "Fetch RC Lite",
+      "Basic Verification",
+      "Email Support",
+    ] as string[],
+    monthlyFeatures: [
+      "RC Detailed + Challan",
+      "Chassis-to-RC Lookup",
+      "FASTag Details",
+      "API Access",
+      "Priority Support",
+      "Quota-aware Billing",
+    ] as string[],
+    yearlyFeatures: [
+      "All Monthly Features",
+      "24/7 Support",
+      "Bulk Processing",
+      "Custom Integration",
+      "Dedicated Account Manager",
+    ] as string[],
+    highlighted: false,
+    popular: true,
+    color: "cyan",
+  })
+
   const hasVoterPricing = useMemo(
     () => (data || []).some((p) => p.verificationType === "voterid"),
     [data]
@@ -110,6 +147,11 @@ const AdminPricing: React.FC = () => {
 
   const hasCompanyPricing = useMemo(
     () => (data || []).some((p) => p.verificationType === "company"),
+    [data]
+  )
+
+  const hasRcPricing = useMemo(
+    () => (data || []).some((p) => p.verificationType === "vehicle"),
     [data]
   )
 
@@ -121,6 +163,8 @@ const AdminPricing: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-verification-pricing"] })
       setShowVoterForm(false)
+      setShowCompanyForm(false)
+      setShowRcForm(false)
     },
   })
 
@@ -143,6 +187,29 @@ const AdminPricing: React.FC = () => {
       yearlyQuota: {
         count: Number(form.yearlyQuota.count),
         validityDays: Number(form.yearlyQuota.validityDays),
+      },
+    }
+    addMutation.mutate(payload)
+  }
+
+  const onSubmitRc = (e: React.FormEvent) => {
+    e.preventDefault()
+    const payload = {
+      ...rcForm,
+      oneTimePrice: Number(rcForm.oneTimePrice),
+      monthlyPrice: Number(rcForm.monthlyPrice),
+      yearlyPrice: Number(rcForm.yearlyPrice),
+      oneTimeQuota: {
+        count: Number(rcForm.oneTimeQuota.count),
+        validityDays: Number(rcForm.oneTimeQuota.validityDays),
+      },
+      monthlyQuota: {
+        count: Number(rcForm.monthlyQuota.count),
+        validityDays: Number(rcForm.monthlyQuota.validityDays),
+      },
+      yearlyQuota: {
+        count: Number(rcForm.yearlyQuota.count),
+        validityDays: Number(rcForm.yearlyQuota.validityDays),
       },
     }
     addMutation.mutate(payload)
@@ -188,6 +255,7 @@ const AdminPricing: React.FC = () => {
                   onClick={() => {
                     setShowVoterForm((s) => !s)
                     setShowCompanyForm(false)
+                    setShowRcForm(false)
                   }}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
@@ -199,10 +267,23 @@ const AdminPricing: React.FC = () => {
                   onClick={() => {
                     setShowCompanyForm((s) => !s)
                     setShowVoterForm(false)
+                    setShowRcForm(false)
                   }}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   <Plus className="w-4 h-4" /> Add Company Pricing
+                </button>
+              )}
+              {!hasRcPricing && (
+                <button
+                  onClick={() => {
+                    setShowRcForm((s) => !s)
+                    setShowVoterForm(false)
+                    setShowCompanyForm(false)
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700"
+                >
+                  <Plus className="w-4 h-4" /> Add RC Pricing
                 </button>
               )}
             </div>
@@ -375,6 +456,127 @@ const AdminPricing: React.FC = () => {
                   </button>
                   {addMutation.isError && (
                     <span className="text-sm text-red-600">Failed to save. Ensure voter plan does not already exist.</span>
+                  )}
+                  {addMutation.isSuccess && (
+                    <span className="text-sm text-green-700">Saved!</span>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Add RC pricing form */}
+          {showRcForm && !hasRcPricing && (
+            <div className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-lg font-semibold mb-4">Add RC Verification Pricing</h3>
+              <form onSubmit={onSubmitRc} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-gray-700">Title</label>
+                  <input
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.title}
+                    onChange={(e) => setRcForm({ ...rcForm, title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">One-time Price</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.oneTimePrice}
+                    onChange={(e) => setRcForm({ ...rcForm, oneTimePrice: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Monthly Price</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.monthlyPrice}
+                    onChange={(e) => setRcForm({ ...rcForm, monthlyPrice: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Yearly Price</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.yearlyPrice}
+                    onChange={(e) => setRcForm({ ...rcForm, yearlyPrice: Number(e.target.value) })}
+                  />
+                </div>
+                {/* Quotas */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">One-time Count</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.oneTimeQuota.count}
+                    onChange={(e) => setRcForm({ ...rcForm, oneTimeQuota: { ...rcForm.oneTimeQuota, count: Number(e.target.value) } })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">One-time Validity Days</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.oneTimeQuota.validityDays}
+                    onChange={(e) => setRcForm({ ...rcForm, oneTimeQuota: { ...rcForm.oneTimeQuota, validityDays: Number(e.target.value) } })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Monthly Count</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.monthlyQuota.count}
+                    onChange={(e) => setRcForm({ ...rcForm, monthlyQuota: { ...rcForm.monthlyQuota, count: Number(e.target.value) } })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Monthly Validity Days</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.monthlyQuota.validityDays}
+                    onChange={(e) => setRcForm({ ...rcForm, monthlyQuota: { ...rcForm.monthlyQuota, validityDays: Number(e.target.value) } })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Yearly Count</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.yearlyQuota.count}
+                    onChange={(e) => setRcForm({ ...rcForm, yearlyQuota: { ...rcForm.yearlyQuota, count: Number(e.target.value) } })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Yearly Validity Days</label>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-md border-gray-300 shadow-sm"
+                    value={rcForm.yearlyQuota.validityDays}
+                    onChange={(e) => setRcForm({ ...rcForm, yearlyQuota: { ...rcForm.yearlyQuota, validityDays: Number(e.target.value) } })}
+                  />
+                </div>
+                <div className="md:col-span-3 flex items-center gap-3 mt-2">
+                  <button
+                    type="submit"
+                    disabled={addMutation.isPending}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-60"
+                  >
+                    <Check className="w-4 h-4" /> {addMutation.isPending ? "Saving…" : "Save RC Pricing"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowRcForm(false)}
+                    className="px-4 py-2 border rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  {addMutation.isError && (
+                    <span className="text-sm text-red-600">Failed to save. Ensure RC plan does not already exist.</span>
                   )}
                   {addMutation.isSuccess && (
                     <span className="text-sm text-green-700">Saved!</span>

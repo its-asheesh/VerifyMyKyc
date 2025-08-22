@@ -13,9 +13,8 @@ router.get('/product/:productId', review_controller_1.getProductReviews);
 router.get('/public', review_controller_1.getPublicReviews);
 // Authenticated user: create a review
 router.post('/', auth_1.authenticate, review_controller_1.createReview);
-// Admin routes
-router.use(auth_1.authenticate, auth_1.requireAdmin);
-router.get('/', review_controller_1.adminListReviews);
-router.put('/:id', review_controller_1.adminUpdateReview);
-router.delete('/:id', review_controller_1.adminDeleteReview);
+// Admin routes (apply middleware per-route to avoid affecting public endpoints)
+router.get('/', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminListReviews);
+router.put('/:id', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminUpdateReview);
+router.delete('/:id', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminDeleteReview);
 exports.default = router;

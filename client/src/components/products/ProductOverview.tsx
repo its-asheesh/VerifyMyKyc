@@ -11,6 +11,7 @@ import { VoterSection } from "../verification/VoterSection"
 import { GstinSection } from "../verification/GstinSection"
 import { CompanySection } from "../verification/CompanySection"
 import { BankAccountSection } from "../verification/BankAccountSection"
+import { RcSection } from "../verification/RcSection"
 import { useQuery } from "@tanstack/react-query"
 import { reviewApi } from "../../services/api/reviewApi"
 
@@ -26,6 +27,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const [gstinModalOpen, setGstinModalOpen] = useState(false)
   const [companyModalOpen, setCompanyModalOpen] = useState(false)
   const [bankModalOpen, setBankModalOpen] = useState(false)
+  const [rcModalOpen, setRcModalOpen] = useState(false)
   const title = product.title.toLowerCase()
   const categoryName = product.category.name.toLowerCase()
   const isAadhaarProduct = title.includes("aadhaar") || categoryName.includes("aadhaar")
@@ -49,6 +51,10 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     categoryName.includes("bankaccount") ||
     title.includes("ifsc") ||
     title.includes("upi")
+  const isRcProduct =
+    (product.id || "").toLowerCase() === "vehicle" ||
+    title.includes("registration certificate") ||
+    /\bvehicle\b/.test(title)
 
   const handleTryDemo = () => {
     if (isAadhaarProduct) setAadhaarModalOpen(true)
@@ -58,6 +64,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     else if (isCompanyProduct) setCompanyModalOpen(true)
     else if (isBankProduct) setBankModalOpen(true)
     else if (isPanProduct) setPanModalOpen(true)
+    else if (isRcProduct) setRcModalOpen(true)
   }
 
   const handleBuyNow = () => {
@@ -177,7 +184,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
           <button
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
             onClick={handleTryDemo}
-            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isVoterProduct && !isGstinProduct && !isCompanyProduct && !isBankProduct}
+            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isVoterProduct && !isGstinProduct && !isCompanyProduct && !isBankProduct && !isRcProduct}
           >
             Start Verification
           </button>
@@ -192,6 +199,19 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
                 &times;
               </button>
               <BankAccountSection productId={product.id} />
+            </div>
+          </div>
+        )}
+        {rcModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setRcModalOpen(false)}
+              >
+                &times;
+              </button>
+              <RcSection productId={product.id} />
             </div>
           </div>
         )}

@@ -227,6 +227,40 @@ const seedPricingData = async () => {
         highlighted: false,
         popular: false,
         color: 'emerald'
+      },
+      {
+        verificationType: 'vehicle',
+        monthlyPrice: 399,
+        yearlyPrice: 3999,
+        oneTimePrice: 99,
+        title: 'RC Verification',
+        description: 'Vehicle RC, eChallan and FASTag verification',
+        oneTimeFeatures: [
+          'Fetch RC Lite',
+          'Basic Verification',
+          'Email Support'
+        ],
+        monthlyFeatures: [
+          'RC Detailed + Challan',
+          'Chassis-to-RC Lookup',
+          'FASTag Details',
+          'API Access',
+          'Priority Support',
+          'Quota-aware Billing'
+        ],
+        yearlyFeatures: [
+          'All Monthly Features',
+          '24/7 Support',
+          'Bulk Processing',
+          'Custom Integration',
+          'Dedicated Account Manager'
+        ],
+        oneTimeQuota: { count: 10, validityDays: 30 },
+        monthlyQuota: { count: 500, validityDays: 30 },
+        yearlyQuota: { count: 5000, validityDays: 365 },
+        highlighted: false,
+        popular: true,
+        color: 'cyan'
       }
     ]
     
@@ -252,7 +286,7 @@ const seedPricingData = async () => {
         highlighted: false,
         popular: false,
         color: 'blue',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
       {
         planType: 'yearly',
@@ -271,7 +305,7 @@ const seedPricingData = async () => {
         highlighted: false,
         popular: false,
         color: 'blue',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
       
       // Professional Plans
@@ -292,7 +326,7 @@ const seedPricingData = async () => {
         highlighted: false,
         popular: true,
         color: 'purple',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
       {
         planType: 'yearly',
@@ -312,7 +346,7 @@ const seedPricingData = async () => {
         highlighted: false,
         popular: true,
         color: 'purple',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
       
       // Business Plans
@@ -334,7 +368,7 @@ const seedPricingData = async () => {
         highlighted: true,
         popular: false,
         color: 'green',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
       {
         planType: 'yearly',
@@ -355,7 +389,7 @@ const seedPricingData = async () => {
         highlighted: true,
         popular: false,
         color: 'green',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       }
     ]
     

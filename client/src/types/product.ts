@@ -38,4 +38,5 @@ export enum ProductType {
   DOCUMENT_VERIFICATION = "document-verification",
   BIOMETRIC_VERIFICATION = "biometric-verification",
   ADDRESS_VERIFICATION = "address-verification",
+  VEHICLE_VERIFICATION = "vehicle-verification",
 }

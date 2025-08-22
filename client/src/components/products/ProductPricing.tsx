@@ -8,6 +8,7 @@ import { useState } from "react"
 import type { Product } from "../../types/product"
 import { useVerificationPricing } from "../../hooks/usePricing"
 import { PricingCard } from "../pricing/PricingCard"
+import { useAppSelector } from "../../redux/hooks"
 
 interface ProductPricingProps {
   product: Product
@@ -16,13 +17,32 @@ interface ProductPricingProps {
 export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
   const navigate = useNavigate()
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const { isAuthenticated } = useAppSelector((state) => state.auth)
   
   const handleChoosePlan = (tier: any) => {
-    const verificationType = getVerificationType(product.title)
+    const verificationType = getVerificationType(product)
     console.log('=== PRODUCT PAGE DEBUG ===')
     console.log('Product title:', product.title)
     console.log('Detected verification type:', verificationType)
     console.log('Selected services array:', [verificationType])
+    
+    // If not logged in, redirect to login with a helpful message and the intended checkout payload
+    if (!isAuthenticated) {
+      navigate('/login', {
+        state: {
+          message: 'Please login to continue to checkout',
+          redirectTo: '/checkout',
+          nextState: {
+            selectedPlan: tier.name,
+            billingPeriod: tier.period === 'one-time' ? 'one-time' : tier.period === 'month' ? 'monthly' : 'yearly',
+            selectedServices: [verificationType],
+            productInfo: product,
+            tierInfo: tier,
+          },
+        },
+      })
+      return
+    }
     
     // Navigate to checkout page with the selected plan and product info
     navigate('/checkout', {
@@ -44,20 +64,35 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     setSelectedPlan(null)
   }
   
-  // Map product titles to verification types
-  const getVerificationType = (productTitle: string): string => {
-    const title = productTitle.toLowerCase()
+  // Resolve verification type from product (prefer stable id, fallback to title)
+  const getVerificationType = (prod: Product): string => {
+    const id = (prod.id || '').toLowerCase()
+    if ([
+      'aadhaar',
+      'pan',
+      'drivinglicense',
+      'gstin',
+      'company',
+      'voterid',
+      'bankaccount',
+      'vehicle',
+    ].includes(id)) return id
+
+    const title = (prod.title || '').toLowerCase()
+    // Important: check company/MCA first to avoid matching 'pan' inside 'company'
+    if (title.includes('company') || title.includes('mca') || title.includes('cin') || title.includes('din')) return 'company'
     if (title.includes('pan')) return 'pan'
     if (title.includes('aadhaar')) return 'aadhaar'
     if (title.includes('driving license') || title.includes('drivinglicense')) return 'drivinglicense'
     if (title.includes('gstin')) return 'gstin'
-    if (title.includes('company') || title.includes('mca')) return 'company'
     if (title.includes('voter')) return 'voterid'
     if (title.includes('bank account') || title.includes('bankaccount') || title.includes('banking')) return 'bankaccount'
+    // RC product mapping (avoid overly-broad "vehicle" to prevent misclassification)
+    if (title.includes('vehicle') || title.includes('registration certificate')) return 'vehicle'
     return ''
   }
 
-  const verificationType = getVerificationType(product.title)
+  const verificationType = getVerificationType(product)
   const { data: verificationPricing, isLoading: verificationsLoading, error: verificationsError } = useVerificationPricing(verificationType)
 
   console.log('Product title:', product.title)

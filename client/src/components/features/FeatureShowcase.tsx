@@ -79,7 +79,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
           }`}
         >
           {/* Image Section */}
-          <motion.div variants={imageVariants} className={`relative ${reverse ? "lg:col-start-2" : ""}`}>
+          <motion.div variants={imageVariants} className={`relative order-2 lg:order-none ${reverse ? "lg:col-start-2" : ""}`}>
             <motion.div
               whileHover={{ scale: 1.05, rotate: 0 }}
               transition={{ duration: 0.4 }}
@@ -89,8 +89,8 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-110" />
 
               {/* Image Container */}
-              <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg border border-gray-100">
-                <img src={image || "/placeholder.svg"} alt={title} className="w-full h-64 md:h-80 object-contain" />
+              <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+                <img src={image || "/placeholder.svg"} alt={title} className="w-full h-48 sm:h-64 md:h-80 object-contain" />
 
                 {/* Floating Badge */}
                 <motion.div
@@ -102,13 +102,31 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
                   <Sparkles className="w-4 h-4" />
                 </motion.div>
               </div>
+
+        {/* Stats (mobile only, placed after image) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="grid grid-cols-2 gap-3 py-3 lg:hidden"
+        >
+          <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-xl">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">99.9%</div>
+            <div className="text-xs sm:text-sm text-gray-600">Accuracy</div>
+          </div>
+          <div className="text-center p-3 sm:p-4 bg-green-50 rounded-xl">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">3s</div>
+            <div className="text-xs sm:text-sm text-gray-600">Verification</div>
+          </div>
+        </motion.div>
             </motion.div>
           </motion.div>
 
           {/* Content Section */}
           <motion.div
             variants={getTextVariants(reverse)}
-            className={`space-y-6 ${reverse ? "lg:col-start-1 lg:row-start-1" : ""}`}
+            className={`space-y-6 order-1 lg:order-none ${reverse ? "lg:col-start-1 lg:row-start-1" : ""}`}
           >
             {/* Category Badge */}
             <motion.div
@@ -148,7 +166,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="grid grid-cols-2 gap-4 py-4"
+              className="hidden lg:grid grid-cols-2 gap-4 py-4"
             >
               <div className="text-center p-4 bg-blue-50 rounded-xl">
                 <div className="text-2xl font-bold text-blue-600">99.9%</div>
@@ -160,11 +178,12 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
               </div>
             </motion.div>
 
-            {/* CTA Button */}
+            {/* CTA Button (desktop only) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.6 }}
+              className="hidden lg:block"
             >
               <motion.a
                 href={ctaLink}
@@ -178,6 +197,25 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
             </motion.div>
           </motion.div>
         </div>
+
+        {/* CTA Button (mobile only, placed after image) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mt-6 lg:hidden"
+        >
+          <motion.a
+            href={ctaLink}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full inline-flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group"
+          >
+            {ctaText}
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+          </motion.a>
+        </motion.div>
       </motion.div>
     </motion.div>
   )

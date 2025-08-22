@@ -14,6 +14,7 @@ import couponRouter from './modules/coupons/coupon.router';
 import bankAccountRouter from './modules/bankaccount/bankaccount.router';
 import voterRouter from './modules/voter/voter.router';
 import reviewsRouter from './modules/reviews/review.router';
+import vehicleRouter from './modules/vehicle/vehicle.router';
 
 const router = Router();
 
@@ -43,5 +44,6 @@ router.use('/pricing', pricingRouter);
 router.use('/bankaccount', bankAccountRouter);
 router.use('/voter', voterRouter);
 router.use('/reviews', reviewsRouter);
+router.use('/vehicle', vehicleRouter)
 
 export default router;

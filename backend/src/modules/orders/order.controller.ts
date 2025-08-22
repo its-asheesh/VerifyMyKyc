@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Order, IOrder } from './order.model';
 import { Coupon } from '../coupons/coupon.model';
 import asyncHandler from '../../common/middleware/asyncHandler';
-import { VerificationPricing } from '../pricing/pricing.model';
+import { VerificationPricing, HomepagePlan } from '../pricing/pricing.model';
 
 // Create new order
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -174,6 +174,69 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
   }
   
   await order.save();
+
+  // If this is a plan purchase, auto-provision included verification quotas as separate verification orders
+  try {
+    if (order.orderType === 'plan' && order.paymentStatus === 'completed' && order.status === 'active') {
+      const planType = (order.serviceDetails?.planType === 'monthly' || order.serviceDetails?.planType === 'yearly')
+        ? order.serviceDetails.planType
+        : (order.billingPeriod === 'monthly' || order.billingPeriod === 'yearly') ? order.billingPeriod : 'monthly';
+
+      const planName = order.serviceDetails?.planName;
+      if (planName) {
+        const plan = await HomepagePlan.findOne({ planType, planName });
+        if (plan && Array.isArray(plan.includesVerifications) && plan.includesVerifications.length > 0) {
+          for (const vType of plan.includesVerifications) {
+            try {
+              // Lookup pricing for the included verification type to determine quota
+              const pricing = await VerificationPricing.findOne({ verificationType: vType });
+              if (!pricing) {
+                console.warn(`processPayment: No pricing found for included verification type '${vType}'`);
+                continue;
+              }
+
+              const quotaCfg = planType === 'yearly' ? pricing.yearlyQuota : pricing.monthlyQuota;
+              if (!quotaCfg || typeof (quotaCfg as any).count !== 'number' || (quotaCfg as any).count <= 0) {
+                console.warn(`processPayment: No usable quota config for type '${vType}' under planType '${planType}'`);
+                continue;
+              }
+
+              // Create a child verification order representing the included quota for this verification type
+              const childOrderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              await Order.create({
+                userId: order.userId,
+                orderId: childOrderId,
+                orderType: 'verification',
+                serviceName: `${vType.toUpperCase()} Verification (Included in ${planName} ${planType})`,
+                serviceDetails: { verificationType: vType, features: ['Included via plan'] },
+                totalAmount: 0,
+                finalAmount: 0,
+                billingPeriod: planType,
+                paymentMethod: order.paymentMethod,
+                paymentStatus: 'completed',
+                status: 'active',
+                startDate: order.startDate || new Date(),
+                verificationQuota: {
+                  totalAllowed: (quotaCfg as any).count,
+                  used: 0,
+                  remaining: (quotaCfg as any).count,
+                  validityDays: (quotaCfg as any).validityDays || (planType === 'monthly' ? 30 : 365),
+                },
+              });
+              console.log(`processPayment: Provisioned included '${vType}' verification quota from plan '${planName}'`);
+            } catch (childErr) {
+              console.error('processPayment: Failed to create included verification order', { vType, planType, planName, err: childErr });
+            }
+          }
+        } else {
+          console.log(`processPayment: Plan '${planName}' (${planType}) has no includesVerifications or plan not found`);
+        }
+      }
+    }
+  } catch (provisionErr) {
+    console.error('processPayment: Error while provisioning included verification quotas for plan', provisionErr);
+    // Do not fail the payment response due to provisioning errors
+  }
 
   res.json({
     success: true,

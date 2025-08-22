@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { 
   Package, CreditCard, Users, TrendingUp, Filter, Search, 
   CheckCircle, Clock, AlertCircle, X, Eye, Calendar,
-  DollarSign, ArrowUpDown, Loader2, BarChart
+  IndianRupee, ArrowUpDown, Loader2, BarChart
 } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
 import { useOrders, useOrderStats, useUpdateOrderStatus } from '../hooks/useOrders'
@@ -225,7 +225,7 @@ const OrderManagement: React.FC = () => {
           >
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-purple-600" />
+                <IndianRupee className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Revenue</p>

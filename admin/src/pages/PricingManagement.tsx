@@ -145,6 +145,8 @@ const PricingManagement: React.FC = () => {
         return '🚗'
       case 'gstin':
         return '🏢'
+      case 'vehicle':
+        return '🚗'
       default:
         return '📄'
     }

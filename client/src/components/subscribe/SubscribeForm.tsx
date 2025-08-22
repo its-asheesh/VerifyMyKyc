@@ -56,7 +56,7 @@ export const SubscribeForm: React.FC<SubscribeFormProps> = ({ onSubmit }) => {
       <div className="relative">
         <div className="flex items-center bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 p-2 shadow-xl">
           <div className="flex items-center pl-4 pr-2">
-            <Mail className="w-5 h-5 text-white/70" />
+            <Mail className="w-4 h-4 text-white/70" />
           </div>
           <input
             type="email"
