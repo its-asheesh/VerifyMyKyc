@@ -2265,6 +2265,149 @@ if (serviceKey === "fetch-detailed-challan") {
   )
 }
 
+// E-Challan: echallan-fetch
+if (serviceKey === "echallan-fetch") {
+  const data = (result as any).data || result
+  const challans: any[] = data.challan_data || []
+
+  const totalChallans = challans.length
+  const totalAmount = challans.reduce((sum, c) => sum + (Number(c.amount) || 0), 0)
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Service Header */}
+      <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-xl p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">{serviceName}</h2>
+            <p className="text-orange-100 mt-1">{serviceDescription}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Result */}
+      <motion.div
+        ref={shareTargetRef}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+            <h4 className="font-semibold text-green-900 text-lg">Challan Details Fetched</h4>
+            {typeof data.message === "string" && data.message && (
+              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                {data.message}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareActions
+              targetRef={shareTargetRef}
+              serviceName={serviceName || (serviceKey ?? "Verification")}
+              fileName={`${(serviceName || "challan").toString().toLowerCase().replace(/\s+/g, "-")}-details`}
+              result={result}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Verify Another
+            </button>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6 flex flex-wrap items-center gap-6">
+          <div>
+            <div className="text-sm text-gray-500">Total Challans</div>
+            <div className="text-lg font-semibold text-gray-900">{totalChallans}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500">Total Amount</div>
+            <div className="text-lg font-semibold text-red-600">₹{totalAmount}</div>
+          </div>
+        </div>
+
+        {/* Challan List */}
+        {challans.length > 0 ? (
+          <div className="space-y-4">
+            {challans.map((c, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm"
+              >
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="text-sm text-gray-500">Challan ID</div>
+                    <div className="font-semibold text-gray-900">{c.document_id}</div>
+                    {c.document_type && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        Type: {c.document_type}
+                      </div>
+                    )}
+                    <div className="mt-1 text-sm text-gray-500">Issued On</div>
+                    <div className="text-gray-800">{c.date_issued}</div>
+                  </div>
+                  <div className="mt-3 md:mt-0">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        c.status?.toLowerCase() === "paid"
+                          ? "bg-green-100 text-green-800"
+                          : c.status?.toLowerCase() === "unpaid"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {c.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500">Accused Name</div>
+                    <div className="text-gray-900 font-medium">{c.accused_name}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">State</div>
+                    <div className="text-gray-900">{c.state}</div>
+                  </div>
+                  {c.area_name && (
+                    <div className="md:col-span-2">
+                      <div className="text-sm text-gray-500">Area</div>
+                      <div className="text-gray-900">{c.area_name}</div>
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-sm text-gray-500">Amount</div>
+                    <div className="text-gray-900 font-semibold">₹{c.amount}</div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className="text-sm text-gray-500">Offences</div>
+                    <ul className="list-disc list-inside text-gray-900 mt-1 space-y-1">
+                      {(c.offence_data || []).map((o: any, i: number) => (
+                        <li key={i}>{o.offence_description}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No challans found.</p>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
 // RC Registration Number by Chassis: fetch-reg-num-by-chassis
 if (serviceKey === "fetch-reg-num-by-chassis") {
   const data = (result as any).data || result

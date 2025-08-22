@@ -1,5 +1,3 @@
-// src/containers/Home/VerificationSection.tsx
-
 "use client"
 
 import { useRef, useState, useEffect } from "react"
@@ -16,7 +14,7 @@ const VerificationSection = () => {
 
   useEffect(() => {
     if (activeCategory === "All") setFiltered(verificationServices)
-    else setFiltered(verificationServices.filter(v => v.category === activeCategory))
+    else setFiltered(verificationServices.filter((v) => v.category === activeCategory))
   }, [activeCategory])
 
   const scroll = (dir: "left" | "right") => {
@@ -32,9 +30,9 @@ const VerificationSection = () => {
       </Typography>
 
       <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
-        {["All", ...categories].map(cat => {
-          const label = typeof cat === "string" ? cat : cat.label;
-          const value = typeof cat === "string" ? cat : cat.value;
+        {["All", ...categories].map((cat) => {
+          const label = typeof cat === "string" ? cat : cat.label
+          const value = typeof cat === "string" ? cat : cat.value
           return (
             <Chip
               key={value}
@@ -43,14 +41,21 @@ const VerificationSection = () => {
               onClick={() => setActiveCategory(value)}
               variant={activeCategory === value ? "filled" : "outlined"}
             />
-          );
+          )
         })}
       </Box>
 
       <Box position="relative">
         <Button
           onClick={() => scroll("left")}
-          sx={{ position: "absolute", top: "50%", left: 0, zIndex: 10, transform: "translateY(-50%)" }}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            zIndex: 10,
+            transform: "translateY(-50%)",
+            display: { xs: "none", md: "flex" },
+          }}
         >
           <ArrowBackIos fontSize="small" />
         </Button>
@@ -59,22 +64,25 @@ const VerificationSection = () => {
           component={motion.div}
           sx={{
             display: "flex",
-            gap: 3,
+            gap: { xs: 1.5, md: 3 },
             overflowX: "auto",
             scrollBehavior: "smooth",
-            px: 6,
+            px: { xs: 2, md: 6 },
             scrollbarWidth: "none",
             "&::-webkit-scrollbar": { display: "none" },
+            WebkitOverflowScrolling: "touch",
+            scrollSnapType: "x mandatory",
           }}
         >
           <AnimatePresence initial={false}>
-            {filtered.map(item => (
+            {filtered.map((item) => (
               <motion.div
                 key={item.id}
                 layout
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 30 }}
+                style={{ scrollSnapAlign: "start" }}
               >
                 <VerificationCard
                   title={item.title}
@@ -99,7 +107,14 @@ const VerificationSection = () => {
         </Box>
         <Button
           onClick={() => scroll("right")}
-          sx={{ position: "absolute", top: "50%", right: 0, zIndex: 10, transform: "translateY(-50%)" }}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 0,
+            zIndex: 10,
+            transform: "translateY(-50%)",
+            display: { xs: "none", md: "flex" },
+          }}
         >
           <ArrowForwardIos fontSize="small" />
         </Button>
