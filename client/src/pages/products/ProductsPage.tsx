@@ -29,17 +29,17 @@ const ProductsPage: React.FC = () => {
 
   // Handle URL parameters on page load
   useEffect(() => {
-    const categoryFromUrl = searchParams.get('category')
-    if (categoryFromUrl === 'all') {
-      if (filters.category !== '') {
-        dispatch(setFilters({ category: '' }))
-      }
-      return
+  const categoryFromUrl = searchParams.get("category")
+
+  if (!categoryFromUrl) {
+    // No param → "all"
+    if (filters.category !== "") {
+      dispatch(setFilters({ category: "" }))
     }
-    if (categoryFromUrl && categoryFromUrl !== filters.category) {
-      dispatch(setFilters({ category: categoryFromUrl }))
-    }
-  }, [searchParams, dispatch, filters.category])
+  } else if (categoryFromUrl !== filters.category) {
+    dispatch(setFilters({ category: categoryFromUrl }))
+  }
+}, [searchParams, dispatch, filters.category])
 
   useEffect(() => {
     dispatch(fetchProducts(filters))
@@ -50,14 +50,19 @@ const ProductsPage: React.FC = () => {
   }
 
   const handleCategoryChange = (category: string) => {
-    // Use 'all' as the special id for no filter
-    if (category === 'all') {
-      dispatch(setFilters({ category: '' }))
-      navigate('/products')
-      return
-    }
+  if (category === "all") {
+    dispatch(setFilters({ category: "" }))
+    navigate("/products", { replace: true }) // Clean URL
+  } else {
     dispatch(setFilters({ category }))
     navigate(`/products?category=${category}`)
+  }
+}
+
+  const handleProductClick = (product: any) => {
+    console.log("[v0] Product clicked:", product.name)
+    // Navigate to product detail or handle product selection
+    navigate(`/products/${product.id}`)
   }
 
   // Ensure categories is an array before mapping
@@ -91,82 +96,136 @@ const ProductsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <PageHeader title="Our Products" subtitle="Comprehensive verification solutions for every business need">
         {/* Layout toggle buttons and search bar aligned */}
-        <div className="flex flex-col md:flex-row md:items-center md:gap-6 w-full">
-          <div className="flex-1">
-            <SearchInput placeholder="Search products..." onSearch={handleSearch} className="max-w-md w-full" />
-          </div>
-          <div className="flex items-center gap-2 mt-4 md:mt-0">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+        <div className="flex flex-col space-y-4 w-full">
+          {/* View toggle buttons - hidden on mobile, shown on desktop */}
+          <div className="hidden md:flex items-center justify-end gap-2">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-3 rounded-xl transition-all duration-200 ${
+                viewMode === "grid"
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-white text-gray-600 hover:bg-gray-100 shadow-sm"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-3 rounded-xl transition-all duration-200 ${
+                viewMode === "list"
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-white text-gray-600 hover:bg-gray-100 shadow-sm"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </PageHeader>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+        <div className="mb-12">
+          <div className="flex justify-center mb-8">
+            <div className="w-full max-w-2xl">
+              <SearchInput
+                placeholder="Search verification services..."
+                onSearch={handleSearch}
+                className="w-full shadow-xl border-2 border-gray-200 focus:border-blue-500 rounded-2xl px-8 py-5 text-lg placeholder-gray-400 bg-white backdrop-blur-sm"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Search and Filters */}
-        <div className="mb-8 space-y-6">
+        <div className="mb-10 space-y-6">
           {/* Only show filter tabs if categories are loaded */}
           {categories && categories.length > 0 && (
-            <FilterTabs tabs={categoryTabs} activeTab={filters?.category || "all"} onTabChange={handleCategoryChange} />
+            <div className="w-full">
+              {/* Mobile: Horizontal scrollable tabs */}
+              <div className="md:hidden">
+                <div
+                  className="flex overflow-x-auto scrollbar-hide gap-3 pb-4 px-2"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {categoryTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => handleCategoryChange(tab.id)}
+                      className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap shadow-sm ${
+                        (filters?.category || "all") === tab.id
+                          ? "bg-blue-600 text-white shadow-lg scale-105"
+                          : "bg-white text-gray-600 hover:bg-gray-100 hover:shadow-md"
+                      }`}
+                    >
+                      {tab.label} <span className="ml-1 opacity-75">{tab.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Desktop: Regular FilterTabs */}
+              <div className="hidden md:block">
+                <FilterTabs
+                  tabs={categoryTabs}
+                  activeTab={filters?.category || "all"}
+                  onTabChange={handleCategoryChange}
+                />
+              </div>
+            </div>
           )}
         </div>
 
         {/* Products Grid/List */}
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-16">
             <LoadingSpinner size="lg" />
           </div>
         ) : (
           <motion.div
             layout
-            className={`grid gap-6 ${
-              viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
+            className={`grid gap-8 ${
+              viewMode === "grid" || window.innerWidth < 768
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                : "grid-cols-1"
             }`}
           >
             {(products || []).map((product, index) => (
               <motion.div
                 key={product.id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
               >
-                <ProductCard product={product} viewMode={viewMode} />
+                <ProductCard
+                  product={product}
+                  viewMode={window.innerWidth < 768 ? "grid" : viewMode}
+                />
               </motion.div>
             ))}
           </motion.div>
         )}
 
         {(!products || products.length === 0) && !isLoading && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16 bg-white rounded-2xl shadow-sm"
+          >
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
             <p className="text-gray-600">Try adjusting your search or filter criteria</p>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

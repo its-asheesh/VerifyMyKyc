@@ -501,7 +501,7 @@ export default function Navbar() {
           {/* Right Section */}
           <div className="flex items-center gap-4">
             {/* Search */}
-            <div className="relative">
+            {/* <div className="relative">
               <AnimatePresence>
                 {searchOpen && (
                   <motion.div
@@ -526,7 +526,7 @@ export default function Navbar() {
               <IconButton onClick={toggleSearch}>
                 <Search className="w-5 h-5" />
               </IconButton>
-            </div>
+            </div> */}
 
             {/* CTA Buttons */}
             <div className="hidden sm:flex items-center gap-3">
@@ -573,9 +573,9 @@ export default function Navbar() {
             </div>
 
             {/* Mobile CTA */}
-            <Button variant="gradient" size="sm" className="sm:hidden">
+            {/* <Button variant="gradient" size="sm" className="sm:hidden">
               <Shield className="w-3 h-3" />
-            </Button>
+            </Button> */}
 
             {/* Mobile Menu Toggle */}
             <IconButton className="lg:hidden" onClick={toggleMobileMenu}>

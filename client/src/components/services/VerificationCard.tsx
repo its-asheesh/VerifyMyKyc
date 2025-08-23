@@ -3,6 +3,8 @@
 import { motion } from "framer-motion"
 import { Clock, CheckCircle, Star } from "lucide-react"
 import type { FC } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { reviewApi } from "../..//services/api/reviewApi"
 
 type VerificationCardProps = {
   title: string
@@ -42,6 +44,25 @@ export const VerificationCard: FC<VerificationCardProps> = ({
   expiresAt,
 }) => {
   const formattedExpiry = expiresAt ? new Date(expiresAt).toLocaleDateString() : null
+
+  const { data } = useQuery({
+    queryKey: ["product-reviews", productId],
+    queryFn: () => reviewApi.getProductReviews(productId as string, { page: 1, limit: 1 }),
+    enabled: !!productId,
+    staleTime: 30_000,
+  })
+
+  const apiAvg = data?.stats?.avgRating
+  const apiCount = data?.stats?.count
+  const useApi = !!productId
+  const avgDisplay = useApi
+    ? typeof apiCount === "number" && apiCount > 0
+      ? (apiAvg ?? 0).toFixed(1)
+      : "0.0"
+    : typeof rating === "number"
+      ? rating.toFixed(1)
+      : String(rating)
+  const countDisplay = useApi ? (typeof apiCount === "number" && apiCount > 0 ? apiCount : 0) : reviews
 
   const handleGetStarted = () => {
     if (link) {
@@ -102,7 +123,7 @@ export const VerificationCard: FC<VerificationCardProps> = ({
           <div className="hidden md:flex items-center gap-1 text-xs md:text-sm text-gray-600">
             <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-400 fill-yellow-400" />
             <span>
-              {rating.toFixed(1)} ({reviews})
+              {avgDisplay} ({countDisplay} reviews)
             </span>
           </div>
 

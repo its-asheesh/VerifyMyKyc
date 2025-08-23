@@ -73,28 +73,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
           </h3>
 
           {/* Description */}
-          <p
-            className={`text-gray-600 leading-relaxed line-clamp-3 ${
-              isListView ? "mb-0" : "mb-4"
-            }`}
-          >
+          <p className={`text-gray-600 leading-relaxed line-clamp-3 ${isListView ? "mb-0" : "mb-4"}`}>
             {product.description}
           </p>
 
           {/* Features - Only show in grid view or first 3 in list view */}
           <div className={`flex flex-wrap gap-2 ${isListView ? "mt-3" : "mb-4"}`}>
             {product.features.slice(0, isListView ? 3 : 4).map((feature, index) => (
-              <span
-                key={index}
-                className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
-              >
+              <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                 {feature}
               </span>
             ))}
             {product.features.length > (isListView ? 3 : 4) && (
-              <span className="text-xs text-gray-500">
-                +{product.features.length - (isListView ? 3 : 4)} more
-              </span>
+              <span className="text-xs text-gray-500">+{product.features.length - (isListView ? 3 : 4)} more</span>
             )}
           </div>
         </div>
@@ -112,9 +103,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
 
           {/* Stats */}
           <div
-            className={`flex gap-4 text-sm text-gray-600 ${
-              isListView ? "justify-end mb-4" : "justify-between mb-4"
-            }`}
+            className={`flex gap-4 text-sm text-gray-600 ${isListView ? "justify-end mb-4" : "justify-between mb-4"}`}
           >
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
