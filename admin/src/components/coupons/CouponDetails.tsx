@@ -159,6 +159,8 @@ const CouponDetails: React.FC<CouponDetailsProps> = ({ couponId, onClose }) => {
                       'gstin': 'GSTIN Verification',
                       'drivinglicense': 'Driving License Verification',
                       'mca': 'MCA Verification',
+                      'passport': 'Passport Verification',
+                      'voterid': 'Voter ID Verification',
                       'personal': 'Personal Plan Verifications',
                       'professional': 'Professional Plan Verifications',
                       'business': 'Business Plan Verifications',

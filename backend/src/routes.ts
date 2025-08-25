@@ -15,6 +15,7 @@ import bankAccountRouter from './modules/bankaccount/bankaccount.router';
 import voterRouter from './modules/voter/voter.router';
 import reviewsRouter from './modules/reviews/review.router';
 import vehicleRouter from './modules/vehicle/vehicle.router';
+import passportRouter from './modules/passport/passport.routes';
 
 const router = Router();
 
@@ -45,5 +46,8 @@ router.use('/bankaccount', bankAccountRouter);
 router.use('/voter', voterRouter);
 router.use('/reviews', reviewsRouter);
 router.use('/vehicle', vehicleRouter)
+// Passport routes
+
+router.use('/passport', passportRouter);
 
 export default router;

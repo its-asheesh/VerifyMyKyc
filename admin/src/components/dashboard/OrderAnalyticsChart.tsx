@@ -260,7 +260,8 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
     { name: 'PAN Verification', value: 25, color: getColor(1) },
     { name: 'Driving License', value: 20, color: getColor(2) },
     { name: 'GSTIN Verification', value: 15, color: getColor(3) },
-    { name: 'MCA Verification', value: 5, color: getColor(4) }
+    { name: 'MCA Verification', value: 5, color: getColor(4) },
+    { name: 'passport', value: 5, color: getColor(5) },
   ]
 
   // Monthly order trends - use revenue trend data if available, otherwise use overall stats

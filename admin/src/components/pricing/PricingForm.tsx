@@ -228,7 +228,7 @@ const PricingForm: React.FC<PricingFormProps> = ({
           color: formData.color,
           includesVerifications: formData.includesVerifications.length > 0
             ? formData.includesVerifications
-            : ['aadhaar', 'pan', 'drivinglicense', 'gstin'] // Default to all verifications
+            : ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'voterid', 'vehicle', 'passport'] // Default to all verifications
         }
     
     console.log('Submitting data:', submitData)
@@ -479,7 +479,7 @@ const PricingForm: React.FC<PricingFormProps> = ({
                   Included Verifications
                 </label>
                 <div className="space-y-2">
-                  {['aadhaar', 'pan', 'drivinglicense', 'gstin'].map((verification) => (
+                  {['aadhaar', 'pan', 'drivinglicense', 'gstin', 'voterid', 'vehicle', 'passport'].map((verification) => (
                     <div key={verification} className="flex items-center">
                       <input
                         type="checkbox"

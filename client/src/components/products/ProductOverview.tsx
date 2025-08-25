@@ -1,47 +1,60 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { motion } from "framer-motion"
-import { CheckCircle, Star, Users, Zap, Shield } from "lucide-react"
-import type { Product } from "../../types/product"
-import { AadhaarSection } from "../verification/AadhaarSection"
-import { PanSection } from "../verification/PanSection"
-import { DrivingLicenseSection } from "../verification/DrivingLicenseSection"
-import { VoterSection } from "../verification/VoterSection"
-import { GstinSection } from "../verification/GstinSection"
-import { CompanySection } from "../verification/CompanySection"
-import { BankAccountSection } from "../verification/BankAccountSection"
-import { RcSection } from "../verification/RcSection"
-import { useQuery } from "@tanstack/react-query"
-import { reviewApi } from "../../services/api/reviewApi"
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { CheckCircle, Star, Users, Zap, Shield } from "lucide-react";
+import type { Product } from "../../types/product";
+import { AadhaarSection } from "../verification/AadhaarSection";
+import { PanSection } from "../verification/PanSection";
+import { DrivingLicenseSection } from "../verification/DrivingLicenseSection";
+import { VoterSection } from "../verification/VoterSection";
+import { GstinSection } from "../verification/GstinSection";
+import { CompanySection } from "../verification/CompanySection";
+import { BankAccountSection } from "../verification/BankAccountSection";
+import { RcSection } from "../verification/RcSection";
+import { PassportSection } from "../verification/PassportSection";
+import { useQuery } from "@tanstack/react-query";
+import { reviewApi } from "../../services/api/reviewApi";
 
 interface ProductOverviewProps {
-  product: Product
+  product: Product;
 }
 
-export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => {
-  const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false)
-  const [panModalOpen, setPanModalOpen] = useState(false)
-  const [drivingLicenseModalOpen, setDrivingLicenseModalOpen] = useState(false)
-  const [voterModalOpen, setVoterModalOpen] = useState(false)
-  const [gstinModalOpen, setGstinModalOpen] = useState(false)
-  const [companyModalOpen, setCompanyModalOpen] = useState(false)
-  const [bankModalOpen, setBankModalOpen] = useState(false)
-  const [rcModalOpen, setRcModalOpen] = useState(false)
-  const title = product.title.toLowerCase()
-  const categoryName = product.category.name.toLowerCase()
-  const isAadhaarProduct = title.includes("aadhaar") || categoryName.includes("aadhaar")
+export const ProductOverview: React.FC<ProductOverviewProps> = ({
+  product,
+}) => {
+  const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false);
+  const [panModalOpen, setPanModalOpen] = useState(false);
+  const [drivingLicenseModalOpen, setDrivingLicenseModalOpen] = useState(false);
+  const [voterModalOpen, setVoterModalOpen] = useState(false);
+  const [gstinModalOpen, setGstinModalOpen] = useState(false);
+  const [companyModalOpen, setCompanyModalOpen] = useState(false);
+  const [bankModalOpen, setBankModalOpen] = useState(false);
+  const [rcModalOpen, setRcModalOpen] = useState(false);
+  const [passportModalOpen, setPassportModalOpen] = useState(false);
+  
+  const title = product.title.toLowerCase();
+  const categoryName = product.category.name.toLowerCase();
+  
+  const isAadhaarProduct =
+    title.includes("aadhaar") || categoryName.includes("aadhaar");
   // Use word-boundary to avoid matching 'pan' inside 'company'
-  const isPanProduct = /\bpan\b/.test(title) || /\bpan\b/.test(categoryName)
-  const isDrivingLicenseProduct = title.includes("driving") || categoryName.includes("driving")
-  const isVoterProduct = title.includes("voter") || categoryName.includes("voter")
-  const isGstinProduct = title.includes("gstin") || categoryName.includes("gstin") || title.includes("gst") || categoryName.includes("gst")
+  const isPanProduct = /\bpan\b/.test(title) || /\bpan\b/.test(categoryName);
+  const isDrivingLicenseProduct =
+    title.includes("driving") || categoryName.includes("driving");
+  const isVoterProduct =
+    title.includes("voter") || categoryName.includes("voter");
+  const isGstinProduct =
+    title.includes("gstin") ||
+    categoryName.includes("gstin") ||
+    title.includes("gst") ||
+    categoryName.includes("gst");
   const isCompanyProduct =
     title.includes("company") ||
     categoryName.includes("company") ||
     title.includes("mca") ||
     title.includes("cin") ||
-    title.includes("din")
+    title.includes("din");
   const isBankProduct =
     title.includes("bank") ||
     categoryName.includes("bank") ||
@@ -50,39 +63,46 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     title.includes("bankaccount") ||
     categoryName.includes("bankaccount") ||
     title.includes("ifsc") ||
-    title.includes("upi")
+    title.includes("upi");
   const isRcProduct =
     (product.id || "").toLowerCase() === "vehicle" ||
     title.includes("registration certificate") ||
-    /\bvehicle\b/.test(title)
+    /\bvehicle\b/.test(title);
+
+  const isPassportProduct =
+    (product.id || "").toLowerCase() === "passport" ||
+    title.includes("passport") ||
+    /\bpassport\b/.test(title);
 
   const handleTryDemo = () => {
-    if (isAadhaarProduct) setAadhaarModalOpen(true)
-    else if (isDrivingLicenseProduct) setDrivingLicenseModalOpen(true)
-    else if (isVoterProduct) setVoterModalOpen(true)
-    else if (isGstinProduct) setGstinModalOpen(true)
-    else if (isCompanyProduct) setCompanyModalOpen(true)
-    else if (isBankProduct) setBankModalOpen(true)
-    else if (isPanProduct) setPanModalOpen(true)
-    else if (isRcProduct) setRcModalOpen(true)
-  }
+    if (isAadhaarProduct) setAadhaarModalOpen(true);
+    else if (isDrivingLicenseProduct) setDrivingLicenseModalOpen(true);
+    else if (isVoterProduct) setVoterModalOpen(true);
+    else if (isGstinProduct) setGstinModalOpen(true);
+    else if (isCompanyProduct) setCompanyModalOpen(true);
+    else if (isBankProduct) setBankModalOpen(true);
+    else if (isPanProduct) setPanModalOpen(true);
+    else if (isRcProduct) setRcModalOpen(true);
+    else if (isPassportProduct) setPassportModalOpen(true);
+  };
 
   const handleBuyNow = () => {
-    const section = document.getElementById('pricing')
+    const section = document.getElementById("pricing");
     if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }
+  };
 
   // Fetch reviews stats (avg rating and count)
   const { data } = useQuery({
     queryKey: ["product-reviews", product.id],
-    queryFn: () => reviewApi.getProductReviews(product.id, { page: 1, limit: 1 }),
+    queryFn: () =>
+      reviewApi.getProductReviews(product.id, { page: 1, limit: 1 }),
     staleTime: 30_000,
-  })
-  const avg = data?.stats?.avgRating ?? 0
-  const count = data?.stats?.count ?? 0
-  const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0"
+  });
+  const avg = data?.stats?.avgRating ?? 0;
+  const count = data?.stats?.count ?? 0;
+  const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -94,7 +114,11 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         className="relative"
       >
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 shadow-lg">
-          <img src={product.image || "/placeholder.svg"} alt={product.title} className="w-full h-56 object-contain" />
+          <img
+            src={product.image || "/placeholder.svg"}
+            alt={product.title}
+            className="w-full h-56 object-contain"
+          />
         </div>
 
         {/* Floating Stats */}
@@ -158,7 +182,9 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               <Star className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="text-2xl font-bold text-gray-900">{avgDisplay}</div>
-            <div className="text-sm text-gray-600">Rating{count > 0 ? ` • ${count} reviews` : ""}</div>
+            <div className="text-sm text-gray-600">
+              Rating{count > 0 ? ` • ${count} reviews` : ""}
+            </div>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
@@ -178,17 +204,32 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
 
         {/* CTA Buttons */}
         <div className="flex gap-4 pt-6">
-          <button className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300" onClick={handleBuyNow}>
+          <button
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+            onClick={handleBuyNow}
+          >
             Buy Now
           </button>
           <button
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
             onClick={handleTryDemo}
-            disabled={!isAadhaarProduct && !isPanProduct && !isDrivingLicenseProduct && !isVoterProduct && !isGstinProduct && !isCompanyProduct && !isBankProduct && !isRcProduct}
+            disabled={
+              !isAadhaarProduct &&
+              !isPanProduct &&
+              !isDrivingLicenseProduct &&
+              !isVoterProduct &&
+              !isGstinProduct &&
+              !isCompanyProduct &&
+              !isBankProduct &&
+              !isRcProduct &&
+              !isPassportProduct
+            }
           >
             Start Verification
           </button>
         </div>
+
+        {/* Modals - All sections */}
         {bankModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -202,6 +243,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {rcModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -215,6 +257,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {aadhaarModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -228,6 +271,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {panModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -241,6 +285,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {drivingLicenseModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -254,6 +299,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {voterModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -267,6 +313,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {gstinModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -280,6 +327,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
         {companyModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
@@ -293,7 +341,21 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             </div>
           </div>
         )}
+        
+        {passportModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                onClick={() => setPassportModalOpen(false)}
+              >
+                &times;
+              </button>
+              <PassportSection productId={product.id} />
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
-  )
-}
+  );
+};
