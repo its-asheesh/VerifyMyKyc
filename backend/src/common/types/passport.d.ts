@@ -20,9 +20,9 @@ export interface PassportGenerateMrzResponse {
   reference_id?: string;
   status: number;
   data: {
-    code: PassportGenerateMrzResponseCode;
+    code: '1000';
     message: string;
-    mrz_data?: {
+    mrz_data: {
       first_line: string;
       second_line: string;
     };
@@ -53,7 +53,7 @@ export interface PassportVerifyMrzResponse {
   reference_id?: string;
   status: number;
   data: {
-    code: PassportVerifyMrzResponseCode;
+    code: '1001' | '1002';
     message: string;
   };
   timestamp: number;
@@ -78,7 +78,7 @@ export interface PassportVerifyResponse {
   reference_id?: string;
   status: number;
   data: {
-    code: PassportVerifyResponseCode;
+    code: '1003' | '1004' | '1005';
     message: string;
   };
   error?: {
@@ -111,7 +111,7 @@ export interface PassportFetchResponse {
   reference_id?: string;
   status: number;
   data: {
-    code: PassportFetchResponseCode;
+    code: '1003' | '1005' | '1006';
     message?: string;
     passport_data?: {
       document_type: string;
@@ -153,7 +153,7 @@ export interface PassportOcrResponse {
   reference_id?: string;
   status: number;
   data?: {
-    code: PassportOcrResponseCode;
+    code: '1007';
     message: string;
     ocr_data?: {
       document_id: string;
@@ -176,7 +176,7 @@ export interface PassportOcrResponse {
     };
   };
   error?: {
-    code: PassportOcrErrorResponseCode;
+    code: 'BAD_REQUEST' | 'FILE_REQUIRED' | 'FILE_SIZE_EXCEEDED' | 'INVALID_PASSPORT_DOCUMENT';
     message: string;
     type?: string;
     metadata?: {
@@ -189,33 +189,3 @@ export interface PassportOcrResponse {
   timestamp: number;
   path: string;
 }
-
-// --------------------------
-// Response Code Union Types
-// --------------------------
-export type PassportGenerateMrzResponseCode = '1000';
-export type PassportVerifyMrzResponseCode = '1001' | '1002';
-export type PassportVerifyResponseCode = '1003' | '1004' | '1005';
-export type PassportFetchResponseCode = '1003' | '1005' | '1006';
-export type PassportOcrResponseCode = '1007';
-export type PassportOcrErrorResponseCode =
-  | 'BAD_REQUEST'
-  | 'FILE_REQUIRED'
-  | 'FILE_SIZE_EXCEEDED'
-  | 'INVALID_PASSPORT_DOCUMENT';
-
-// --------------------------
-// Export All Types
-// --------------------------
-export type {
-  PassportGenerateMrzRequest,
-  PassportGenerateMrzResponse,
-  PassportVerifyMrzRequest,
-  PassportVerifyMrzResponse,
-  PassportVerifyRequest,
-  PassportVerifyResponse,
-  PassportFetchRequest,
-  PassportFetchResponse,
-  PassportOcrRequest,
-  PassportOcrResponse,
-};

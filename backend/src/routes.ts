@@ -19,22 +19,14 @@ import passportRouter from './modules/passport/passport.routes';
 
 const router = Router();
 
-// Auth routes
+// Auth routes - should come first for authentication
 router.use('/auth', authRouter);
 
-// Order routes
-router.use('/orders', orderRouter);
+// Passport routes - make sure this is properly registered
+router.use('/passport', passportRouter);
 
-// Analytics routes
-router.use('/analytics', analyticsRouter);
-
-// Carousel routes
-router.use('/carousel', carouselRouter);
-
-// Coupon routes
-router.use('/coupons', couponRouter);
-
-// Other routes
+// Other routes in logical order
+router.use('/vehicle', vehicleRouter);
 router.use('/aadhaar', aadhaarRouter);
 router.use('/pan', panRouter);
 router.use('/gstin', gstinRouter);
@@ -45,9 +37,9 @@ router.use('/pricing', pricingRouter);
 router.use('/bankaccount', bankAccountRouter);
 router.use('/voter', voterRouter);
 router.use('/reviews', reviewsRouter);
-router.use('/vehicle', vehicleRouter)
-// Passport routes
-
-router.use('/passport', passportRouter);
+router.use('/orders', orderRouter);
+router.use('/analytics', analyticsRouter);
+router.use('/carousel', carouselRouter);
+router.use('/coupons', couponRouter);
 
 export default router;

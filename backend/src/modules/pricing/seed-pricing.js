@@ -239,7 +239,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 color: 'emerald'
             },
             {
-                verificationType: 'rc',
+                verificationType: 'vehicle',
                 monthlyPrice: 399,
                 yearlyPrice: 3999,
                 oneTimePrice: 99,
@@ -294,7 +294,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: false,
                 popular: false,
                 color: 'blue',
-                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
             },
             {
                 planType: 'yearly',
@@ -313,7 +313,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: false,
                 popular: false,
                 color: 'blue',
-                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
             },
             // Professional Plans
             {
@@ -333,7 +333,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: false,
                 popular: true,
                 color: 'purple',
-                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
             },
             {
                 planType: 'yearly',
@@ -353,7 +353,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: false,
                 popular: true,
                 color: 'purple',
-                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
             },
             // Business Plans
             {
@@ -374,7 +374,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: true,
                 popular: false,
                 color: 'green',
-                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
             },
             {
                 planType: 'yearly',
@@ -395,7 +395,7 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: true,
                 popular: false,
                 color: 'green',
-                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin']
+                includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
             }
         ];
         yield pricing_model_1.HomepagePlan.insertMany(homepagePlansData);

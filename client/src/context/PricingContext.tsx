@@ -17,11 +17,6 @@ interface PricingContextType {
   getHomepagePlanByType: (planType: 'monthly' | 'yearly') => HomepagePlan | undefined
   getHomepagePlansByPeriod: (period: 'monthly' | 'yearly') => HomepagePlan[] | undefined
   getVerificationPricingByType: (verificationType: string) => VerificationPricing | undefined
-  getVerificationPricing: (verificationType: string) => {
-    data: VerificationPricing | undefined
-    isLoading: boolean
-    error: any
-  }
 }
 
 const PricingContext = createContext<PricingContextType | undefined>(undefined)
@@ -51,19 +46,22 @@ export const PricingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return homepagePlans?.filter(plan => plan.planType === period)
   }
 
-  // Helper function to get verification pricing by type - This needs to be fixed
-  // We can't use availableVerifications because it doesn't include features
-  // Instead, we'll need to use the useVerificationPricing hook directly in components
+  // FIXED: Proper implementation to find verification pricing by type
   const getVerificationPricingByType = (verificationType: string): VerificationPricing | undefined => {
-    // This function is deprecated - use getVerificationPricing instead
-    console.warn('getVerificationPricingByType is deprecated. Use getVerificationPricing instead.')
-    return undefined
-  }
-
-  // Helper function to get verification pricing with loading state
-  const getVerificationPricing = (verificationType: string) => {
-    const { data, isLoading, error } = useVerificationPricing(verificationType)
-    return { data, isLoading, error }
+    console.log("Searching for verification type:", verificationType);
+    console.log("Available verifications:", availableVerifications);
+    
+    if (!availableVerifications) {
+      console.log("No available verifications found");
+      return undefined;
+    }
+    
+    const found = availableVerifications.find(ver => 
+      ver.verificationType?.toLowerCase() === verificationType.toLowerCase()
+    );
+    
+    console.log("Found pricing:", found);
+    return found;
   }
 
   return (
@@ -81,8 +79,7 @@ export const PricingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Helper functions
       getHomepagePlanByType,
       getHomepagePlansByPeriod,
-      getVerificationPricingByType,
-      getVerificationPricing
+      getVerificationPricingByType
     }}>
       {children}
     </PricingContext.Provider>
@@ -95,4 +92,4 @@ export const usePricingContext = () => {
     throw new Error('usePricingContext must be used within a PricingProvider')
   }
   return context
-} 
+}

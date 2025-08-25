@@ -16,8 +16,17 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
 
   // Get Passport pricing from backend
   const { getVerificationPricingByType } = usePricingContext();
+  
+  // DEBUG: Log the actual function being called
+  console.log("=== PASSPORT PRICING DEBUG ===");
+  console.log("Calling getVerificationPricingByType with 'passport'");
+  
   const passportPricing = getVerificationPricingByType("passport");
-
+  
+  console.log("Raw result from context:", passportPricing);
+  console.log("Type of result:", typeof passportPricing);
+  console.log("Is it undefined?", passportPricing === undefined);
+  
   // Clear results when service changes
   const handleServiceChange = (service: any) => {
     setSelectedService(service);
@@ -199,28 +208,51 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
       onServiceChange={handleServiceChange}
     >
       {/* Display pricing if available */}
-      {passportPricing && (
+      {/* {passportPricing && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
           <div className="flex flex-col gap-1 text-sm">
-            <span className="text-blue-700">
-              One-time: ₹{passportPricing.oneTimePrice}
-              {passportPricing.oneTimeQuota?.count ? ` • Includes ${passportPricing.oneTimeQuota.count} verification${passportPricing.oneTimeQuota.count > 1 ? 's' : ''}` : ''}
-              {passportPricing.oneTimeQuota?.validityDays && passportPricing.oneTimeQuota.validityDays > 0 ? ` • valid ${passportPricing.oneTimeQuota.validityDays} days` : ''}
-            </span>
-            <span className="text-blue-700">
-              Monthly: ₹{passportPricing.monthlyPrice}
-              {passportPricing.monthlyQuota?.count ? ` • Includes ${passportPricing.monthlyQuota.count} verification${passportPricing.monthlyQuota.count > 1 ? 's' : ''}` : ''}
-              {passportPricing.monthlyQuota?.validityDays && passportPricing.monthlyQuota.validityDays > 0 ? ` • valid ${passportPricing.monthlyQuota.validityDays} days` : ''}
-            </span>
-            <span className="text-blue-700">
-              Yearly: ₹{passportPricing.yearlyPrice}
-              {passportPricing.yearlyQuota?.count ? ` • Includes ${passportPricing.yearlyQuota.count} verification${passportPricing.yearlyQuota.count > 1 ? 's' : ''}` : ''}
-              {passportPricing.yearlyQuota?.validityDays && passportPricing.yearlyQuota.validityDays > 0 ? ` • valid ${passportPricing.yearlyQuota.validityDays} days` : ''}
-            </span>
+            {passportPricing.oneTimePrice !== undefined && (
+              <span className="text-blue-700">
+                One-time: ₹{passportPricing.oneTimePrice}
+                {passportPricing.oneTimeQuota?.count ? ` • Includes ${passportPricing.oneTimeQuota.count} verification${passportPricing.oneTimeQuota.count > 1 ? 's' : ''}` : ''}
+                {passportPricing.oneTimeQuota?.validityDays && passportPricing.oneTimeQuota.validityDays > 0 ? ` • valid ${passportPricing.oneTimeQuota.validityDays} days` : ''}
+              </span>
+            )}
+            {passportPricing.monthlyPrice !== undefined && (
+              <span className="text-blue-700">
+                Monthly: ₹{passportPricing.monthlyPrice}
+                {passportPricing.monthlyQuota?.count ? ` • Includes ${passportPricing.monthlyQuota.count} verification${passportPricing.monthlyQuota.count > 1 ? 's' : ''}` : ''}
+                {passportPricing.monthlyQuota?.validityDays && passportPricing.monthlyQuota.validityDays > 0 ? ` • valid ${passportPricing.monthlyQuota.validityDays} days` : ''}
+              </span>
+            )}
+            {passportPricing.yearlyPrice !== undefined && (
+              <span className="text-blue-700">
+                Yearly: ₹{passportPricing.yearlyPrice}
+                {passportPricing.yearlyQuota?.count ? ` • Includes ${passportPricing.yearlyQuota.count} verification${passportPricing.yearlyQuota.count > 1 ? 's' : ''}` : ''}
+                {passportPricing.yearlyQuota?.validityDays && passportPricing.yearlyQuota.validityDays > 0 ? ` • valid ${passportPricing.yearlyQuota.validityDays} days` : ''}
+              </span>
+            )}
           </div>
         </div>
-      )}
+      )} */}
+
+      {/* DEBUG: Show what we're getting */}
+      {/* {passportPricing ? (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-sm">
+          <strong>DEBUG INFO:</strong> Found pricing data for passport!
+          <br />
+          One-time: ₹{passportPricing.oneTimePrice}
+          <br />
+          Monthly: ₹{passportPricing.monthlyPrice}
+          <br />
+          Yearly: ₹{passportPricing.yearlyPrice}
+        </div>
+      ) : (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-sm">
+          <strong>DEBUG INFO:</strong> No pricing data found for passport
+        </div>
+      )} */}
 
       <VerificationForm
         fields={getFormFields(selectedService)}

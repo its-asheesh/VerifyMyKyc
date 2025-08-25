@@ -26,7 +26,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     console.log('Detected verification type:', verificationType)
     console.log('Selected services array:', [verificationType])
     
-    // If not logged in, redirect to login with a helpful message and the intended checkout payload
+    // If not logged in, redirect to login with state
     if (!isAuthenticated) {
       navigate('/login', {
         state: {
@@ -44,7 +44,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
       return
     }
     
-    // Navigate to checkout page with the selected plan and product info
+    // Navigate to checkout
     navigate('/checkout', {
       state: {
         selectedPlan: tier.name,
@@ -64,7 +64,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     setSelectedPlan(null)
   }
   
-  // Resolve verification type from product (prefer stable id, fallback to title)
+  // Resolve verification type from product
   const getVerificationType = (prod: Product): string => {
     const id = (prod.id || '').toLowerCase()
     if ([
@@ -79,7 +79,6 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     ].includes(id)) return id
 
     const title = (prod.title || '').toLowerCase()
-    // Important: check company/MCA first to avoid matching 'pan' inside 'company'
     if (title.includes('company') || title.includes('mca') || title.includes('cin') || title.includes('din')) return 'company'
     if (title.includes('pan')) return 'pan'
     if (title.includes('aadhaar')) return 'aadhaar'
@@ -87,8 +86,8 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     if (title.includes('gstin')) return 'gstin'
     if (title.includes('voter')) return 'voterid'
     if (title.includes('bank account') || title.includes('bankaccount') || title.includes('banking')) return 'bankaccount'
-    // RC product mapping (avoid overly-broad "vehicle" to prevent misclassification)
     if (title.includes('vehicle') || title.includes('registration certificate')) return 'vehicle'
+    if (title.includes('passport')) return 'passport'
     return ''
   }
 
@@ -115,7 +114,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     }
   }
 
-  // If we have backend pricing data, use it; otherwise fall back to mock data
+  // Use backend pricing if available, fallback to product.pricing
   const pricingTiers = verificationPricing ? [
     {
       name: "One-time",
@@ -127,7 +126,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
         return v && v > 0 ? `${base} • valid ${v} days` : base
       })(),
       features: verificationPricing.oneTimeFeatures || [],
-      color: "blue" as const, // Changed from gray to blue since PricingCard doesn't support gray
+      color: "blue" as const,
       support: "Email support",
       period: "one-time",
       billingPeriod: 'custom' as const,
@@ -170,7 +169,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
       name: "Free",
       ...product.pricing.free,
       requests: String(product.pricing.free.requests),
-      color: "blue" as const, // Changed from gray to blue
+      color: "blue" as const,
       period: "month",
       billingPeriod: 'monthly' as const,
       popular: false
@@ -199,8 +198,8 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
 
   if (verificationsLoading) {
     return (
-      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12">
-        <div className="text-center py-12">
+      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px] flex items-center justify-center">
+        <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 mt-4">Loading pricing information...</p>
         </div>
@@ -210,7 +209,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
 
   if (verificationsError) {
     return (
-      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12">
+      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px]">
         <div className="text-center py-12">
           <p className="text-red-600">Failed to load pricing information. Using default pricing.</p>
         </div>
@@ -219,56 +218,76 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
   }
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 md:p-12">
+    <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[640px] relative">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-12"
+        className="text-center mb-8 md:mb-10"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Choose Your Plan</h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
+          Choose Your Plan
+        </h2>
+        <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
           Flexible pricing options to match your verification needs and scale with your business
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {pricingTiers.map((tier, index) => (
-          <motion.div
-            key={tier.name}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-          >
-            <PricingCard
-              title={tier.name}
-              price={`₹${tier.price}`}
-              description={tier.requests}
-              features={tier.features}
-              icon={getVerificationIcon(verificationType)}
-              color={tier.color}
-              popular={tier.popular}
-              isHovered={selectedPlan === tier.name}
-              billingPeriod={tier.billingPeriod}
-              onHover={() => handlePlanHover(tier.name)}
-              onHoverEnd={handlePlanLeave}
-              planData={{
-                name: tier.name,
-                price: String(tier.price),
-                description: tier.requests,
-                features: tier.features,
-                planType: tier.billingPeriod,
-                planName: tier.name,
-                support: tier.support,
-                period: tier.period
-              }}
-              onChoosePlan={(planData) => handleChoosePlan(tier)}
-            />
-          </motion.div>
-        ))}
+      {/* Pricing Cards - Responsive Horizontal Scroll on Mobile */}
+      <div className="md:grid md:grid-cols-3 gap-6">
+        <div 
+          className="
+            flex md:block
+            space-x-6 md:space-x-0
+            overflow-x-auto pb-6
+            -mx-4 px-4
+            md:mx-0 md:px-0
+            scrollbar-hide
+            min-h-[400px]  // Ensures enough height on mobile
+          "
+        >
+          {pricingTiers.map((tier, index) => (
+            <motion.div
+              key={tier.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="flex-shrink-0 w-72 md:w-auto"  // Compact width on mobile
+            >
+              <PricingCard
+                title={tier.name}
+                price={`₹${tier.price}`}
+                description={tier.requests}
+                features={tier.features}
+                icon={getVerificationIcon(verificationType)}
+                color={tier.color}
+                popular={tier.popular}
+                isHovered={selectedPlan === tier.name}
+                billingPeriod={tier.billingPeriod}
+                onHover={() => handlePlanHover(tier.name)}
+                onHoverEnd={handlePlanLeave}
+                planData={{
+                  name: tier.name,
+                  price: String(tier.price),
+                  description: tier.requests,
+                  features: tier.features,
+                  planType: tier.billingPeriod,
+                  planName: tier.name,
+                  support: tier.support,
+                  period: tier.period,
+                }}
+                onChoosePlan={() => handleChoosePlan(tier)}
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
+
+      {/* Extra vertical space to increase scrollable area */}
+      <div className="h-16 md:h-20"></div>
     </section>
   )
 }

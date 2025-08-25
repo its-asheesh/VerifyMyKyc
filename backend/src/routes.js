@@ -20,18 +20,14 @@ const bankaccount_router_1 = __importDefault(require("./modules/bankaccount/bank
 const voter_router_1 = __importDefault(require("./modules/voter/voter.router"));
 const review_router_1 = __importDefault(require("./modules/reviews/review.router"));
 const vehicle_router_1 = __importDefault(require("./modules/vehicle/vehicle.router"));
+const passport_routes_1 = __importDefault(require("./modules/passport/passport.routes"));
 const router = (0, express_1.Router)();
-// Auth routes
+// Auth routes - should come first for authentication
 router.use('/auth', auth_router_1.default);
-// Order routes
-router.use('/orders', order_router_1.default);
-// Analytics routes
-router.use('/analytics', analytics_router_1.default);
-// Carousel routes
-router.use('/carousel', carousel_router_1.default);
-// Coupon routes
-router.use('/coupons', coupon_router_1.default);
-// Other routes
+// Passport routes - make sure this is properly registered
+router.use('/passport', passport_routes_1.default);
+// Other routes in logical order
+router.use('/vehicle', vehicle_router_1.default);
 router.use('/aadhaar', aadhaar_router_1.default);
 router.use('/pan', pan_router_1.default);
 router.use('/gstin', gstin_router_1.default);
@@ -42,5 +38,8 @@ router.use('/pricing', pricing_router_1.default);
 router.use('/bankaccount', bankaccount_router_1.default);
 router.use('/voter', voter_router_1.default);
 router.use('/reviews', review_router_1.default);
-router.use('/vehicle', vehicle_router_1.default);
+router.use('/orders', order_router_1.default);
+router.use('/analytics', analytics_router_1.default);
+router.use('/carousel', carousel_router_1.default);
+router.use('/coupons', coupon_router_1.default);
 exports.default = router;

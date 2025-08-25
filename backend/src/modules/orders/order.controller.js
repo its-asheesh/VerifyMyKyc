@@ -115,7 +115,7 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
 }));
 // Process payment and activate order
 exports.processPayment = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c, _d;
     const { orderId, transactionId } = req.body;
     const order = yield order_model_1.Order.findOne({ orderId, userId: req.user._id });
     if (!order) {
@@ -159,6 +159,68 @@ exports.processPayment = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
         console.error('Failed to recompute endDate on payment:', err);
     }
     yield order.save();
+    // If this is a plan purchase, auto-provision included verification quotas as separate verification orders
+    try {
+        if (order.orderType === 'plan' && order.paymentStatus === 'completed' && order.status === 'active') {
+            const planType = (((_b = order.serviceDetails) === null || _b === void 0 ? void 0 : _b.planType) === 'monthly' || ((_c = order.serviceDetails) === null || _c === void 0 ? void 0 : _c.planType) === 'yearly')
+                ? order.serviceDetails.planType
+                : (order.billingPeriod === 'monthly' || order.billingPeriod === 'yearly') ? order.billingPeriod : 'monthly';
+            const planName = (_d = order.serviceDetails) === null || _d === void 0 ? void 0 : _d.planName;
+            if (planName) {
+                const plan = yield pricing_model_1.HomepagePlan.findOne({ planType, planName });
+                if (plan && Array.isArray(plan.includesVerifications) && plan.includesVerifications.length > 0) {
+                    for (const vType of plan.includesVerifications) {
+                        try {
+                            // Lookup pricing for the included verification type to determine quota
+                            const pricing = yield pricing_model_1.VerificationPricing.findOne({ verificationType: vType });
+                            if (!pricing) {
+                                console.warn(`processPayment: No pricing found for included verification type '${vType}'`);
+                                continue;
+                            }
+                            const quotaCfg = planType === 'yearly' ? pricing.yearlyQuota : pricing.monthlyQuota;
+                            if (!quotaCfg || typeof quotaCfg.count !== 'number' || quotaCfg.count <= 0) {
+                                console.warn(`processPayment: No usable quota config for type '${vType}' under planType '${planType}'`);
+                                continue;
+                            }
+                            // Create a child verification order representing the included quota for this verification type
+                            const childOrderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                            yield order_model_1.Order.create({
+                                userId: order.userId,
+                                orderId: childOrderId,
+                                orderType: 'verification',
+                                serviceName: `${vType.toUpperCase()} Verification (Included in ${planName} ${planType})`,
+                                serviceDetails: { verificationType: vType, features: ['Included via plan'] },
+                                totalAmount: 0,
+                                finalAmount: 0,
+                                billingPeriod: planType,
+                                paymentMethod: order.paymentMethod,
+                                paymentStatus: 'completed',
+                                status: 'active',
+                                startDate: order.startDate || new Date(),
+                                verificationQuota: {
+                                    totalAllowed: quotaCfg.count,
+                                    used: 0,
+                                    remaining: quotaCfg.count,
+                                    validityDays: quotaCfg.validityDays || (planType === 'monthly' ? 30 : 365),
+                                },
+                            });
+                            console.log(`processPayment: Provisioned included '${vType}' verification quota from plan '${planName}'`);
+                        }
+                        catch (childErr) {
+                            console.error('processPayment: Failed to create included verification order', { vType, planType, planName, err: childErr });
+                        }
+                    }
+                }
+                else {
+                    console.log(`processPayment: Plan '${planName}' (${planType}) has no includesVerifications or plan not found`);
+                }
+            }
+        }
+    }
+    catch (provisionErr) {
+        console.error('processPayment: Error while provisioning included verification quotas for plan', provisionErr);
+        // Do not fail the payment response due to provisioning errors
+    }
     res.json({
         success: true,
         message: 'Payment processed successfully',
