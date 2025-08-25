@@ -36,6 +36,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
     }
     return (name?.[0] || "?").toUpperCase()
   }, [email, name])
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -43,78 +44,83 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
       whileHover={{
-        y: -8,
+        y: -6,
         transition: { duration: 0.3 },
       }}
-      className="bg-white/95 backdrop-blur-sm border border-white/20 p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 relative group h-[320px] md:h-[340px] flex flex-col"
+      className="bg-white/95 backdrop-blur-sm border border-white/20 p-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 relative group h-[260px] flex flex-col"
     >
       {/* Quote Icon */}
-      <div className="absolute top-4 right-4 text-blue-500/30 group-hover:text-blue-500/50 transition-colors duration-300">
-        <Quote className="w-8 h-8" />
+      <div className="absolute top-3 right-3 text-blue-500/30 group-hover:text-blue-500/50 transition-colors duration-300">
+        <Quote className="w-6 h-6" />
       </div>
 
-      {/* Review Text (truncated) */}
-      <div className="mb-6">
-        <div className="relative h-[120px] md:h-[140px] overflow-hidden">
-          <p className="text-gray-700 leading-relaxed text-sm md:text-base font-medium whitespace-pre-line">"{text}"</p>
-          {/* Fade gradient (only when truncated) */}
+      {/* Review Text */}
+      <div className="flex-1 flex flex-col justify-start mb-3">
+        <div className="relative h-24 overflow-hidden">
+          <p className="text-gray-700 leading-relaxed text-sm font-medium whitespace-pre-line line-clamp-4">
+            "{text}"
+          </p>
           {showReadMore && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-white to-transparent" />
           )}
         </div>
         {showReadMore && (
-          <button
-            type="button"
-            onClick={onReadMore}
-            className="mt-2 text-blue-600 hover:text-blue-700 font-semibold text-sm underline"
-          >
-            Read more
-          </button>
+          <div className="w-full mt-0.5">
+            <button
+              type="button"
+              onClick={onReadMore}
+              className="text-blue-600 hover:text-blue-700 font-semibold text-xs underline text-left"
+            >
+              Read more
+            </button>
+          </div>
         )}
       </div>
 
       {/* Stars */}
-      <div className="flex items-center gap-1 mb-4">
+      <div className="flex items-center gap-1 mb-2">
         {Array.from({ length: 5 }).map((_, i) => (
           <motion.div
             key={i}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: i * 0.1, duration: 0.3 }}
+            transition={{ delay: i * 0.05, duration: 0.2 }}
           >
-            <Star className={`w-4 h-4 ${i < stars ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
+            <Star
+              className={`w-4 h-4 ${i < stars ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+            />
           </motion.div>
         ))}
-        <span className="ml-2 text-sm font-semibold text-gray-600">{stars}.0</span>
+        <span className="ml-1 text-xs font-semibold text-gray-600">{stars}.0</span>
       </div>
 
       {/* User Info */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 mt-auto">
         <div className="relative">
           <div
-            className="w-12 h-12 rounded-full border-2 border-blue-100 shadow-md bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-blue-700 font-bold text-base select-none"
+            className="w-10 h-10 rounded-full border-2 border-blue-100 shadow-md bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-blue-700 font-bold text-sm select-none"
             aria-label={`Avatar of ${name}`}
             title={email || name}
           >
             {initial}
           </div>
           {verified && (
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-              <CheckCircle className="w-3 h-3 text-white" />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+              <CheckCircle className="w-2.5 h-2.5 text-white" />
             </div>
           )}
         </div>
         <div>
-          <p className="font-bold text-gray-900 text-sm">{name}</p>
+          <p className="font-bold text-gray-900 text-xs">{name}</p>
           {position && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 truncate max-w-[140px]">
               {position} {company && `at ${company}`}
             </p>
           )}
           {verified && (
-            <p className="text-xs text-green-600 font-medium flex items-center gap-1 mt-1">
-              <CheckCircle className="w-3 h-3" />
-              Verified Customer
+            <p className="text-xs text-green-600 font-medium flex items-center gap-1 mt-0.5">
+              <CheckCircle className="w-2.5 h-2.5" />
+              Verified
             </p>
           )}
         </div>

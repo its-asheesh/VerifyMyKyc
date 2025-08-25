@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Star, Users, Zap, Shield } from "lucide-react"
@@ -31,9 +31,11 @@ const cardVariants = {
 const PricingSection: React.FC = () => {
   const navigate = useNavigate()
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
-  const [focusedCard, setFocusedCard] = useState<number | null>(1)
+  const [focusedCard, setFocusedCard] = useState<number | null>(0) // Start from 0
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly' | 'custom'>('monthly')
   
+  const scrollRef = useRef<HTMLDivElement>(null) // Ref for scroll container
+
   // Fetch homepage pricing data from backend
   const { homepagePlans, homepageLoading, homepageError, getHomepagePlansByPeriod } = usePricingContext()
 
@@ -42,7 +44,6 @@ const PricingSection: React.FC = () => {
 
   const handleBillingPeriodChange = (period: 'monthly' | 'yearly' | 'custom') => {
     if (period === 'custom') {
-      // Navigate to custom selection page
       navigate('/custom-pricing')
     } else {
       setBillingPeriod(period)
@@ -62,6 +63,35 @@ const PricingSection: React.FC = () => {
         return Users
     }
   }
+
+  // Sync focusedCard with scroll position
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container || !currentPlans?.length) return
+
+    const handleScroll = () => {
+      const width = container.clientWidth
+      const scrollLeft = container.scrollLeft
+      let index = Math.round(scrollLeft / width)
+
+      // Clamp index
+      index = Math.max(0, Math.min(index, currentPlans.length - 1))
+
+      // Only update if changed
+      if (index !== focusedCard) {
+        setFocusedCard(index)
+        setHoveredCard(index)
+      }
+    }
+
+    // Use passive listener for performance
+    container.addEventListener('scroll', handleScroll, { passive: true })
+
+    // Cleanup
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [currentPlans, focusedCard])
 
   return (
     <section id="pricing" className="py-10 md:py-16 px-4 md:px-8 bg-gradient-to-br from-slate-50 via-white to-blue-50 relative overflow-hidden">
@@ -107,7 +137,7 @@ const PricingSection: React.FC = () => {
           </motion.p>
         </motion.div>
 
-        {/* Billing Period Toggle - Positioned just above cards */}
+        {/* Billing Period Toggle */}
         <div className="flex justify-center mb-4">
           <div className="inline-flex bg-gray-100 rounded-lg p-1">
             <button
@@ -132,62 +162,138 @@ const PricingSection: React.FC = () => {
         </div>
 
         {/* Pricing Cards */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-12 md:mb-16"
-        >
-          {homepageLoading ? (
-            // Loading state
-            Array.from({ length: 3 }).map((_, index) => (
-              <motion.div key={index} variants={cardVariants}>
-                <div className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                  <div className="space-y-2">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="h-3 bg-gray-200 rounded"></div>
-                    ))}
+        <div className="mb-12 md:mb-16">
+          {/* Mobile: Scrollable Row with Snap */}
+          <div
+            ref={scrollRef}
+            className="md:hidden flex overflow-x-auto snap-x snap-mandatory py-4 px-4 scrollbar-hide scroll-smooth"
+            style={{
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {homepageLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="min-w-full snap-center flex-shrink-0 px-2">
+                  <div className="bg-white rounded-xl p-4 border border-gray-200 animate-pulse">
+                    <div className="h-5 bg-gray-200 rounded mb-3"></div>
+                    <div className="h-7 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                    <div className="space-y-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="h-2.5 bg-gray-200 rounded"></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </motion.div>
-            ))
-          ) : homepageError ? (
-            // Error state
-            <div className="col-span-full text-center py-8">
-              <p className="text-red-600">Failed to load pricing. Please try again later.</p>
-            </div>
-          ) : (
-            // Success state - render homepage plans from backend
-            currentPlans?.map((plan, index) => (
-              <motion.div key={plan._id} variants={cardVariants}>
-                <PricingCard
-                  title={plan.name}
-                  price={`₹${plan.price}`}
-                  description={plan.description}
-                  features={plan.features}
-                  icon={getPlanIcon(plan.planName)}
-                  color={plan.color as 'blue' | 'purple' | 'green' || "blue"}
-                  highlighted={plan.highlighted}
-                  popular={plan.popular}
-                  isHovered={hoveredCard === index}
-                  isFocused={focusedCard === index}
-                  billingPeriod={billingPeriod}
-                  planData={plan}
-                  onHover={() => {
-                    setHoveredCard(index)
-                    setFocusedCard(index)
-                  }}
-                  onHoverEnd={() => {
-                    setHoveredCard(null)
-                  }}
-                />
-              </motion.div>
-            ))
-          )}
-        </motion.div>
+              ))
+            ) : homepageError ? (
+              <div className="col-span-full text-center py-6 text-red-600 text-sm">
+                Failed to load pricing. Please try again later.
+              </div>
+            ) : (
+              currentPlans?.map((plan, index) => (
+                <div
+                  key={plan._id}
+                  className="min-w-full snap-center flex-shrink-0 px-2"
+                >
+                  <PricingCard
+                    title={plan.name}
+                    price={`₹${plan.price}`}
+                    description={plan.description}
+                    features={plan.features}
+                    icon={getPlanIcon(plan.planName)}
+                    color={plan.color as 'blue' | 'purple' | 'green' || "blue"}
+                    highlighted={plan.highlighted}
+                    popular={plan.popular}
+                    isHovered={hoveredCard === index}
+                    isFocused={focusedCard === index}
+                    billingPeriod={billingPeriod}
+                    planData={plan}
+                    onHover={() => {
+                      setHoveredCard(index)
+                      setFocusedCard(index)
+                    }}
+                    onHoverEnd={() => setHoveredCard(null)}
+                    onClick={() => {
+                      // Tap: focus and scroll to this card
+                      setFocusedCard(index)
+                      setHoveredCard(index)
+                      setTimeout(() => setHoveredCard(prev => prev === index ? null : prev), 1500)
+
+                      // Scroll to this card if not already centered
+                      if (scrollRef.current) {
+                        const container = scrollRef.current
+                        container.scrollTo({
+                          left: index * container.clientWidth,
+                          behavior: 'smooth',
+                        })
+                      }
+                    }}
+                  />
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop: Grid Layout */}
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6"
+          >
+            {homepageLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <motion.div key={index} variants={cardVariants}>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 animate-pulse">
+                    <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="space-y-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="h-3 bg-gray-200 rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : homepageError ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-red-600">Failed to load pricing. Please try again later.</p>
+              </div>
+            ) : (
+              currentPlans?.map((plan, index) => (
+                <motion.div key={plan._id} variants={cardVariants}>
+                  <PricingCard
+                    title={plan.name}
+                    price={`₹${plan.price}`}
+                    description={plan.description}
+                    features={plan.features}
+                    icon={getPlanIcon(plan.planName)}
+                    color={plan.color as 'blue' | 'purple' | 'green' || "blue"}
+                    highlighted={plan.highlighted}
+                    popular={plan.popular}
+                    isHovered={hoveredCard === index}
+                    isFocused={focusedCard === index}
+                    billingPeriod={billingPeriod}
+                    planData={plan}
+                    onHover={() => {
+                      setHoveredCard(index)
+                      setFocusedCard(index)
+                    }}
+                    onHoverEnd={() => setHoveredCard(null)}
+                    onClick={() => {
+                      setFocusedCard(index)
+                      setHoveredCard(index)
+                      setTimeout(() => setHoveredCard(prev => prev === index ? null : prev), 1500)
+                    }}
+                  />
+                </motion.div>
+              ))
+            )}
+          </motion.div>
+        </div>
 
         {/* Stats Section */}
         <motion.div
@@ -230,6 +336,13 @@ const PricingSection: React.FC = () => {
         }
         .bg-grid-white\\/10 {
           background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.1)'%3e%3cpath d='m0 .5h32m-32 32v-32'/%3e%3c/svg%3e");
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </section>

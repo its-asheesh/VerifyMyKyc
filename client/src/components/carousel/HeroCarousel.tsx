@@ -1,50 +1,60 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { ChevronLeft, ChevronRight, Play, Shield, Award, ArrowRight, CheckCircle, Loader2 } from "lucide-react"
-import { useCarouselSlides } from "../../hooks/useCarousel"
-import { useNavigate } from "react-router-dom"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Shield,
+  Award,
+  ArrowRight,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
+import { useCarouselSlides } from "../../hooks/useCarousel";
+import { useNavigate } from "react-router-dom";
 
 const HeroCarousel: React.FC = () => {
-  const navigate = useNavigate()
-  const { data: slides, isLoading, error } = useCarouselSlides()
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(true)
+  const navigate = useNavigate();
+  const { data: slides, isLoading, error } = useCarouselSlides();
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   // Auto-play functionality
   useEffect(() => {
-    if (!isPlaying || !slides || slides.length === 0) return
+    if (!isPlaying || !slides || slides.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 5000)
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
 
-    return () => clearInterval(interval)
-  }, [isPlaying, slides])
+    return () => clearInterval(interval);
+  }, [isPlaying, slides]);
 
   const nextSlide = () => {
-    if (!slides) return
-    setCurrentSlide((prev) => (prev + 1) % slides.length)
-  }
+    if (!slides) return;
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
 
   const prevSlide = () => {
-    if (!slides) return
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
-  }
+    if (!slides) return;
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-  }
+    setCurrentSlide(index);
+  };
 
   const handleButtonClick = (link: string) => {
-    if (link.startsWith('http')) {
-      window.open(link, '_blank')
+    if (link.startsWith("http")) {
+      window.open(link, "_blank", "noopener,noreferrer");
     } else {
-      navigate(link)
+      navigate(link);
     }
-  }
+  };
 
   // Loading state
   if (isLoading) {
@@ -55,7 +65,7 @@ const HeroCarousel: React.FC = () => {
           <p className="text-gray-600">Loading carousel...</p>
         </div>
       </section>
-    )
+    );
   }
 
   // Error state
@@ -66,10 +76,10 @@ const HeroCarousel: React.FC = () => {
           <p className="text-gray-600">Carousel content not available</p>
         </div>
       </section>
-    )
+    );
   }
 
-  const currentSlideData = slides[currentSlide]
+  const currentSlideData = slides[currentSlide];
 
   return (
     <section className="relative min-h-[50vh] bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
@@ -121,7 +131,7 @@ const HeroCarousel: React.FC = () => {
                 </p>
               </motion.div>
 
-              {/* Mobile Image (between title/subtitle and description) */}
+              {/* Mobile Image (shown only on mobile) */}
               <div className="block lg:hidden">
                 <div className="relative flex justify-center my-4">
                   <img
@@ -129,7 +139,8 @@ const HeroCarousel: React.FC = () => {
                     alt={currentSlideData.title}
                     className="w-full max-w-[360px] h-auto object-contain"
                     onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/400x250?text=Image+Not+Found"
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/400x250?text=Image+Not+Found";
                     }}
                   />
                 </div>
@@ -145,7 +156,7 @@ const HeroCarousel: React.FC = () => {
                 {currentSlideData.description}
               </motion.p>
 
-              {/* CTA Buttons */}
+              {/* CTA Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -165,7 +176,7 @@ const HeroCarousel: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Right Image */}
+            {/* Right Image (shown only on desktop) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8, x: 50 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -188,18 +199,25 @@ const HeroCarousel: React.FC = () => {
                       alt={currentSlideData.title}
                       className="w-full max-w-[400px] h-auto object-contain"
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/400x250?text=Image+Not+Found"
+                        e.currentTarget.src =
+                          "https://via.placeholder.com/400x250?text=Image+Not+Found";
                       }}
                     />
                     {/* Gradient mask for sides blending */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent pointer-events-none" 
-                         style={{
-                           background: 'linear-gradient(90deg, transparent 0%, transparent 85%, rgba(255,255,255,0.1) 100%)'
-                         }} />
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-transparent pointer-events-none" 
-                         style={{
-                           background: 'linear-gradient(270deg, transparent 0%, transparent 85%, rgba(255,255,255,0.1) 100%)'
-                         }} />
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent 0%, transparent 85%, rgba(255,255,255,0.1) 100%)",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(270deg, transparent 0%, transparent 85%, rgba(255,255,255,0.1) 100%)",
+                      }}
+                    />
                   </div>
 
                   {/* Floating Stats */}
@@ -275,13 +293,14 @@ const HeroCarousel: React.FC = () => {
         </div>
       </div>
 
+      {/* Background Grid Pattern */}
       <style>{`
         .bg-grid-slate-100 {
           background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(148 163 184 / 0.05)'%3e%3cpath d='m0 .5h32m-32 32v-32'/%3e%3c/svg%3e");
         }
       `}</style>
     </section>
-  )
-}
+  );
+};
 
-export default HeroCarousel
+export default HeroCarousel;

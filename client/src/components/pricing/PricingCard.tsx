@@ -19,6 +19,7 @@ interface PricingCardProps {
   billingPeriod?: 'monthly' | 'yearly' | 'custom'
   onHover?: () => void
   onHoverEnd?: () => void
+  onClick?: () => void
   planData?: any // Full plan data from backend
   onChoosePlan?: (planData: any) => void // Callback for when plan is chosen
 }
@@ -98,6 +99,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
   billingPeriod = 'monthly',
   onHover,
   onHoverEnd,
+  onClick,
   planData,
   onChoosePlan,
 }) => {
@@ -178,8 +180,10 @@ export const PricingCard: React.FC<PricingCardProps> = ({
         y: -6,
         transition: { duration: 0.3, ease: "easeOut" },
       }}
+      whileTap={{ scale: 0.98 }}
       onHoverStart={onHover}
       onHoverEnd={onHoverEnd}
+      onClick={onClick}
       className={`relative rounded-xl border-2 transition-all duration-300 ${colors.border} ${colors.bg} shadow-lg hover:shadow-xl overflow-visible group cursor-pointer flex flex-col h-full`}
       style={{
         transform: isActive ? "scale(1.02)" : "scale(1)",

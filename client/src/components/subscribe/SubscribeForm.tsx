@@ -55,7 +55,7 @@ export const SubscribeForm: React.FC<SubscribeFormProps> = ({ onSubmit }) => {
     >
       <div className="relative">
         <div className="flex items-center bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 p-2 shadow-xl">
-          <div className="flex items-center pl-4 pr-2">
+          <div className="flex items-center pl-2 pr-2">
             <Mail className="w-4 h-4 text-white/70" />
           </div>
           <input
@@ -63,7 +63,7 @@ export const SubscribeForm: React.FC<SubscribeFormProps> = ({ onSubmit }) => {
             placeholder="Enter your email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-transparent flex-1 px-2 py-3 text-white placeholder-white/70 outline-none text-sm md:text-base"
+            className="bg-transparent flex-1 px-0 py-3 text-white placeholder-white/70 outline-none text-sm md:text-base"
             disabled={loading}
           />
           <motion.button
@@ -71,7 +71,7 @@ export const SubscribeForm: React.FC<SubscribeFormProps> = ({ onSubmit }) => {
             disabled={loading || !email}
             whileHover={{ scale: loading ? 1 : 1.05 }}
             whileTap={{ scale: loading ? 1 : 0.95 }}
-            className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
               <motion.div

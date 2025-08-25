@@ -110,7 +110,7 @@ const ReviewsSection: React.FC = () => {
           {isLoading ? (
             <div className="text-center text-blue-100 py-8">Loading reviews…</div>
           ) : mappedReviews.length > 0 ? (
-            <ReviewCarousel reviews={mappedReviews} autoPlay={true} autoPlayInterval={4000} />
+            <ReviewCarousel reviews={mappedReviews} autoPlay={true} autoPlayInterval={2000} />
           ) : (
             <div className="text-center text-blue-100 py-8">No reviews yet. Be the first to share your experience!</div>
           )}

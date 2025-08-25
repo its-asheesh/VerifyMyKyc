@@ -86,31 +86,31 @@ const SubscribeSection: React.FC = () => {
             </div>
 
             {/* Features */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-            >
-              {[
-                { icon: Shield, text: "Industry Insights" },
-                { icon: Users, text: "Exclusive Content" },
-                { icon: Bell, text: "Special Offers" },
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
-                  className="flex items-center justify-center gap-3 text-white/90 text-sm md:text-base"
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.text}</span>
-                </motion.div>
-              ))}
-            </motion.div>
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ delay: 0.5, duration: 0.6 }}
+  className="flex flex-wrap md:flex-nowrap items-center justify-center gap-4 sm:gap-6 md:gap-6 mb-8"
+>
+  {[
+    { icon: Shield, text: "Industry Insights" },
+    { icon: Users, text: "Exclusive Content" },
+    { icon: Bell, text: "Special Offers" },
+  ].map((item, index) => (
+    <motion.div
+      key={index}
+      initial={{ opacity: 0, x: 20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
+      className="flex items-center justify-center gap-2 sm:gap-3 text-white/90 text-xs sm:text-sm md:text-base whitespace-nowrap"
+    >
+      <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+      <span className="font-medium">{item.text}</span>
+    </motion.div>
+  ))}
+</motion.div>
 
             {/* Disclaimer */}
             <motion.p
