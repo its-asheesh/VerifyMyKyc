@@ -31,7 +31,7 @@ exports.fetchRcLiteHandler = (0, asyncHandler_1.default)((req, res) => __awaiter
         rc_number,
         hasConsent: Boolean(consent),
     });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'rc');
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'vehicle');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     console.log('RC Lite Controller: using order for quota', {
@@ -63,7 +63,7 @@ exports.fetchRcDetailedHandler = (0, asyncHandler_1.default)((req, res) => __awa
         extract_insurer: !!extract_insurer,
         hasConsent: Boolean(consent),
     });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'rc');
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'vehicle');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchRcDetailed({
@@ -91,7 +91,7 @@ exports.fetchRcDetailedWithChallanHandler = (0, asyncHandler_1.default)((req, re
         extract_mapping: !!extract_mapping,
         hasConsent: Boolean(consent),
     });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'rc');
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'vehicle');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchRcDetailedWithChallan({
@@ -121,7 +121,7 @@ exports.fetchEChallanHandler = (0, asyncHandler_1.default)((req, res) => __await
         state_portals,
         hasConsent: Boolean(consent),
     });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'rc');
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'vehicle');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchEChallan({
@@ -147,7 +147,7 @@ exports.fetchRegNumByChassisHandler = (0, asyncHandler_1.default)((req, res) => 
         chassis_number,
         hasConsent: Boolean(consent),
     });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'rc');
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'vehicle');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchRegNumByChassis({ chassis_number, consent });
@@ -173,7 +173,7 @@ exports.fetchFastagDetailsHandler = (0, asyncHandler_1.default)((req, res) => __
         tag_id: tag_id ? 'PROVIDED' : 'N/A',
         hasConsent: Boolean(consent),
     });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'rc');
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'vehicle');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.fetchFastagDetails({ rc_number, tag_id, consent });

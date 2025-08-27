@@ -54,3 +54,4 @@ const iconMap: Record<string, LucideIcon> = {
 export const getIcon = (iconName: string): LucideIcon => {
   return iconMap[iconName] || FileText
 }
+

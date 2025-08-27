@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { motion } from "framer-motion"
-import { ArrowRight, Sparkles, TrendingUp } from "lucide-react"
-import { easeOut } from "framer-motion"
+import type React from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, TrendingUp } from "lucide-react";
+import { easeOut } from "framer-motion";
 
 interface FeatureShowcaseProps {
-  title: string
-  description: string
-  image: string
-  detailedText: string
-  reverse?: boolean
-  ctaText?: string
-  ctaLink?: string
+  title: string;
+  description: string;
+  image: string;
+  detailedText: string;
+  reverse?: boolean;
+  ctaText?: string;
+  ctaLink?: string;
 }
 
 const cardVariants = {
@@ -22,7 +22,7 @@ const cardVariants = {
     y: 0,
     transition: { duration: 0.8, ease: easeOut },
   },
-}
+};
 
 const imageVariants = {
   hidden: { opacity: 0, scale: 0.8, y: 40 },
@@ -32,7 +32,7 @@ const imageVariants = {
     y: 0,
     transition: { duration: 0.8, ease: easeOut },
   },
-}
+};
 
 const getTextVariants = (reverse: boolean) => ({
   hidden: { opacity: 0, x: reverse ? 40 : -40 },
@@ -41,7 +41,7 @@ const getTextVariants = (reverse: boolean) => ({
     x: 0,
     transition: { duration: 0.8, ease: easeOut, delay: 0.2 },
   },
-})
+});
 
 export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
   title,
@@ -73,68 +73,76 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
         <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-orange-400/10 to-pink-400/10 rounded-full blur-xl" />
 
         <div
-  className={`grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-center ${
-    reverse ? "lg:grid-flow-col-dense" : ""
-  }`}
->
-  {/* Image Section (2 columns wide) */}
-  <motion.div
-    variants={imageVariants}
-    className={`relative order-2 lg:order-none ${reverse ? "lg:col-start-4 lg:col-span-2" : "lg:col-span-2"}`}
-  >
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.3 }}
-      className="relative group"
-    >
-      {/* Glow Effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-110" />
-
-      {/* Image Container */}
-      <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-3 sm:p-4">
-        <img
-          src={image || "/placeholder.svg"}
-          alt={title}
-          className="w-full h-40 sm:h-52 md:h-64 lg:h-72 object-contain"
-        />
-
-        {/* Floating Badge */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-          className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white p-1.5 rounded-lg shadow-lg"
+          className={`grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-center ${
+            reverse ? "lg:grid-flow-col-dense" : ""
+          }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
-        </motion.div>
-      </div>
+          {/* Image Section (2 columns wide) */}
+          <motion.div
+            variants={imageVariants}
+            className={`relative order-2 lg:order-none ${
+              reverse ? "lg:col-start-4 lg:col-span-2" : "lg:col-span-2"
+            }`}
+          >
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+              className="relative group"
+            >
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-110" />
 
-      {/* Stats (mobile only) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="grid grid-cols-2 gap-2 py-2 mt-3 lg:hidden"
-      >
-        <div className="text-center p-2 bg-blue-50 rounded-lg">
-          <div className="text-sm sm:text-base font-bold text-blue-600">99.9%</div>
-          <div className="text-xs text-gray-600">Accuracy</div>
-        </div>
-        <div className="text-center p-2 bg-green-50 rounded-lg">
-          <div className="text-sm sm:text-base font-bold text-green-600">3s</div>
-          <div className="text-xs text-gray-600">Verify</div>
-        </div>
-      </motion.div>
-    </motion.div>
-  </motion.div>
+              {/* Image Container */}
+              <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-1 sm:p-1.5 md:p-2">
+                {" "}
+                {/* Minimal padding */}
+                <img
+                  src={image || "/placeholder.svg"}
+                  alt={title}
+                  className="w-full h-52 sm:h-64 md:h-72 lg:h-80 xl:h-96 object-cover rounded-xl" // Full width, taller height, fills space
+                />
+                {/* Floating Badge */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                  className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white p-1.5 rounded-lg shadow-lg"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                </motion.div>
+              </div>
 
-  {/* Content Section (3 columns wide) */}
-  <motion.div
-    variants={getTextVariants(reverse)}
-    className={`space-y-4 order-1 lg:order-none ${reverse ? "lg:col-start-1 lg:col-span-3" : "lg:col-span-3"}`}
-  >
+              {/* Stats (mobile only) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="grid grid-cols-2 gap-2 py-2 mt-3 lg:hidden"
+              >
+                <div className="text-center p-2 bg-blue-50 rounded-lg">
+                  <div className="text-sm sm:text-base font-bold text-blue-600">
+                    99.9%
+                  </div>
+                  <div className="text-xs text-gray-600">Accuracy</div>
+                </div>
+                <div className="text-center p-2 bg-green-50 rounded-lg">
+                  <div className="text-sm sm:text-base font-bold text-green-600">
+                    3s
+                  </div>
+                  <div className="text-xs text-gray-600">Verify</div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
 
+          {/* Content Section (3 columns wide) */}
+          <motion.div
+            variants={getTextVariants(reverse)}
+            className={`space-y-4 order-1 lg:order-none ${
+              reverse ? "lg:col-start-1 lg:col-span-3" : "lg:col-span-3"
+            }`}
+          >
             {/* Category Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -223,5 +231,5 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
         </motion.div>
       </motion.div>
     </motion.div>
-  )
-}
+  );
+};

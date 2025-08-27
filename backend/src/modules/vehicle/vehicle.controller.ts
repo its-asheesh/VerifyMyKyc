@@ -22,7 +22,7 @@ export const fetchRcLiteHandler = asyncHandler(async (req: AuthenticatedRequest,
     hasConsent: Boolean(consent),
   });
 
-  const order = await ensureVerificationQuota(userId, 'rc');
+  const order = await ensureVerificationQuota(userId, 'vehicle');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   console.log('RC Lite Controller: using order for quota', {
@@ -61,7 +61,7 @@ export const fetchRcDetailedHandler = asyncHandler(async (req: AuthenticatedRequ
     hasConsent: Boolean(consent),
   });
 
-  const order = await ensureVerificationQuota(userId, 'rc');
+  const order = await ensureVerificationQuota(userId, 'vehicle');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   const result = await service.fetchRcDetailed({
@@ -94,7 +94,7 @@ export const fetchRcDetailedWithChallanHandler = asyncHandler(async (req: Authen
     hasConsent: Boolean(consent),
   });
 
-  const order = await ensureVerificationQuota(userId, 'rc');
+  const order = await ensureVerificationQuota(userId, 'vehicle');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   const result = await service.fetchRcDetailedWithChallan({
@@ -129,7 +129,7 @@ export const fetchEChallanHandler = asyncHandler(async (req: AuthenticatedReques
     hasConsent: Boolean(consent),
   });
 
-  const order = await ensureVerificationQuota(userId, 'rc');
+  const order = await ensureVerificationQuota(userId, 'vehicle');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   const result = await service.fetchEChallan({
@@ -160,7 +160,7 @@ export const fetchRegNumByChassisHandler = asyncHandler(async (req: Authenticate
     hasConsent: Boolean(consent),
   });
 
-  const order = await ensureVerificationQuota(userId, 'rc');
+  const order = await ensureVerificationQuota(userId, 'vehicle');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   const result = await service.fetchRegNumByChassis({ chassis_number, consent });
@@ -192,7 +192,7 @@ export const fetchFastagDetailsHandler = asyncHandler(async (req: AuthenticatedR
     hasConsent: Boolean(consent),
   });
 
-  const order = await ensureVerificationQuota(userId, 'rc');
+  const order = await ensureVerificationQuota(userId, 'vehicle');
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   const result = await service.fetchFastagDetails({ rc_number, tag_id, consent });

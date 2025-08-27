@@ -1,15 +1,15 @@
 "use client"
 
+// SocialLinks.tsx
+
 import type React from "react"
 import { motion } from "framer-motion"
-import { Facebook, Instagram, Music, Smile, Twitter, Linkedin } from "lucide-react"
+import { Facebook, Instagram, X, Linkedin } from "lucide-react" // ✅ X instead of Music/Smile/Twitter
 
 const socialIcons = {
   facebook: Facebook,
   instagram: Instagram,
-  tiktok: Music,
-  snapchat: Smile,
-  twitter: Twitter,
+  x: X, // ✅ Map 'x' to X icon
   linkedin: Linkedin,
 }
 
@@ -23,34 +23,65 @@ interface SocialLinksProps {
 
 export const SocialLinks: React.FC<SocialLinksProps> = ({ links }) => {
   return (
-    <div className="flex gap-3 justify-center">
+    <div className="flex gap-4 justify-center">
       {links.map((social, index) => {
         const IconComponent = socialIcons[social.name]
         return (
           <motion.a
             key={social.name}
             href={social.href}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1, duration: 0.3 }}
-            whileHover={{
-              scale: 1.2,
-              rotate: 5,
-              transition: { duration: 0.2 },
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, scale: 0, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{
+              delay: index * 0.15,
+              duration: 0.4,
+              type: "spring",
+              stiffness: 100,
             }}
-            whileTap={{ scale: 0.9 }}
-            className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-gray-600 hover:text-white hover:bg-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+            whileHover={{
+              scale: 1.15,
+              rotate: [0, -5, 5, 0],
+              y: -2,
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="group relative w-12 h-12 rounded-xl bg-gradient-to-br from-white/20 to-white/5 
+                       backdrop-blur-md border border-white/30 flex items-center justify-center 
+                       text-gray-700 hover:text-white transition-all duration-300 
+                       shadow-lg hover:shadow-2xl hover:shadow-blue-500/25
+                       before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br 
+                       before:from-transparent before:to-black/10 before:opacity-0 
+                       hover:before:opacity-100 before:transition-opacity before:duration-300"
             style={
               {
                 "--hover-color": social.color,
               } as React.CSSProperties
             }
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `linear-gradient(135deg, ${social.color}20, ${social.color}40)`
+              e.currentTarget.style.borderColor = social.color
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = ""
+              e.currentTarget.style.borderColor = ""
+            }}
           >
-            <IconComponent className="w-5 h-5" />
+            <div
+              className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 
+                           transition-opacity duration-300 blur-sm -z-10"
+              style={{ background: `linear-gradient(135deg, ${social.color}40, ${social.color}20)` }}
+            />
+
+            <IconComponent className="w-5 h-5 relative z-10 group-hover:drop-shadow-sm transition-all duration-300" />
+
+            <div
+              className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-white/20 
+                           group-hover:animate-pulse transition-all duration-300"
+            />
           </motion.a>
         )
       })}
     </div>
   )
 }
-// Compare this snippet from client/src/components/footer/Footer.tsx:

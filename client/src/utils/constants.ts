@@ -1,4 +1,4 @@
-import { Users, Zap, Shield } from "lucide-react"
+import { Users, Zap, Shield } from "lucide-react";
 
 export const categories = [
   { label: "Personal", value: "personal" },
@@ -8,7 +8,7 @@ export const categories = [
   { label: "Government", value: "government" },
   // { label: "Biometric", value: "biometric" },
   // { label: "Covid Check", value: "covid" },
-]
+];
 
 export const verificationServices = [
   {
@@ -109,13 +109,14 @@ export const verificationServices = [
     reviews: 80,
     link: "/products/company",
   },
-]
+];
 
 export const verificationFeatures = [
   {
     id: 1,
     title: "GOVERNMENT ID VERIFICATION",
-    description: "PAN Card, Aadhaar Card,\nVoter ID, Driving Licence,\nPassport",
+    description:
+      "PAN Card, Aadhaar Card,\nVoter ID, Driving Licence,\nPassport",
     image: "/cat1.png",
     detailedText:
       "We authenticate each document against its issuing authority to prevent identity fraud and ensure complete compliance with regulatory standards.",
@@ -125,7 +126,8 @@ export const verificationFeatures = [
   {
     id: 2,
     title: "COMPANY & CREDENTIAL VERIFICATION",
-    description: "GST Registration, FSSAI,\nLicense, MSME Certification,\nCompany Registration",
+    description:
+      "GST Registration, FSSAI,\nLicense, MSME Certification,\nCompany Registration",
     image: "/cat2.png",
     detailedText:
       "We verify business credentials to help you trust your business associates and ensure legitimate partnerships with verified entities.",
@@ -162,7 +164,7 @@ export const verificationFeatures = [
     ctaText: "Explore Specialized Services",
     ctaLink: "/specialized-verification",
   },
-]
+];
 
 export const pricingPlans = [
   {
@@ -212,14 +214,14 @@ export const pricingPlans = [
     icon: Shield,
     color: "green" as const,
   },
-]
+];
 
 export const verificationStats = [
   { value: 95, label: "Coverage for Indians", suffix: "%" },
   { value: 0.5, label: "Seconds - Speed to Verification", prefix: "~" },
   { value: 3, label: "Seconds. Same speed as phone OTP", prefix: "~" },
   { value: 1, label: "OTP-based solution in India", prefix: "#" },
-]
+];
 
 export const trustPillars = [
   {
@@ -237,7 +239,7 @@ export const trustPillars = [
     icon: "/file.png",
     brandLogo: "/verifymykyc.jpg",
   },
-]
+];
 
 export const partnerLogos = [
   { src: "/gartner.png", alt: "Gartner" },
@@ -246,15 +248,16 @@ export const partnerLogos = [
   { src: "/acuity.png", alt: "Acuity" },
   { src: "/chartis.png", alt: "Chartis" },
   { src: "/qksgroup.png", alt: "QKS Group" },
-]
+];
 
 export const featuredContent = {
   badge: "FEATURED",
   title: "CATEGORY LEADER",
-  description: "VerifyMyKyc: a leader in the QKS 2025 SPARK Matrix for Identity Capture and Verification solutions.",
+  description:
+    "VerifyMyKyc: a leader in the QKS 2025 SPARK Matrix for Identity Capture and Verification solutions.",
   ctaText: "Learn more",
   ctaLink: "#",
-}
+};
 
 export const expertContent = {
   title: "Here's what the experts say",
@@ -262,7 +265,7 @@ export const expertContent = {
     "Recognition for our tech innovation, leadership, and mission to make the internet a safer place for everyone.",
   ctaText: "Awards & recognition",
   ctaLink: "#",
-}
+};
 
 export const customerReviews = [
   {
@@ -310,14 +313,14 @@ export const customerReviews = [
     stars: 5,
     verified: true,
   },
-]
+];
 
 export const reviewStats = [
   { value: 4.9, label: "Average Rating", suffix: "/5", decimals: 1 },
   { value: 10000, label: "Happy Customers", suffix: "+" },
   { value: 99.9, label: "Uptime", suffix: "%", decimals: 1 },
   { value: 24, label: "Support", suffix: "/7" },
-]
+];
 
 export const faqData = [
   {
@@ -350,32 +353,46 @@ export const faqData = [
     answer:
       "We offer flexible pricing plans to suit different needs - from individual users to large enterprises. Our plans include pay-per-verification options and monthly subscriptions. Contact our sales team for custom enterprise pricing.",
   },
-]
+];
 
 export const footerData = {
   legalLinks: [
-    { label: "Terms and conditions", href: "#" },
-    { label: "Privacy", href: "#" },
+    { label: "Terms and conditions", href: "/terms" },
+    { label: "Privacy", href: "/privacy-policy" },
     { label: "Cookies", href: "#" },
-    { label: "Modern Slavery Statement", href: "#" },
   ],
   importantLinks: [
     { label: "Get help", href: "#" },
-    { label: "Add your restaurant", href: "#" },
-    { label: "Sign up to deliver", href: "#" },
-    { label: "Create a business account", href: "#" },
+    // { label: "Add your restaurant", href: "#" },
+    // { label: "Sign up to deliver", href: "#" },
+    // { label: "Create a business account", href: "#" },
   ],
   socialLinks: [
-    { name: "facebook" as const, href: "#", color: "#1877F2" },
-    { name: "instagram" as const, href: "#", color: "#E4405F" },
-    { name: "tiktok" as const, href: "#", color: "#000000" },
-    { name: "twitter" as const, href: "#", color: "#1DA1F2" },
-    { name: "linkedin" as const, href: "#", color: "#0A66C2" },
+    {
+      name: "facebook" as const,
+      href: "https://www.facebook.com/people/Verify-My-KYC/61576760613090/",
+      color: "#1877F2",
+    },
+    {
+      name: "instagram" as const,
+      href: "https://www.instagram.com/verifymykyc/",
+      color: "#C13584",
+    },
+    {
+      name: "x" as const, // formerly Twitter
+      href: "#", // replace with your actual X.com link
+      color: "#000000", // X.com black
+    },
+    {
+      name: "linkedin" as const,
+      href: "#",
+      color: "#0A66C2",
+    },
   ],
   bottomLinks: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms", href: "#" },
-    { label: "Pricing", href: "#" },
-    { label: "Do not sell or share my personal information", href: "#" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms and Conditions", href: "/terms" },
+    { label: "Disclaimer", href: "/disclaimer" },
+    // { label: "Do not sell or share my personal information", href: "#" },
   ],
-}
+};

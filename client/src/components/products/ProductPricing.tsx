@@ -235,19 +235,9 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
         </p>
       </motion.div>
 
-      {/* Pricing Cards - Responsive Horizontal Scroll on Mobile */}
-      <div className="md:grid md:grid-cols-3 gap-6">
-        <div 
-          className="
-            flex md:block
-            space-x-6 md:space-x-0
-            overflow-x-auto pb-6
-            -mx-4 px-4
-            md:mx-0 md:px-0
-            scrollbar-hide
-            min-h-[400px]  // Ensures enough height on mobile
-          "
-        >
+            <div className="hidden md:block">
+        {/* Desktop: Grid layout - 3 in a row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
           {pricingTiers.map((tier, index) => (
             <motion.div
               key={tier.name}
@@ -255,7 +245,47 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="flex-shrink-0 w-72 md:w-auto"  // Compact width on mobile
+            >
+              <PricingCard
+                title={tier.name}
+                price={`₹${tier.price}`}
+                description={tier.requests}
+                features={tier.features}
+                icon={getVerificationIcon(verificationType)}
+                color={tier.color}
+                popular={tier.popular}
+                isHovered={selectedPlan === tier.name}
+                billingPeriod={tier.billingPeriod}
+                onHover={() => handlePlanHover(tier.name)}
+                onHoverEnd={handlePlanLeave}
+                planData={{
+                  name: tier.name,
+                  price: String(tier.price),
+                  description: tier.requests,
+                  features: tier.features,
+                  planType: tier.billingPeriod,
+                  planName: tier.name,
+                  support: tier.support,
+                  period: tier.period,
+                }}
+                onChoosePlan={() => handleChoosePlan(tier)}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile & Small Screens: Horizontal Scroll */}
+      <div className="md:hidden">
+        <div className="flex space-x-6 overflow-x-auto pb-6 px-4 hide-scrollbar">
+          {pricingTiers.map((tier, index) => (
+            <motion.div
+              key={tier.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="flex-shrink-0 w-72"
             >
               <PricingCard
                 title={tier.name}

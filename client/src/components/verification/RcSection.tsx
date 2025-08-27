@@ -153,7 +153,7 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
       onServiceChange={handleServiceChange}
     >
       {/* Display pricing if available */}
-      {rcPricing && (
+      {/* {rcPricing && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
           <div className="flex flex-col gap-1 text-sm">
@@ -174,7 +174,7 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
             </span>
           </div>
         </div>
-      )}
+      )} */}
 
       <VerificationForm
         fields={getFormFields(selectedService)}

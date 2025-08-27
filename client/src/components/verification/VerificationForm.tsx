@@ -7,6 +7,7 @@ import {
   Upload,
   Camera,
   X,
+  XCircle,
   CheckCircle,
   AlertCircle,
   Loader2,
@@ -17,6 +18,8 @@ import {
   Link,
   RotateCcw,
 } from "lucide-react";
+import { VerificationResultShell } from "./VerificationResultShell.tsx";
+
 import ShareActions from "./ShareActions";
 import { ProductReviews } from "../reviews/ProductReviews";
 
@@ -64,6 +67,11 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
   const shareTargetRef = useRef<HTMLDivElement | null>(null);
+
+  interface CINDetail {
+    cin: string;
+    entity_name: string;
+  }
 
   // Clear form data and results when service changes
   useEffect(() => {
@@ -762,660 +770,119 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       serviceKey === "meson-fetch" ||
       serviceKey === "ocr"
     ) {
-      const data = result.data || result;
-      const voter = data.voter_data || data.ocr_data || data;
+      const payload = result.data || result;
+      const voter = payload.voter_data || payload.ocr_data || payload;
 
-      // Extract key voter fields with tolerant fallbacks
-      const name =
-        voter.name ||
-        voter.full_name ||
-        voter.fullName ||
-        voter.voter_name ||
-        voter.applicant_name;
-      const epic =
-        voter.voter_id ||
-        voter.epic_number ||
-        voter.epic ||
-        voter.id ||
-        voter.number ||
-        formData?.voter_id;
-      const relation =
-        voter.father_name ||
-        voter.husband_name ||
-        voter.guardian_name ||
-        voter.guardian ||
-        voter.relation_name;
-      const gender = voter.gender || voter.sex;
-      const age = voter.age || voter.age_years;
-      const dob = voter.date_of_birth || voter.dob || voter.dateOfBirth;
-      const state = voter.state || voter.state_name;
-      const district = voter.district || voter.district_name;
-      const docType = voter.document_type || voter.documentType;
-      const docId = voter.document_id || voter.documentId;
-      const assemblyName = voter.assembly_constituency_name || voter.ac_name;
-      const assemblyNumber =
-        voter.assembly_constituency_number || voter.ac_number;
-      const parliamentaryName =
-        voter.parliamentary_constituency_name || voter.pc_name;
-      const parliamentaryNumber =
-        voter.parliamentary_constituency_number || voter.pc_number;
-      const partName = voter.part_name;
-      const partNumber = voter.part_number;
-      const pollingStation = voter.polling_station;
-      const serialNumber = voter.serial_number;
-      const normalizedEpic = epic ? String(epic).trim().toUpperCase() : "";
-      const normalizedDocId = docId ? String(docId).trim().toUpperCase() : "";
-      const addressLine =
-        voter.address ||
-        voter.address_full ||
-        voter.address_line ||
-        voter.locality ||
-        voter.street;
-      const pincode = voter.pincode || voter.pin_code;
-      const status =
-        data.status || data.verification_status || data.message || data.code;
-
-      const details: {
-        label: string;
-        value: any;
-        icon: React.ReactNode;
-        bgColor: string;
-        borderColor: string;
-        textColor: string;
-        valueColor: string;
-      }[] = [];
-      if (status) {
-        details.push({
-          label: "Status",
-          value: typeof status === "string" ? status : JSON.stringify(status),
-          icon: <CheckCircle className="w-6 h-6 text-green-600" />,
-          bgColor: "bg-green-50",
-          borderColor: "border-green-200",
-          textColor: "text-green-800",
-          valueColor: "text-green-900",
-        });
-      }
-      if (docType) {
-        details.push({
-          label: "Document Type",
-          value: docType,
-          icon: <FileText className="w-6 h-6 text-slate-600" />,
-          bgColor: "bg-slate-50",
-          borderColor: "border-slate-200",
-          textColor: "text-slate-800",
-          valueColor: "text-slate-900",
-        });
-      }
-      if (docId && normalizedDocId !== normalizedEpic) {
-        details.push({
-          label: "Document ID",
-          value: docId,
-          icon: <CreditCard className="w-6 h-6 text-emerald-600" />,
-          bgColor: "bg-emerald-50",
-          borderColor: "border-emerald-200",
-          textColor: "text-emerald-800",
-          valueColor: "text-emerald-900",
-        });
-      }
-      if (name) {
-        details.push({
-          label: "Name",
-          value: name,
-          icon: <User className="w-6 h-6 text-blue-600" />,
-          bgColor: "bg-blue-50",
-          borderColor: "border-blue-200",
-          textColor: "text-blue-800",
-          valueColor: "text-blue-900",
-        });
-      }
-      if (epic) {
-        details.push({
-          label: "EPIC Number",
-          value: epic,
-          icon: <CreditCard className="w-6 h-6 text-purple-600" />,
-          bgColor: "bg-purple-50",
-          borderColor: "border-purple-200",
-          textColor: "text-purple-800",
-          valueColor: "text-purple-900",
-        });
-      }
-      if (voter.father_name) {
-        details.push({
-          label: "Father's Name",
-          value: voter.father_name,
-          icon: <User className="w-6 h-6 text-teal-600" />,
-          bgColor: "bg-teal-50",
-          borderColor: "border-teal-200",
-          textColor: "text-teal-800",
-          valueColor: "text-teal-900",
-        });
-      } else if (relation) {
-        details.push({
-          label: "Relation",
-          value: relation,
-          icon: <User className="w-6 h-6 text-teal-600" />,
-          bgColor: "bg-teal-50",
-          borderColor: "border-teal-200",
-          textColor: "text-teal-800",
-          valueColor: "text-teal-900",
-        });
-      }
-      if (gender) {
-        details.push({
-          label: "Gender",
-          value: gender,
-          icon: <FileText className="w-6 h-6 text-pink-600" />,
-          bgColor: "bg-pink-50",
-          borderColor: "border-pink-200",
-          textColor: "text-pink-800",
-          valueColor: "text-pink-900",
-        });
-      }
-      if (age || dob) {
-        details.push({
-          label: age ? "Age" : "Date of Birth",
-          value: age || dob,
-          icon: <FileText className="w-6 h-6 text-orange-600" />,
-          bgColor: "bg-orange-50",
-          borderColor: "border-orange-200",
-          textColor: "text-orange-800",
-          valueColor: "text-orange-900",
-        });
-      }
-      if (state) {
-        details.push({
-          label: "State",
-          value: state,
-          icon: <FileText className="w-6 h-6 text-indigo-600" />,
-          bgColor: "bg-indigo-50",
-          borderColor: "border-indigo-200",
-          textColor: "text-indigo-800",
-          valueColor: "text-indigo-900",
-        });
-      }
-      if (district) {
-        details.push({
-          label: "District",
-          value: district,
-          icon: <FileText className="w-6 h-6 text-cyan-600" />,
-          bgColor: "bg-cyan-50",
-          borderColor: "border-cyan-200",
-          textColor: "text-cyan-800",
-          valueColor: "text-cyan-900",
-        });
-      }
-      if (assemblyName) {
-        details.push({
+      const fields = [
+        { label: "Document Type", value: voter.document_type },
+        { label: "Document ID / EPIC", value: voter.document_id },
+        { label: "Name", value: voter.name },
+        { label: "Father's Name", value: voter.father_name },
+        { label: "Gender", value: voter.gender },
+        { label: "Age", value: voter.age },
+        { label: "District", value: voter.district },
+        { label: "State", value: voter.state },
+        {
           label: "Assembly Constituency",
-          value: assemblyName,
-          icon: <FileText className="w-6 h-6 text-fuchsia-600" />,
-          bgColor: "bg-fuchsia-50",
-          borderColor: "border-fuchsia-200",
-          textColor: "text-fuchsia-800",
-          valueColor: "text-fuchsia-900",
-        });
-      }
-      if (assemblyNumber) {
-        details.push({
-          label: "Assembly Constituency No.",
-          value: assemblyNumber,
-          icon: <FileText className="w-6 h-6 text-fuchsia-600" />,
-          bgColor: "bg-fuchsia-50",
-          borderColor: "border-fuchsia-200",
-          textColor: "text-fuchsia-800",
-          valueColor: "text-fuchsia-900",
-        });
-      }
-      if (parliamentaryName) {
-        details.push({
+          value: `${voter.assembly_constituency_name} (${voter.assembly_constituency_number})`,
+        },
+        {
           label: "Parliamentary Constituency",
-          value: parliamentaryName,
-          icon: <FileText className="w-6 h-6 text-rose-600" />,
-          bgColor: "bg-rose-50",
-          borderColor: "border-rose-200",
-          textColor: "text-rose-800",
-          valueColor: "text-rose-900",
-        });
-      }
-      if (parliamentaryNumber) {
-        details.push({
-          label: "Parliamentary Constituency No.",
-          value: parliamentaryNumber,
-          icon: <FileText className="w-6 h-6 text-rose-600" />,
-          bgColor: "bg-rose-50",
-          borderColor: "border-rose-200",
-          textColor: "text-rose-800",
-          valueColor: "text-rose-900",
-        });
-      }
-      if (partName) {
-        details.push({
-          label: "Part Name",
-          value: partName,
-          icon: <FileText className="w-6 h-6 text-lime-600" />,
-          bgColor: "bg-lime-50",
-          borderColor: "border-lime-200",
-          textColor: "text-lime-800",
-          valueColor: "text-lime-900",
-        });
-      }
-      if (partNumber) {
-        details.push({
-          label: "Part Number",
-          value: partNumber,
-          icon: <FileText className="w-6 h-6 text-lime-600" />,
-          bgColor: "bg-lime-50",
-          borderColor: "border-lime-200",
-          textColor: "text-lime-800",
-          valueColor: "text-lime-900",
-        });
-      }
-      if (pollingStation) {
-        details.push({
-          label: "Polling Station",
-          value: pollingStation,
-          icon: <FileText className="w-6 h-6 text-amber-600" />,
-          bgColor: "bg-amber-50",
-          borderColor: "border-amber-200",
-          textColor: "text-amber-800",
-          valueColor: "text-amber-900",
-        });
-      }
-      if (serialNumber) {
-        details.push({
-          label: "Serial Number",
-          value: serialNumber,
-          icon: <FileText className="w-6 h-6 text-amber-600" />,
-          bgColor: "bg-amber-50",
-          borderColor: "border-amber-200",
-          textColor: "text-amber-800",
-          valueColor: "text-amber-900",
-        });
-      }
-      // Keep address concise to avoid repeating fields already shown separately
-      const addressParts = [addressLine, pincode].filter(Boolean);
-      if (addressParts.length) {
-        details.push({
-          label: "Address",
-          value: addressParts.join(", "),
-          icon: <FileText className="w-6 h-6 text-indigo-600" />,
-          bgColor: "bg-indigo-50",
-          borderColor: "border-indigo-200",
-          textColor: "text-indigo-800",
-          valueColor: "text-indigo-900",
-        });
-      }
+          value: `${voter.parliamentary_constituency_name} (${voter.parliamentary_constituency_number})`,
+        },
+        { label: "Part Number", value: voter.part_number },
+        { label: "Serial Number", value: voter.serial_number },
+        { label: "Polling Station", value: voter.polling_station },
+      ].filter((f) => f.value);
 
-      // Group details into sections for cleaner presentation
-      const identityDetails = details.filter((d) =>
-        [
-          "Document Type",
-          "Document ID",
-          "Father's Name",
-          "Relation",
-          "Gender",
-          "Age",
-          "Date of Birth",
-        ].includes(d.label)
+      const InfoRow = ({ label, value }: { label: string; value: string }) => (
+        <div>
+          <p className="text-xs font-medium text-gray-500">{label}</p>
+          <p className="text-sm font-semibold text-gray-900 break-words">
+            {value}
+          </p>
+        </div>
       );
-      const constituencyDetails = details.filter((d) =>
-        [
-          "Assembly Constituency",
-          "Assembly Constituency No.",
-          "Parliamentary Constituency",
-          "Parliamentary Constituency No.",
-        ].includes(d.label)
-      );
-      const boothDetails = details.filter((d) =>
-        [
-          "Part Name",
-          "Part Number",
-          "Polling Station",
-          "Serial Number",
-        ].includes(d.label)
-      );
-      const locationDetails = details.filter((d) =>
-        ["State", "District", "Address"].includes(d.label)
-      );
-      const hasAny =
-        identityDetails.length ||
-        constituencyDetails.length ||
-        boothDetails.length ||
-        locationDetails.length;
 
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={payload.message || "Voter details fetched"}
+          isValid={true}
+          requestId={payload.request_id}
+          transactionId={payload.transaction_id}
+          referenceId={payload.reference_id}
+          result={result}
+          onReset={handleReset}
+        >
+          <div className="bg-white rounded-lg p-6 border border-green-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {fields.map((f) => (
+                <InfoRow key={f.label} label={f.label} value={f.value} />
+              ))}
             </div>
           </div>
-
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-                {typeof status === "string" && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {status}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
-            </div>
-
-            {(name || epic) && (
-              <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {name && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Name
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900 break-words">
-                        {name}
-                      </p>
-                    </div>
-                  )}
-                  {epic && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        EPIC Number
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900 break-words">
-                        {epic}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg p-6 border border-green-200">
-              {hasAny ? (
-                <div className="space-y-8">
-                  {identityDetails.length > 0 && (
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h5 className="text-gray-800 font-semibold mb-3">
-                        Identity
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {identityDetails.map((info, index) => (
-                          <div key={index} className="space-y-1">
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                              {info.label}
-                            </p>
-                            <p className="text-base font-semibold text-gray-900 break-words">
-                              {info.value}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {constituencyDetails.length > 0 && (
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h5 className="text-gray-800 font-semibold mb-3">
-                        Constituency
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {constituencyDetails.map((info, index) => (
-                          <div key={index} className="space-y-1">
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                              {info.label}
-                            </p>
-                            <p className="text-base font-semibold text-gray-900 break-words">
-                              {info.value}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(boothDetails.length > 0 || locationDetails.length > 0) && (
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setShowMoreDetails((v) => !v)}
-                        className="text-sm text-blue-700 hover:text-blue-800 font-medium"
-                      >
-                        {showMoreDetails
-                          ? "Hide extra details"
-                          : "Show more details"}
-                      </button>
-                    </div>
-                  )}
-
-                  {showMoreDetails && boothDetails.length > 0 && (
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h5 className="text-gray-800 font-semibold mb-3">
-                        Booth Details
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {boothDetails.map((info, index) => (
-                          <div key={index} className="space-y-1">
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                              {info.label}
-                            </p>
-                            <p className="text-base font-semibold text-gray-900 break-words">
-                              {info.value}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {showMoreDetails && locationDetails.length > 0 && (
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h5 className="text-gray-800 font-semibold mb-3">
-                        Location
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {locationDetails.map((info, index) => (
-                          <div key={index} className="space-y-1">
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                              {info.label}
-                            </p>
-                            <p className="text-base font-semibold text-gray-900 break-words">
-                              {info.value}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-green-800 mb-2">
-                    Verification Completed
-                  </h3>
-                  <p className="text-gray-600">
-                    Voter details verified successfully.
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+        </VerificationResultShell>
       );
     }
 
     if (serviceKey === "father-name") {
-      // Handle different possible response structures
       const data = result.data || result;
-      const panData = data.pan_data || data; // Check for nested pan_data first
+      const panData = data.pan_data || data;
 
-      // More comprehensive data extraction with better fallbacks
-      let documentType = "PAN Card"; // Default for father name service
-      let documentId = "";
-      let fatherName = "";
+      // ✅ Confirmed from API: use exact known fields
+      const documentType = panData.document_type || "PAN";
+      const documentId =
+        panData.document_id || formData.pan_number || "Not Available";
+      const fatherName = panData.father_name || "Not Available";
 
-      // Try multiple possible field names for document ID
-      if (panData.document_id) documentId = panData.document_id;
-      else if (panData.documentId) documentId = panData.documentId;
-      else if (panData.pan_number) documentId = panData.pan_number;
-      else if (panData.panNumber) documentId = panData.panNumber;
-      else if (panData.pan) documentId = panData.pan;
-      else if (panData.number) documentId = panData.number;
-      else if (panData.id) documentId = panData.id;
-      else if (formData.pan_number)
-        documentId = formData.pan_number; // Use form input as fallback
-      else if (formData.panNumber) documentId = formData.panNumber;
-      else documentId = "Not Available";
+      // Meta info
+      const requestId = data.request_id;
+      const transactionId = data.transaction_id;
+      const referenceId = data.reference_id;
+      const message = data.message || "PAN details fetched";
 
-      // Try multiple possible field names for father's name
-      if (panData.father_name) fatherName = panData.father_name;
-      else if (panData.fatherName) fatherName = panData.fatherName;
-      else if (panData.fathers_name) fatherName = panData.fathers_name;
-      else if (panData.fathersName) fatherName = panData.fathersName;
-      else if (panData.father) fatherName = panData.father;
-      else if (panData.parent_name) fatherName = panData.parent_name;
-      else if (panData.parentName) fatherName = panData.parentName;
-      else fatherName = "Not Available";
+      // Only show fields that have real values
+      const fields = [
+        { label: "Document Type", value: documentType },
+        { label: "Document ID", value: documentId },
+        { label: "Father's Name", value: fatherName },
+      ].filter((f) => f.value && f.value !== "Not Available");
 
-      // Try to get document type if available
-      if (panData.document_type) documentType = panData.document_type;
-      else if (panData.documentType) documentType = panData.documentType;
-      else if (panData.doc_type) documentType = panData.doc_type;
+      const InfoRow = ({ label, value }: { label: string; value: string }) => (
+        <div>
+          <p className="text-xs font-medium text-gray-500">{label}</p>
+          <p className="text-sm font-semibold text-gray-900 break-words">
+            {value}
+          </p>
+        </div>
+      );
 
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          <div className="bg-white rounded-lg p-6 border border-green-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {fields.map((field) => (
+                <InfoRow
+                  key={field.label}
+                  label={field.label}
+                  value={field.value}
+                />
+              ))}
             </div>
           </div>
-
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
-            </div>
-
-            {/* Column Layout for Results */}
-            <div className="bg-white rounded-lg p-6 border border-green-200">
-              <div className="space-y-6">
-                {/* Document Type */}
-                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-800 mb-1">
-                      Document Type
-                    </p>
-                    <p className="text-lg font-bold text-blue-900">
-                      {documentType}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Document ID */}
-                <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CreditCard className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-purple-800 mb-1">
-                      Document ID
-                    </p>
-                    <p className="text-lg font-bold text-purple-900 font-mono">
-                      {documentId}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Father's Name */}
-                <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <User className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-green-800 mb-1">
-                      Father's Name
-                    </p>
-                    <p className="text-lg font-bold text-green-900">
-                      {fatherName}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+        </VerificationResultShell>
       );
     }
 
@@ -1423,201 +890,114 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
     if (serviceKey === "cin-by-pan") {
       const payload = result.data || result;
       const data = payload.data || payload;
-      const message = data.message || payload.message || "CIN details fetched";
+
+      const message = data.message || "CIN details fetched";
+      const cinDetails: { cin: string; entity_name: string }[] = Array.isArray(
+        data.cin_details
+      )
+        ? data.cin_details
+        : [];
       const cinList: string[] = Array.isArray(data.cin_list)
         ? data.cin_list
-        : Array.isArray(data.cinList)
-        ? data.cinList
         : [];
-      const cinDetails: {
-        cin?: string;
-        entity_name?: string;
-        entityName?: string;
-      }[] = Array.isArray(data.cin_details || data.cinDetails)
-        ? data.cin_details || data.cinDetails
-        : [];
-      const count =
-        (cinDetails && cinDetails.length) || (cinList && cinList.length) || 0;
-      const requestId = payload.request_id || payload.requestId;
-      const transactionId = payload.transaction_id || payload.transactionId;
-      const referenceId = payload.reference_id || payload.referenceId;
+      const count = cinDetails.length || cinList.length;
+
+      const requestId = payload.request_id;
+      const transactionId = payload.transaction_id;
+      const referenceId = payload.reference_id;
+
+      const hasDetails = cinDetails.length > 0;
+      const hasListOnly = !hasDetails && cinList.length > 0;
 
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-                {typeof message === "string" && message && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {message}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
-            </div>
-
-            {/* Summary Row */}
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
+            {/* Summary */}
             {count > 0 && (
               <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                      CINs Found
-                    </p>
-                    <p className="mt-1 text-lg font-semibold text-gray-900 break-words">
-                      {count}
-                    </p>
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  CINs Found
+                </p>
+                <p className="mt-1 text-lg font-semibold text-gray-900">
+                  {count}
+                </p>
+              </div>
+            )}
+
+            {/* Detailed Results */}
+            {hasDetails ? (
+              <div className="space-y-4">
+                {cinDetails.map((item) => (
+                  <div
+                    key={item.cin}
+                    className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200"
+                  >
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-purple-800 mb-1">
+                        CIN
+                      </p>
+                      <p className="text-lg font-bold text-purple-900 font-mono">
+                        {item.cin}
+                      </p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-800 mb-1">
+                        Entity Name
+                      </p>
+                      <p className="text-lg font-bold text-blue-900 break-words">
+                        {item.entity_name}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            ) : hasListOnly ? (
+              <div className="space-y-3">
+                {cinList.map((cin) => (
+                  <div
+                    key={cin}
+                    className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200"
+                  >
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-purple-800 mb-1">
+                        CIN
+                      </p>
+                      <p className="text-lg font-bold text-purple-900 font-mono">
+                        {cin}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-green-800 mb-2">
+                  Lookup Completed
+                </h3>
+                <p className="text-gray-600">
+                  No CIN records found for the provided PAN.
+                </p>
               </div>
             )}
-
-            {/* Meta identifiers */}
-            {(requestId || transactionId || referenceId) && (
-              <div className="mb-6 rounded-lg bg-white p-4 border border-green-200">
-                <h5 className="text-gray-800 font-semibold mb-3">
-                  Request Info
-                </h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {requestId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Request ID
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
-                        {requestId}
-                      </p>
-                    </div>
-                  )}
-                  {transactionId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Transaction ID
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
-                        {transactionId}
-                      </p>
-                    </div>
-                  )}
-                  {referenceId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Reference ID
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
-                        {referenceId}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
-              {cinDetails.length > 0 ? (
-                <div className="space-y-4">
-                  {cinDetails.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200"
-                    >
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-purple-800 mb-1">
-                          CIN
-                        </p>
-                        <p className="text-lg font-bold text-purple-900 font-mono">
-                          {item.cin}
-                        </p>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-800 mb-1">
-                          Entity Name
-                        </p>
-                        <p className="text-lg font-bold text-blue-900 break-words">
-                          {item.entity_name || item.entityName}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : cinList.length > 0 ? (
-                <div className="space-y-3">
-                  {cinList.map((cin, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200"
-                    >
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-purple-800 mb-1">
-                          CIN
-                        </p>
-                        <p className="text-lg font-bold text-purple-900 font-mono">
-                          {cin}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-green-800 mb-2">
-                    Lookup Completed
-                  </h3>
-                  <p className="text-gray-600">
-                    No CIN records found for the provided PAN.
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+          </div>
+        </VerificationResultShell>
       );
     }
 
@@ -1625,8 +1005,12 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
     if (serviceKey === "gstin-by-pan") {
       const payload = result?.data || result;
       const data = payload?.data || payload || {};
+
+      // ✅ Extract message
       const message =
         data?.message || payload?.message || "GSTIN details fetched";
+
+      // ✅ Extract results with type safety
       const results: {
         document_type?: string;
         document_id?: string;
@@ -1634,182 +1018,109 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
         state?: string;
         state_code?: string;
       }[] = Array.isArray(data?.results) ? data.results : [];
+
       const count = results.length;
+
+      // ✅ Meta IDs
       const requestId = payload?.request_id || payload?.requestId;
       const transactionId = payload?.transaction_id || payload?.transactionId;
       const referenceId = payload?.reference_id || payload?.referenceId;
 
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          {/* Summary */}
+          {count > 0 && (
+            <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                GSTINs Found
+              </p>
+              <p className="mt-1 text-lg font-semibold text-gray-900">
+                {count}
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-                {typeof message === "string" && message && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {message}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
-            </div>
+          {/* GSTIN List */}
+          <div className="bg-white rounded-lg p-6 border border-green-200 space-y-4">
+            {results.length > 0 ? (
+              <div className="space-y-3">
+                {results.map((item) => (
+                  <div
+                    key={item.document_id} // ✅ Stable key
+                    className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200"
+                  >
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="w-6 h-6 text-purple-600" />
+                    </div>
 
-            {/* Summary Row */}
-            {count > 0 && (
-              <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                      GSTINs Found
-                    </p>
-                    <p className="mt-1 text-lg font-semibold text-gray-900 break-words">
-                      {count}
-                    </p>
+                    {/* GSTIN */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-purple-800">
+                        GSTIN
+                      </p>
+                      <p className="text-lg font-bold text-purple-900 font-mono break-words">
+                        {item.document_id}
+                      </p>
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-600">
+                        Status
+                      </p>
+                      <p
+                        className={`text-sm font-semibold ${
+                          item.status?.toLowerCase() === "active"
+                            ? "text-green-700"
+                            : "text-red-700"
+                        }`}
+                      >
+                        {item.status || "Unknown"}
+                      </p>
+                    </div>
+
+                    {/* State */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-600">State</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {item.state} ({item.state_code})
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-green-800 mb-2">
+                  Lookup Completed
+                </h3>
+                <p className="text-gray-600">
+                  No GSTIN records found for the provided PAN.
+                </p>
               </div>
             )}
-
-            {/* Meta identifiers */}
-            {(requestId || transactionId || referenceId) && (
-              <div className="mb-6 rounded-lg bg-white p-4 border border-green-200">
-                <h5 className="text-gray-800 font-semibold mb-3">
-                  Request Info
-                </h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {requestId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Request ID
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
-                        {requestId}
-                      </p>
-                    </div>
-                  )}
-                  {transactionId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Transaction ID
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
-                        {transactionId}
-                      </p>
-                    </div>
-                  )}
-                  {referenceId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Reference ID
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
-                        {referenceId}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-4">
-              {results.length > 0 ? (
-                <div className="space-y-3">
-                  {results.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200"
-                    >
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-purple-800">
-                          GSTIN
-                        </p>
-                        <p className="text-lg font-bold text-purple-900 font-mono break-words">
-                          {item.document_id}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-600">
-                          Status
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {item.status}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-600">
-                          State
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {item.state} ({item.state_code})
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-green-800 mb-2">
-                    Lookup Completed
-                  </h3>
-                  <p className="text-gray-600">
-                    No GSTIN records found for the provided PAN.
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+          </div>
+        </VerificationResultShell>
       );
     }
 
     // GSTIN services: show comprehensive business details
     if (serviceKey === "contact" || serviceKey === "lite") {
       const data = result.data || result;
-      const gstin = data.gstin_data || data;
+      const gstin = data.gstin_data || data; // Handle nested or flat structure
 
+      // ✅ Extract fields with fallbacks
       const documentType = gstin.document_type || "GSTIN";
       const documentId =
         gstin.document_id || gstin.gstin || gstin.document_number;
@@ -1817,6 +1128,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
         gstin.document_number && !gstin.gstin && !gstin.document_id
           ? "Document Number"
           : "GSTIN";
+
       const legalName = gstin.legal_name || gstin.legalName;
       const tradeName = gstin.trade_name || gstin.tradeName;
       const pan = gstin.pan;
@@ -1846,92 +1158,60 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
         gstin.phone_number ||
         gstin.contact_mobile;
 
-      const message = data.message || data.status || "Verified";
+      // ✅ Message
+      const message = data.message || data.status || "Details verified";
+
+      // ✅ Meta IDs
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const referenceId = data.reference_id || data.referenceId;
+
+      // ✅ Determine validity: at least one key field exists
+      const isValid = !!(documentId || legalName || email || mobile);
 
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-                {typeof message === "string" && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {message}
-                  </span>
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={isValid}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          {/* Summary Row */}
+          {(legalName || documentId) && (
+            <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {legalName && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                      Legal Name
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-gray-900 break-words">
+                      {legalName}
+                    </p>
+                  </div>
+                )}
+                {documentId && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                      {documentLabel}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-gray-900 break-words font-mono">
+                      {documentId}
+                    </p>
+                  </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
             </div>
+          )}
 
-            {/* Summary Row */}
-            {(legalName || documentId) && (
-              <div className="mb-6 rounded-lg bg-gray-50 p-4 border border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {legalName && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Legal Name
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900 break-words">
-                        {legalName}
-                      </p>
-                    </div>
-                  )}
-                  {documentId && (
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        {documentLabel}
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900 break-words font-mono">
-                        {documentId}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-8">
-              {/* Identity */}
+          <div className="bg-white rounded-lg p-6 border border-green-200 space-y-8">
+            {/* Identity Section */}
+            {(tradeName || pan || documentType || documentId) && (
               <div className="border border-gray-200 rounded-lg p-4">
                 <h5 className="text-gray-800 font-semibold mb-3">Identity</h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1977,8 +1257,15 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
                   )}
                 </div>
               </div>
+            )}
 
-              {/* Registration */}
+            {/* Registration Section */}
+            {(activeStatus ||
+              registrationDate ||
+              taxpayerType ||
+              constitution ||
+              aadhaarVerified !== undefined ||
+              fieldVisit !== undefined) && (
               <div className="border border-gray-200 rounded-lg p-4">
                 <h5 className="text-gray-800 font-semibold mb-3">
                   Registration
@@ -1989,7 +1276,13 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
                       <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                         Status
                       </p>
-                      <p className="text-base font-semibold text-gray-900 break-words">
+                      <p
+                        className={`text-base font-semibold ${
+                          String(activeStatus).toLowerCase() === "active"
+                            ? "text-green-700"
+                            : "text-red-700"
+                        }`}
+                      >
                         {String(activeStatus)}
                       </p>
                     </div>
@@ -2046,88 +1339,83 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
                   )}
                 </div>
               </div>
+            )}
 
-              {/* Contact (GSTIN Contact service) */}
-              {serviceKey === "contact" && (email || mobile) && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h5 className="text-gray-800 font-semibold mb-3">Contact</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {email && (
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                          Email
-                        </p>
-                        <p className="text-base font-semibold text-gray-900 break-words">
-                          {email}
-                        </p>
-                      </div>
-                    )}
-                    {mobile && (
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                          Mobile
-                        </p>
-                        <p className="text-base font-semibold text-gray-900 break-words">
-                          {mobile}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Jurisdiction */}
-              {(centerJurisdiction || stateJurisdiction) && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h5 className="text-gray-800 font-semibold mb-3">
-                    Jurisdiction
-                  </h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {centerJurisdiction && (
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                          Center Jurisdiction
-                        </p>
-                        <p className="text-base font-semibold text-gray-900 break-words">
-                          {centerJurisdiction}
-                        </p>
-                      </div>
-                    )}
-                    {stateJurisdiction && (
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                          State Jurisdiction
-                        </p>
-                        <p className="text-base font-semibold text-gray-900 break-words">
-                          {stateJurisdiction}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Address */}
-              {principalAddress && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h5 className="text-gray-800 font-semibold mb-3">
-                    Principal Address
-                  </h5>
-                  <div className="grid grid-cols-1 gap-2">
+            {/* Contact Section - Only for 'contact' service */}
+            {serviceKey === "contact" && (email || mobile) && (
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h5 className="text-gray-800 font-semibold mb-3">Contact</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {email && (
                     <div>
                       <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                        Address
+                        Email
                       </p>
                       <p className="text-base font-semibold text-gray-900 break-words">
-                        {principalAddress}
+                        {email}
                       </p>
                     </div>
-                  </div>
+                  )}
+                  {mobile && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Mobile
+                      </p>
+                      <p className="text-base font-semibold text-gray-900 break-words">
+                        {mobile}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+              </div>
+            )}
+
+            {/* Jurisdiction */}
+            {(centerJurisdiction || stateJurisdiction) && (
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h5 className="text-gray-800 font-semibold mb-3">
+                  Jurisdiction
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {centerJurisdiction && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Center Jurisdiction
+                      </p>
+                      <p className="text-base font-semibold text-gray-900 break-words">
+                        {centerJurisdiction}
+                      </p>
+                    </div>
+                  )}
+                  {stateJurisdiction && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        State Jurisdiction
+                      </p>
+                      <p className="text-base font-semibold text-gray-900 break-words">
+                        {stateJurisdiction}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Principal Address */}
+            {principalAddress && (
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h5 className="text-gray-800 font-semibold mb-3">
+                  Principal Address
+                </h5>
+                <div>
+                  <p className="text-base font-semibold text-gray-900 break-words">
+                    {principalAddress}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </VerificationResultShell>
       );
     }
 
@@ -2285,7 +1573,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
 
     // RC Lite (Vehicle RC): fetch-lite — show RC, owner, insurance, PUCC, vehicle details
     if (serviceKey === "fetch-lite") {
-      const data = (result as any).data || result;
+      const data = result.data || result;
       const rc = data.rc_data || {};
 
       const owner = rc.owner_data || {};
@@ -2293,172 +1581,184 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       const insurance = rc.insurance_data || {};
       const vehicle = rc.vehicle_data || {};
 
-      const detailRows: { label: string; value?: any }[] = [
+      // ✅ Fixed: Added "Father's Name" and improved blacklist status
+      const detailRows: { label: string; value?: string | boolean }[] = [
         { label: "Document Type", value: rc.document_type },
         { label: "RC Number", value: rc.document_id },
         { label: "Owner Name", value: owner.name },
+        { label: "Father's Name", value: owner.father_name }, // ✅ Now shown
         { label: "Present Address", value: owner.present_address },
         { label: "Permanent Address", value: owner.permanent_address },
         { label: "Issue Date", value: rc.issue_date },
         { label: "Expiry Date", value: rc.expiry_date },
         { label: "Registered At", value: rc.registered_at },
         { label: "Status", value: rc.status },
-        { label: "Blacklist Status", value: rc.blacklist_status },
+        {
+          label: "Blacklist Status",
+          value:
+            rc.blacklist_status === "false" || rc.blacklist_status === false
+              ? "Not Blacklisted"
+              : rc.blacklist_status === "true" || rc.blacklist_status === true
+              ? "Blacklisted"
+              : "Unknown",
+        },
         { label: "Norms Type", value: rc.norms_type },
         { label: "Tax End Date", value: rc.tax_end_date },
-        { label: "Is Commercial", value: String(rc.is_commercial) },
+        { label: "Is Commercial", value: rc.is_commercial },
       ].filter(
         (r) => r.value !== undefined && r.value !== null && r.value !== ""
       );
 
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const referenceId = data.reference_id || data.referenceId;
+      const message = data.message || "Vehicle details fetched";
+
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-                {typeof data.message === "string" && data.message && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {data.message}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          <div className="bg-white rounded-lg p-6 border border-green-200 space-y-8">
+            {/* Basic Info Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {detailRows.map((row, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl border bg-gray-50 border-gray-200"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {row.label}
+                  </div>
+                  <div className="mt-1 font-semibold text-gray-900 break-words">
+                    {typeof row.value === "boolean"
+                      ? row.value
+                        ? "Yes"
+                        : "No"
+                      : String(row.value)}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* RC Lite Details */}
-            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {detailRows.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-xl border bg-white border-gray-200"
-                  >
-                    <div className="text-sm text-gray-500">{row.label}</div>
-                    <div className="mt-1 font-medium text-gray-900 break-words">
-                      {String(row.value)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* PUCC Section */}
-              {Object.keys(pucc).length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    PUCC Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl border bg-white border-gray-200">
-                      <div className="text-sm text-gray-500">PUCC Number</div>
-                      <div className="mt-1 font-medium text-gray-900">
+            {/* PUCC */}
+            {Object.keys(pucc).length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  PUCC Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {pucc.pucc_number && (
+                    <div className="p-4 rounded-xl border bg-gray-50 border-gray-200">
+                      <div className="text-sm font-medium text-gray-600">
+                        PUCC Number
+                      </div>
+                      <div className="mt-1 font-semibold text-gray-900">
                         {pucc.pucc_number}
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl border bg-white border-gray-200">
-                      <div className="text-sm text-gray-500">Expiry Date</div>
-                      <div className="mt-1 font-medium text-gray-900">
+                  )}
+                  {pucc.expiry_date && (
+                    <div className="p-4 rounded-xl border bg-gray-50 border-gray-200">
+                      <div className="text-sm font-medium text-gray-600">
+                        Expiry Date
+                      </div>
+                      <div className="mt-1 font-semibold text-gray-900">
                         {pucc.expiry_date}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Insurance Section */}
-              {Object.keys(insurance).length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    Insurance Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl border bg-white border-gray-200">
-                      <div className="text-sm text-gray-500">Policy Number</div>
-                      <div className="mt-1 font-medium text-gray-900">
-                        {insurance.policy_number}
+            {/* Insurance */}
+            {Object.keys(insurance).length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Insurance Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {insurance.policy_number && (
+                    <div className="p-4 rounded-xl border bg-gray-50 border-gray-200">
+                      <div className="text-sm font-medium text-gray-600">
+                        Policy Number
+                      </div>
+                      <div className="mt-1 font-semibold text-gray-900">
+                        {String(insurance.policy_number)
+                          .replace(/,+$/, "")
+                          .trim()}
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl border bg-white border-gray-200">
-                      <div className="text-sm text-gray-500">Company</div>
-                      <div className="mt-1 font-medium text-gray-900">
+                  )}
+                  {insurance.company && (
+                    <div className="p-4 rounded-xl border bg-gray-50 border-gray-200">
+                      <div className="text-sm font-medium text-gray-600">
+                        Company
+                      </div>
+                      <div className="mt-1 font-semibold text-gray-900">
                         {insurance.company}
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl border bg-white border-gray-200">
-                      <div className="text-sm text-gray-500">Expiry Date</div>
-                      <div className="mt-1 font-medium text-gray-900">
+                  )}
+                  {insurance.expiry_date && (
+                    <div className="p-4 rounded-xl border bg-gray-50 border-gray-200">
+                      <div className="text-sm font-medium text-gray-600">
+                        Expiry Date
+                      </div>
+                      <div className="mt-1 font-semibold text-gray-900">
                         {insurance.expiry_date}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Vehicle Section */}
-              {Object.keys(vehicle).length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    Vehicle Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(vehicle).map(([k, v]) => (
+            {/* Vehicle */}
+            {Object.keys(vehicle).length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Vehicle Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(vehicle).map(([key, value]) => {
+                    if (!value && value !== 0) return null;
+
+                    const label = key
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase())
+                      .replace("Cubic Capacity", "Engine Capacity (CC)")
+                      .replace("Unladen Weight", "Kerb Weight (kg)")
+                      .replace("Gross Weight", "GVW (kg)")
+                      .replace("Number Of Cylinders", "Cylinders");
+
+                    return (
                       <div
-                        key={k}
-                        className="p-4 rounded-xl border bg-white border-gray-200"
+                        key={key}
+                        className="p-4 rounded-xl border bg-gray-50 border-gray-200"
                       >
-                        <div className="text-sm text-gray-500">
-                          {k.replace(/_/g, " ")}
+                        <div className="text-sm font-medium text-gray-600">
+                          {label}
                         </div>
-                        <div className="mt-1 font-medium text-gray-900 break-words">
-                          {String(v)}
+                        <div className="mt-1 font-semibold text-gray-900 break-words">
+                          {String(value)}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+              </div>
+            )}
+          </div>
+        </VerificationResultShell>
       );
     }
 
@@ -2641,7 +1941,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
 
     // RC Detailed Verification: fetch-detailed-challan — show all RC, owner, insurance, PUCC, vehicle details
     if (serviceKey === "fetch-detailed-challan") {
-      const data = (result as any).data || result;
+      const data = result.data || result;
       const rc = data.rc_data || {};
 
       const owner = rc.owner_data || {};
@@ -2649,176 +1949,167 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       const insurance = rc.insurance_data || {};
       const vehicle = rc.vehicle_data || {};
 
-      const detailRows: { label: string; value?: any }[] = [
-        { label: "Document Type", value: rc.document_type },
-        { label: "RC Number", value: rc.document_id },
-        { label: "Owner Name", value: owner.name },
-        { label: "Serial", value: owner.serial },
-        { label: "Present Address", value: owner.present_address },
-        { label: "Permanent Address", value: owner.permanent_address },
-        { label: "Issue Date", value: rc.issue_date },
-        { label: "Expiry Date", value: rc.expiry_date },
-        { label: "Registered At", value: rc.registered_at },
-        { label: "Status", value: rc.status },
-        { label: "Norms Type", value: rc.norms_type },
-        { label: "Tax End Date", value: rc.tax_end_date },
-        { label: "Financed", value: String(rc.financed) },
-      ].filter(
-        (r) => r.value !== undefined && r.value !== null && r.value !== ""
-      );
+      // ✅ Extract main RC fields
+      const detailRows: { label: string; value?: string | number | boolean }[] =
+        [
+          { label: "Document Type", value: rc.document_type },
+          { label: "RC Number", value: rc.document_id },
+          { label: "Owner Name", value: owner.name },
+          { label: "Father's Name", value: owner.father_name },
+          { label: "Serial", value: owner.serial },
+          { label: "Present Address", value: owner.present_address },
+          { label: "Permanent Address", value: owner.permanent_address },
+          { label: "Issue Date", value: rc.issue_date },
+          { label: "Expiry Date", value: rc.expiry_date },
+          { label: "Registered At", value: rc.registered_at },
+          { label: "Status", value: rc.status },
+          { label: "Norms Type", value: rc.norms_type },
+          { label: "Tax End Date", value: rc.tax_end_date },
+          { label: "Financed", value: rc.financed },
+        ].filter(
+          (r) => r.value !== undefined && r.value !== null && r.value !== ""
+        );
+
+      // ✅ Meta IDs
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const referenceId = data.reference_id || data.referenceId;
+      const message = data.message || "Vehicle details extracted";
 
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-blue-100 mt-1">{serviceDescription}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                <h4 className="font-semibold text-green-800 text-lg">
-                  Verification Successful
-                </h4>
-                {typeof data.message === "string" && data.message && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {data.message}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "verification")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          <div className="bg-white rounded-lg p-6 border border-green-200 space-y-8">
+            {/* RC & Owner Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {detailRows.map((row, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl border bg-gray-50 border-gray-200"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {row.label}
+                  </div>
+                  <div className="mt-1 font-semibold text-gray-900 break-words">
+                    {typeof row.value === "boolean"
+                      ? row.value
+                        ? "Yes"
+                        : "No"
+                      : String(row.value)}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* RC Detailed Information */}
-            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
-              {/* Owner & RC Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {detailRows.map((row, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-xl border bg-white border-gray-200"
-                  >
-                    <div className="text-sm text-gray-500">{row.label}</div>
-                    <div className="mt-1 font-medium text-gray-900 break-words">
-                      {String(row.value)}
+            {/* PUCC Details */}
+            {Object.keys(pucc).length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  PUCC Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(pucc).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                    >
+                      <div className="text-sm font-medium text-gray-600">
+                        {key
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())}
+                      </div>
+                      <div className="mt-1 font-semibold text-gray-900 break-words">
+                        {String(value)}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+            )}
 
-              {/* PUCC Details */}
-              {Object.keys(pucc).length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    PUCC Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(pucc).map(([k, v]) => (
-                      <div
-                        key={k}
-                        className="p-4 rounded-xl border bg-white border-gray-200"
-                      >
-                        <div className="text-sm text-gray-500">
-                          {k.replace(/_/g, " ")}
-                        </div>
-                        <div className="mt-1 font-medium text-gray-900 break-words">
-                          {String(v)}
-                        </div>
+            {/* Insurance Details */}
+            {Object.keys(insurance).length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Insurance Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(insurance).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                    >
+                      <div className="text-sm font-medium text-gray-600">
+                        {key
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())}
                       </div>
-                    ))}
-                  </div>
+                      <div className="mt-1 font-semibold text-gray-900 break-words">
+                        {String(value)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Insurance Details */}
-              {Object.keys(insurance).length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    Insurance Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(insurance).map(([k, v]) => (
-                      <div
-                        key={k}
-                        className="p-4 rounded-xl border bg-white border-gray-200"
-                      >
-                        <div className="text-sm text-gray-500">
-                          {k.replace(/_/g, " ")}
-                        </div>
-                        <div className="mt-1 font-medium text-gray-900 break-words">
-                          {String(v)}
-                        </div>
+            {/* Vehicle Details */}
+            {Object.keys(vehicle).length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Vehicle Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(vehicle).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                    >
+                      <div className="text-sm font-medium text-gray-600">
+                        {key
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())
+                          .replace("Cubic Capacity", "Engine Capacity (CC)")
+                          .replace("Unladen Weight", "Kerb Weight (kg)")
+                          .replace("Gross Weight", "Gross Vehicle Weight (kg)")
+                          .replace("Number Of Cylinders", "Cylinders")}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Vehicle Details */}
-              {Object.keys(vehicle).length > 0 && (
-                <div className="space-y-3 mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    Vehicle Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(vehicle).map(([k, v]) => (
-                      <div
-                        key={k}
-                        className="p-4 rounded-xl border bg-white border-gray-200"
-                      >
-                        <div className="text-sm text-gray-500">
-                          {k.replace(/_/g, " ")}
-                        </div>
-                        <div className="mt-1 font-medium text-gray-900 break-words">
-                          {String(v)}
-                        </div>
+                      <div className="mt-1 font-semibold text-gray-900 break-words">
+                        {String(value)}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
+              </div>
+            )}
+          </div>
+        </VerificationResultShell>
       );
     }
 
     // E-Challan: echallan-fetch
     if (serviceKey === "echallan-fetch") {
-      const data = (result as any).data || result;
-      const challans: any[] = data.challan_data || [];
+      const data = result.data || result;
+      const challans: {
+        document_id?: string;
+        document_type?: string;
+        date_issued?: string;
+        status?: string;
+        accused_name?: string;
+        state?: string;
+        area_name?: string;
+        amount?: string | number;
+        offence_data?: { offence_description: string }[];
+      }[] = Array.isArray(data.challan_data) ? data.challan_data : [];
 
       const totalChallans = challans.length;
       const totalAmount = challans.reduce(
@@ -2826,157 +2117,124 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
         0
       );
 
+      // ✅ Meta IDs
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const referenceId = data.reference_id || data.referenceId;
+      const message = data.message || "Challan details fetched";
+
       return (
-        <div className="w-full space-y-6">
-          {/* Service Header */}
-          <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-xl p-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6" />
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+          theme="warning" // Optional: custom theme for yellow/orange
+        >
+          {/* Summary */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6 flex flex-wrap items-center gap-6">
+            <div>
+              <div className="text-sm text-gray-500">Total Challans</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {totalChallans}
               </div>
-              <div>
-                <h2 className="text-xl font-bold">{serviceName}</h2>
-                <p className="text-orange-100 mt-1">{serviceDescription}</p>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Total Amount</div>
+              <div className="text-lg font-semibold text-red-600">
+                ₹{totalAmount}
               </div>
             </div>
           </div>
 
-          {/* Success Result */}
-          <motion.div
-            ref={shareTargetRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 w-full"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                <h4 className="font-semibold text-green-900 text-lg">
-                  Challan Details Fetched
-                </h4>
-                {typeof data.message === "string" && data.message && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
-                    {data.message}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <ShareActions
-                  targetRef={shareTargetRef}
-                  serviceName={serviceName || (serviceKey ?? "Verification")}
-                  fileName={`${(serviceName || "challan")
-                    .toString()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")}-details`}
-                  result={result}
-                />
-                <button
-                  onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          {/* Challan List */}
+          {challans.length > 0 ? (
+            <div className="space-y-4">
+              {challans.map((c, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm"
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  Verify Another
-                </button>
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6 flex flex-wrap items-center gap-6">
-              <div>
-                <div className="text-sm text-gray-500">Total Challans</div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {totalChallans}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Total Amount</div>
-                <div className="text-lg font-semibold text-red-600">
-                  ₹{totalAmount}
-                </div>
-              </div>
-            </div>
-
-            {/* Challan List */}
-            {challans.length > 0 ? (
-              <div className="space-y-4">
-                {challans.map((c, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <div className="text-sm text-gray-500">Challan ID</div>
-                        <div className="font-semibold text-gray-900">
-                          {c.document_id}
-                        </div>
-                        {c.document_type && (
-                          <div className="mt-1 text-xs text-gray-500">
-                            Type: {c.document_type}
-                          </div>
-                        )}
-                        <div className="mt-1 text-sm text-gray-500">
-                          Issued On
-                        </div>
-                        <div className="text-gray-800">{c.date_issued}</div>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="text-sm text-gray-500">Challan ID</div>
+                      <div className="font-semibold text-gray-900">
+                        {c.document_id || "Not Available"}
                       </div>
-                      <div className="mt-3 md:mt-0">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            c.status?.toLowerCase() === "paid"
-                              ? "bg-green-100 text-green-800"
-                              : c.status?.toLowerCase() === "unpaid"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {c.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm text-gray-500">
-                          Accused Name
-                        </div>
-                        <div className="text-gray-900 font-medium">
-                          {c.accused_name}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-500">State</div>
-                        <div className="text-gray-900">{c.state}</div>
-                      </div>
-                      {c.area_name && (
-                        <div className="md:col-span-2">
-                          <div className="text-sm text-gray-500">Area</div>
-                          <div className="text-gray-900">{c.area_name}</div>
+                      {c.document_type && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          Type: {c.document_type}
                         </div>
                       )}
-                      <div>
-                        <div className="text-sm text-gray-500">Amount</div>
-                        <div className="text-gray-900 font-semibold">
-                          ₹{c.amount}
-                        </div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        Issued On
                       </div>
-                      <div className="md:col-span-2">
-                        <div className="text-sm text-gray-500">Offences</div>
-                        <ul className="list-disc list-inside text-gray-900 mt-1 space-y-1">
-                          {(c.offence_data || []).map((o: any, i: number) => (
-                            <li key={i}>{o.offence_description}</li>
-                          ))}
-                        </ul>
+                      <div className="text-gray-800">
+                        {c.date_issued || "—"}
                       </div>
                     </div>
+
+                    <div className="mt-3 md:mt-0">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          c.status?.toLowerCase() === "paid"
+                            ? "bg-green-100 text-green-800"
+                            : c.status?.toLowerCase() === "unpaid"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {c.status || "Pending"}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No challans found.</p>
-            )}
-          </motion.div>
-        </div>
+
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-500">Accused Name</div>
+                      <div className="text-gray-900 font-medium">
+                        {c.accused_name || "Not Provided"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500">State</div>
+                      <div className="text-gray-900">{c.state || "—"}</div>
+                    </div>
+                    {c.area_name && (
+                      <div className="md:col-span-2">
+                        <div className="text-sm text-gray-500">Area</div>
+                        <div className="text-gray-900">{c.area_name}</div>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-sm text-gray-500">Amount</div>
+                      <div className="text-gray-900 font-semibold">
+                        ₹{Number(c.amount) || 0}
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="text-sm text-gray-500">Offences</div>
+                      <ul className="list-disc list-inside text-gray-900 mt-1 space-y-1">
+                        {(c.offence_data || []).map((offence, i) => (
+                          <li key={i}>
+                            {offence.offence_description || `Offence #${i + 1}`}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-6">No challans found.</p>
+          )}
+        </VerificationResultShell>
       );
     }
 
@@ -3075,9 +2333,16 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       );
     }
 
-    if (serviceKey === "aadhaar-link") {
-      const data = result.data || result;
-      const message = data.message || data.status || "Linked Successfully";
+    if (serviceKey === "fetch") {
+      const payload = result.data || result;
+      const data = payload.data || payload;
+      const message =
+        data.message || payload.message || "Passport details fetched";
+      const passport = data.passport_data || data.passportData || {};
+
+      const requestId = payload.request_id || payload.requestId;
+      const transactionId = payload.transaction_id || payload.transactionId;
+      const referenceId = payload.reference_id || payload.referenceId;
 
       return (
         <div className="w-full space-y-6">
@@ -3085,7 +2350,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                <Link className="w-6 h-6" />
+                <FileText className="w-6 h-6" />
               </div>
               <div>
                 <h2 className="text-xl font-bold">{serviceName}</h2>
@@ -3105,9 +2370,15 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-6 h-6 text-green-500" />
                 <h4 className="font-semibold text-green-800 text-lg">
-                  Link Status Verified
+                  Verification Successful
                 </h4>
+                {typeof message === "string" && message && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
+                    {message}
+                  </span>
+                )}
               </div>
+
               <div className="flex items-center gap-2">
                 <ShareActions
                   targetRef={shareTargetRef}
@@ -3128,23 +2399,646 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-8 border border-green-200">
-              <div className="flex items-center justify-center gap-6">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                  <Link className="w-10 h-10 text-green-600" />
+            {/* Meta identifiers */}
+            {(requestId || transactionId || referenceId) && (
+              <div className="mb-6 rounded-lg bg-white p-4 border border-green-200">
+                <h5 className="text-gray-800 font-semibold mb-3">
+                  Request Info
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {requestId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Request ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {requestId}
+                      </p>
+                    </div>
+                  )}
+                  {transactionId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Transaction ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {transactionId}
+                      </p>
+                    </div>
+                  )}
+                  {referenceId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Reference ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {referenceId}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-green-800 mb-2">
+              </div>
+            )}
+
+            {/* Passport Card */}
+            <div className="bg-white rounded-lg p-6 border border-green-200 space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <CreditCard className="w-8 h-8 text-purple-600" />
+                </div>
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  <div>
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      Document Type
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {passport.document_type}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      Document ID
+                    </p>
+                    <p className="text-sm font-semibold font-mono text-gray-900">
+                      {passport.document_id}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      File Number
+                    </p>
+                    <p className="text-sm font-semibold font-mono text-gray-900">
+                      {passport.file_number}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      First Name
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {passport.first_name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      Last Name
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {passport.last_name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      Date of Birth
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {passport.date_of_birth}
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs font-medium uppercase text-gray-500">
+                      Application Received
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {passport.application_received_date}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
+    if (serviceKey === "mrz-generate") {
+      const payload = result.data || result;
+      const data = payload.data || payload;
+      const message = data.message || payload.message || "MRZ generated";
+      const mrz = data.mrz_data || data.mrzData || {};
+
+      const requestId = payload.request_id || payload.requestId;
+      const transactionId = payload.transaction_id || payload.transactionId;
+      const referenceId = payload.reference_id || payload.referenceId;
+
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Success Result */}
+          <motion.div
+            ref={shareTargetRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-50 border border-green-200 rounded-xl p-6 w-full"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                <h4 className="font-semibold text-green-800 text-lg">
+                  MRZ Generated Successfully
+                </h4>
+                {typeof message === "string" && message && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 border border-green-200">
                     {message}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <ShareActions
+                  targetRef={shareTargetRef}
+                  serviceName={serviceName || (serviceKey ?? "Verification")}
+                  fileName={`${(serviceName || "verification")
+                    .toString()
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")}-details`}
+                  result={result}
+                />
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Generate Another
+                </button>
+              </div>
+            </div>
+
+            {/* Meta identifiers */}
+            {(requestId || transactionId || referenceId) && (
+              <div className="mb-6 rounded-lg bg-white p-4 border border-green-200">
+                <h5 className="text-gray-800 font-semibold mb-3">
+                  Request Info
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {requestId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Request ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {requestId}
+                      </p>
+                    </div>
+                  )}
+                  {transactionId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Transaction ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {transactionId}
+                      </p>
+                    </div>
+                  )}
+                  {referenceId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Reference ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {referenceId}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* MRZ Card */}
+            <div className="bg-white rounded-lg p-6 border border-green-200">
+              <h5 className="text-gray-800 font-semibold mb-4">
+                Machine-Readable Zone
+              </h5>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">
+                    First Line
                   </p>
-                  <p className="text-gray-600 text-lg">
-                    PAN and Aadhaar are successfully linked
+                  <p className="text-lg font-mono bg-gray-100 rounded px-3 py-2 text-gray-900 break-all">
+                    {mrz.first_line}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">
+                    Second Line
+                  </p>
+                  <p className="text-lg font-mono bg-gray-100 rounded px-3 py-2 text-gray-900 break-all">
+                    {mrz.second_line}
                   </p>
                 </div>
               </div>
             </div>
           </motion.div>
         </div>
+      );
+    }
+
+    if (serviceKey === "mrz-verify") {
+      const payload = result.data || result;
+      const data = payload.data || payload;
+      const message =
+        data.message || payload.message || "MRZ verification completed";
+
+      const isMatch = data.code === "1000"; // 1000 = success
+      const requestId = payload.request_id || payload.requestId;
+      const transactionId = payload.transaction_id || payload.transactionId;
+      const referenceId = payload.reference_id || payload.referenceId;
+
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Result Card */}
+          <motion.div
+            ref={shareTargetRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-xl p-6 w-full border ${
+              isMatch
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {isMatch ? (
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-red-500" />
+                )}
+                <h4
+                  className={`font-semibold text-lg ${
+                    isMatch ? "text-green-800" : "text-red-800"
+                  }`}
+                >
+                  {isMatch
+                    ? "MRZ Verified Successfully"
+                    : "MRZ Verification Failed"}
+                </h4>
+                {typeof message === "string" && message && (
+                  <span
+                    className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${
+                      isMatch
+                        ? "bg-green-100 text-green-800 border-green-200"
+                        : "bg-red-100 text-red-800 border-red-200"
+                    }`}
+                  >
+                    {message}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <ShareActions
+                  targetRef={shareTargetRef}
+                  serviceName={serviceName || (serviceKey ?? "Verification")}
+                  fileName={`${(serviceName || "verification")
+                    .toString()
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")}-details`}
+                  result={result}
+                />
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Verify Another
+                </button>
+              </div>
+            </div>
+
+            {/* Meta identifiers */}
+            {(requestId || transactionId || referenceId) && (
+              <div
+                className="mb-6 rounded-lg bg-white p-4 border"
+                style={{ borderColor: isMatch ? "#bbf7d0" : "#fecaca" }}
+              >
+                <h5 className="text-gray-800 font-semibold mb-3">
+                  Request Info
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {requestId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Request ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {requestId}
+                      </p>
+                    </div>
+                  )}
+                  {transactionId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Transaction ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {transactionId}
+                      </p>
+                    </div>
+                  )}
+                  {referenceId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Reference ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {referenceId}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Status Message Block */}
+            <div
+              className={`rounded-lg p-6 text-center border ${
+                isMatch
+                  ? "bg-green-100 border-green-200"
+                  : "bg-red-100 border-red-200"
+              }`}
+            >
+              {isMatch ? (
+                <>
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-green-800 mb-2">
+                    MRZ Matched
+                  </h3>
+                  <p className="text-gray-600">
+                    The provided Machine-Readable Zone is valid and verified.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-red-800 mb-2">
+                    MRZ Mismatch
+                  </h3>
+                  <p className="text-gray-600">
+                    The provided Machine-Readable Zone does not match our
+                    records.
+                  </p>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
+    if (serviceKey === "verify") {
+      const payload = result.data || result;
+      const data = payload.data || payload;
+      const message =
+        data.message || payload.message || "Verification completed";
+
+      // 1004 = valid, 1005 = invalid
+      const isValid = data.code === "1004";
+
+      const requestId = payload.request_id || payload.requestId;
+      const transactionId = payload.transaction_id || payload.transactionId;
+      const referenceId = payload.reference_id || payload.referenceId;
+
+      return (
+        <div className="w-full space-y-6">
+          {/* Service Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{serviceName}</h2>
+                <p className="text-blue-100 mt-1">{serviceDescription}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Result Card */}
+          <motion.div
+            ref={shareTargetRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-xl p-6 w-full border ${
+              isValid
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {isValid ? (
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-red-500" />
+                )}
+                <h4
+                  className={`font-semibold text-lg ${
+                    isValid ? "text-green-800" : "text-red-800"
+                  }`}
+                >
+                  {isValid ? "Verification Successful" : "Verification Failed"}
+                </h4>
+                {typeof message === "string" && message && (
+                  <span
+                    className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${
+                      isValid
+                        ? "bg-green-100 text-green-800 border-green-200"
+                        : "bg-red-100 text-red-800 border-red-200"
+                    }`}
+                  >
+                    {message}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <ShareActions
+                  targetRef={shareTargetRef}
+                  serviceName={serviceName || (serviceKey ?? "Verification")}
+                  fileName={`${(serviceName || "verification")
+                    .toString()
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")}-details`}
+                  result={result}
+                />
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Verify Another
+                </button>
+              </div>
+            </div>
+
+            {/* Meta identifiers */}
+            {(requestId || transactionId || referenceId) && (
+              <div
+                className="mb-6 rounded-lg bg-white p-4 border"
+                style={{ borderColor: isValid ? "#bbf7d0" : "#fecaca" }}
+              >
+                <h5 className="text-gray-800 font-semibold mb-3">
+                  Request Info
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {requestId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Request ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {requestId}
+                      </p>
+                    </div>
+                  )}
+                  {transactionId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Transaction ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {transactionId}
+                      </p>
+                    </div>
+                  )}
+                  {referenceId && (
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                        Reference ID
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">
+                        {referenceId}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Status Message */}
+            <div
+              className={`rounded-lg p-6 text-center border ${
+                isValid
+                  ? "bg-green-100 border-green-200"
+                  : "bg-red-100 border-red-200"
+              }`}
+            >
+              {isValid ? (
+                <>
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-green-800 mb-2">
+                    Details Verified
+                  </h3>
+                  <p className="text-gray-600">
+                    The provided passport information is valid and matches our
+                    records.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-red-800 mb-2">
+                    Verification Failed
+                  </h3>
+                  <p className="text-gray-600">
+                    The provided passport information is invalid or does not
+                    match our records.
+                  </p>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
+    if (serviceKey === "aadhaar-link") {
+      const data = result.data || result;
+
+      // ✅ Extract message and determine status
+      const apiMessage =
+        data.message || data.status || "Verification completed";
+      const isLinked =
+        typeof apiMessage === "string"
+          ? apiMessage.toLowerCase().includes("linked")
+          : false;
+
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const referenceId = data.reference_id || data.referenceId;
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={apiMessage}
+          isValid={isLinked} // ✅ true = green, false = red (if shell supports it)
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          <div className="bg-white rounded-lg p-8 border border-gray-200">
+            <div className="flex items-center justify-center gap-6">
+              {/* Dynamic Icon */}
+              <div
+                className={`w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  isLinked ? "bg-green-100" : "bg-red-100"
+                }`}
+              >
+                {isLinked ? (
+                  <Link className="w-10 h-10 text-green-600" />
+                ) : (
+                  <XCircle className="w-10 h-10 text-red-600" />
+                )}
+              </div>
+
+              {/* Status Text */}
+              <div className="text-center">
+                <p
+                  className={`text-3xl font-bold mb-2 ${
+                    isLinked ? "text-green-800" : "text-red-800"
+                  }`}
+                >
+                  {isLinked ? "Linked Successfully" : "Not Linked"}
+                </p>
+                <p className="text-gray-600 text-lg">
+                  {isLinked
+                    ? "PAN and Aadhaar are successfully linked."
+                    : "PAN and Aadhaar are NOT linked. Please link them on the Income Tax e-Filing portal."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </VerificationResultShell>
       );
     }
 

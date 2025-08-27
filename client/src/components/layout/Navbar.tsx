@@ -237,36 +237,36 @@ const navItems = [
     ],
   },
   { label: "Pricing", link: "/#pricing" },
-  {
-    label: "Resources",
-    dropdown: true,
-    items: [
-      {
-        label: "Documentation",
-        icon: BookOpen,
-        description: "API guides and tutorials",
-        href: "/documentation",
-      },
-      {
-        label: "API Reference",
-        icon: FileText,
-        description: "Complete API documentation",
-        href: "/api-reference",
-      },
-      {
-        label: "Case Studies",
-        icon: Award,
-        description: "Success stories and examples",
-        href: "/resources?type=case-study",
-      },
-      {
-        label: "Help Center",
-        icon: HelpCircle,
-        description: "Support and FAQs",
-        href: "/help",
-      },
-    ],
-  },
+  // {
+  //   label: "Resources",
+  //   dropdown: true,
+  //   items: [
+  //     {
+  //       label: "Documentation",
+  //       icon: BookOpen,
+  //       description: "API guides and tutorials",
+  //       href: "/documentation",
+  //     },
+  //     {
+  //       label: "API Reference",
+  //       icon: FileText,
+  //       description: "Complete API documentation",
+  //       href: "/api-reference",
+  //     },
+  //     {
+  //       label: "Case Studies",
+  //       icon: Award,
+  //       description: "Success stories and examples",
+  //       href: "/resources?type=case-study",
+  //     },
+  //     {
+  //       label: "Help Center",
+  //       icon: HelpCircle,
+  //       description: "Support and FAQs",
+  //       href: "/help",
+  //     },
+  //   ],
+  // },
   {
     label: "Company",
     dropdown: true,
@@ -283,18 +283,18 @@ const navItems = [
         description: "Join our growing team",
         href: "/careers",
       },
-      {
-        label: "News & Updates",
-        icon: FileText,
-        description: "Latest company news",
-        href: "/news",
-      },
-      {
-        label: "Partners",
-        icon: Building,
-        description: "Our trusted partners",
-        href: "/partners",
-      },
+      // {
+      //   label: "News & Updates",
+      //   icon: FileText,
+      //   description: "Latest company news",
+      //   href: "/news",
+      // },
+      // {
+      //   label: "Partners",
+      //   icon: Building,
+      //   description: "Our trusted partners",
+      //   href: "/partners",
+      // },
     ],
   },
   { label: "Contact Us", href: "/contact" },

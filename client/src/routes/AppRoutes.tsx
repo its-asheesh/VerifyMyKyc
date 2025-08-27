@@ -28,6 +28,7 @@ import DrivingLicensePage from "../pages/drivinglicense"
 import CustomPricingPage from "../pages/CustomPricingPage"
 import CheckoutPage from "../pages/CheckoutPage"
 
+
 // Auth Pages
 import LoginPage from "../pages/auth/LoginPage"
 import RegisterPage from "../pages/auth/RegisterPage"
@@ -41,6 +42,11 @@ import AdminReviews from "../pages/admin/AdminReviews"
 
 // Payment Pages
 import PaymentSuccessPage from "../pages/PaymentSuccessPage"
+
+// Footer Pages
+import DisclaimerPage from '../pages/DisclaimerPage';
+import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
+import TermsAndConditionsPage from "../pages/TermsAndConditionsPage"
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -95,6 +101,11 @@ const AppRoutes: React.FC = () => {
                 <Route path="/documentation" element={<div>Documentation Page</div>} />
                 <Route path="/api-reference" element={<div>API Reference Page</div>} />
                 <Route path="/help" element={<div>Help Center Page</div>} />
+
+                {/* Footer routes */}
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/disclaimer" element={<DisclaimerPage />} />
+                <Route path="/terms" element={<TermsAndConditionsPage />} />
                 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
