@@ -113,7 +113,7 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
       onServiceChange={handleServiceChange}
     >
       {/* Display pricing if available */}
-      {dlPricing && (
+      {/* {dlPricing && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
           <div className="flex gap-4 text-sm">
@@ -122,7 +122,7 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
             <span className="text-blue-600">Yearly: ₹{dlPricing.yearlyPrice}</span>
           </div>
         </div>
-      )}
+      )} */}
       <VerificationForm
         fields={getFormFields(selectedService)}
         onSubmit={handleSubmit}

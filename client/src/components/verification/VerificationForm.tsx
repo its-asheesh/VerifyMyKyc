@@ -2134,7 +2134,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
           referenceId={referenceId}
           result={result}
           onReset={handleReset}
-          theme="warning" // Optional: custom theme for yellow/orange
+          //theme="warning" // Optional: custom theme for yellow/orange
         >
           {/* Summary */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6 flex flex-wrap items-center gap-6">

@@ -42,7 +42,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
         <img
           src={product.image || "/placeholder.svg"}
           alt={product.title}
-          className="w-full max-h-32 object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain rounded-t-xl p-1 md:p-2 group-hover:scale-110 transition-transform duration-300 "
         />
 
         <div className="absolute top-3 right-3">

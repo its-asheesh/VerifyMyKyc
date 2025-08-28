@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, Star, Users, Zap, Shield } from "lucide-react";
+import {
+  CheckCircle,
+  Star,
+  Users,
+  Zap,
+  Shield,
+} from "lucide-react";
 import type { Product } from "../../types/product";
 import { AadhaarSection } from "../verification/AadhaarSection";
 import { PanSection } from "../verification/PanSection";
@@ -15,14 +21,14 @@ import { RcSection } from "../verification/RcSection";
 import { PassportSection } from "../verification/PassportSection";
 import { useQuery } from "@tanstack/react-query";
 import { reviewApi } from "../../services/api/reviewApi";
+import { useVerificationPricing } from "../../hooks/usePricing";
+import { useNavigate } from "react-router-dom";
 
 interface ProductOverviewProps {
   product: Product;
 }
 
-export const ProductOverview: React.FC<ProductOverviewProps> = ({
-  product,
-}) => {
+export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => {
   const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false);
   const [panModalOpen, setPanModalOpen] = useState(false);
   const [drivingLicenseModalOpen, setDrivingLicenseModalOpen] = useState(false);
@@ -32,18 +38,18 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [rcModalOpen, setRcModalOpen] = useState(false);
   const [passportModalOpen, setPassportModalOpen] = useState(false);
-  
+
+  const navigate = useNavigate();
+
+  // Extract lowercase identifiers for matching
   const title = product.title.toLowerCase();
   const categoryName = product.category.name.toLowerCase();
-  
-  const isAadhaarProduct =
-    title.includes("aadhaar") || categoryName.includes("aadhaar");
-  // Use word-boundary to avoid matching 'pan' inside 'company'
+
+  // Detection logic for verification types
+  const isAadhaarProduct = title.includes("aadhaar") || categoryName.includes("aadhaar");
   const isPanProduct = /\bpan\b/.test(title) || /\bpan\b/.test(categoryName);
-  const isDrivingLicenseProduct =
-    title.includes("driving") || categoryName.includes("driving");
-  const isVoterProduct =
-    title.includes("voter") || categoryName.includes("voter");
+  const isDrivingLicenseProduct = title.includes("driving") || categoryName.includes("driving");
+  const isVoterProduct = title.includes("voter") || categoryName.includes("voter");
   const isGstinProduct =
     title.includes("gstin") ||
     categoryName.includes("gstin") ||
@@ -61,48 +67,114 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({
     title.includes("bank account") ||
     categoryName.includes("bank account") ||
     title.includes("bankaccount") ||
-    categoryName.includes("bankaccount") ||
     title.includes("ifsc") ||
     title.includes("upi");
   const isRcProduct =
     (product.id || "").toLowerCase() === "vehicle" ||
     title.includes("registration certificate") ||
     /\bvehicle\b/.test(title);
-
   const isPassportProduct =
     (product.id || "").toLowerCase() === "passport" ||
     title.includes("passport") ||
     /\bpassport\b/.test(title);
 
+  // ✅ Define getVerificationType BEFORE it's used
+  const getVerificationType = (prod: Product): string => {
+    const id = (prod.id || "").toLowerCase();
+    const validTypes = [
+      'aadhaar',
+      'pan',
+      'drivinglicense',
+      'gstin',
+      'company',
+      'voterid',
+      'bankaccount',
+      'vehicle',
+      'passport'
+    ];
+    if (validTypes.includes(id)) return id;
+
+    const t = (prod.title || '').toLowerCase();
+    if (t.includes('company') || t.includes('mca') || t.includes('cin') || t.includes('din')) return 'company';
+    if (t.includes('pan')) return 'pan';
+    if (t.includes('aadhaar')) return 'aadhaar';
+    if (t.includes('driving license') || t.includes('drivinglicense')) return 'drivinglicense';
+    if (t.includes('gstin')) return 'gstin';
+    if (t.includes('voter')) return 'voterid';
+    if (t.includes('bank account') || t.includes('bankaccount') || t.includes('banking')) return 'bankaccount';
+    if (t.includes('vehicle') || t.includes('registration certificate')) return 'vehicle';
+    if (t.includes('passport')) return 'passport';
+    return 'other';
+  };
+
+  const verificationType = getVerificationType(product);
+
+  // Fetch reviews
+  const { data: reviewsData } = useQuery({
+    queryKey: ["product-reviews", product.id],
+    queryFn: () => reviewApi.getProductReviews(product.id, { page: 1, limit: 1 }),
+    staleTime: 30_000,
+  });
+
+  const avg = reviewsData?.stats?.avgRating ?? 0;
+  const count = reviewsData?.stats?.count ?? 0;
+  const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0";
+
+  // Fetch pricing
+  const { data: pricingData } = useVerificationPricing(verificationType);
+
+  // Handle Buy Now
+  const handleBuyNow = () => {
+    if (!pricingData) {
+      console.error("Pricing data not available");
+      return;
+    }
+
+    const oneTimePrice = Number(pricingData.oneTimePrice);
+    if (isNaN(oneTimePrice) || oneTimePrice <= 0) {
+      console.error("Invalid price:", pricingData.oneTimePrice);
+      return;
+    }
+
+    const tierInfo = {
+      service: verificationType,
+      label: product.title,
+      price: oneTimePrice, // ✅ Numeric price
+      billingPeriod: "one-time",
+      originalPrice: oneTimePrice,
+      discount: 0,
+    };
+
+    navigate("/checkout", {
+      state: {
+        selectedPlan: "one-time",
+        billingPeriod: "one-time",
+        selectedServices: [verificationType],
+        productInfo: {
+          id: product.id,
+          title: product.title,
+          description: product.description,
+          image: product.image,
+          category: product.category.name,
+        },
+        tierInfo,
+        totalAmount: oneTimePrice, // ✅ Pass amount as number
+      },
+    });
+  };
+
+  // Handle Try Demo
   const handleTryDemo = () => {
     if (isAadhaarProduct) setAadhaarModalOpen(true);
+    else if (isPanProduct) setPanModalOpen(true);
     else if (isDrivingLicenseProduct) setDrivingLicenseModalOpen(true);
     else if (isVoterProduct) setVoterModalOpen(true);
     else if (isGstinProduct) setGstinModalOpen(true);
     else if (isCompanyProduct) setCompanyModalOpen(true);
     else if (isBankProduct) setBankModalOpen(true);
-    else if (isPanProduct) setPanModalOpen(true);
     else if (isRcProduct) setRcModalOpen(true);
     else if (isPassportProduct) setPassportModalOpen(true);
   };
-
-  const handleBuyNow = () => {
-    const section = document.getElementById("pricing");
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  // Fetch reviews stats (avg rating and count)
-  const { data } = useQuery({
-    queryKey: ["product-reviews", product.id],
-    queryFn: () =>
-      reviewApi.getProductReviews(product.id, { page: 1, limit: 1 }),
-    staleTime: 30_000,
-  });
-  const avg = data?.stats?.avgRating ?? 0;
-  const count = data?.stats?.count ?? 0;
-  const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -145,7 +217,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="space-y-4"
+        className="space-y-6"
       >
         {/* Category Badge */}
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
@@ -153,8 +225,11 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({
           {product.category.name}
         </div>
 
+        {/* Title */}
+        <h2 className="text-3xl font-bold text-gray-900">{product.title}</h2>
+
         {/* Description */}
-        {/* <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p> */}
+        <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p>
 
         {/* Key Features */}
         <div className="space-y-3">
@@ -176,7 +251,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-6 pt-6 border-t">
+        <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200">
           <div className="text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-2">
               <Star className="w-6 h-6 text-yellow-600" />
@@ -208,154 +283,156 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({
             className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
             onClick={handleBuyNow}
           >
-            Buy Now
+            {pricingData ? `Buy Now - ₹${Number(pricingData.oneTimePrice).toFixed(2)}` : "Buy Now"}
           </button>
           <button
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
+            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleTryDemo}
             disabled={
-              !isAadhaarProduct &&
-              !isPanProduct &&
-              !isDrivingLicenseProduct &&
-              !isVoterProduct &&
-              !isGstinProduct &&
-              !isCompanyProduct &&
-              !isBankProduct &&
-              !isRcProduct &&
-              !isPassportProduct
+              !(
+                isAadhaarProduct ||
+                isPanProduct ||
+                isDrivingLicenseProduct ||
+                isVoterProduct ||
+                isGstinProduct ||
+                isCompanyProduct ||
+                isBankProduct ||
+                isRcProduct ||
+                isPassportProduct
+              )
             }
           >
             Start Verification
           </button>
         </div>
-
-        {/* Modals - All sections */}
-        {bankModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setBankModalOpen(false)}
-              >
-                &times;
-              </button>
-              <BankAccountSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {rcModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setRcModalOpen(false)}
-              >
-                &times;
-              </button>
-              <RcSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {aadhaarModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setAadhaarModalOpen(false)}
-              >
-                &times;
-              </button>
-              <AadhaarSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {panModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setPanModalOpen(false)}
-              >
-                &times;
-              </button>
-              <PanSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {drivingLicenseModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setDrivingLicenseModalOpen(false)}
-              >
-                &times;
-              </button>
-              <DrivingLicenseSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {voterModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setVoterModalOpen(false)}
-              >
-                &times;
-              </button>
-              <VoterSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {gstinModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setGstinModalOpen(false)}
-              >
-                &times;
-              </button>
-              <GstinSection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {companyModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setCompanyModalOpen(false)}
-              >
-                &times;
-              </button>
-              <CompanySection productId={product.id} />
-            </div>
-          </div>
-        )}
-        
-        {passportModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-                onClick={() => setPassportModalOpen(false)}
-              >
-                &times;
-              </button>
-              <PassportSection productId={product.id} />
-            </div>
-          </div>
-        )}
       </motion.div>
+
+      {/* Modals */}
+      {aadhaarModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setAadhaarModalOpen(false)}
+            >
+              &times;
+            </button>
+            <AadhaarSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {panModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setPanModalOpen(false)}
+            >
+              &times;
+            </button>
+            <PanSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {drivingLicenseModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setDrivingLicenseModalOpen(false)}
+            >
+              &times;
+            </button>
+            <DrivingLicenseSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {voterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setVoterModalOpen(false)}
+            >
+              &times;
+            </button>
+            <VoterSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {gstinModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setGstinModalOpen(false)}
+            >
+              &times;
+            </button>
+            <GstinSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {companyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setCompanyModalOpen(false)}
+            >
+              &times;
+            </button>
+            <CompanySection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {bankModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setBankModalOpen(false)}
+            >
+              &times;
+            </button>
+            <BankAccountSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {rcModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setRcModalOpen(false)}
+            >
+              &times;
+            </button>
+            <RcSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {passportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setPassportModalOpen(false)}
+            >
+              &times;
+            </button>
+            <PassportSection productId={product.id} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

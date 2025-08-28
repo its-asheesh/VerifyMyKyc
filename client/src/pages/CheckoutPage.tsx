@@ -393,7 +393,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
             )}
 
             {/* Billing Period Selection */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -422,7 +422,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Coupon Input */}
             <motion.div

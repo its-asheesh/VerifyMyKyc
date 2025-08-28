@@ -271,7 +271,46 @@ const seedPricingData = () => __awaiter(void 0, void 0, void 0, function* () {
                 highlighted: false,
                 popular: true,
                 color: 'cyan'
-            }
+            },
+            {
+                verificationType: 'ccrv',
+                monthlyPrice: 349,
+                yearlyPrice: 3499,
+                oneTimePrice: 99,
+                title: 'Criminal Verification',
+                description: 'Voter verification with direct, captcha, and OCR flows',
+                oneTimeFeatures: [
+                    'Direct Fetch (Boson)',
+                    'Captcha Flow (Meson)',
+                    'OCR Data Extraction',
+                    'Email Support'
+                ],
+                monthlyFeatures: [
+                    'Direct Fetch (Boson)',
+                    'Captcha Flow (Meson)',
+                    'OCR Data Extraction',
+                    'API Access',
+                    'Priority Support',
+                    'Bulk Processing'
+                ],
+                yearlyFeatures: [
+                    'Direct Fetch (Boson)',
+                    'Captcha Flow (Meson)',
+                    'OCR Data Extraction',
+                    'API Access',
+                    '24/7 Support',
+                    'Bulk Processing',
+                    'Custom Integration',
+                    'Dedicated Account Manager'
+                ],
+                // Quotas for display in UI
+                oneTimeQuota: { count: 1, validityDays: 30 },
+                monthlyQuota: { count: 100, validityDays: 30 },
+                yearlyQuota: { count: 1200, validityDays: 365 },
+                highlighted: false,
+                popular: true,
+                color: 'indigo'
+            },
         ];
         yield pricing_model_1.VerificationPricing.insertMany(verificationPricingData);
         console.log('✅ Verification pricing seeded successfully');

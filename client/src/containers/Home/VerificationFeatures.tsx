@@ -93,9 +93,9 @@ const VerificationSection = () => {
                       ? item.demandLevel
                       : "medium"
                   }
-                  verifications={item.verifications}
-                  duration={item.duration}
-                  price={item.price}
+                  // verifications={item.verifications}
+                  // duration={item.duration}
+                  // price={item.price}
                   rating={item.rating}
                   reviews={item.reviews}
                   productId={item.id}

@@ -45,7 +45,7 @@ export const mockProducts: Product[] = [
     documentation: "Complete API documentation for PAN verification",
     isActive: true,
     icon: "/pan.png",
-    image: "/pan.png",
+    image: "/Pan _card.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -245,6 +245,65 @@ export const mockProducts: Product[] = [
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
+  {
+  id: "ccrv",
+  title: "Criminal Case Record Verification",
+  description: "Comprehensive criminal background check and case record verification",
+  category: {
+    id: "background",
+    name: "Background Verification",
+    slug: "background",
+    description: "Criminal and background checks"
+  },
+  features: [
+    "Nationwide criminal record search",
+    "Court case history verification",
+    "Real-time status updates",
+    "Detailed case information",
+    "Report generation with PDF download"
+  ],
+  "pricing": {
+    "free": {
+      "price": 0,
+      "requests": 10,
+      "features": [
+        "Basic criminal record search",
+        "Email support",
+        "Limited case details"
+      ],
+      "support": "Email"
+    },
+    "basic": {
+      "price": 499,
+      "requests": 500,
+      "features": [
+        "Comprehensive criminal background check",
+        "Detailed case information",
+        "Priority support",
+        "Report PDF download"
+      ],
+      "support": "Chat"
+    },
+    "premium": {
+      "price": 1499,
+      "requests": 5000,
+      "features": [
+        "Enterprise-level background verification",
+        "Advanced search capabilities",
+        "24/7 dedicated support",
+        "Bulk verification processing",
+        "Custom reporting and analytics"
+      ],
+      "support": "Phone"
+    }
+  },
+  "documentation": "Complete API documentation for CCRV verification",
+  "isActive": true,
+  "icon": "/ccrv.png",
+  "image": "/ccrv-verification.jpg",
+  "createdAt": "2024-01-01",
+  "updatedAt": "2024-01-01"
+},
 ]
 
 const mockCategories: ProductCategory[] = [
@@ -256,7 +315,7 @@ const mockCategories: ProductCategory[] = [
   //   slug: "biometric",
   //   description: "Face and fingerprint verification",
   // },
-  { id: "address", name: "Address Verification", slug: "address", description: "Residential address verification" },
+  { id: "background", name: "Background Verification", slug: "background", description: "Criminal record verification" },
   { id: "business", name: "Business Verification", slug: "business", description: "Business registry verification" },
   { id: "vehicle", name: "Vehicle Verification", slug: "vehicle", description: "Vehicle and transport document verification" },
 

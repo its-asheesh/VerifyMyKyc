@@ -15,7 +15,7 @@ export const verificationServices = [
     id: "pan",
     category: "personal",
     title: "PAN Card Verification",
-    image: "/pan.png",
+    image: "/Pan _card.jpg",
     demand: "Most Demanding",
     demandLevel: "high",
     verifications: 20,

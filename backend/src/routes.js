@@ -21,6 +21,7 @@ const voter_router_1 = __importDefault(require("./modules/voter/voter.router"));
 const review_router_1 = __importDefault(require("./modules/reviews/review.router"));
 const vehicle_router_1 = __importDefault(require("./modules/vehicle/vehicle.router"));
 const passport_routes_1 = __importDefault(require("./modules/passport/passport.routes"));
+const ccrv_routes_1 = __importDefault(require("./modules/ccrv/ccrv.routes"));
 const router = (0, express_1.Router)();
 // Auth routes - should come first for authentication
 router.use('/auth', auth_router_1.default);
@@ -29,6 +30,7 @@ router.use('/passport', passport_routes_1.default);
 // Other routes in logical order
 router.use('/vehicle', vehicle_router_1.default);
 router.use('/aadhaar', aadhaar_router_1.default);
+router.use('/ccrv', ccrv_routes_1.default);
 router.use('/pan', pan_router_1.default);
 router.use('/gstin', gstin_router_1.default);
 router.use('/mca', mca_router_1.default);

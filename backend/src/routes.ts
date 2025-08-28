@@ -16,6 +16,7 @@ import voterRouter from './modules/voter/voter.router';
 import reviewsRouter from './modules/reviews/review.router';
 import vehicleRouter from './modules/vehicle/vehicle.router';
 import passportRouter from './modules/passport/passport.routes';
+import ccrvRouter from './modules/ccrv/ccrv.routes';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.use('/passport', passportRouter);
 // Other routes in logical order
 router.use('/vehicle', vehicleRouter);
 router.use('/aadhaar', aadhaarRouter);
+router.use('/ccrv', ccrvRouter);
 router.use('/pan', panRouter);
 router.use('/gstin', gstinRouter);
 router.use('/mca', mcaRouter);
