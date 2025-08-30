@@ -6,6 +6,7 @@ import { ArrowLeft, Check, CreditCard, Shield, Clock, Users } from "lucide-react
 import CouponInput from "../components/common/CouponInput"
 import type { CouponValidationResponse } from "../services/api/couponApi"
 import { useAppSelector } from "../redux/hooks"
+import {loadRazorpay} from "../utils/loadRazorpay"
 
 interface CheckoutPageProps {}
 
@@ -202,115 +203,91 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
   })
 
   const handleCheckout = async () => {
-    setIsProcessing(true)
-    
-    try {
-      // Create order data
-      const orderData = {
-        orderType: planDetails ? 'plan' : 'verification',
-        serviceName: planDetails ? planDetails.planName : 'Custom Verification Service',
-        serviceDetails: planDetails ? {
-          planName: planDetails.planName,
-          planType: billingPeriod === 'one-time' ? 'one-time' : billingPeriod,
-          features: planDetails.features
-        } : {
-          verificationType: allSelectedServices.join(', '),
-          features: allSelectedServices.map((type: string) => `${type} verification`)
-        },
-        totalAmount: subtotal,
-        finalAmount: total, // Updated to reflect coupon discount
-        billingPeriod,
-        paymentMethod,
-        ...(appliedCoupon && {
-          couponApplied: {
-            couponId: appliedCoupon.coupon.id,
-            code: appliedCoupon.coupon.code,
-            discount: appliedCoupon.discount,
-            discountType: appliedCoupon.coupon.discountType,
-            discountValue: appliedCoupon.coupon.discountValue
-          }
-        })
-      }
-
-      console.log('Creating order with data:', orderData)
-      console.log('User token:', localStorage.getItem('token'))
-      console.log('Price breakdown:', {
-        subtotal,
-        discount,
-        total,
-        appliedCoupon: appliedCoupon ? appliedCoupon.coupon.code : 'None'
-      })
-
-      // Create order in backend
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(orderData)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Order creation failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        })
-        throw new Error(`Failed to create order: ${errorData.message || response.statusText}`)
-      }
-
-      const orderResponse = await response.json()
-      const order = orderResponse.data.order
-
-      // Simulate payment processing
-      setTimeout(async () => {
-        try {
-          // Process payment
-          const paymentResponse = await fetch('/api/orders/process-payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({
-              orderId: order.orderId,
-              transactionId: `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-            })
-          })
-
-          if (!paymentResponse.ok) {
-            throw new Error('Payment processing failed')
-          }
-
-          setIsProcessing(false)
-          
-          // Navigate to payment success page with order details
-          navigate(`/payment-success?orderId=${order.orderId}&amount=${total}&service=${encodeURIComponent(orderData.serviceName)}`, { 
-            state: { 
-              selectedPlan: planDetails ? planDetails.planName : 'Custom',
-              billingPeriod, 
-              total: total,
-              orderId: order.orderId,
-              selectedVerifications,
-              selectedServices,
-              planDetails
-            } 
-          })
-        } catch (error) {
-          console.error('Payment processing error:', error)
-          setIsProcessing(false)
-          // Handle payment error - you might want to show an error message
+  setIsProcessing(true)
+  
+  try {
+    // 1️⃣ Create order in backend
+    const orderData = {
+      orderType: planDetails ? 'plan' : 'verification',
+      serviceName: planDetails ? planDetails.planName : 'Custom Verification Service',
+      serviceDetails: planDetails ? {
+        planName: planDetails.planName,
+        planType: billingPeriod,
+        features: planDetails.features
+      } : {
+        verificationType: allSelectedServices.join(', '),
+        features: allSelectedServices.map((type: string) => `${type} verification`)
+      },
+      totalAmount: subtotal,
+      finalAmount: total,
+      billingPeriod,
+      paymentMethod,
+      ...(appliedCoupon && {
+        couponApplied: {
+          couponId: appliedCoupon.coupon.id,
+          code: appliedCoupon.coupon.code,
+          discount: appliedCoupon.discount,
+          discountType: appliedCoupon.coupon.discountType,
+          discountValue: appliedCoupon.coupon.discountValue
         }
-      }, 2000)
-
-    } catch (error) {
-      console.error('Order creation error:', error)
-      setIsProcessing(false)
-      // Handle order creation error - you might want to show an error message
+      })
     }
+
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(orderData)
+    })
+
+    if (!response.ok) throw new Error('Order creation failed')
+
+    const { data } = await response.json()
+    const order = data.order
+    const { razorpayOrderId, amount, currency } = data
+
+    // 2️⃣ Load Razorpay
+    const Razorpay = await loadRazorpay()
+    if (!Razorpay) {
+      setIsProcessing(false)
+      return
+    }
+
+    // 3️⃣ Configure Razorpay options
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY, // Your Razorpay key from env
+      amount: amount, // in paise
+      currency: currency,
+      name: 'Your App Name',
+      description: order.serviceName,
+      order_id: razorpayOrderId,
+      handler: function (response: any) {
+        // 4️⃣ Payment success callback
+        navigate(`/payment-success?orderId=${order.orderId}&amount=${total}&service=${encodeURIComponent(order.serviceName)}`, {
+          state: { selectedPlan: planDetails?.planName, billingPeriod, total, orderId: order.orderId }
+        })
+      },
+      prefill: {
+        name: '', // optionally fill from user profile
+        email: '',
+        contact: ''
+      },
+      theme: { color: '#5B21B6' }
+    }
+
+    const rzp = new Razorpay(options)
+    rzp.open()
+    setIsProcessing(false)
+
+  } catch (error) {
+    console.error('Checkout error:', error)
+    setIsProcessing(false)
+    alert('Payment failed. Please try again.')
   }
+}
+
 
   const getVerificationIcon = (verificationType: string) => {
     switch (verificationType) {

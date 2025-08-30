@@ -3,6 +3,7 @@ import { Order, IOrder } from './order.model';
 import { Coupon } from '../coupons/coupon.model';
 import asyncHandler from '../../common/middleware/asyncHandler';
 import { VerificationPricing, HomepagePlan } from '../pricing/pricing.model';
+import { razorpay } from '../../common/services/razorpay';
 
 // Create new order
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -94,6 +95,55 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const order = await Order.create(orderData);
+
+// Razorpay order creation starts here
+ // make sure to import at top
+
+const paymentCapture = 1; // 1 for automatic capture
+const currency = "INR";
+
+const options = {
+  amount: finalAmount * 100, // amount in paise
+  currency,
+  receipt: order.orderId,
+  payment_capture: paymentCapture,
+};
+
+const razorpayOrder = await razorpay.orders.create(options);
+
+// Update coupon usage if a coupon was applied
+if (couponApplied && order) {
+  try {
+    const coupon = await Coupon.findById(couponApplied.couponId);
+    if (coupon) {
+      coupon.usedCount += 1;
+      coupon.usageHistory.push({
+        userId: req.user._id,
+        orderId: order._id,
+        usedAt: new Date(),
+        discountApplied: couponApplied.discount
+      });
+      await coupon.save();
+      console.log('Coupon usage updated successfully');
+    }
+  } catch (error) {
+    console.error('Failed to update coupon usage:', error);
+    // Don't fail order creation if coupon update fails
+  }
+}
+
+// Respond with order + Razorpay info
+res.status(201).json({
+  success: true,
+  message: 'Order created successfully',
+  data: {
+    order,
+    razorpayOrderId: razorpayOrder.id,
+    amount: razorpayOrder.amount,
+    currency: razorpayOrder.currency
+  }
+});
+
 
   // Update coupon usage if a coupon was applied
   if (couponApplied && order) {

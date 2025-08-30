@@ -2979,6 +2979,129 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       );
     }
 
+    if (serviceKey === "ocr-v2") {
+      const data = result.data || result;
+      const ocrData = data.ocr_data || {};
+
+      // ✅ Meta IDs
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const referenceId = data.reference_id || data.referenceId;
+      const message = data.message || "OCR data extracted";
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+        >
+          {/* Summary */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6">
+            <div className="flex flex-wrap items-center gap-6">
+              <div>
+                <div className="text-sm text-gray-500">Document ID</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {ocrData.document_id || "Not Available"}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Name</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {ocrData.name || "Not Available"}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Date of Birth</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {ocrData.date_of_birth || "Not Available"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* OCR Details */}
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm">
+              <h5 className="font-semibold text-gray-900 mb-4">
+                Personal Information
+              </h5>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-gray-500">Full Name</div>
+                  <div className="font-semibold text-gray-900">
+                    {ocrData.name || "Not Available"}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-500">Document ID</div>
+                  <div className="font-semibold text-gray-900">
+                    {ocrData.document_id || "Not Available"}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-500">Date of Birth</div>
+                  <div className="font-semibold text-gray-900">
+                    {ocrData.date_of_birth || "Not Available"}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-500">Gender</div>
+                  <div className="font-semibold text-gray-900">
+                    {ocrData.gender || "Not Available"}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-sm text-gray-500">Contact Number</div>
+                  <div className="font-semibold text-gray-900">
+                    {ocrData.contact_number || "Not Available"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm">
+              <h5 className="font-semibold text-gray-900 mb-4">
+                Family Information
+              </h5>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-gray-500">Guardian Name</div>
+                  <div className="font-semibold text-gray-900">
+                    {ocrData.guardian_name || "Not Available"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm">
+              <h5 className="font-semibold text-gray-900 mb-4">
+                Address Information
+              </h5>
+
+              <div>
+                <div className="text-sm text-gray-500">Address</div>
+                <div className="font-semibold text-gray-900 mt-1">
+                  {ocrData.address || "Not Available"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
     if (serviceKey === "aadhaar-link") {
       const data = result.data || result;
 
@@ -3236,43 +3359,41 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg sm:rounded-xl p-4 sm:p-6 hover:border-blue-400 transition-colors w-full">
               <input
-                ref={fileInputRef}
                 type="file"
                 accept={field.accept || "image/*"}
-                onChange={(e) =>
-                  handleFileChange(field.name, e.target.files?.[0] || null)
-                }
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  handleFileChange(field.name, file);
+                }}
                 className="hidden"
+                id={`file-input-${field.name}`} // Unique ID for each field
               />
-              {formData[field.name] ? (
-                <div className="text-center">
-                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mx-auto mb-2" />
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
-                    {formData[field.name].name}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm"
-                  >
-                    Change file
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                    Click to upload or drag and drop
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm"
-                  >
-                    Choose File
-                  </button>
-                </div>
-              )}
+              <label
+                htmlFor={`file-input-${field.name}`}
+                className="cursor-pointer"
+              >
+                {formData[field.name] ? (
+                  <div className="text-center">
+                    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2 break-words">
+                      {formData[field.name].name}
+                    </p>
+                    <div className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm">
+                      Change file
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                      Click to upload or drag and drop
+                    </p>
+                    <div className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm">
+                      Choose File
+                    </div>
+                  </div>
+                )}
+              </label>
             </div>
           </div>
         );
