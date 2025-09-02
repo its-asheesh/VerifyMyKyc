@@ -2,24 +2,44 @@ import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle, Download, Mail, ArrowRight, Home, Receipt } from 'lucide-react'
+import { useAppSelector } from '../redux/hooks'
+
+// inside PaymentSuccessPage, top-level
+const serviceMap: Record<string, string> = {
+  "PAN Card Verification": "pan",
+  "Aadhaar Verification": "aadhaar",
+  "Passport Verification": "passport",
+  "Driving License Verification": "drivinglicense",
+  "Voter ID Verification": "voterid",
+  "GSTIN Verification": "gstin",
+  "Company Verification": "company",
+  "Criminal Case Record Verification": "ccrv",
+  "RC Verification": "vehicle",
+  // fallback for any custom string
+  "Custom Verification Service": "pan",
+}
 
 const PaymentSuccessPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { user } = useAppSelector((state) => state.auth)
+  const isAdmin = user?.role === 'admin'
   
   // Get order details from URL params
   const orderId = searchParams.get('orderId') || 'ORD-' + Date.now()
   const amount = searchParams.get('amount') || '0'
   const service = searchParams.get('service') || 'Verification Service'
+  // 1.  Grab service slug from URL (or fall back)
+const serviceSlug = serviceMap[service] || 'pan' // pan / aadhaar / 
 
   useEffect(() => {
     // Auto-redirect to home after 10 seconds
     const timer = setTimeout(() => {
-      navigate('/')
+      navigate(`/products/${serviceSlug}`)
     }, 10000)
 
     return () => clearTimeout(timer)
-  }, [navigate])
+  }, [navigate,serviceSlug])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -42,6 +62,9 @@ const PaymentSuccessPage: React.FC = () => {
           
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
           <p className="text-gray-600">Your verification service has been activated</p>
+          <p className="text-sm text-gray-500">
+    Redirecting to your service page in <span className="font-medium">1.5 seconds</span>
+  </p>
         </motion.div>
       </div>
 
@@ -114,13 +137,15 @@ const PaymentSuccessPage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            <button
+            {isAdmin && (
+              <button
               onClick={() => navigate('/dashboard')}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               <ArrowRight className="w-4 h-4" />
               Go to Dashboard
             </button>
+            )}
             
             <div className="grid grid-cols-2 gap-3">
               <button

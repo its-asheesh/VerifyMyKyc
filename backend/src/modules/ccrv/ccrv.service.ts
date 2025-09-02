@@ -18,6 +18,12 @@ import {
   CCRVSearchResponse,
 } from '../../common/types/ccrv';
 
+import {
+  CCRVCallbackData
+} from '../../common/types/ccrv';
+
+import { logToFile } from '../../common/utils/logger';
+
 export class CCRVService {
   /**
    * Generates a CCRV report for criminal case record verification.
@@ -42,4 +48,38 @@ export class CCRVService {
   async search(payload: CCRVSearchRequest): Promise<CCRVSearchResponse> {
     return searchCCRVProvider(payload);
   }
+
+  async handleCallback(data: CCRVCallbackData): Promise<void> {
+  const { transactionId, referenceId, payload } = data;
+
+  // Log for audit
+  logToFile('ccrv-callbacks', {
+    timestamp: new Date().toISOString(),
+    transactionId,
+    referenceId,
+    code: payload?.data?.code,
+    status: payload?.data?.ccrv_status,
+    result: payload?.data?.ccrv_data?.report_status?.result,
+  });
+
+  const code = payload?.data?.code;
+  const result = payload?.data?.ccrv_data?.report_status?.result;
+
+  // 🔍 Business Logic
+  if (code === '1004' && result === 'SUCCESS') {
+    console.log(`🎉 CCRV SUCCESS for ${transactionId}`);
+    // ➕ Update DB, notify user via email/SMS, trigger webhook
+    // await updateUserVerificationStatus(transactionId, 'completed');
+    // await sendEmailNotification(userId, 'ccrv_success', payload);
+  } else if (['1006', '1008', '1010'].includes(code)) {
+    console.log(`⚠️ CCRV ${code} for ${transactionId}:`, payload?.data?.message);
+    // ➕ Handle failure or UTV
+  } else {
+    console.log(`📌 CCRV In Progress or Unknown: ${code}`);
+  }
+
+  // Optionally: store full payload in DB
+  // await db.ccrvCallbacks.create({ transactionId, payload });
+
+}
 }

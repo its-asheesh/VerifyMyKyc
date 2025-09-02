@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Star } from "lucide-react"
-import type { FC } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { reviewApi } from "../../services/api/reviewApi"
+import { motion } from "framer-motion";
+import { Star } from "lucide-react";
+import type { FC } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { reviewApi } from "../../services/api/reviewApi";
 
 type VerificationCardProps = {
-  title: string
-  image: string
-  demand: string
-  demandLevel: "high" | "medium" | "low"
-  rating: number
-  reviews: number
-  productId?: string
-  remaining?: number
-  expiresAt?: string
-  link?: string
-}
+  title: string;
+  image: string;
+  demand: string;
+  demandLevel: "high" | "medium" | "low";
+  rating: number;
+  reviews: number;
+  productId?: string;
+  remaining?: number;
+  expiresAt?: string;
+  link?: string;
+};
 
 const gradientMap = {
   high: "bg-gradient-to-r from-red-500 to-pink-500",
   medium: "bg-gradient-to-r from-yellow-500 to-orange-500",
   low: "bg-gradient-to-r from-gray-400 to-gray-600",
-}
+};
 
 export const VerificationCard: FC<VerificationCardProps> = ({
   title,
@@ -37,48 +37,55 @@ export const VerificationCard: FC<VerificationCardProps> = ({
   remaining,
   expiresAt,
 }) => {
-  const formattedExpiry = expiresAt ? new Date(expiresAt).toLocaleDateString() : null
+  const formattedExpiry = expiresAt
+    ? new Date(expiresAt).toLocaleDateString()
+    : null;
 
   const { data } = useQuery({
     queryKey: ["product-reviews", productId],
-    queryFn: () => reviewApi.getProductReviews(productId as string, { page: 1, limit: 1 }),
+    queryFn: () =>
+      reviewApi.getProductReviews(productId as string, { page: 1, limit: 1 }),
     enabled: !!productId,
     staleTime: 30_000,
-  })
+  });
 
-  const apiAvg = data?.stats?.avgRating
-  const apiCount = data?.stats?.count
-  const useApi = !!productId
+  const apiAvg = data?.stats?.avgRating;
+  const apiCount = data?.stats?.count;
+  const useApi = !!productId;
   const avgDisplay = useApi
     ? typeof apiCount === "number" && apiCount > 0
       ? (apiAvg ?? 0).toFixed(1)
       : "0.0"
     : typeof rating === "number"
-      ? rating.toFixed(1)
-      : String(rating)
-  const countDisplay = useApi ? (typeof apiCount === "number" && apiCount > 0 ? apiCount : 0) : reviews
+    ? rating.toFixed(1)
+    : String(rating);
+  const countDisplay = useApi
+    ? typeof apiCount === "number" && apiCount > 0
+      ? apiCount
+      : 0
+    : reviews;
 
   const handleGetStarted = () => {
     if (link) {
-      window.location.href = link
+      window.location.href = link;
     } else if (productId) {
-      console.log("Navigate to product:", productId)
+      console.log("Navigate to product:", productId);
       // Add navigation logic here
     }
-  }
+  };
 
   // Common card content component
   const CardContent = ({ isMobile }: { isMobile: boolean }) => (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full w-full">
       {/* Image section */}
-<div className="w-full bg-slate-50 flex-shrink-0">
-  <img
-    src={image || "/placeholder.svg"}
-    alt={title}
-    className="w-full h-16 md:h-36 object-fill rounded-t-xl p-1 md:p-4"
-    loading="lazy"
-  />
-</div>
+      <div className="w-full rounded-xl bg-slate-50 flex-shrink-0">
+        <img
+          src={image || "/placeholder.svg"}
+          alt={title}
+          className="w-full rounded-xl h-16 md:h-36 object-fill rounded-t-xl p-1 md:p-1"
+          loading="lazy"
+        />
+      </div>
 
       <div className="p-3 md:p-4 space-y-2 md:space-y-3 flex-1 flex flex-col">
         <span
@@ -92,7 +99,9 @@ export const VerificationCard: FC<VerificationCardProps> = ({
             {typeof remaining === "number" && (
               <span
                 className={`inline-block px-2 py-1 rounded text-[8px] md:text-xs ${
-                  remaining === 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+                  remaining === 0
+                    ? "bg-red-100 text-red-600"
+                    : "bg-green-100 text-green-600"
                 }`}
               >
                 Remaining: {remaining}
@@ -156,5 +165,5 @@ export const VerificationCard: FC<VerificationCardProps> = ({
         <CardContent isMobile={false} />
       </div>
     </motion.div>
-  )
-}
+  );
+};

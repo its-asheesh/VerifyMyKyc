@@ -135,7 +135,7 @@ const ProductsPage: React.FC = () => {
       </PageHeader>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        <div className="mb-12">
+        {/* <div className="mb-12">
           <div className="flex justify-center mb-8">
             <div className="w-full max-w-2xl">
               <SearchInput
@@ -145,7 +145,7 @@ const ProductsPage: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Search and Filters */}
         <div className="mb-10 space-y-6">

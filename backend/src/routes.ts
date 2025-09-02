@@ -18,7 +18,11 @@ import vehicleRouter from './modules/vehicle/vehicle.router';
 import passportRouter from './modules/passport/passport.routes';
 import ccrvRouter from './modules/ccrv/ccrv.routes';
 
+import callbackRouter from "./common/middleware/callback-handler";
 const router = Router();
+
+// Callback handler route
+router.use(callbackRouter);
 
 // Auth routes - should come first for authentication
 router.use('/auth', authRouter);

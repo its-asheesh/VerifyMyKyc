@@ -3,8 +3,11 @@ import type { BaseEntity } from "./common"
 export interface Product extends BaseEntity {
   title: string
   description: string
+  demand: DemandLabel;
+  demandLevel: DemandLevel;
   category: ProductCategory
   features: string[]
+  services?: string[]
   pricing: ProductPricing
   documentation: string
   apiEndpoint?: string
@@ -33,6 +36,13 @@ export interface PricingTier {
   support: string
 }
 
+export type DemandLevel = "high" | "medium" | "low";
+export type DemandLabel =
+  | "Most Demanding"
+  | "High Demand"
+  | "Trending"
+  | "Essential";
+  
 export enum ProductType {
   IDENTITY_VERIFICATION = "identity-verification",
   DOCUMENT_VERIFICATION = "document-verification",

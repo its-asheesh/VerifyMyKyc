@@ -4,9 +4,12 @@ import { Router } from 'express';
 import {
   generateCCRVReportHandler,
   fetchCCRVResultHandler,
-  searchCCRVHandler
+  searchCCRVHandler,ccrvCallbackHandler
 } from './ccrv.controller';
 import { authenticate, requireUser } from '../../common/middleware/auth';
+
+
+
 
 const router = Router();
 
@@ -25,5 +28,7 @@ router.post('/fetch-result', authenticate, requireUser, fetchCCRVResultHandler);
 // Search CCRV records
 // POST /api/ccrv/search
 router.post('/search', authenticate, requireUser, searchCCRVHandler);
+
+router.post('/callback', ccrvCallbackHandler);
 
 export default router;

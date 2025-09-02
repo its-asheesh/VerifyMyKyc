@@ -22,11 +22,9 @@ import ResourcesPage from "../pages/resources/ResourcesPage"
 import AboutPage from "../pages/company/AboutPage"
 import ContactPage from "../pages/company/ContactPage"
 import CareersPage from "../pages/company/CareersPage"
-import AadhaarPage from "../pages/aadhaar"
-import PanPage from "../pages/pan"
-import DrivingLicensePage from "../pages/drivinglicense"
 import CustomPricingPage from "../pages/CustomPricingPage"
 import CheckoutPage from "../pages/CheckoutPage"
+
 
 
 // Auth Pages
@@ -88,9 +86,6 @@ const AppRoutes: React.FC = () => {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/careers" element={<CareersPage />} />
-                <Route path="/aadhaar" element={<AadhaarPage />} />
-                <Route path="/pan" element={<PanPage />} />
-                <Route path="/drivinglicense" element={<DrivingLicensePage />} />
                 
                 {/* Pricing */}
                 <Route path="/custom-pricing" element={<CustomPricingPage />} />

@@ -263,12 +263,38 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
       name: 'Your App Name',
       description: order.serviceName,
       order_id: razorpayOrderId,
-      handler: function (response: any) {
-        // 4️⃣ Payment success callback
-        navigate(`/payment-success?orderId=${order.orderId}&amount=${total}&service=${encodeURIComponent(order.serviceName)}`, {
-          state: { selectedPlan: planDetails?.planName, billingPeriod, total, orderId: order.orderId }
-        })
+      handler: async function (response: any) {
+  try {
+    const verifyRes = await fetch('/api/orders/verify-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
+      body: JSON.stringify({
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_signature: response.razorpay_signature,
+        orderId: order.orderId  // your internal orderId
+      })
+    });
+
+    if (verifyRes.ok) {
+      // ✅ Payment verified and order activated
+      navigate(`/payment-success?orderId=${order.orderId}&amount=${total}&service=${encodeURIComponent(order.serviceName)}`, {
+        state: { selectedPlan: planDetails?.planName, billingPeriod, total, orderId: order.orderId }
+      });
+    } else {
+      const data = await verifyRes.json();
+      alert(`Payment verification failed: ${data.message}`);
+      navigate('/payment-failed');
+    }
+  } catch (error) {
+    console.error('Verification failed:', error);
+    alert('Payment verification failed. Please contact support.');
+    navigate('/payment-failed');
+  }
+},
       prefill: {
         name: '', // optionally fill from user profile
         email: '',
@@ -556,3 +582,4 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
 }
 
 export default CheckoutPage
+

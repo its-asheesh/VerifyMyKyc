@@ -226,16 +226,16 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         </div>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold text-gray-900">{product.title}</h2>
+        {/* <h2 className="text-3xl font-bold text-gray-900">{product.title}</h2> */}
 
         {/* Description */}
-        <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p>
+        {/* <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p> */}
 
         {/* Key Features */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">Key Features</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Key Services</h3>
           <div className="grid grid-cols-1 gap-3">
-            {product.features.slice(0, 4).map((feature, index) => (
+            {product.services?.slice(0, 4).map((services, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, x: -20 }}
@@ -244,7 +244,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
                 className="flex items-center gap-3"
               >
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">{feature}</span>
+                <span className="text-gray-700">{services}</span>
               </motion.div>
             ))}
           </div>

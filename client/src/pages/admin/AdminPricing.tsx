@@ -107,7 +107,7 @@ const AdminPricing: React.FC = () => {
   // RC form state
   const [rcForm, setRcForm] = useState({
     verificationType: "vehicle",
-    title: "RC Verification",
+    title: "Vehicle Verification",
     description: "Vehicle RC, eChallan and FASTag verification",
     oneTimePrice: 99,
     monthlyPrice: 399,

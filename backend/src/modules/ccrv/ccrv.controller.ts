@@ -193,3 +193,39 @@ export const searchCCRVHandler = asyncHandler(async (req: AuthenticatedRequest, 
     });
   }
 });
+
+
+
+/**
+ * PUBLIC: Callback handler for OnGrid CCRV API
+ * This is where OnGrid sends the result when the report is ready
+ */
+export const ccrvCallbackHandler = async (req: Request, res: Response) => {
+  const transactionId = req.headers['x-transaction-id'] as string;
+  const referenceId = req.headers['x-reference-id'] as string;
+  const authType = req.headers['x-auth-type'] as string;
+
+  const payload = req.body;
+
+  console.log('✅ CCRV Callback Received', {
+    transactionId,
+    referenceId,
+    authType,
+    payload,
+  });
+
+  try {
+    // Pass to service for processing (e.g., save to DB, notify user)
+    await service.handleCallback({
+      transactionId,
+      referenceId,
+      payload,
+    });
+
+    // ✅ Acknowledge receipt
+    return res.status(200).json({ received: true, transactionId });
+  } catch (error: any) {
+    console.error('CCRV Callback Processing Error:', error);
+    return res.status(500).json({ error: 'Failed to process callback' });
+  }
+};

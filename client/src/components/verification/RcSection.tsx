@@ -146,7 +146,7 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
 
   return (
     <VerificationLayout
-      title="RC Verification Services"
+      title="Vehicle Verification Services"
       description="Comprehensive vehicle RC, challan, and FASTag verification services"
       services={rcServices}
       selectedService={selectedService}

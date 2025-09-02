@@ -175,16 +175,16 @@ const navItems = [
     dropdown: true,
     items: [
       {
-        label: "Identity Verification",
+        label: "Personal Verification",
         icon: Shield,
         description: "Verify government IDs instantly",
-        href: "/products?category=identity",
+        href: "/products?category=personal",
       },
       {
-        label: "Document Verification",
+        label: "Criminal Record Verification",
         icon: FileText,
-        description: "Authenticate official documents",
-        href: "/products?category=document",
+        description: "Authenticate official records",
+        href: "/products?category=criminal",
       },
       // {
       //   label: "Biometric Verification",
@@ -192,12 +192,12 @@ const navItems = [
       //   description: "Face matching & liveness detection",
       //   href: "/products?category=biometric",
       // },
-      {
-        label: "Address Verification",
-        icon: Building,
-        description: "Confirm residential addresses",
-        href: "/products?category=address",
-      },
+      // {
+      //   label: "Address Verification",
+      //   icon: Building,
+      //   description: "Confirm residential addresses",
+      //   href: "/products?category=address",
+      // },
       {
         label: "Business Verification",
         icon: Briefcase,

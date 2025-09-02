@@ -8,9 +8,12 @@ import {
   cancelOrder,
   getAllOrders,
   updateOrderStatus,
-  getOrderStats
+  getOrderStats,
 } from './order.controller';
 import { authenticate, requireAdmin, requireUser } from '../../common/middleware/auth';
+// routes/order.routes.ts
+import { verifyPayment } from './verifyPayment';
+
 
 const router = Router();
 
@@ -21,6 +24,7 @@ router.get('/my-orders', authenticate, requireUser, getUserOrders);
 router.get('/my-services', authenticate, requireUser, getActiveServices);
 router.get('/:orderId', authenticate, requireUser, getOrderById);
 router.put('/:orderId/cancel', authenticate, requireUser, cancelOrder);
+router.post('/verify-payment', verifyPayment);
 
 // Admin routes (require admin role)
 router.get('/', authenticate, requireAdmin, getAllOrders);

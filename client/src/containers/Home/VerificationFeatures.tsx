@@ -5,46 +5,78 @@ import { Box, Typography, Button, Chip } from "@mui/material"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material"
 import { VerificationCard } from "../../components/services/VerificationCard"
-import { categories, verificationServices } from "../../utils/constants"
+import { useAppDispatch, useAppSelector } from "../../redux/hooks"
+import { fetchProducts, fetchCategories } from "../../redux/slices/productSlice"
 
 const VerificationSection = () => {
+  const dispatch = useAppDispatch()
+
+  const { products = [], categories = [], isLoading } = useAppSelector(
+    (state) => state.products
+  )
+
   const [activeCategory, setActiveCategory] = useState("All")
-  const [filtered, setFiltered] = useState(verificationServices)
+  const [filtered, setFiltered] = useState(products)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
+  /* -------- fetch once -------- */
   useEffect(() => {
-    if (activeCategory === "All") setFiltered(verificationServices)
-    else setFiltered(verificationServices.filter((v) => v.category === activeCategory))
-  }, [activeCategory])
+    dispatch(fetchProducts())
+    dispatch(fetchCategories())
+  }, [dispatch])
 
+  /* -------- filter when products or category changes -------- */
+  useEffect(() => {
+    if (activeCategory === "All") {
+      setFiltered(products)
+    } else {
+      setFiltered(products.filter((p) => p.category?.slug === activeCategory))
+    }
+  }, [activeCategory, products])
+
+  /* -------- scroll helpers -------- */
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return
     const amount = scrollRef.current.offsetWidth * 0.8
     scrollRef.current.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" })
   }
 
+  /* -------- loading -------- */
+  if (isLoading) {
+    return (
+      <Box sx={{ py: 8, px: 2, bgcolor: "#f9fbff", textAlign: "center" }}>
+        <Typography variant="h6">Loading services…</Typography>
+      </Box>
+    )
+  }
+
+  /* -------- render -------- */
   return (
     <Box sx={{ py: 8, px: 2, bgcolor: "#f9fbff" }}>
       <Typography variant="h4" align="center" fontWeight={700} mb={4}>
         Browse Our Top Services
       </Typography>
 
+      {/* category chips from Redux */}
       <Box display="flex" justifyContent="center" gap={2} flexWrap="wrap" mb={4}>
-        {["All", ...categories].map((cat) => {
-          const label = typeof cat === "string" ? cat : cat.label
-          const value = typeof cat === "string" ? cat : cat.value
-          return (
-            <Chip
-              key={value}
-              label={label}
-              color={activeCategory === value ? "primary" : "default"}
-              onClick={() => setActiveCategory(value)}
-              variant={activeCategory === value ? "filled" : "outlined"}
-            />
-          )
-        })}
+        <Chip
+          label="All"
+          color={activeCategory === "All" ? "primary" : "default"}
+          onClick={() => setActiveCategory("All")}
+          variant={activeCategory === "All" ? "filled" : "outlined"}
+        />
+        {categories.map((cat) => (
+          <Chip
+            key={cat.id}
+            label={cat.name}
+            color={activeCategory === cat.slug ? "primary" : "default"}
+            onClick={() => setActiveCategory(cat.slug)}
+            variant={activeCategory === cat.slug ? "filled" : "outlined"}
+          />
+        ))}
       </Box>
 
+      {/* horizontal scroll with arrows */}
       <Box position="relative">
         <Button
           onClick={() => scroll("left")}
@@ -59,6 +91,7 @@ const VerificationSection = () => {
         >
           <ArrowBackIos fontSize="small" />
         </Button>
+
         <Box
           ref={scrollRef}
           component={motion.div}
@@ -88,23 +121,17 @@ const VerificationSection = () => {
                   title={item.title}
                   image={item.image}
                   demand={item.demand}
-                  demandLevel={
-                    item.demandLevel === "high" || item.demandLevel === "medium" || item.demandLevel === "low"
-                      ? item.demandLevel
-                      : "medium"
-                  }
-                  // verifications={item.verifications}
-                  // duration={item.duration}
-                  // price={item.price}
-                  rating={item.rating}
-                  reviews={item.reviews}
+  demandLevel={item.demandLevel}
+                  rating={4.5}
+                  reviews={100}
                   productId={item.id}
-                  link={item.link}
+                  link={`/products/${item.id}`}
                 />
               </motion.div>
             ))}
           </AnimatePresence>
         </Box>
+
         <Button
           onClick={() => scroll("right")}
           sx={{

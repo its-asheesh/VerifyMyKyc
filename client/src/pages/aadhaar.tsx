@@ -1,6 +1,6 @@
-import React from "react"
-import { AadhaarSection } from "../components/verification/AadhaarSection"
+// import React from "react"
+// import { AadhaarSection } from "../components/verification/AadhaarSection"
 
-const AadhaarPage: React.FC = () => <AadhaarSection />
+// const AadhaarPage: React.FC = () => <AadhaarSection />
  
-export default AadhaarPage 
+// export default AadhaarPage 

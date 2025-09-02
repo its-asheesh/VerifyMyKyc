@@ -1,5 +1,10 @@
 // ccrv.d.ts
 
+export interface CCRVCallbackData {
+  transactionId: string;
+  referenceId?: string;
+  payload: any; // Or define a more specific response type
+}
 // --------------------------
 // 1. CCRV Generate Report
 // --------------------------
