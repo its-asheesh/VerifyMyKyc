@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import type { Product } from "../../types/product"
 import { useVerificationPricing } from "../../hooks/usePricing"
-import { PricingCard } from "../pricing/PricingCard"
+//import { PricingCard } from "../pricing/PricingCard"
 import { useAppSelector } from "../../redux/hooks"
 
 interface ProductPricingProps {
@@ -246,7 +246,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <PricingCard
+              {/* <PricingCard
                 title={tier.name}
                 price={`₹${tier.price}`}
                 description={tier.requests}
@@ -269,7 +269,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
                   period: tier.period,
                 }}
                 onChoosePlan={() => handleChoosePlan(tier)}
-              />
+              /> */}
             </motion.div>
           ))}
         </div>
@@ -287,7 +287,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="flex-shrink-0 w-72"
             >
-              <PricingCard
+              {/* <PricingCard
                 title={tier.name}
                 price={`₹${tier.price}`}
                 description={tier.requests}
@@ -310,7 +310,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
                   period: tier.period,
                 }}
                 onChoosePlan={() => handleChoosePlan(tier)}
-              />
+              /> */}
             </motion.div>
           ))}
         </div>

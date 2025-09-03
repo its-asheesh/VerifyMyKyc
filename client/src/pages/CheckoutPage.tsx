@@ -446,7 +446,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
             </motion.div>
 
             {/* Payment Method */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -476,7 +476,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
                   )
                 })}
               </div>
-            </motion.div>
+            </motion.div> */}
           </div>
 
           {/* Order Summary */}

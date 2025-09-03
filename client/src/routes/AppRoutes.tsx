@@ -18,10 +18,10 @@ import ProductsPage from "../pages/products/ProductsPage"
 import ProductDetailPage from "../pages/products/ProductDetailPage"
 import SolutionsPage from "../pages/solutions/SolutionsPage"
 import SolutionDetailPage from "../pages/solutions/SolutionDetailPage"
-import ResourcesPage from "../pages/resources/ResourcesPage"
+// import ResourcesPage from "../pages/resources/ResourcesPage"
 import AboutPage from "../pages/company/AboutPage"
 import ContactPage from "../pages/company/ContactPage"
-import CareersPage from "../pages/company/CareersPage"
+// import CareersPage from "../pages/company/CareersPage"
 import CustomPricingPage from "../pages/CustomPricingPage"
 import CheckoutPage from "../pages/CheckoutPage"
 
@@ -79,13 +79,13 @@ const AppRoutes: React.FC = () => {
                 <Route path="/solutions/:id" element={<SolutionDetailPage />} />
                 
                 {/* Resources */}
-                <Route path="/resources" element={<ResourcesPage />} />
+                {/* <Route path="/resources" element={<ResourcesPage />} /> */}
                 <Route path="/resources/:id" element={<div>Resource Detail Page</div>} />
                 
                 {/* Company */}
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
-                <Route path="/careers" element={<CareersPage />} />
+                {/* <Route path="/careers" element={<CareersPage />} /> */}
                 
                 {/* Pricing */}
                 <Route path="/custom-pricing" element={<CustomPricingPage />} />

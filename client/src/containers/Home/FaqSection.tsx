@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { FaqItem } from "../../components/faq/FaqItem"
 import { FaqHeader } from "../../components/faq/FaqHeader"
@@ -14,8 +15,9 @@ const FaqSection: React.FC = () => {
     setActiveIndex(index === activeIndex ? null : index)
   }
 
+  const navigate = useNavigate()
   const handleCtaClick = () => {
-    // Handle CTA click - could navigate to signup page
+    navigate("/products")
     console.log("Start Verifying clicked")
   }
 

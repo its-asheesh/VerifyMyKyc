@@ -186,24 +186,18 @@ const navItems = [
         description: "Authenticate official records",
         href: "/products?category=criminal",
       },
-      // {
-      //   label: "Biometric Verification",
-      //   icon: Users,
-      //   description: "Face matching & liveness detection",
-      //   href: "/products?category=biometric",
-      // },
-      // {
-      //   label: "Address Verification",
-      //   icon: Building,
-      //   description: "Confirm residential addresses",
-      //   href: "/products?category=address",
-      // },
       {
         label: "Business Verification",
         icon: Briefcase,
         description: "Verify business registries",
         href: "/products?category=business",
       },
+      {
+        label: "Vehicle Verification",
+        icon: CreditCard,
+        description: "Authenticate vehicle documents",
+        href: "/products?category=vehicle",
+      }
     ],
   },
   {
@@ -236,37 +230,6 @@ const navItems = [
       },
     ],
   },
-  { label: "Pricing", link: "/#pricing" },
-  // {
-  //   label: "Resources",
-  //   dropdown: true,
-  //   items: [
-  //     {
-  //       label: "Documentation",
-  //       icon: BookOpen,
-  //       description: "API guides and tutorials",
-  //       href: "/documentation",
-  //     },
-  //     {
-  //       label: "API Reference",
-  //       icon: FileText,
-  //       description: "Complete API documentation",
-  //       href: "/api-reference",
-  //     },
-  //     {
-  //       label: "Case Studies",
-  //       icon: Award,
-  //       description: "Success stories and examples",
-  //       href: "/resources?type=case-study",
-  //     },
-  //     {
-  //       label: "Help Center",
-  //       icon: HelpCircle,
-  //       description: "Support and FAQs",
-  //       href: "/help",
-  //     },
-  //   ],
-  // },
   {
     label: "Company",
     dropdown: true,
@@ -277,24 +240,6 @@ const navItems = [
         description: "Our story and mission",
         href: "/about",
       },
-      {
-        label: "Careers",
-        icon: Award,
-        description: "Join our growing team",
-        href: "/careers",
-      },
-      // {
-      //   label: "News & Updates",
-      //   icon: FileText,
-      //   description: "Latest company news",
-      //   href: "/news",
-      // },
-      // {
-      //   label: "Partners",
-      //   icon: Building,
-      //   description: "Our trusted partners",
-      //   href: "/partners",
-      // },
     ],
   },
   { label: "Contact Us", href: "/contact" },
@@ -514,33 +459,6 @@ export default function Navbar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
-            {/* Search */}
-            {/* <div className="relative">
-              <AnimatePresence>
-                {searchOpen && (
-                  <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 320, opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="absolute right-16 top-1/2 -translate-y-1/2"
-                  >
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search services, docs..."
-                        className="w-full px-5 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none text-sm bg-white/95 backdrop-blur-sm shadow-lg"
-                        autoFocus
-                      />
-                      <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <IconButton onClick={toggleSearch}>
-                <Search className="w-5 h-5" />
-              </IconButton>
-            </div> */}
 
             {/* CTA Buttons */}
             <div className="hidden sm:flex items-center gap-3">
@@ -585,11 +503,6 @@ export default function Navbar() {
                 </>
               )}
             </div>
-
-            {/* Mobile CTA */}
-            {/* <Button variant="gradient" size="sm" className="sm:hidden">
-              <Shield className="w-3 h-3" />
-            </Button> */}
 
             {/* Mobile Menu Toggle */}
             <IconButton className="lg:hidden" onClick={toggleMobileMenu}>

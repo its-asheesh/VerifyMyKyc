@@ -2,7 +2,7 @@ import type React from "react"
 import HeroCarousel from "../components/carousel/HeroCarousel"
 import VerificationFeatures from "../containers/Home/VerificationFeatures"
 import FeaturesSection from "../containers/Home/FeaturesSection"
-import PricingSection from "../containers/Home/PricingSection"
+// import PricingSection from "../containers/Home/PricingSection"
 import TrustSection from "../containers/Home/TrustSection"
 import ReviewsSection from "../containers/Home/ReviewsSection"
 import FaqSection from "../containers/Home/FaqSection"
@@ -14,7 +14,7 @@ const Home: React.FC = () => {
       <HeroCarousel />
       <VerificationFeatures />
       <FeaturesSection />
-      <PricingSection />
+      {/* <PricingSection /> */}
       <TrustSection />
       <ReviewsSection />
       <FaqSection />
