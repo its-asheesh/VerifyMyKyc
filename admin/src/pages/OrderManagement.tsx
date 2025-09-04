@@ -116,6 +116,85 @@ const OrderManagement: React.FC = () => {
     return matchesSearch && matchesStatus && matchesOrderType && matchesPaymentStatus
   })
 
+  // Export filtered orders to Excel (.xls via HTML table) without extra deps
+  const exportOrdersToExcel = () => {
+    try {
+      const headers = [
+        'Order ID',
+        'Service',
+        'Order Type',
+        'Customer Name',
+        'Customer Email',
+        'Amount (INR)',
+        'Billing Period',
+        'Status',
+        'Payment Status',
+        'Payment Method',
+        'Created At',
+      ]
+
+      const escapeHtml = (value: string) =>
+        value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+
+      const rowsHtml = filteredOrders
+        .map((o: any) => {
+          const cells = [
+            o.orderId,
+            o.serviceName,
+            o.orderType,
+            o.userId?.name,
+            o.userId?.email,
+            o.finalAmount ?? 0,
+            o.billingPeriod,
+            o.status,
+            o.paymentStatus,
+            o.paymentMethod,
+            formatDate(o.createdAt),
+          ]
+            .map((cell) => `<td>${escapeHtml(String(cell ?? ''))}</td>`) 
+            .join('')
+          return `<tr>${cells}</tr>`
+        })
+        .join('')
+
+      const headerHtml = `<tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`
+      const tableHtml = `
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+          </head>
+          <body>
+            <table>
+              <thead>${headerHtml}</thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </body>
+        </html>`
+
+      const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      const pad = (n: number) => n.toString().padStart(2, '0')
+      const now = new Date()
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
+      link.href = url
+      link.download = `orders_${timestamp}.xls`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to export orders:', err)
+      // Optional: show toast if available
+    }
+  }
+
   const handleStatusUpdate = async (orderId: string, newStatus: 'active' | 'expired' | 'cancelled') => {
     try {
       await updateOrderStatus.mutateAsync({ orderId, data: { status: newStatus } })
@@ -284,6 +363,13 @@ const OrderManagement: React.FC = () => {
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
             </select>
+
+            <button
+              onClick={exportOrdersToExcel}
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Export Excel
+            </button>
           </div>
         </div>
       </div>

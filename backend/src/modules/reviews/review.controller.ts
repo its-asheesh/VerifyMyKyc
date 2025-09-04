@@ -71,7 +71,7 @@ export const createReview = async (req: Request, res: Response) => {
 // Admin: list all reviews (optional filters)
 export const adminListReviews = async (req: Request, res: Response) => {
   try {
-    const { status, productId, userId } = req.query as Record<string, string>
+    const { status, productId, userId, verified } = req.query as Record<string, string>
     const page = Math.max(1, Number(req.query.page) || 1)
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20))
     const skip = (page - 1) * limit
@@ -80,6 +80,7 @@ export const adminListReviews = async (req: Request, res: Response) => {
     if (status) filter.status = status
     if (productId) filter.productId = productId
     if (userId) filter.userId = userId
+    if (typeof verified !== 'undefined') filter.verified = verified === 'true' || verified === '1'
 
     const [items, total] = await Promise.all([
       Review.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('userId', 'name email').lean(),
@@ -96,12 +97,15 @@ export const adminListReviews = async (req: Request, res: Response) => {
 export const adminUpdateReview = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
-    const { rating, title, comment, status } = req.body
+    const { rating, title, comment, status, verified } = req.body
     const update: any = {}
     if (typeof rating !== 'undefined') update.rating = rating
     if (typeof title !== 'undefined') update.title = title
     if (typeof comment !== 'undefined') update.comment = comment
     if (typeof status !== 'undefined') update.status = status
+    if (typeof verified !== 'undefined') {
+      update.verified = typeof verified === 'string' ? (verified === 'true' || verified === '1') : !!verified
+    }
 
     const doc = await Review.findByIdAndUpdate(id, update, { new: true })
     if (!doc) return res.status(404).json({ message: 'Review not found' })
@@ -120,6 +124,22 @@ export const adminDeleteReview = async (req: Request, res: Response) => {
     return res.json({ success: true })
   } catch (err: any) {
     return res.status(500).json({ message: err.message || 'Failed to delete review' })
+  }
+}
+
+// Admin: set verified status (defaults to true if not provided)
+export const adminSetVerified = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    let { verified } = req.body as any
+    if (typeof verified === 'undefined') verified = true
+    if (typeof verified === 'string') verified = verified === 'true' || verified === '1'
+
+    const doc = await Review.findByIdAndUpdate(id, { verified }, { new: true })
+    if (!doc) return res.status(404).json({ message: 'Review not found' })
+    return res.json(doc)
+  } catch (err: any) {
+    return res.status(500).json({ message: err.message || 'Failed to set verified status' })
   }
 }
 

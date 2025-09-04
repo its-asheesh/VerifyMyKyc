@@ -4,16 +4,17 @@ import type React from "react"
 import { motion } from "framer-motion"
 import { Bell, Shield, Users } from "lucide-react"
 import { SubscribeForm } from "../../components/subscribe/SubscribeForm"
+import { subscribe as subscribeApi } from "../../services/subscription.service"
 
 const SubscribeSection: React.FC = () => {
   const handleSubscribe = async (email: string): Promise<boolean> => {
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate success/failure
-        resolve(Math.random() > 0.2) // 80% success rate
-      }, 2000)
-    })
+    try {
+      await subscribeApi(email)
+      return true
+    } catch (err) {
+      console.error("Subscribe error", err)
+      return false
+    }
   }
 
   return (

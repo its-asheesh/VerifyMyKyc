@@ -22,7 +22,11 @@ const review_router_1 = __importDefault(require("./modules/reviews/review.router
 const vehicle_router_1 = __importDefault(require("./modules/vehicle/vehicle.router"));
 const passport_routes_1 = __importDefault(require("./modules/passport/passport.routes"));
 const ccrv_routes_1 = __importDefault(require("./modules/ccrv/ccrv.routes"));
+const subscriber_routes_1 = __importDefault(require("./modules/subscriber/subscriber.routes"));
+const callback_handler_1 = __importDefault(require("./common/middleware/callback-handler"));
 const router = (0, express_1.Router)();
+// Callback handler route
+router.use(callback_handler_1.default);
 // Auth routes - should come first for authentication
 router.use('/auth', auth_router_1.default);
 // Passport routes - make sure this is properly registered
@@ -44,4 +48,6 @@ router.use('/orders', order_router_1.default);
 router.use('/analytics', analytics_router_1.default);
 router.use('/carousel', carousel_router_1.default);
 router.use('/coupons', coupon_router_1.default);
+// Subscriber routes
+router.use('/subscribers', subscriber_routes_1.default);
 exports.default = router;

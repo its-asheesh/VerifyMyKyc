@@ -4,6 +4,8 @@ import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Send, Mail, CheckCircle, AlertCircle } from "lucide-react"
+import { subscribe } from "../../services/subscription.service"
+import { toast } from "react-hot-toast"
 
 export const NewsletterForm: React.FC = () => {
   const [email, setEmail] = useState("")
@@ -22,17 +24,20 @@ export const NewsletterForm: React.FC = () => {
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await subscribe(email)
+      setSuccess(true)
+      setEmail("")
+      toast.success('Thank you for subscribing!')
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (err) {
+      const error = err as Error
+      const errorMessage = error.message || 'Failed to subscribe. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
       setLoading(false)
-      if (Math.random() > 0.2) {
-        setSuccess(true)
-        setEmail("")
-        setTimeout(() => setSuccess(false), 3000)
-      } else {
-        setError("Failed to subscribe. Please try again.")
-      }
-    }, 1500)
+    }
   }
 
   return (

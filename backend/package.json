@@ -4,8 +4,8 @@
   "description": "Backend API for VerifyMyKyc",
   "main": "server.ts",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon server.ts",
+    "start": "node server.js",
+    "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc",
     "seed-pricing": "ts-node src/modules/pricing/seed-pricing.ts",
     "seed-users": "ts-node src/modules/auth/seed-users.ts",
@@ -15,11 +15,16 @@
     "seed-analytics": "node seed-analytics-data.js"
   },
   "dependencies": {
+    "@types/exceljs": "^0.5.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "csv-writer": "^1.6.0",
     "dotenv": "^16.3.1",
+    "exceljs": "^4.4.0",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.5.0",
     "multer": "^2.0.2",
     "razorpay": "^2.9.6"

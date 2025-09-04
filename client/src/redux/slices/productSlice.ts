@@ -271,7 +271,7 @@ export const mockProducts: Product[] = [
     documentation: "Complete API documentation for RC verification",
     isActive: true,
     icon: "/rc.png", // Add your icon
-    image: "/rc.png", // Add your image
+    image: "/Vhicle.png", // Add your image
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -333,7 +333,7 @@ export const mockProducts: Product[] = [
   "documentation": "Complete API documentation for CCRV verification",
   "isActive": true,
   "icon": "/ccrv.png",
-  "image": "/ccrv-verification.jpg",
+  "image": "/CCRV.jpg",
   "createdAt": "2024-01-01",
   "updatedAt": "2024-01-01"
 },

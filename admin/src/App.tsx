@@ -1,4 +1,3 @@
-import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastProvider } from './context/ToastContext'
@@ -14,6 +13,8 @@ import Users from './pages/Users'
 import Analytics from './pages/Analytics'
 import LocationAnalytics from './pages/LocationAnalytics'
 import Settings from './pages/Settings'
+import SubscribersPage from './pages/SubscribersPage'
+import ReviewsManagement from './pages/ReviewsManagement'
 import './App.css'
 
 // Create a client
@@ -42,6 +43,8 @@ function App() {
                     <Route path="/users" element={<Users />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/location-analytics" element={<LocationAnalytics />} />
+                    <Route path="/subscribers" element={<SubscribersPage />} />
+                    <Route path="/reviews" element={<ReviewsManagement />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </DashboardLayout>

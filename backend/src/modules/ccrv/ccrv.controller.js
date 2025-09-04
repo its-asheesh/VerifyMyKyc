@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchCCRVHandler = exports.fetchCCRVResultHandler = exports.generateCCRVReportHandler = void 0;
+exports.ccrvCallbackHandler = exports.searchCCRVHandler = exports.fetchCCRVResultHandler = exports.generateCCRVReportHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const ccrv_service_1 = require("./ccrv.service");
 const quota_service_1 = require("../orders/quota.service");
@@ -162,3 +162,34 @@ exports.searchCCRVHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(
         });
     }
 }));
+/**
+ * PUBLIC: Callback handler for OnGrid CCRV API
+ * This is where OnGrid sends the result when the report is ready
+ */
+const ccrvCallbackHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const transactionId = req.headers['x-transaction-id'];
+    const referenceId = req.headers['x-reference-id'];
+    const authType = req.headers['x-auth-type'];
+    const payload = req.body;
+    console.log('✅ CCRV Callback Received', {
+        transactionId,
+        referenceId,
+        authType,
+        payload,
+    });
+    try {
+        // Pass to service for processing (e.g., save to DB, notify user)
+        yield service.handleCallback({
+            transactionId,
+            referenceId,
+            payload,
+        });
+        // ✅ Acknowledge receipt
+        return res.status(200).json({ received: true, transactionId });
+    }
+    catch (error) {
+        console.error('CCRV Callback Processing Error:', error);
+        return res.status(500).json({ error: 'Failed to process callback' });
+    }
+});
+exports.ccrvCallbackHandler = ccrvCallbackHandler;

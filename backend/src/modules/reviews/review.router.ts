@@ -7,6 +7,7 @@ import {
   adminUpdateReview,
   adminDeleteReview,
   getPublicReviews,
+  adminSetVerified,
 } from './review.controller'
 
 const router = express.Router()
@@ -24,5 +25,6 @@ router.post('/', authenticate, createReview)
 router.get('/', authenticate, requireAdmin, adminListReviews)
 router.put('/:id', authenticate, requireAdmin, adminUpdateReview)
 router.delete('/:id', authenticate, requireAdmin, adminDeleteReview)
+router.patch('/:id/verify', authenticate, requireAdmin, adminSetVerified)
 
 export default router

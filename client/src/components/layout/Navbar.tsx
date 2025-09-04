@@ -231,17 +231,12 @@ const navItems = [
     ],
   },
   {
-    label: "Company",
-    dropdown: true,
-    items: [
-      {
-        label: "About Us",
-        icon: Users,
-        description: "Our story and mission",
-        href: "/about",
-      },
-    ],
+    label: "About Us",
+    icon: Users,
+    description: "Our story and mission",
+    href: "/about",
   },
+
   { label: "Contact Us", href: "/contact" },
 ]
 

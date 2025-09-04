@@ -7,6 +7,7 @@ export interface IReview extends Document {
   title?: string
   comment: string
   status: 'pending' | 'approved' | 'rejected'
+  verified?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -18,8 +19,9 @@ const reviewSchema = new Schema<IReview>({
   title: { type: String, trim: true, maxlength: 120 },
   comment: { type: String, trim: true, maxlength: 2000, required: true },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved', index: true },
+  verified: { type: Boolean, default: false, index: true },
 }, { timestamps: true })
 
-reviewSchema.index({ productId: 1, status: 1, createdAt: -1 })
+reviewSchema.index({ productId: 1, status: 1, verified: 1, createdAt: -1 })
 
 export const Review = mongoose.model<IReview>('Review', reviewSchema)

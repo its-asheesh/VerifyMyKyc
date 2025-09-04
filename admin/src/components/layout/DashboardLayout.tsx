@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { redirectToClient } from '../../config/environment'
 import { 
-  LayoutDashboard, 
   DollarSign, 
   Users, 
   BarChart3, 
-  Settings, 
   Menu, 
   X, 
   Bell, 
@@ -18,7 +15,9 @@ import {
   Image,
   Home,
   Globe,
-  Tag
+  Tag,
+  Mail,
+  MessageSquare,
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -38,6 +37,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Location Analytics', href: '/location-analytics', icon: Globe },
     { name: 'Carousel Management', href: '/carousel', icon: Image },
+    { name: 'Reviews', href: '/reviews', icon: MessageSquare },
+    { name: 'Subscribers', href: '/subscribers', icon: Mail },
   ]
 
   const isActive = (href: string) => {

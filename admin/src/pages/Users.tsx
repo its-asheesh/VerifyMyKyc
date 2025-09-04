@@ -99,6 +99,78 @@ const Users: React.FC = () => {
     })
   }
 
+  // Export filtered users to Excel (.xls via HTML table)
+  const exportUsersToExcel = () => {
+    try {
+      const headers = [
+        'Name',
+        'Email',
+        'Role',
+        'Status',
+        'Company',
+        'Email Verified',
+        'Last Login',
+        'Created At',
+      ]
+
+      const escapeHtml = (value: string) =>
+        value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+
+      const rowsHtml = filteredUsers
+        .map((user) => {
+          const cells = [
+            user.name,
+            user.email,
+            user.role,
+            user.isActive ? 'Active' : 'Inactive',
+            user.company || '',
+            user.emailVerified ? 'Yes' : 'No',
+            user.lastLogin ? formatDate(user.lastLogin) : 'Never',
+            formatDate(user.createdAt),
+          ]
+            .map((cell) => `<td>${escapeHtml(String(cell ?? ''))}</td>`)
+            .join('')
+          return `<tr>${cells}</tr>`
+        })
+        .join('')
+
+      const headerHtml = `<tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`
+      const tableHtml = `
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+          </head>
+          <body>
+            <table>
+              <thead>${headerHtml}</thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </body>
+        </html>`
+
+      const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      const pad = (n: number) => n.toString().padStart(2, '0')
+      const now = new Date()
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
+      link.href = url
+      link.download = `users_${timestamp}.xls`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to export users:', err)
+    }
+  }
+
   if (usersLoading || statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -244,12 +316,21 @@ const Users: React.FC = () => {
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Roles</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="user">Regular Users</option>
+              <option value="admin">Admins</option>
             </select>
             <button className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
               <Filter className="w-4 h-4 mr-2" />
               More Filters
+            </button>
+            <button
+              onClick={exportUsersToExcel}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export Excel
             </button>
           </div>
         </div>

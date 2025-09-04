@@ -17,4 +17,5 @@ router.post('/fetch-result', auth_1.authenticate, auth_1.requireUser, ccrv_contr
 // Search CCRV records
 // POST /api/ccrv/search
 router.post('/search', auth_1.authenticate, auth_1.requireUser, ccrv_controller_1.searchCCRVHandler);
+router.post('/callback', ccrv_controller_1.ccrvCallbackHandler);
 exports.default = router;
