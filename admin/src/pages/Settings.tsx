@@ -5,13 +5,10 @@ import {
   Shield, 
   Bell, 
   Globe, 
-  Database, 
-  Key,
   Save,
   Eye,
   EyeOff,
-  Check,
-  X
+  Check
 } from 'lucide-react'
 
 const Settings: React.FC = () => {

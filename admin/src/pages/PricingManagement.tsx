@@ -3,8 +3,7 @@ import { motion } from 'framer-motion'
 import { 
   Plus, 
   Edit, 
-  Trash2, 
-  Eye, 
+  Trash2,
   DollarSign, 
   Users, 
   Shield,

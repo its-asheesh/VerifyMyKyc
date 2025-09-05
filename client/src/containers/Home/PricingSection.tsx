@@ -5,8 +5,8 @@ import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Star, Users, Zap, Shield } from "lucide-react"
-import { PricingCard } from "../../components/pricing/PricingCard"
-import { StatsCard } from "../../components/pricing/StatsCard"
+// import { PricingCard } from "../../components/pricing/PricingCard"
+// import { StatsCard } from "../../components/pricing/StatsCard"
 import { verificationStats } from "../../utils/constants"
 import { usePricingContext } from "../../context/PricingContext"
 
@@ -197,7 +197,7 @@ const PricingSection: React.FC = () => {
                   key={plan._id}
                   className="min-w-full snap-center flex-shrink-0 px-2"
                 >
-                  <PricingCard
+                  {/* <PricingCard
                     title={plan.name}
                     price={`₹${plan.price}`}
                     description={plan.description}
@@ -230,7 +230,7 @@ const PricingSection: React.FC = () => {
                         })
                       }
                     }}
-                  />
+                  /> */}
                 </div>
               ))
             )}
@@ -265,7 +265,7 @@ const PricingSection: React.FC = () => {
             ) : (
               currentPlans?.map((plan, index) => (
                 <motion.div key={plan._id} variants={cardVariants}>
-                  <PricingCard
+                  {/* <PricingCard
                     title={plan.name}
                     price={`₹${plan.price}`}
                     description={plan.description}
@@ -288,7 +288,7 @@ const PricingSection: React.FC = () => {
                       setHoveredCard(index)
                       setTimeout(() => setHoveredCard(prev => prev === index ? null : prev), 1500)
                     }}
-                  />
+                  /> */}
                 </motion.div>
               ))
             )}
@@ -314,7 +314,7 @@ const PricingSection: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {verificationStats.map((item, index) => (
                 <StatsCard
                   key={index}
@@ -325,7 +325,7 @@ const PricingSection: React.FC = () => {
                   index={index}
                 />
               ))}
-            </div>
+            </div> */}
           </div>
         </motion.div>
       </div>

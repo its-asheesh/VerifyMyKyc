@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
+import type { AlertColor } from '@mui/material';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Table, 
@@ -19,8 +21,7 @@ import {
 } from '@mui/material';
 import { 
   Delete as DeleteIcon, 
-  FileDownload as FileDownloadIcon,
-  MoreVert as MoreVertIcon
+  FileDownload as FileDownloadIcon
 } from '@mui/icons-material';
 import { 
   getSubscribers, 
@@ -32,7 +33,15 @@ const SubscribersPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: AlertColor;
+  }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
@@ -83,7 +92,7 @@ const SubscribersPage: React.FC = () => {
     }
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 

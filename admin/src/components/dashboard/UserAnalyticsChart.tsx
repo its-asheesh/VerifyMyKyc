@@ -1,21 +1,21 @@
 import React from 'react'
 import { Users, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts'
+// import {
+//   LineChart,
+//   Line,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   ResponsiveContainer,
+//   Area,
+//   AreaChart,
+//   BarChart,
+//   Bar,
+//   PieChart,
+//   Pie,
+//   Cell
+// } from 'recharts'
 import ResizableModal from './ResizableModal'
 import { useUserStats } from '../../hooks/useUsers'
 
@@ -296,37 +296,37 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
     console.log('Custom date range changed to:', startDate, 'to', endDate)
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0]?.payload
-      return (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{label}</p>
-          {data?.newUsers !== undefined && (
-            <p className="text-blue-600">
-              New Users: {formatNumber(data.newUsers)}
-            </p>
-          )}
-          {data?.cumulativeUsers !== undefined && (
-            <p className="text-purple-600">
-              Total Users: {formatNumber(data.cumulativeUsers)}
-            </p>
-          )}
-          {data?.activeUsers !== undefined && (
-            <p className="text-green-600">
-              Active Users: {formatNumber(data.activeUsers)}
-            </p>
-          )}
-          {data?.returningUsers !== undefined && (
-            <p className="text-orange-600">
-              Returning Users: {formatNumber(data.returningUsers)}
-            </p>
-          )}
-        </div>
-      )
-    }
-    return null
-  }
+  // const CustomTooltip = ({ active, payload, label }: any) => {
+  //   if (active && payload && payload.length) {
+  //     const data = payload[0]?.payload
+  //     return (
+  //       <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
+  //         <p className="font-medium text-gray-900">{label}</p>
+  //         {data?.newUsers !== undefined && (
+  //           <p className="text-blue-600">
+  //             New Users: {formatNumber(data.newUsers)}
+  //           </p>
+  //         )}
+  //         {data?.cumulativeUsers !== undefined && (
+  //           <p className="text-purple-600">
+  //             Total Users: {formatNumber(data.cumulativeUsers)}
+  //           </p>
+  //         )}
+  //         {data?.activeUsers !== undefined && (
+  //           <p className="text-green-600">
+  //             Active Users: {formatNumber(data.activeUsers)}
+  //           </p>
+  //         )}
+  //         {data?.returningUsers !== undefined && (
+  //           <p className="text-orange-600">
+  //             Returning Users: {formatNumber(data.returningUsers)}
+  //           </p>
+  //         )}
+  //       </div>
+  //     )
+  //   }
+  //   return null
+  // }
 
   return (
     <ResizableModal

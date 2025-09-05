@@ -1,11 +1,18 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Image, 
+  Plus, Edit, Trash2, Eye, EyeOff, Image, 
   Loader2, AlertCircle, CheckCircle, X
-} from 'lucide-react'
+} from 'lucide-react'  // Removed unused 'GripVertical'
 import { useToast } from '../context/ToastContext'
-import { useCarouselSlides, useCreateCarouselSlide, useUpdateCarouselSlide, useDeleteCarouselSlide, useToggleCarouselSlideStatus, useReorderCarouselSlides } from '../hooks/useCarousel'
+import { 
+  useCarouselSlides, 
+  useCreateCarouselSlide, 
+  useUpdateCarouselSlide, 
+  useDeleteCarouselSlide, 
+  useToggleCarouselSlideStatus 
+  // Removed: useReorderCarouselSlides (not used)
+} from '../hooks/useCarousel'
 import type { CarouselSlide, CreateCarouselSlideData } from '../services/api/carouselApi'
 
 interface CarouselFormProps {
@@ -246,8 +253,7 @@ const CarouselManagement: React.FC = () => {
   const updateSlide = useUpdateCarouselSlide()
   const deleteSlide = useDeleteCarouselSlide()
   const toggleStatus = useToggleCarouselSlideStatus()
-  const reorderSlides = useReorderCarouselSlides()
-  const { toast } = useToast()
+  const { showSuccess, showError } = useToast() // ✅ Use actual functions from context
 
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingSlide, setEditingSlide] = useState<CarouselSlide | null>(null)
@@ -256,26 +262,16 @@ const CarouselManagement: React.FC = () => {
     try {
       if (editingSlide) {
         await updateSlide.mutateAsync({ id: editingSlide._id, data })
-        toast({
-          title: 'Slide updated',
-          description: 'Carousel slide updated successfully.',
-        })
+        showSuccess('Carousel slide updated successfully.') // ✅ Use showSuccess
       } else {
         await createSlide.mutateAsync(data)
-        toast({
-          title: 'Slide added',
-          description: 'Carousel slide added successfully.',
-        })
+        showSuccess('Carousel slide added successfully.') // ✅ Use showSuccess
       }
       setIsFormOpen(false)
       setEditingSlide(null)
     } catch (error) {
       console.error('Failed to save slide:', error)
-      toast({
-        title: 'Failed to save slide',
-        description: 'Failed to save carousel slide.',
-        variant: 'destructive',
-      })
+      showError('Failed to save carousel slide.') // ✅ Use showError
     }
   }
 
@@ -288,17 +284,10 @@ const CarouselManagement: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this slide?')) {
       try {
         await deleteSlide.mutateAsync(id)
-        toast({
-          title: 'Slide deleted',
-          description: 'Carousel slide deleted successfully.',
-        })
+        showSuccess('Carousel slide deleted successfully.') // ✅
       } catch (error) {
         console.error('Failed to delete slide:', error)
-        toast({
-          title: 'Failed to delete slide',
-          description: 'Failed to delete carousel slide.',
-          variant: 'destructive',
-        })
+        showError('Failed to delete carousel slide.') // ✅
       }
     }
   }
@@ -306,17 +295,10 @@ const CarouselManagement: React.FC = () => {
   const handleToggleStatus = async (id: string) => {
     try {
       await toggleStatus.mutateAsync(id)
-      toast({
-        title: 'Status updated',
-        description: 'Carousel slide status updated successfully.',
-      })
+      showSuccess('Carousel slide status updated successfully.') // ✅
     } catch (error) {
       console.error('Failed to toggle status:', error)
-      toast({
-        title: 'Failed to update status',
-        description: 'Failed to update carousel slide status.',
-        variant: 'destructive',
-      })
+      showError('Failed to update carousel slide status.') // ✅
     }
   }
 
@@ -465,4 +447,4 @@ const CarouselManagement: React.FC = () => {
   )
 }
 
-export default CarouselManagement 
+export default CarouselManagement

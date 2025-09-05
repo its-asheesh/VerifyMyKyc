@@ -447,7 +447,7 @@ const ResizableModal: React.FC<ResizableModalProps> = ({
 
     const CustomTooltip = ({ active, payload, label }: any) => {
       if (active && payload && payload.length) {
-        const data = payload[0]?.payload
+        // const data = payload[0]?.payload
         return (
           <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
             <p className="font-medium text-gray-900">{label}</p>
@@ -788,7 +788,7 @@ const ResizableModal: React.FC<ResizableModalProps> = ({
                 paddingAngle={5}
                 dataKey={config.dataKey}
               >
-                {config.data.map((entry: any, index: number) => (
+                {config.data.map((_entry: any, index: number) => (
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                 ))}
               </Pie>
@@ -814,7 +814,7 @@ const ResizableModal: React.FC<ResizableModalProps> = ({
               data={{
                 labels: finalData.map((item: any) => item[config.xAxisDataKey || 'name']),
                 datasets: config.multipleLines ? 
-                  config.multipleLines.map((line, index) => ({
+                  config.multipleLines.map((line, _index) => ({
                     label: line.name,
                     data: finalData.map((item: any) => item[line.dataKey]),
                     borderColor: line.color,

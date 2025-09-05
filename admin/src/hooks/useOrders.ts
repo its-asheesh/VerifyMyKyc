@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import orderApi, { type Order, type UpdateOrderStatusData } from '../services/api/orderApi'
+import orderApi, { type UpdateOrderStatusData } from '../services/api/orderApi'
 
 // Get all orders
 export const useOrders = () => {

@@ -1,77 +1,105 @@
-import React, { useState } from 'react'
-import { useLocationAnalytics, useUsersWithLocation } from '../hooks/useUsers'
-import { MapPin, Users, Globe, TrendingUp, Calendar, Loader2, AlertCircle, BarChart3, PieChart } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line } from 'recharts'
-import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps'
+import React, { useState } from 'react';
+import { useLocationAnalytics, useUsersWithLocation } from '../hooks/useUsers';
+import {
+  MapPin,
+  Users,
+  Globe,
+  TrendingUp,
+  Calendar,
+  Loader2,
+  AlertCircle,
+  BarChart3,
+  PieChart as LucidePieChart
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Pie as RechartsPie,
+  PieChart as RechartsPieChart,
+  Cell
+} from 'recharts';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 
-// Modern World Map Component using react-simple-maps
-const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null)
-  const [tooltipContent, setTooltipContent] = useState<string>("")
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [position, setPosition] = useState({ coordinates: [0, 0], zoom: 1 })
+// Country coordinates for markers
+const countryCoordinates: { [key: string]: [number, number] } = {
+  'United States': [-95.7129, 37.0902],
+  'India': [78.9629, 20.5937],
+  'United Kingdom': [-0.1278, 51.5074],
+  'Canada': [-106.3468, 56.1304],
+  'Australia': [133.7751, -25.2744],
+  'Germany': [10.4515, 51.1657],
+  'France': [2.2137, 46.2276],
+  'Japan': [138.2529, 36.2048],
+  'Brazil': [-51.9253, -14.2350],
+  'Mexico': [-102.5528, 23.6345],
+  'Singapore': [103.8198, 1.3521],
+  'Netherlands': [5.2913, 52.1326],
+  'Sweden': [18.0686, 60.1282],
+  'Switzerland': [8.2275, 46.8182],
+  'South Korea': [127.7669, 35.9078]
+};
 
-  // World map data URL
-  const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
+// COLORS for pie chart
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B6B', '#4ECDC4', '#45B7D1'];
 
-  // Country coordinates for markers
-  const countryCoordinates: { [key: string]: [number, number] } = {
-    'United States': [-95.7129, 37.0902],
-    'India': [78.9629, 20.5937],
-    'United Kingdom': [-0.1278, 51.5074],
-    'Canada': [-106.3468, 56.1304],
-    'Australia': [133.7751, -25.2744],
-    'Germany': [10.4515, 51.1657],
-    'France': [2.2137, 46.2276],
-    'Japan': [138.2529, 36.2048],
-    'Brazil': [-51.9253, -14.2350],
-    'Mexico': [-102.5528, 23.6345],
-    'Singapore': [103.8198, 1.3521],
-    'Netherlands': [5.2913, 52.1326],
-    'Sweden': [18.0686, 60.1282],
-    'Switzerland': [8.2275, 46.8182],
-    'South Korea': [127.7669, 35.9078]
-  }
+// World Map Component
+const WorldMap: React.FC<{
+  locationStats: Array<{
+    country: string;
+    userCount: number;
+    cityCount: number;
+    regionCount: number;
+    cities: string[];
+  }>;
+  position: { coordinates: [number, number]; zoom: number };
+  setPosition: React.Dispatch<React.SetStateAction<{ coordinates: [number, number]; zoom: number }>>;
+  setZoom: React.Dispatch<React.SetStateAction<number>>;
+}> = ({ locationStats, position, setPosition, setZoom }) => {
+  const [tooltipContent, setTooltipContent] = useState<string>('');
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF6B6B', '#4ECDC4', '#45B7D1']
+  const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
   const handleMouseMove = (event: React.MouseEvent) => {
-    setTooltipPosition({ x: event.clientX, y: event.clientY })
-  }
+    setTooltipPosition({ x: event.clientX, y: event.clientY });
+  };
 
   const getCountryColor = (countryName: string) => {
-    const stat = locationStats.find(s => s.country === countryName)
-    if (!stat) return "#F5F5F5" // Default light gray for countries without data
-    
-    const userCount = stat.userCount
-    if (userCount >= 10) return "#FF6B6B" // Red for high user count
-    if (userCount >= 5) return "#4ECDC4"  // Teal for medium user count
-    return "#45B7D1" // Blue for low user count
-  }
+    const stat = locationStats.find(s => s.country === countryName);
+    if (!stat) return "#F5F5F5";
+    const userCount = stat.userCount;
+    if (userCount >= 10) return "#FF6B6B";
+    if (userCount >= 5) return "#4ECDC4";
+    return "#45B7D1";
+  };
 
   const getCountryOpacity = (countryName: string) => {
-    const stat = locationStats.find(s => s.country === countryName)
-    return stat ? 0.8 : 0.3
-  }
+    const stat = locationStats.find(s => s.country === countryName);
+    return stat ? 0.8 : 0.3;
+  };
 
   const handleZoomChange = (newPosition: any) => {
-    setPosition(newPosition)
-    setZoom(newPosition.zoom)
-  }
+    setPosition(newPosition);
+    setZoom(newPosition.zoom);
+  };
 
   const zoomToCountry = (countryName: string) => {
-    const coords = countryCoordinates[countryName]
+    const coords = countryCoordinates[countryName];
     if (coords) {
-      setPosition({ coordinates: coords, zoom: 4 })
-      setZoom(4)
+      setPosition({ coordinates: coords, zoom: 4 });
+      setZoom(4);
     }
-  }
+  };
 
   const resetZoom = () => {
-    setPosition({ coordinates: [0, 0], zoom: 1 })
-    setZoom(1)
-  }
+    setPosition({ coordinates: [0, 0], zoom: 1 });
+    setZoom(1);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -88,16 +116,15 @@ const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
             Reset View
           </button>
           <span className="text-xs text-gray-500">
-            Zoom: {zoom.toFixed(1)}x
+            Zoom: {position.zoom.toFixed(1)}x
           </span>
         </div>
       </div>
+
       <div className="relative h-96 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg overflow-hidden">
         <ComposableMap
           projection="geoEqualEarth"
-          projectionConfig={{
-            scale: 147
-          }}
+          projectionConfig={{ scale: 147 }}
           onMouseMove={handleMouseMove}
         >
           <ZoomableGroup
@@ -108,13 +135,12 @@ const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
             minZoom={1}
           >
             <Geographies geography={geoUrl}>
-              {({ geographies }: { geographies: any[] }) =>
-                geographies.map((geo: any) => {
-                  const countryName = geo.properties.name
-                  const color = getCountryColor(countryName)
-                  const opacity = getCountryOpacity(countryName)
-                  const stat = locationStats.find(s => s.country === countryName)
-                  
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const countryName = geo.properties.name;
+                  const color = getCountryColor(countryName);
+                  const opacity = getCountryOpacity(countryName);
+
                   return (
                     <Geography
                       key={geo.rsmKey}
@@ -125,73 +151,36 @@ const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
                       opacity={opacity}
                       style={{
                         default: { outline: 'none' },
-                        hover: { 
-                          fill: color,
-                          opacity: 1,
-                          outline: 'none',
-                          cursor: 'pointer'
-                        },
+                        hover: { fill: color, opacity: 1, outline: 'none', cursor: 'pointer' },
                         pressed: { outline: 'none' }
                       }}
                       onMouseEnter={() => {
+                        const stat = locationStats.find(s => s.country === countryName);
                         if (stat) {
-                          setHoveredCountry(countryName)
-                          setTooltipContent(`${countryName}: ${stat.userCount} users`)
+                          setTooltipContent(`${countryName}: ${stat.userCount} users`);
                         }
                       }}
                       onMouseLeave={() => {
-                        setHoveredCountry(null)
-                        setTooltipContent("")
+                        setTooltipContent('');
                       }}
                       onClick={() => {
-                        if (stat) {
-                          zoomToCountry(countryName)
-                        }
+                        const stat = locationStats.find(s => s.country === countryName);
+                        if (stat) zoomToCountry(countryName);
                       }}
                     />
-                  )
+                  );
                 })
               }
             </Geographies>
 
-            {/* Country Labels - Show when zoomed in */}
-            {zoom > 2 && (
-              <Geographies geography={geoUrl}>
-                {({ geographies }: { geographies: any[] }) =>
-                  geographies.map((geo: any) => {
-                    const countryName = geo.properties.name
-                    const stat = locationStats.find(s => s.country === countryName)
-                    
-                    if (!stat) return null
-                    
-                    return (
-                      <text
-                        key={`label-${geo.rsmKey}`}
-                        textAnchor="middle"
-                        style={{
-                          fontFamily: "system-ui",
-                          fill: "#374151",
-                          fontSize: Math.max(8, Math.min(12, zoom * 2)),
-                          fontWeight: "bold",
-                          pointerEvents: "none"
-                        }}
-                      >
-                        {countryName}
-                      </text>
-                    )
-                  })
-                }
-              </Geographies>
-            )}
-
             {/* User markers */}
-            {locationStats.map((stat, index) => {
-              const coords = countryCoordinates[stat.country]
-              if (!coords) return null
-              
-              const color = COLORS[index % COLORS.length]
-              const markerSize = Math.max(3, Math.min(12, stat.userCount * zoom))
-              
+            {locationStats.map((stat) => {
+              const coords = countryCoordinates[stat.country];
+              if (!coords) return null;
+
+              const color = COLORS[locationStats.indexOf(stat) % COLORS.length];
+              const markerSize = Math.max(3, Math.min(12, stat.userCount * position.zoom));
+
               return (
                 <Marker key={stat.country} coordinates={coords}>
                   <circle
@@ -202,38 +191,34 @@ const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
                     opacity={0.8}
                     style={{ cursor: 'pointer' }}
                     onMouseEnter={() => {
-                      setHoveredCountry(stat.country)
-                      setTooltipContent(`${stat.country}: ${stat.userCount} users`)
+                      setTooltipContent(`${stat.country}: ${stat.userCount} users`);
                     }}
                     onMouseLeave={() => {
-                      setHoveredCountry(null)
-                      setTooltipContent("")
+                      setTooltipContent('');
                     }}
                     onClick={() => zoomToCountry(stat.country)}
                   />
-                  {/* User count label - always visible */}
                   <text
                     textAnchor="middle"
                     y={-markerSize - 5}
                     style={{
                       fontFamily: "system-ui",
                       fill: "#374151",
-                      fontSize: Math.max(8, Math.min(14, zoom * 2)),
+                      fontSize: Math.max(8, Math.min(14, position.zoom * 2)),
                       fontWeight: "bold",
                       pointerEvents: "none"
                     }}
                   >
                     {stat.userCount}
                   </text>
-                  {/* Country name label - show when zoomed */}
-                  {zoom > 1.5 && (
+                  {position.zoom > 1.5 && (
                     <text
                       textAnchor="middle"
                       y={markerSize + 15}
                       style={{
                         fontFamily: "system-ui",
                         fill: "#6B7280",
-                        fontSize: Math.max(6, Math.min(10, zoom * 1.5)),
+                        fontSize: Math.max(6, Math.min(10, position.zoom * 1.5)),
                         fontWeight: "500",
                         pointerEvents: "none"
                       }}
@@ -242,7 +227,7 @@ const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
                     </text>
                   )}
                 </Marker>
-              )
+              );
             })}
           </ZoomableGroup>
         </ComposableMap>
@@ -289,20 +274,24 @@ const WorldMap: React.FC<{ locationStats: any[] }> = ({ locationStats }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const LocationAnalytics: React.FC = () => {
-  const { data: analytics, isLoading, error } = useLocationAnalytics()
-  const { data: users, isLoading: usersLoading } = useUsersWithLocation()
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+  const { data: analytics, isLoading, error } = useLocationAnalytics();
+  const { data: users, isLoading: usersLoading } = useUsersWithLocation();
+
+  // Zoom & position state
+  const [position, setPosition] = useState({ coordinates: [0, 0] as [number, number], zoom: 1 });
+  const [_zoom, setZoom] = useState(1);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
 
   if (isLoading || usersLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -314,7 +303,7 @@ const LocationAnalytics: React.FC = () => {
           <p className="text-sm text-red-500 mt-2">{error.message}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!analytics) {
@@ -322,34 +311,34 @@ const LocationAnalytics: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-600">No location data available</p>
       </div>
-    )
+    );
   }
 
-  const { locationStats, totalUsersWithLocation, topCities, recentLocationActivity } = analytics
+  const { locationStats, totalUsersWithLocation, topCities, recentLocationActivity } = analytics;
 
   // Prepare data for charts
   const countryChartData = locationStats.map(stat => ({
     name: stat.country,
     users: stat.userCount,
     cities: stat.cityCount
-  }))
+  }));
 
   const cityChartData = topCities.map(city => ({
     name: city._id,
     users: city.count,
     country: city.country
-  }))
+  }));
 
   const pieChartData = locationStats.slice(0, 5).map((stat, index) => ({
     name: stat.country,
     value: stat.userCount,
-    color: ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'][index]
-  }))
+    color: COLORS[index % COLORS.length]
+  }));
 
   // Get selected country data
-  const selectedCountryData = selectedCountry 
+  const selectedCountryData = selectedCountry
     ? locationStats.find(stat => stat.country === selectedCountry)
-    : null
+    : null;
 
   return (
     <div className="space-y-6">
@@ -430,31 +419,37 @@ const LocationAnalytics: React.FC = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* World Map */}
-        <WorldMap locationStats={locationStats} />
+        <WorldMap
+          locationStats={locationStats}
+          position={position}
+          setPosition={setPosition}
+          setZoom={setZoom}
+        />
 
         {/* Country Distribution Pie Chart */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <PieChart className="w-5 h-5 text-green-600" />
+            <LucidePieChart className="w-5 h-5 text-green-600" />
             User Distribution by Country
           </h3>
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPieChart>
-                <Pie
+                <RechartsPie
                   data={pieChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                  label={({ name, percent }) =>
+                    `${name} ${(percent ? percent * 100 : 0).toFixed(0)}%`
+                  }
                   outerRadius={80}
-                  fill="#8884d8"
                   dataKey="value"
                 >
-                  {pieChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {pieChartData.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={entry.color} />
                   ))}
-                </Pie>
+                </RechartsPie>
                 <Tooltip />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -473,10 +468,10 @@ const LocationAnalytics: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
-                  const coords = countryCoordinates[selectedCountryData.country]
+                  const coords = countryCoordinates[selectedCountryData.country];
                   if (coords) {
-                    setPosition({ coordinates: coords, zoom: 4 })
-                    setZoom(4)
+                    setPosition({ coordinates: coords, zoom: 4 });
+                    setZoom(4);
                   }
                 }}
                 className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
@@ -508,8 +503,11 @@ const LocationAnalytics: React.FC = () => {
           <div className="mt-4">
             <h4 className="font-medium text-gray-900 mb-2">Top Cities:</h4>
             <div className="flex flex-wrap gap-2">
-              {selectedCountryData.cities.map((city, index) => (
-                <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {selectedCountryData.cities.map((city, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                >
                   <MapPin className="w-3 h-3 mr-1" />
                   {city}
                 </span>
@@ -526,21 +524,20 @@ const LocationAnalytics: React.FC = () => {
           Countries with Users
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {locationStats.map((stat, index) => (
+          {locationStats.map((stat) => (
             <div
               key={stat.country}
               className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
-                selectedCountry === stat.country 
-                  ? 'border-blue-500 bg-blue-50' 
+                selectedCountry === stat.country
+                  ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 hover:border-blue-300'
               }`}
               onClick={() => {
-                setSelectedCountry(stat.country)
-                // Also zoom to the country on the map
-                const coords = countryCoordinates[stat.country]
+                setSelectedCountry(stat.country);
+                const coords = countryCoordinates[stat.country];
                 if (coords) {
-                  setPosition({ coordinates: coords, zoom: 4 })
-                  setZoom(4)
+                  setPosition({ coordinates: coords, zoom: 4 });
+                  setZoom(4);
                 }
               }}
             >
@@ -556,8 +553,11 @@ const LocationAnalytics: React.FC = () => {
               </div>
               <div className="mt-2">
                 <div className="flex flex-wrap gap-1">
-                  {stat.cities.slice(0, 2).map((city, cityIndex) => (
-                    <span key={cityIndex} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                  {stat.cities.slice(0, 2).map((city, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+                    >
                       {city}
                     </span>
                   ))}
@@ -642,8 +642,8 @@ const LocationAnalytics: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users?.map((user, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+              {users?.map((user, idx) => (
+                <tr key={idx} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.name}
                   </td>
@@ -688,8 +688,8 @@ const LocationAnalytics: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {recentLocationActivity.slice(0, 10).map((activity, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+              {recentLocationActivity.slice(0, 10).map((activity, idx) => (
+                <tr key={idx} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {activity._id.date}
                   </td>
@@ -708,7 +708,7 @@ const LocationAnalytics: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LocationAnalytics 
+export default LocationAnalytics;

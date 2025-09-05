@@ -17,4 +17,5 @@ router.post('/', auth_1.authenticate, review_controller_1.createReview);
 router.get('/', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminListReviews);
 router.put('/:id', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminUpdateReview);
 router.delete('/:id', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminDeleteReview);
+router.patch('/:id/verify', auth_1.authenticate, auth_1.requireAdmin, review_controller_1.adminSetVerified);
 exports.default = router;

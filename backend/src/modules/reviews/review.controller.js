@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPublicReviews = exports.adminDeleteReview = exports.adminUpdateReview = exports.adminListReviews = exports.createReview = exports.getProductReviews = void 0;
+exports.getPublicReviews = exports.adminSetVerified = exports.adminDeleteReview = exports.adminUpdateReview = exports.adminListReviews = exports.createReview = exports.getProductReviews = void 0;
 const review_model_1 = require("./review.model");
 // Public: list approved reviews for a product with basic stats
 const getProductReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -78,7 +78,7 @@ exports.createReview = createReview;
 // Admin: list all reviews (optional filters)
 const adminListReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { status, productId, userId } = req.query;
+        const { status, productId, userId, verified } = req.query;
         const page = Math.max(1, Number(req.query.page) || 1);
         const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
         const skip = (page - 1) * limit;
@@ -89,6 +89,8 @@ const adminListReviews = (req, res) => __awaiter(void 0, void 0, void 0, functio
             filter.productId = productId;
         if (userId)
             filter.userId = userId;
+        if (typeof verified !== 'undefined')
+            filter.verified = verified === 'true' || verified === '1';
         const [items, total] = yield Promise.all([
             review_model_1.Review.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('userId', 'name email').lean(),
             review_model_1.Review.countDocuments(filter),
@@ -104,7 +106,7 @@ exports.adminListReviews = adminListReviews;
 const adminUpdateReview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const { rating, title, comment, status } = req.body;
+        const { rating, title, comment, status, verified } = req.body;
         const update = {};
         if (typeof rating !== 'undefined')
             update.rating = rating;
@@ -114,6 +116,9 @@ const adminUpdateReview = (req, res) => __awaiter(void 0, void 0, void 0, functi
             update.comment = comment;
         if (typeof status !== 'undefined')
             update.status = status;
+        if (typeof verified !== 'undefined') {
+            update.verified = typeof verified === 'string' ? (verified === 'true' || verified === '1') : !!verified;
+        }
         const doc = yield review_model_1.Review.findByIdAndUpdate(id, update, { new: true });
         if (!doc)
             return res.status(404).json({ message: 'Review not found' });
@@ -138,6 +143,25 @@ const adminDeleteReview = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.adminDeleteReview = adminDeleteReview;
+// Admin: set verified status (defaults to true if not provided)
+const adminSetVerified = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        let { verified } = req.body;
+        if (typeof verified === 'undefined')
+            verified = true;
+        if (typeof verified === 'string')
+            verified = verified === 'true' || verified === '1';
+        const doc = yield review_model_1.Review.findByIdAndUpdate(id, { verified }, { new: true });
+        if (!doc)
+            return res.status(404).json({ message: 'Review not found' });
+        return res.json(doc);
+    }
+    catch (err) {
+        return res.status(500).json({ message: err.message || 'Failed to set verified status' });
+    }
+});
+exports.adminSetVerified = adminSetVerified;
 // Public: list approved reviews across all products (all categories)
 const getPublicReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;

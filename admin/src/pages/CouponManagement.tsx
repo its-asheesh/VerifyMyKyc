@@ -4,7 +4,6 @@ import { useToast } from '../context/ToastContext'
 import { 
   Plus, 
   Search, 
-  Filter, 
   Edit, 
   Trash2, 
   Copy, 
@@ -36,7 +35,7 @@ const CouponManagement: React.FC = () => {
 
   const { data: stats, isLoading: statsLoading } = useCouponStats()
   const deleteCouponMutation = useDeleteCoupon()
-  const { showSuccess, showError, showWarning } = useToast()
+  const { showSuccess, showError } = useToast()
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this coupon?')) {

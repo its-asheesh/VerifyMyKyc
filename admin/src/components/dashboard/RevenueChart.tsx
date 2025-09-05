@@ -52,7 +52,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ isOpen, onClose, data }) =>
   const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0
 
   // Use the exact same data from analytics API that's used in dashboard cards
-  const revenueData = data?.revenueTrend?.map((item: any, index: number) => ({
+  const revenueData = data?.revenueTrend?.map((item: any, _index: number) => ({
     month: item.month,
     revenue: item.value,
     // Use exact same order data structure as OrderManagement page

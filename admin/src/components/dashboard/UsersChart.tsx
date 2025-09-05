@@ -1,8 +1,6 @@
 import React from 'react'
 import { Users, UserPlus, MapPin, Globe, TrendingUp } from 'lucide-react'
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -34,7 +32,7 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
   const { data: userStats } = useUserStats()
 
   // Use the exact same data from analytics API that's used in dashboard cards
-  const userData = data?.userGrowth?.map((item: any, index: number) => ({
+  const userData = data?.userGrowth?.map((item: any, _index: number) => ({
     month: item.month,
     newUsers: item.newUsers,
     totalUsers: data?.metrics?.totalUsers || 0, // Use exact same total users from metrics

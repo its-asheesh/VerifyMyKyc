@@ -1,21 +1,6 @@
 import React from 'react'
-import { Package, TrendingUp, DollarSign, BarChart3, Calendar, RefreshCw, Filter } from 'lucide-react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Area,
-  AreaChart,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts'
+import { Package, TrendingUp, DollarSign,  Calendar } from 'lucide-react'
+
 import ResizableModal from './ResizableModal'
 import { useOrderStats } from '../../hooks/useOrders'
 import { useQueryClient } from '@tanstack/react-query'
@@ -180,11 +165,11 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   }
 
   // Use custom data if available, otherwise use default data
-  const finalData = customData || data
+  // const finalData = customData || data
   const finalRevenueTrendData = customData?.revenueTrend || data?.revenueTrend
 
   // Use the exact same data from analytics API
-  const revenueTrendData = finalRevenueTrendData?.map((item: any, index: number) => {
+  const revenueTrendData = finalRevenueTrendData?.map((item: any) => {
     // Check if the item has order statistics
     const hasOrderStats = item.totalOrders !== undefined || item.completedOrders !== undefined
     
@@ -265,13 +250,13 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   ]
 
   // Monthly order trends - use revenue trend data if available, otherwise use overall stats
-  const monthlyOrderTrends = processedData.map((item: any) => ({
-    month: item.period,
-    totalOrders: item.totalOrders || 0,
-    completedOrders: item.completedOrders || 0,
-    pendingOrders: item.pendingOrders || 0,
-    activeOrders: item.activeOrders || 0
-  }))
+  // const monthlyOrderTrends = processedData.map((item: any) => ({
+  //   month: item.period,
+  //   totalOrders: item.totalOrders || 0,
+  //   completedOrders: item.completedOrders || 0,
+  //   pendingOrders: item.pendingOrders || 0,
+  //   activeOrders: item.activeOrders || 0
+  // }))
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -286,42 +271,42 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
     return new Intl.NumberFormat('en-IN').format(value)
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0]?.payload
-      return (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{label}</p>
-          {data?.revenue !== undefined && (
-            <p className="text-purple-600 font-semibold">
-              Revenue: {formatCurrency(data.revenue)}
-            </p>
-          )}
-          {data?.totalOrders !== undefined && (
-            <p className="text-blue-600">
-              Total Orders: {formatNumber(data.totalOrders)}
-            </p>
-          )}
-          {data?.completedOrders !== undefined && (
-            <p className="text-green-600">
-              Completed: {formatNumber(data.completedOrders)}
-            </p>
-          )}
-          {data?.pendingOrders !== undefined && (
-            <p className="text-orange-600">
-              Pending: {formatNumber(data.pendingOrders)}
-            </p>
-          )}
-          {data?.activeOrders !== undefined && (
-            <p className="text-blue-600">
-              Active: {formatNumber(data.activeOrders)}
-            </p>
-          )}
-        </div>
-      )
-    }
-    return null
-  }
+  // const CustomTooltip = ({ active, payload, label }: any) => {
+  //   if (active && payload && payload.length) {
+  //     const data = payload[0]?.payload
+  //     return (
+  //       <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
+  //         <p className="font-medium text-gray-900">{label}</p>
+  //         {data?.revenue !== undefined && (
+  //           <p className="text-purple-600 font-semibold">
+  //             Revenue: {formatCurrency(data.revenue)}
+  //           </p>
+  //         )}
+  //         {data?.totalOrders !== undefined && (
+  //           <p className="text-blue-600">
+  //             Total Orders: {formatNumber(data.totalOrders)}
+  //           </p>
+  //         )}
+  //         {data?.completedOrders !== undefined && (
+  //           <p className="text-green-600">
+  //             Completed: {formatNumber(data.completedOrders)}
+  //           </p>
+  //         )}
+  //         {data?.pendingOrders !== undefined && (
+  //           <p className="text-orange-600">
+  //             Pending: {formatNumber(data.pendingOrders)}
+  //           </p>
+  //         )}
+  //         {data?.activeOrders !== undefined && (
+  //           <p className="text-blue-600">
+  //             Active: {formatNumber(data.activeOrders)}
+  //           </p>
+  //         )}
+  //       </div>
+  //     )
+  //   }
+  //   return null
+  // }
 
   // Calculate filtered totals for summary cards
   const filteredTotals = React.useMemo(() => {
@@ -434,7 +419,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
       console.log('Using REAL database data for revenue trend:', data.revenueTrend)
       
       // Process real database data
-      const processedData = data.revenueTrend.map((item: any, index: number) => {
+      const processedData = data.revenueTrend.map((item: any) => {
         // Check if the item has order statistics
         const hasOrderStats = item.totalOrders !== undefined || item.completedOrders !== undefined
         
@@ -709,4 +694,4 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   )
 }
 
-export default OrderAnalyticsChart 
+export default OrderAnalyticsChart

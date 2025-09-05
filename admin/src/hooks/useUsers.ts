@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import userApi, { type User, type UpdateUserRoleData, type UserStats, type LocationAnalytics } from '../services/api/userApi'
+import userApi from '../services/api/userApi'
 
 // Get all users
 export const useUsers = () => {

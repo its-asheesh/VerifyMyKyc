@@ -42,6 +42,7 @@ const reviewSchema = new mongoose_1.Schema({
     title: { type: String, trim: true, maxlength: 120 },
     comment: { type: String, trim: true, maxlength: 2000, required: true },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved', index: true },
+    verified: { type: Boolean, default: false, index: true },
 }, { timestamps: true });
-reviewSchema.index({ productId: 1, status: 1, createdAt: -1 });
+reviewSchema.index({ productId: 1, status: 1, verified: 1, createdAt: -1 });
 exports.Review = mongoose_1.default.model('Review', reviewSchema);

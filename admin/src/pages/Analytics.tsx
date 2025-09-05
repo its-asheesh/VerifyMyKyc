@@ -6,7 +6,6 @@ import {
   Users, 
   IndianRupee, 
   Activity,
-  Calendar,
   BarChart3,
   PieChart,
   Loader2
@@ -186,7 +185,7 @@ const Analytics: React.FC = () => {
           
           {revenueTrend.length > 0 ? (
             <div className="space-y-4">
-              {revenueTrend.map((item, index) => (
+              {revenueTrend.map((item, _index) => (
                 <div key={item.month} className="flex items-center">
                   <div className="w-16 text-sm font-medium text-gray-600">{item.month}</div>
                   <div className="flex-1 ml-4">
@@ -266,7 +265,7 @@ const Analytics: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Plans</h3>
           {topPlans.length > 0 ? (
             <div className="space-y-3">
-              {topPlans.map((plan, index) => (
+              {topPlans.map((plan, _index) => (
                 <div key={plan.name} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{plan.name}</span>
                   <span className="text-sm font-medium text-gray-900">{formatCurrency(plan.revenue)}</span>
@@ -290,7 +289,7 @@ const Analytics: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>
           {userGrowth.length > 0 ? (
             <div className="space-y-3">
-              {userGrowth.slice(-3).map((item, index) => (
+              {userGrowth.slice(-3).map((item, _index) => (
                 <div key={item.month} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{item.month}</span>
                   <span className="text-sm font-medium text-green-600">+{item.newUsers}</span>

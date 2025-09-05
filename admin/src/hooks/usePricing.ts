@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import pricingApi from '../services/api/pricingApi'
-import type { VerificationPricing, HomepagePlan, AllPricingData } from '../services/api/pricingApi'
+import type { VerificationPricing, HomepagePlan } from '../services/api/pricingApi'
 
 // ==================== VERIFICATION PRICING HOOKS ====================
 

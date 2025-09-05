@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Package, CreditCard, Users, TrendingUp, Filter, Search, 
-  CheckCircle, Clock, AlertCircle, X, Eye, Calendar,
-  IndianRupee, ArrowUpDown, Loader2, BarChart
+  Package, Search, 
+  CheckCircle, Clock, AlertCircle, X,
+  IndianRupee,  Loader2, BarChart
 } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
 import { useOrders, useOrderStats, useUpdateOrderStatus } from '../hooks/useOrders'

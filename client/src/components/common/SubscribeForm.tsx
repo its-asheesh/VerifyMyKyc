@@ -24,7 +24,8 @@ const SubscribeForm: React.FC<SubscribeFormProps> = ({
       toast.success('Thank you for subscribing!');
       reset();
     } catch (error) {
-      toast.error(error.message || 'Failed to subscribe. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to subscribe. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
