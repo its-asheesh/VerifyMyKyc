@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.digilockerFetchDocumentHandler = exports.digilockerPullHandler = exports.digilockerInitHandler = exports.checkPanAadhaarLinkHandler = exports.fetchCinByPanHandler = exports.fetchDinByPanHandler = exports.fetchGstinByPanHandler = exports.fetchFatherNameHandler = void 0;
+exports.fetchPanDetailedHandler = exports.fetchPanAdvanceHandler = exports.digilockerFetchDocumentHandler = exports.digilockerPullHandler = exports.digilockerInitHandler = exports.checkPanAadhaarLinkHandler = exports.fetchCinByPanHandler = exports.fetchDinByPanHandler = exports.fetchGstinByPanHandler = exports.fetchFatherNameHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const pan_service_1 = require("./pan.service");
 const quota_service_1 = require("../orders/quota.service");
@@ -147,6 +147,28 @@ exports.digilockerFetchDocumentHandler = (0, asyncHandler_1.default)((req, res) 
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     const result = yield service.digilockerFetchDocument(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
+    res.json(result);
+}));
+// POST /api/pan/fetch-advanced
+// Expects body: { pan_number: string, consent: string, [other optional params] }
+exports.fetchPanAdvanceHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
+    const result = yield service.fetchPanAdvance(req.body);
+    yield (0, quota_service_1.consumeVerificationQuota)(order);
+    res.json(result);
+}));
+// POST /api/pan/fetch-detailed
+// Expects body: { pan_number: string, consent: string }
+exports.fetchPanDetailedHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+    if (!order)
+        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
+    const result = yield service.fetchPanDetailed(req.body);
     yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));

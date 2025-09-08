@@ -76,13 +76,13 @@ export const VerificationCard: FC<VerificationCardProps> = ({
 
   // Common card content component
   const CardContent = ({ isMobile }: { isMobile: boolean }) => (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full w-full">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full  w-full">
       {/* Image section */}
       <div className="w-full rounded-xl bg-slate-50 flex-shrink-0">
         <img
           src={image || "/placeholder.svg"}
           alt={title}
-          className="w-full rounded-xl h-16 md:h-36 object-fill rounded-t-xl p-1 md:p-1"
+          className="w-full rounded-xl h-16 md:h-54 object-fill rounded-t-xl p-1 md:p-1"
           loading="lazy"
         />
       </div>

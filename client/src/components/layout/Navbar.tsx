@@ -367,15 +367,16 @@ export default function Navbar() {
 
   return (
     <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-100"
-          : "bg-white shadow-sm border-b-2 border-blue-500"
-      }`}
-    >
+    initial={{ y: -100 }}
+    animate={{ y: 0 }}
+    transition={{ duration: 0.6, ease: "easeOut" }}
+    className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled
+        ? "bg-gradient-to-r from-[#dbeafe] via-white to-[#e0f2fe] backdrop-blur-lg shadow-lg border-b border-blue-100"
+        : "bg-gradient-to-r from-[#e0f2ff] via-white to-[#dbeafe] shadow-sm border-b-2 border-blue-200"
+    }`}
+  >
+    
       <div className="max-w-7xl mx-auto px-4 lg:px-8 ">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Brand */}

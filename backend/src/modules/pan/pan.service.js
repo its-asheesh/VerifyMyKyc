@@ -15,9 +15,11 @@ const linkCheck_provider_1 = require("./providers/linkCheck.provider");
 const digilockerPull_provider_1 = require("./providers/digilockerPull.provider");
 const digilockerInit_provider_1 = require("./providers/digilockerInit.provider");
 const digilockerFetchDocument_provider_1 = require("./providers/digilockerFetchDocument.provider");
+const fetchPanAdvance_provider_1 = require("./providers/fetchPanAdvance.provider");
 const dinByPan_provider_1 = require("../mca/providers/dinByPan.provider");
 const cinByPan_provider_1 = require("../mca/providers/cinByPan.provider");
 const fetchByPan_provider_1 = require("../gstin/providers/fetchByPan.provider");
+const fetchPanDetailed_provider_1 = require("./providers/fetchPanDetailed.provider");
 class PanService {
     // Fetch Father's Name by PAN
     fetchFatherName(payload) {
@@ -65,6 +67,18 @@ class PanService {
     fetchGstinByPan(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, fetchByPan_provider_1.fetchGstinByPanProvider)(payload);
+        });
+    }
+    // Fetch PAN Advance
+    fetchPanAdvance(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, fetchPanAdvance_provider_1.fetchPanAdvanceProvider)(payload);
+        });
+    }
+    // Fetch PAN Detailed
+    fetchPanDetailed(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, fetchPanDetailed_provider_1.fetchPanDetailedProvider)(payload);
         });
     }
 }

@@ -123,7 +123,7 @@ export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
         payload.consent = payload.consent ? "Y" : "N"
       }
       // For PAN-based services, uppercase and trim PAN values
-      const panServicesNeedingNormalization = ["gstin-by-pan", "din-by-pan", "cin-by-pan"]
+      const panServicesNeedingNormalization = ["gstin-by-pan", "din-by-pan", "cin-by-pan", "fetch-advanced", "aadhaar-link", "digilocker-pull", "fetch-detailed"]
       if (panServicesNeedingNormalization.includes(selectedService.key)) {
         if (payload.pan) payload.pan = String(payload.pan).toUpperCase().trim()
         if (payload.pan_number) payload.pan_number = String(payload.pan_number).toUpperCase().trim()

@@ -50,6 +50,67 @@ export interface PanFatherNameResponse {
   [key: string]: any;
 }
 
+// PAN: Advance
+export interface FetchPanAdvanceRequest {
+  pan_number: string;
+  consent: string;
+}
+
+export interface FetchPanAdvanceResponse {
+  request_id: string;
+  transaction_id?: string;
+  reference_id?: string;
+  status: number;
+  data: {
+    code: string;
+    message: string;
+    pan_data?: any;
+    [key: string]: any;
+  };
+  timestamp?: number; // Often included in API responses
+  path?: string;     // Often included in API responses
+  [key: string]: any; // Top-level flexibility
+}
+
+// PAN: Detailed
+export interface FetchPanDetailedRequest {
+  pan_number: string;
+  consent: string;
+}
+
+export interface AddressData {
+  line_1: string;
+  line_2: string;
+  street: string;
+  city: string;
+  line_5: string;
+  state: string;
+  pincode: string;
+}
+
+export interface PanDetails {
+  document_type: string;
+  document_id: string;
+  name: string;
+  last_name: string;
+  category: string;
+  date_of_birth: string; // YYYY-MM-DD
+  masked_aadhaar_number: string;
+  address_data: AddressData;
+  email: string;
+  phone: string;
+  gender: string;
+  aadhaar_linked: boolean;
+}
+
+export interface FetchPanDetailedResponse {
+  status: string;
+  message: string;
+  pan_details?: PanDetails;
+  timestamp?: number;
+  path?: string;
+}
+
 // PAN: Aadhaar Link
 export interface PanAadhaarLinkRequest {
   pan_number: string;

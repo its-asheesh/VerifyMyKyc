@@ -129,3 +129,25 @@ export const digilockerFetchDocumentHandler = asyncHandler(async (req: Authentic
   await consumeVerificationQuota(order);
   res.json(result);
 });
+
+// POST /api/pan/fetch-advanced
+// Expects body: { pan_number: string, consent: string, [other optional params] }
+export const fetchPanAdvanceHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user._id;
+  const order = await ensureVerificationQuota(userId, 'pan');
+  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
+  const result = await service.fetchPanAdvance(req.body);
+  await consumeVerificationQuota(order);
+  res.json(result);
+});
+
+// POST /api/pan/fetch-detailed
+// Expects body: { pan_number: string, consent: string }
+export const fetchPanDetailedHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user._id;
+  const order = await ensureVerificationQuota(userId, 'pan');
+  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
+  const result = await service.fetchPanDetailed(req.body);
+  await consumeVerificationQuota(order);
+  res.json(result);
+});

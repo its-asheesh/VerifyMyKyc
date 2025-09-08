@@ -9,6 +9,7 @@ import { CreditCard, Link, Download, FileText } from "lucide-react"
 
 export type PanServiceKey =
   | "father-name"
+  | "fetch-advanced"
   | "aadhaar-link"
   | "digilocker-init"
   | "digilocker-pull"
@@ -16,6 +17,7 @@ export type PanServiceKey =
   | "gstin-by-pan"
   | "din-by-pan"
   | "cin-by-pan"
+  | "fetch-detailed"
 
 export interface PanServiceMeta {
   key: PanServiceKey
@@ -111,6 +113,46 @@ export const panServices: PanServiceMeta[] = [
       { name: "consent", label: "Consent", type: "text", required: true },
     ],
     icon: Link,
+  },
+  {
+    key: "fetch-advanced",
+    name: "Fetch PAN Advance",
+    description: "Fetch detailed PAN information including holder's name, DOB, and status.",
+    apiEndpoint: "/pan/fetch-pan-advance",
+    formFields: [
+      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      {
+        name: "consent",
+        label: "Consent",
+        type: "radio",
+        required: true,
+        options: [
+          { label: "Yes", value: "Y" },
+          { label: "No", value: "N" },
+        ],
+      },
+    ],
+    icon: CreditCard,
+  },
+  {
+    key: "fetch-detailed",
+    name: "Fetch PAN Detailed", 
+    description: "Fetch detailed PAN information including holder's name, DOB, and status.",
+    apiEndpoint: "/pan/fetch-pan-detailed",
+    formFields: [
+      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      {
+        name: "consent",
+        label: "Consent",
+        type: "radio",
+        required: true,
+        options: [
+          { label: "Yes", value: "Y" },
+          { label: "No", value: "N" },
+        ],
+      },
+    ],
+    icon: CreditCard,
   },
   // {
   //   key: "digilocker-init",

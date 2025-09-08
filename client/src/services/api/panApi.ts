@@ -9,7 +9,11 @@ import type {
   PanDigilockerPullRequest,
   PanDigilockerPullResponse,
   DigilockerFetchDocumentRequest,
-  DigilockerFetchDocumentResponse
+  DigilockerFetchDocumentResponse,
+  FetchPanAdvanceRequest,
+  FetchPanAdvanceResponse,
+  FetchPanDetailedRequest,
+  FetchPanDetailedResponse
 } from "../../types/kyc"
 
 class PanApi extends BaseApi {
@@ -44,6 +48,16 @@ class PanApi extends BaseApi {
   public async post<T>(url: string, data?: any, config?: any): Promise<T> {
     return super.post<T>(url, data, config)
   }
+  
+  // Fetch PAN Advance
+  async fetchPanAdvance(data: FetchPanAdvanceRequest): Promise<FetchPanAdvanceResponse> {
+    return this.post("/pan/fetch-pan-advance", data)
+  }
+
+  // Fetch PAN Detailed
+  async fetchPanDetailed(data: FetchPanDetailedRequest): Promise<FetchPanDetailedResponse> {
+    return this.post("/pan/fetch-pan-detailed", data)
+  } 
 }
 
 export const panApi = new PanApi("/api") 

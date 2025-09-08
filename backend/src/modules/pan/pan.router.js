@@ -20,4 +20,8 @@ router.post('/digilocker-init', auth_1.authenticate, auth_1.requireUser, pan_con
 router.post('/digilocker-pull', auth_1.authenticate, auth_1.requireUser, pan_controller_1.digilockerPullHandler);
 // Digilocker Fetch Document
 router.post('/digilocker-fetch-document', auth_1.authenticate, auth_1.requireUser, pan_controller_1.digilockerFetchDocumentHandler);
+// Fetch PAN Advance
+router.post('/fetch-pan-advance', auth_1.authenticate, auth_1.requireUser, pan_controller_1.fetchPanAdvanceHandler);
+// Fetch PAN Detailed
+router.post('/fetch-pan-detailed', auth_1.authenticate, auth_1.requireUser, pan_controller_1.fetchPanDetailedHandler);
 exports.default = router;

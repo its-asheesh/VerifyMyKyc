@@ -862,6 +862,310 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
   );
 }
 
+//Fetch Pan advanced
+if (serviceKey === "fetch-advanced") {
+  const data = result.data || result;
+  const panData = data.pan_data || data;
+
+  // ✅ Extract PAN Advanced fields with fallbacks
+  const documentType = panData.document_type || "PAN";
+  const documentId =
+    panData.document_id || formData.pan_number || "Not Available";
+  const fullName = panData.name || "Not Available";
+  const firstName = panData.first_name || "Not Available";
+  const middleName = panData.middle_name || "";
+  const lastName = panData.last_name || "Not Available";
+  const category = panData.category || "Not Available";
+  const categoryType = panData.category_type || "Not Available";
+  const isIndividual =
+    typeof panData.is_individual !== "undefined"
+      ? panData.is_individual
+        ? "Yes"
+        : "No"
+      : "Not Available";
+  const taxComplianceStatus =
+    panData.individual_tax_compliance_status || "Not Available";
+  const aadhaarLinked =
+    typeof panData.aadhaar_linked !== "undefined"
+      ? panData.aadhaar_linked
+        ? "Yes"
+        : "No"
+      : "Not Available";
+
+  // Meta info
+  // const requestId = data.request_id || "Not Available";
+  // const transactionId = data.transaction_id || "Not Available";
+  // const referenceId = data.reference_id || "Not Available";
+  const message =
+    data.message || "PAN Advanced details fetched successfully";
+  const statusCode = data.code || "1000";
+
+  // Group fields for display - only include those with real values
+  const personalInfo = [
+    { label: "Document Type", value: documentType },
+    { label: "Document ID", value: documentId },
+    { label: "Full Name", value: fullName },
+    { label: "First Name", value: firstName },
+    { label: "Middle Name", value: middleName },
+    { label: "Last Name", value: lastName },
+  ].filter((f) => f.value && f.value !== "Not Available" && f.value !== "");
+
+  const categoryInfo = [
+    { label: "Category", value: category },
+    { label: "Category Type", value: categoryType },
+    { label: "Is Individual", value: isIndividual },
+    { label: "Tax Compliance Status", value: taxComplianceStatus },
+    { label: "Aadhaar Linked", value: aadhaarLinked },
+  ].filter((f) => f.value && f.value !== "Not Available");
+
+  // ✅ Build PDF export lines
+  const pdfLines: string[] = [];
+  pdfLines.push(`${serviceName || "PAN Advanced Verification"}`);
+  pdfLines.push("Verification Successful");
+  pdfLines.push(`Status Code: ${statusCode}`);
+  pdfLines.push("");
+
+  // Add personal info to PDF
+  if (personalInfo.length > 0) {
+    pdfLines.push("=== PERSONAL INFORMATION ===");
+    personalInfo.forEach(({ label, value }) => {
+      pdfLines.push(`${label}: ${value}`);
+    });
+    pdfLines.push("");
+  }
+
+  // Add category info to PDF
+  if (categoryInfo.length > 0) {
+    pdfLines.push("=== CATEGORY & STATUS INFORMATION ===");
+    categoryInfo.forEach(({ label, value }) => {
+      pdfLines.push(`${label}: ${value}`);
+    });
+    pdfLines.push("");
+  }
+
+  return (
+    <VerificationResultShell
+      serviceName={serviceName}
+      serviceDescription={serviceDescription}
+      message={message}
+      isValid={true}
+      //requestId={requestId}
+     // transactionId={transactionId}
+      //referenceId={referenceId}
+      result={result}
+      onReset={handleReset}
+      targetRef={shareTargetRef}
+      summary={pdfLines.join("\n")}
+    >
+      <div
+        ref={shareTargetRef}
+        className="bg-white rounded-lg p-6 border border-green-200"
+      >
+        {/* Personal Information Section */}
+        {personalInfo.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {personalInfo.map((field) => (
+                <div
+                  key={field.label}
+                  className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                >
+                  <div className="text-sm font-medium text-gray-600">
+                    {field.label}
+                  </div>
+                  <div className="mt-1 font-semibold text-gray-900 break-words">
+                    {field.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Category & Status Information Section */}
+        {categoryInfo.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              Category & Status Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {categoryInfo.map((field) => (
+                <div
+                  key={field.label}
+                  className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                >
+                  <div className="text-sm font-medium text-gray-600">
+                    {field.label}
+                  </div>
+                  <div className="mt-1 font-semibold text-gray-900 break-words">
+                    {field.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Show message if no data available */}
+        {personalInfo.length === 0 && categoryInfo.length === 0 && (
+          <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-lg">
+            No valid information available.
+          </div>
+        )}
+      </div>
+    </VerificationResultShell>
+  );
+}
+
+if (serviceKey === "fetch-detailed") {
+  const data = result.data || result;
+  const panData = data.pan_data || data.pan_details || data;
+
+  // ✅ Extract PAN Detailed fields with fallbacks
+  const documentType = panData.document_type || "PAN";
+  const documentId = panData.document_id || formData.pan_number || "Not Available";
+  const fullName = panData.name || "Not Available";
+  const lastName = panData.last_name || "Not Available";
+  const category = panData.category || "Not Available";
+  const dob = panData.date_of_birth || "Not Available";
+  const maskedAadhaar = panData.masked_aadhaar_number || "Not Available";
+  const email = panData.email || "Not Available";
+  const phone = panData.phone || "Not Available";
+  const gender = panData.gender || "Not Available";
+  const aadhaarLinked =
+    typeof panData.aadhaar_linked !== "undefined"
+      ? panData.aadhaar_linked
+        ? "Yes"
+        : "No"
+      : "Not Available";
+
+  const address = panData.address_data || {};
+  const addressInfo = [
+    { label: "Line 1", value: address.line_1 },
+    { label: "Line 2", value: address.line_2 },
+    { label: "Street", value: address.street },
+    { label: "City", value: address.city },
+    { label: "Line 5", value: address.line_5 },
+    { label: "State", value: address.state },
+    { label: "Pincode", value: address.pincode },
+  ].filter((f) => f.value && f.value !== "Not Available");
+
+  const personalInfo = [
+    { label: "Document Type", value: documentType },
+    { label: "Document ID", value: documentId },
+    { label: "Full Name", value: fullName },
+    { label: "Last Name", value: lastName },
+    { label: "Category", value: category },
+    { label: "Date of Birth", value: dob },
+    { label: "Masked Aadhaar", value: maskedAadhaar },
+    { label: "Email", value: email },
+    { label: "Phone", value: phone },
+    { label: "Gender", value: gender },
+    { label: "Aadhaar Linked", value: aadhaarLinked },
+  ].filter((f) => f.value && f.value !== "Not Available");
+
+  const message = data.message || "PAN Detailed details fetched successfully";
+  const statusCode = data.code || "1000";
+
+  // ✅ Build PDF export lines
+  const pdfLines: string[] = [];
+  pdfLines.push(`${serviceName || "PAN Detailed Verification"}`);
+  pdfLines.push("Verification Successful");
+  pdfLines.push(`Status Code: ${statusCode}`);
+  pdfLines.push("");
+
+  if (personalInfo.length > 0) {
+    pdfLines.push("=== PERSONAL INFORMATION ===");
+    personalInfo.forEach(({ label, value }) => {
+      pdfLines.push(`${label}: ${value}`);
+    });
+    pdfLines.push("");
+  }
+
+  if (addressInfo.length > 0) {
+    pdfLines.push("=== ADDRESS INFORMATION ===");
+    addressInfo.forEach(({ label, value }) => {
+      pdfLines.push(`${label}: ${value}`);
+    });
+    pdfLines.push("");
+  }
+
+  return (
+    <VerificationResultShell
+      serviceName={serviceName}
+      serviceDescription={serviceDescription}
+      message={message}
+      isValid={true}
+      result={result}
+      onReset={handleReset}
+      targetRef={shareTargetRef}
+      summary={pdfLines.join("\n")}
+    >
+      <div
+        ref={shareTargetRef}
+        className="bg-white rounded-lg p-6 border border-green-200"
+      >
+        {/* Personal Information Section */}
+        {personalInfo.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {personalInfo.map((field) => (
+                <div
+                  key={field.label}
+                  className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                >
+                  <div className="text-sm font-medium text-gray-600">{field.label}</div>
+                  <div className="mt-1 font-semibold text-gray-900 break-words">
+                    {field.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Address Information Section */}
+        {addressInfo.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              Address Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {addressInfo.map((field) => (
+                <div
+                  key={field.label}
+                  className="p-4 rounded-xl border bg-gray-50 border-gray-200"
+                >
+                  <div className="text-sm font-medium text-gray-600">{field.label}</div>
+                  <div className="mt-1 font-semibold text-gray-900 break-words">
+                    {field.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Show message if no data available */}
+        {personalInfo.length === 0 && addressInfo.length === 0 && (
+          <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-lg">
+            No valid information available.
+          </div>
+        )}
+      </div>
+    </VerificationResultShell>
+  );
+}
+
+
+
+
     // MCA CIN-by-PAN: show list of CINs and entity names
     if (serviceKey === "cin-by-pan") {
   const payload = result.data || result;

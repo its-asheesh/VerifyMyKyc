@@ -18,7 +18,7 @@ export const verificationFeatures = [
     title: "COMPANY & CREDENTIAL VERIFICATION",
     description:
       "GST Registration, FSSAI,\nLicense, MSME Certification,\nCompany Registration",
-    image: "/cat2.png",
+    image: "/cat2.jpg",
     detailedText:
       "We verify business credentials to help you trust your business associates and ensure legitimate partnerships with verified entities.",
     ctaText: "Verify Business Credentials",

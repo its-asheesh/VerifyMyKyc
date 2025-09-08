@@ -99,7 +99,7 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
                 <img
                   src={image || "/placeholder.svg"}
                   alt={title}
-                  className="w-full h-52 sm:h-64 md:h-72 lg:h-80 xl:h-96 object-cover rounded-xl" // Full width, taller height, fills space
+                  className="w-full h-52 sm:h-64 md:h-72 lg:h-80 xl:h-96 object-contain rounded-xl" // Full width, taller height, fills space
                 />
                 {/* Floating Badge */}
                 <motion.div

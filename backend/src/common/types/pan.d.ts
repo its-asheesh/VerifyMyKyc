@@ -160,3 +160,54 @@ export interface DigilockerIssuedFileResponse {
   };
   [key: string]: any;
 } 
+
+export interface FetchPanAdvanceRequest {
+  pan_number: string;
+  consent: string;
+}
+
+export interface FetchPanAdvanceResponse {
+  request_id: string;
+  transaction_id: string;
+  status: number;
+  data: {
+    code: string;
+    message: string;
+    pan_data?: any;
+  };
+}
+
+export interface FetchPanDetailsRequest {
+  pan_number: string;
+  consent: string;
+}
+
+export interface FetchPanDetailResponse {
+  message: string;
+  pan_data: {
+    document_type: string;
+    document_id: string;
+    name: string;
+    last_name: string;
+    category: string;
+    date_of_birth: string; // "YYYY-MM-DD"
+    masked_aadhaar_number: string;
+    address_data: {
+      line_1: string;
+      line_2: string;
+      street: string;
+      city: string;
+      line_5: string;
+      state: string;
+      pincode: string;
+    };
+    email: string;
+    phone: string;
+    gender: string;
+    aadhaar_linked: boolean;
+  };
+  timestamp: number;
+  path: string;
+}
+
+  
