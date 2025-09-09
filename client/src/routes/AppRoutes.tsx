@@ -24,6 +24,8 @@ import ContactPage from "../pages/company/ContactPage"
 // import CareersPage from "../pages/company/CareersPage"
 import CustomPricingPage from "../pages/CustomPricingPage"
 import CheckoutPage from "../pages/CheckoutPage"
+import BlogListPage from "../pages/blog/BlogListPage"
+import BlogDetailPage from "../pages/blog/BlogDetailPage"
 
 
 
@@ -87,6 +89,10 @@ const AppRoutes: React.FC = () => {
                 <Route path="/contact" element={<ContactPage />} />
                 {/* <Route path="/careers" element={<CareersPage />} /> */}
                 
+                {/* Blog */}
+                <Route path="/blog" element={<BlogListPage />} />
+                <Route path="/blog/:slug" element={<BlogDetailPage />} />
+
                 {/* Pricing */}
                 <Route path="/custom-pricing" element={<CustomPricingPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />

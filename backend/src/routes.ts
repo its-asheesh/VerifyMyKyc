@@ -18,6 +18,7 @@ import vehicleRouter from './modules/vehicle/vehicle.router';
 import passportRouter from './modules/passport/passport.routes';
 import ccrvRouter from './modules/ccrv/ccrv.routes';
 import subscriberRouter from './modules/subscriber/subscriber.routes';
+import blogRouter from './modules/blog/blog.router';
 
 import callbackRouter from "./common/middleware/callback-handler";
 const router = Router();
@@ -48,6 +49,7 @@ router.use('/orders', orderRouter);
 router.use('/analytics', analyticsRouter);
 router.use('/carousel', carouselRouter);
 router.use('/coupons', couponRouter);
+router.use('/blog', blogRouter);
 
 // Subscriber routes
 router.use('/subscribers', subscriberRouter);

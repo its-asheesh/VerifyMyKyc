@@ -12,7 +12,8 @@
     "seed-orders": "ts-node src/modules/orders/seed-orders.ts",
     "seed-carousel": "ts-node src/modules/carousel/seed-carousel.ts",
     "seed-locations": "ts-node src/modules/auth/seed-users-location.ts",
-    "seed-analytics": "node seed-analytics-data.js"
+    "seed-analytics": "node seed-analytics-data.js",
+    "seed-blogs": "ts-node src/modules/blog/seed-blogs.ts"
   },
   "dependencies": {
     "@types/exceljs": "^0.5.3",

@@ -18,6 +18,7 @@ import {
   Tag,
   Mail,
   MessageSquare,
+  FileText,
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -38,6 +39,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Location Analytics', href: '/location-analytics', icon: Globe },
     { name: 'Carousel Management', href: '/carousel', icon: Image },
     { name: 'Reviews', href: '/reviews', icon: MessageSquare },
+    { name: 'Blog', href: '/blog', icon: FileText },
     { name: 'Subscribers', href: '/subscribers', icon: Mail },
   ]
 

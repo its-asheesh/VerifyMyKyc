@@ -15,6 +15,7 @@ import LocationAnalytics from './pages/LocationAnalytics'
 import Settings from './pages/Settings'
 import SubscribersPage from './pages/SubscribersPage'
 import ReviewsManagement from './pages/ReviewsManagement'
+import BlogManagement from './pages/BlogManagement'
 import './App.css'
 
 // Create a client
@@ -45,6 +46,7 @@ function App() {
                     <Route path="/location-analytics" element={<LocationAnalytics />} />
                     <Route path="/subscribers" element={<SubscribersPage />} />
                     <Route path="/reviews" element={<ReviewsManagement />} />
+                    <Route path="/blog" element={<BlogManagement />} />
                     <Route path="/settings" element={<Settings />} />
                   </Routes>
                 </DashboardLayout>

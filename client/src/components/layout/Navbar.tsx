@@ -236,6 +236,12 @@ const navItems = [
     description: "Our story and mission",
     href: "/about",
   },
+  {
+    label: "Blog",
+    icon: BookOpen,
+    description: "Insights on KYC and compliance",
+    href: "/blog",
+  },
 
   { label: "Contact Us", href: "/contact" },
 ]

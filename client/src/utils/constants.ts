@@ -11,7 +11,7 @@ export const verificationFeatures = [
     detailedText:
       "We authenticate each document against its issuing authority to prevent identity fraud and ensure complete compliance with regulatory standards.",
     ctaText: "Explore Government IDs",
-    ctaLink: "/government-verification",
+    ctaLink: "/blog/government-id-verification-guide",
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ export const verificationFeatures = [
     detailedText:
       "We verify business credentials to help you trust your business associates and ensure legitimate partnerships with verified entities.",
     ctaText: "Verify Business Credentials",
-    ctaLink: "/business-verification",
+    ctaLink: "/blog/company-credential-verification-guide",
   },
   {
     id: 3,
@@ -32,7 +32,7 @@ export const verificationFeatures = [
     detailedText:
       "Ensure candidate or entity credibility with thorough legal record checks across multiple databases and jurisdictions.",
     ctaText: "Check Legal Records",
-    ctaLink: "/background-checks",
+    ctaLink: "/blog/legal-background-checks-guide",
   },
   {
     id: 4,
@@ -42,7 +42,7 @@ export const verificationFeatures = [
     detailedText:
       "AI-based facial recognition and liveness detection to avoid spoofing and ensure authentic identity verification.",
     ctaText: "Try Biometric Verification",
-    ctaLink: "/biometric-verification",
+    ctaLink: "/blog/biometric-liveness-checks-guide",
   },
   {
     id: 5,
@@ -52,7 +52,7 @@ export const verificationFeatures = [
     detailedText:
       "From health to travel, verify specialized credentials quickly and reliably with our comprehensive verification network.",
     ctaText: "Explore Specialized Services",
-    ctaLink: "/specialized-verification",
+    ctaLink: "/blog/specialized-verifications-guide",
   },
 ];
 
