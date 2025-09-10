@@ -6,7 +6,7 @@ import type {
     RcFetchRegNumByChassisRequest,
     RcFastagFetchRequest,
   } from '../types/kyc'
-  import { FileText, Car, AlertTriangle, BadgeDollarSign, Search } from 'lucide-react'
+  import { FileText, Car, AlertTriangle, IndianRupee, Search } from 'lucide-react'
   
   export type RcServiceKey =
     | 'fetch-lite'
@@ -188,6 +188,6 @@ import type {
           ],
         },
       ],
-      icon: BadgeDollarSign,
+      icon: IndianRupee,
     },
   ]

@@ -1,5 +1,5 @@
 import React from 'react'
-import { TrendingUp, Calendar, DollarSign } from 'lucide-react'
+import { TrendingUp, Calendar, IndianRupee } from 'lucide-react'
 import {
   LineChart,
   Line,
@@ -134,7 +134,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ isOpen, onClose, data }) =>
           <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-600 rounded-lg">
-                <DollarSign className="w-5 h-5 text-white" />
+                <IndianRupee className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-sm text-purple-600 font-medium">Total Revenue</p>
@@ -176,7 +176,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ isOpen, onClose, data }) =>
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-600 rounded-lg">
-                <DollarSign className="w-5 h-5 text-white" />
+                <IndianRupee className="w-5 h-5 text-white" />
               </div>
               <div>
                 <p className="text-sm text-orange-600 font-medium">Avg. Order Value</p>

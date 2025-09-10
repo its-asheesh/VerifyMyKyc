@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
-  DollarSign, 
+  IndianRupee, 
   Users, 
   BarChart3, 
   Menu, 
@@ -33,7 +33,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Order Management', href: '/orders', icon: Package },
-    { name: 'Pricing Management', href: '/pricing', icon: DollarSign },
+    { name: 'Pricing Management', href: '/pricing', icon: IndianRupee },
     { name: 'Coupon Management', href: '/coupons', icon: Tag },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Location Analytics', href: '/location-analytics', icon: Globe },

@@ -95,20 +95,19 @@ export const ReviewCarousel: React.FC<ReviewCarouselProps> = ({
 
   // Limit to 8 reviews + "Show all" card
   const maxCards = 8;
-  const hasMore = reviews.length > maxCards;
-  const displayReviews: Review[] = hasMore
-    ? [
-        ...reviews.slice(0, maxCards),
-        {
-          text: "",
-          name: "Show all reviews",
-          image: "",
-          stars: 5,
-          verified: true,
-          isMoreCard: true,
-        },
-      ]
-    : reviews;
+const displayReviews: Review[] = reviews.length > 0
+  ? [
+      ...reviews.slice(0, maxCards),
+      {
+        text: "",
+        name: "Show all reviews",
+        image: "",
+        stars: 5,
+        verified: true,
+        isMoreCard: true,
+      },
+    ]
+  : reviews; // or [] if you want empty
 
   // Memoized navigation
   const goToReview = useCallback(
