@@ -269,8 +269,8 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       <div ref={shareTargetRef} className="bg-white rounded-lg p-6 border border-green-200">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { label: "Status", value: status },
-            { label: "Status Code", value: statusCode },
+           // { label: "Status", value: status },
+           // { label: "Status Code", value: statusCode },
             { label: "Status Message", value: statusMessage },
             { label: "ID Type", value: idType },
             { label: "Company Name", value: name },

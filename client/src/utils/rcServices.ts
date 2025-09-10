@@ -58,69 +58,69 @@ import type {
       ],
       icon: FileText,
     },
-    {
-      key: 'fetch-detailed',
-      name: 'Fetch RC Detailed',
-      description: 'Get full RC details including address, finance, insurance, and vehicle data.',
-      apiEndpoint: '/vehicle/rc/fetch-detailed',
-      formFields: [
-        { name: 'rc_number', label: 'RC Number', type: 'text', required: true },
-        {
-          name: 'extract_variant',
-          label: 'Extract Variant',
-          type: 'radio',
-          required: false,
-          options: [
-            { label: 'Yes', value: 'true' },
-            { label: 'No', value: 'false' },
-          ],
-        },
-        { name: 'extract_mapping', label: 'Extract Mapping ID', type: 'text', required: false },
-        { name: 'extract_insurer', label: 'Extract Insurer', type: 'text', required: false },
-        {
-          name: 'consent',
-          label: 'Consent',
-          type: 'radio',
-          required: true,
-          options: [
-            { label: 'Yes', value: 'Y' },
-            { label: 'No', value: 'N' },
-          ],
-        },
-      ],
-      icon: Car,
-    },
-    {
-      key: 'fetch-detailed-challan',
-      name: 'Fetch RC + Challan',
-      description: 'Get detailed RC info along with linked e-challans.',
-      apiEndpoint: '/vehicle/rc/fetch-detailed-challan',
-      formFields: [
-        { name: 'rc_number', label: 'RC Number', type: 'text', required: true },
-        {
-          name: 'extract_variant',
-          label: 'Extract Variant',
-          type: 'radio',
-          required: false,
-          options: [
-            { label: 'Yes', value: 'true' },
-            { label: 'No', value: 'false' },
-          ],
-        },
-        { name: 'extract_mapping', label: 'Extract Mapping ID', type: 'text', required: false },
-        {
-          name: 'consent',
-          label: 'Consent',
-          type: 'radio',
-          required: true,
-          options: [
-            { label: 'Yes', value: 'Y' },
-            { label: 'No', value: 'N' },
-          ],
-        },
-      ],
-      icon: AlertTriangle,
-    },
+    // {
+    //   key: 'fetch-detailed',
+    //   name: 'Fetch RC Detailed',
+    //   description: 'Get full RC details including address, finance, insurance, and vehicle data.',
+    //   apiEndpoint: '/vehicle/rc/fetch-detailed',
+    //   formFields: [
+    //     { name: 'rc_number', label: 'RC Number', type: 'text', required: true },
+    //     {
+    //       name: 'extract_variant',
+    //       label: 'Extract Variant',
+    //       type: 'radio',
+    //       required: false,
+    //       options: [
+    //         { label: 'Yes', value: 'true' },
+    //         { label: 'No', value: 'false' },
+    //       ],
+    //     },
+    //     { name: 'extract_mapping', label: 'Extract Mapping ID', type: 'text', required: false },
+    //     { name: 'extract_insurer', label: 'Extract Insurer', type: 'text', required: false },
+    //     {
+    //       name: 'consent',
+    //       label: 'Consent',
+    //       type: 'radio',
+    //       required: true,
+    //       options: [
+    //         { label: 'Yes', value: 'Y' },
+    //         { label: 'No', value: 'N' },
+    //       ],
+    //     },
+    //   ],
+    //   icon: Car,
+    // },
+    // {
+    //   key: 'fetch-detailed-challan',
+    //   name: 'Fetch RC + Challan',
+    //   description: 'Get detailed RC info along with linked e-challans.',
+    //   apiEndpoint: '/vehicle/rc/fetch-detailed-challan',
+    //   formFields: [
+    //     { name: 'rc_number', label: 'RC Number', type: 'text', required: true },
+    //     {
+    //       name: 'extract_variant',
+    //       label: 'Extract Variant',
+    //       type: 'radio',
+    //       required: false,
+    //       options: [
+    //         { label: 'Yes', value: 'true' },
+    //         { label: 'No', value: 'false' },
+    //       ],
+    //     },
+    //     { name: 'extract_mapping', label: 'Extract Mapping ID', type: 'text', required: false },
+    //     {
+    //       name: 'consent',
+    //       label: 'Consent',
+    //       type: 'radio',
+    //       required: true,
+    //       options: [
+    //         { label: 'Yes', value: 'Y' },
+    //         { label: 'No', value: 'N' },
+    //       ],
+    //     },
+    //   ],
+    //   icon: AlertTriangle,
+    // },
     {
       key: 'echallan-fetch',
       name: 'Fetch E-Challan by RC & Engine',

@@ -210,24 +210,24 @@ const navItems = [
         description: "KYC for financial institutions",
         href: "/solutions?industry=banking",
       },
-      {
-        label: "Government Services",
-        icon: Building,
-        description: "Citizen verification solutions",
-        href: "/solutions?industry=government",
-      },
-      {
-        label: "Healthcare",
-        icon: Shield,
-        description: "Patient identity verification",
-        href: "/solutions?industry=healthcare",
-      },
-      {
-        label: "E-commerce",
-        icon: Zap,
-        description: "Customer onboarding solutions",
-        href: "/solutions?industry=ecommerce",
-      },
+      // {
+      //   label: "Government Services",
+      //   icon: Building,
+      //   description: "Citizen verification solutions",
+      //   href: "/solutions?industry=government",
+      // },
+      // {
+      //   label: "Healthcare",
+      //   icon: Shield,
+      //   description: "Patient identity verification",
+      //   href: "/solutions?industry=healthcare",
+      // },
+      // {
+      //   label: "E-commerce",
+      //   icon: Zap,
+      //   description: "Customer onboarding solutions",
+      //   href: "/solutions?industry=ecommerce",
+      // },
     ],
   },
   {
@@ -397,7 +397,7 @@ export default function Navbar() {
             <img
               src="/verifymykyclogo.svg"
               alt="VerifyMyKyc"
-              className="h-12 md:h-12 w-auto"
+              className="h-16 md:h-16 w-auto"
               onError={() => setLogoAvailable(false)}
             />
           ) : (

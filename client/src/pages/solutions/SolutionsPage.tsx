@@ -74,11 +74,11 @@ const SolutionsPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {/* Search and Filters */}
-        <div className="mb-8 space-y-6">
+        {/* <div className="mb-8 space-y-6">
           <SearchInput placeholder="Search solutions..." onSearch={setSearchQuery} className="max-w-md" />
 
           <FilterTabs tabs={industryTabs} activeTab={selectedIndustry} onTabChange={handleTabChange} />
-        </div>
+        </div> */}
 
         {/* Solutions Grid */}
         {isLoading ? (

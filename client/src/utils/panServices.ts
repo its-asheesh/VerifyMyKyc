@@ -164,27 +164,27 @@ export const panServices: PanServiceMeta[] = [
   //     { name: "consent", label: "Consent", type: "text", required: true },
   //   ],
   // },
-  {
-    key: "digilocker-pull",
-    name: "Digilocker Pull PAN",
-    description: "Pull PAN document from Digilocker.",
-    apiEndpoint: "/pan/digilocker-pull",
-    formFields: [
-      { name: "panno", label: "PAN Number", type: "text", required: true },
-      { name: "PANFullName", label: "PAN Full Name", type: "text", required: true },
-      // transactionId will be auto-filled after Digilocker consent
-    ],
-    icon: Download,
-  },
-  {
-    key: "digilocker-fetch-document",
-    name: "Digilocker Fetch Document",
-    description: "Fetch PAN document from Digilocker using document URI.",
-    apiEndpoint: "/pan/digilocker-fetch-document",
-    formFields: [
-      { name: "document_uri", label: "Document URI", type: "text", required: true },
-      { name: "transaction_id", label: "Transaction ID", type: "text", required: true },
-    ],
-    icon: FileText,
-  },
+  // {
+  //   key: "digilocker-pull",
+  //   name: "Digilocker Pull PAN",
+  //   description: "Pull PAN document from Digilocker.",
+  //   apiEndpoint: "/pan/digilocker-pull",
+  //   formFields: [
+  //     { name: "panno", label: "PAN Number", type: "text", required: true },
+  //     { name: "PANFullName", label: "PAN Full Name", type: "text", required: true },
+  //     // transactionId will be auto-filled after Digilocker consent
+  //   ],
+  //   icon: Download,
+  // },
+  // {
+  //   key: "digilocker-fetch-document",
+  //   name: "Digilocker Fetch Document",
+  //   description: "Fetch PAN document from Digilocker using document URI.",
+  //   apiEndpoint: "/pan/digilocker-fetch-document",
+  //   formFields: [
+  //     { name: "document_uri", label: "Document URI", type: "text", required: true },
+  //     { name: "transaction_id", label: "Transaction ID", type: "text", required: true },
+  //   ],
+  //   icon: FileText,
+  // },
 ] 
