@@ -53,8 +53,8 @@ const initialState: AuthState = {
   error: null,
 }
 
-// API base URL - use relative path for cross-device compatibility
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+// API base URL - use production URL for Hostinger
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend.verifymykyc.com/api'
 
 // Helper function to make API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
