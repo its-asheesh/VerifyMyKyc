@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5000', // or your backend port
+      '/api': 'https://backend.verifymykyc.com', // or your backend port
     }
   }
 })

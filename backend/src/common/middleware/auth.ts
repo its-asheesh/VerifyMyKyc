@@ -15,9 +15,24 @@ export interface AuthenticatedRequest extends Request {
   user: any;
 }
 
+// ✅ ADD THIS — Handle OPTIONS requests for CORS preflight
+export const handleOptions = (req: Request, res: Response, next: NextFunction) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', 'https://verifymykyc.com');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+};
+
 // Middleware to authenticate user
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('AUTH REQUEST FROM:', req.headers['user-agent']);
+    console.log('AUTHORIZATION HEADER:', req.headers.authorization);
+
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
@@ -27,7 +42,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const token = extractTokenFromHeader(authHeader);
     const decoded = verifyToken(token) as JWTPayload;
 
-    // Find user in database
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
@@ -38,10 +52,10 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return res.status(401).json({ message: 'Account is deactivated.' });
     }
 
-    // Attach user to request object
     req.user = user;
     next();
   } catch (error: any) {
+    console.error('AUTH ERROR:', error.message);
     return res.status(401).json({ message: error.message || 'Invalid token.' });
   }
 };
@@ -88,7 +102,6 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
 
     next();
   } catch (error) {
-    // Continue without user if token is invalid
     next();
   }
-}; 
+};
