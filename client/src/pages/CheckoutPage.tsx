@@ -22,7 +22,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
     billingPeriod: initialBillingPeriod = 'monthly',
     productInfo,
     tierInfo,
-    planDetails // Plan details from homepage
+    planDetails, // Plan details from homepage
+    returnTo
   } = location.state || {}
   
   // Debug the navigation state
@@ -281,8 +282,9 @@ const CheckoutPage: React.FC<CheckoutPageProps> = () => {
 
     if (verifyRes.ok) {
       // ✅ Payment verified and order activated
-      navigate(`/payment-success?orderId=${order.orderId}&amount=${total}&service=${encodeURIComponent(order.serviceName)}`, {
-        state: { selectedPlan: planDetails?.planName, billingPeriod, total, orderId: order.orderId }
+      const returnToParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ''
+      navigate(`/payment-success?orderId=${order.orderId}&amount=${total}&service=${encodeURIComponent(order.serviceName)}${returnToParam}`, {
+        state: { selectedPlan: planDetails?.planName, billingPeriod, total, orderId: order.orderId, returnTo }
       });
     } else {
       const data = await verifyRes.json();

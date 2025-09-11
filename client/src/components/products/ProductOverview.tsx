@@ -23,6 +23,8 @@ import { useQuery } from "@tanstack/react-query";
 import { reviewApi } from "../../services/api/reviewApi";
 import { useVerificationPricing } from "../../hooks/usePricing";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { fetchActiveServices } from "../../redux/slices/orderSlice";
 
 interface ProductOverviewProps {
   product: Product;
@@ -38,8 +40,21 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [rcModalOpen, setRcModalOpen] = useState(false);
   const [passportModalOpen, setPassportModalOpen] = useState(false);
+  const [buyPromptOpen, setBuyPromptOpen] = useState(false);
+  const [awaitingAccessCheck, setAwaitingAccessCheck] = useState(false);
+  const buyPromptTimerRef = React.useRef<number | null>(null);
 
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { activeServices } = useAppSelector((state) => state.orders);
+
+  // Ensure we have user's active services when authenticated
+  React.useEffect(() => {
+    if (isAuthenticated && !activeServices) {
+      dispatch(fetchActiveServices());
+    }
+  }, [isAuthenticated, activeServices, dispatch]);
 
   // Extract lowercase identifiers for matching
   const title = product.title.toLowerCase();
@@ -159,12 +174,13 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         },
         tierInfo,
         totalAmount: oneTimePrice, // ✅ Pass amount as number
+        returnTo: `/products/${product.id}`,
       },
     });
   };
 
-  // Handle Try Demo
-  const handleTryDemo = () => {
+  // Helper to open the correct verification modal
+  const openVerificationModal = () => {
     if (isAadhaarProduct) setAadhaarModalOpen(true);
     else if (isPanProduct) setPanModalOpen(true);
     else if (isDrivingLicenseProduct) setDrivingLicenseModalOpen(true);
@@ -175,6 +191,90 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     else if (isRcProduct) setRcModalOpen(true);
     else if (isPassportProduct) setPassportModalOpen(true);
   };
+
+  // Determine if user has active access for THIS product's verification type
+  const hasActiveAccessForProduct = (services: typeof activeServices | null | undefined): boolean => {
+    if (!services) return false;
+    const now = new Date();
+
+    // 1) Active verification order matching this verification type
+    const verOk = (services.verifications || []).some((v) => {
+      const notExpired = !v.endDate || new Date(v.endDate) > now;
+      const isActive = v.status === "active" && notExpired;
+      if (!isActive) return false;
+      const vt = (v.serviceDetails?.verificationType || "").toLowerCase();
+      return vt.includes(verificationType);
+    });
+
+    if (verOk) return true;
+
+    // 2) Active plan that includes this verification in its features (best-effort)
+    const planOk = (services.plans || []).some((p) => {
+      const notExpired = !p.endDate || new Date(p.endDate) > now;
+      const isActive = p.status === "active" && notExpired;
+      if (!isActive) return false;
+      const features = p.serviceDetails?.features || [];
+      return features.some((f) => (f || "").toLowerCase().includes(verificationType));
+    });
+
+    return planOk;
+  };
+
+  // Handle Try Demo / Start Verification CTA
+  const handleTryDemo = () => {
+    // Ensure active services are loaded before deciding access
+    if (isAuthenticated && !activeServices) {
+      setAwaitingAccessCheck(true);
+      dispatch(fetchActiveServices());
+      // Fallback: if services don't load in time, show popup so user isn't blocked
+      if (buyPromptTimerRef.current) {
+        window.clearTimeout(buyPromptTimerRef.current);
+      }
+      buyPromptTimerRef.current = window.setTimeout(() => {
+        if (awaitingAccessCheck && !activeServices) {
+          setBuyPromptOpen(true);
+          setAwaitingAccessCheck(false);
+        }
+      }, 1500);
+      return; // wait for state to update; decide in effect below
+    }
+
+    const hasAccess = hasActiveAccessForProduct(activeServices);
+
+    if (!hasAccess) {
+      setBuyPromptOpen(true);
+      return;
+    }
+
+    openVerificationModal();
+  };
+
+  // When we were waiting for services to load, decide what to do once loaded
+  React.useEffect(() => {
+    if (!awaitingAccessCheck || !activeServices) return;
+
+    // Clear fallback timer if any
+    if (buyPromptTimerRef.current) {
+      window.clearTimeout(buyPromptTimerRef.current);
+      buyPromptTimerRef.current = null;
+    }
+
+    setAwaitingAccessCheck(false);
+
+    const hasAccess = hasActiveAccessForProduct(activeServices);
+
+    if (!hasAccess) setBuyPromptOpen(true);
+    else openVerificationModal();
+  }, [awaitingAccessCheck, activeServices]);
+
+  // Cleanup timer on unmount
+  React.useEffect(() => {
+    return () => {
+      if (buyPromptTimerRef.current) {
+        window.clearTimeout(buyPromptTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -430,6 +530,83 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               &times;
             </button>
             <PassportSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {/* Elegant Buy Prompt (inline on product page) */}
+      {buyPromptOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              aria-label="Close"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              onClick={() => setBuyPromptOpen(false)}
+            >
+              ✕
+            </button>
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl">💡</div>
+              <h3 className="text-xl font-semibold text-gray-900">You don’t have an active plan</h3>
+              <p className="text-gray-600">Purchase a verification to get started instantly.</p>
+              <div className="pt-2 flex gap-3 justify-center">
+                <button
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setBuyPromptOpen(false)}
+                >
+                  Not now
+                </button>
+                <button
+                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                  onClick={() => {
+                    // Reuse Buy Now logic if pricing available; otherwise send minimal info
+                    if (pricingData) {
+                      const oneTimePrice = Number(pricingData.oneTimePrice);
+                      const tierInfo = {
+                        service: verificationType,
+                        label: product.title,
+                        price: isNaN(oneTimePrice) ? 0 : oneTimePrice,
+                        billingPeriod: "one-time",
+                        originalPrice: isNaN(oneTimePrice) ? 0 : oneTimePrice,
+                        discount: 0,
+                      };
+                      navigate("/checkout", {
+                        state: {
+                          selectedPlan: "one-time",
+                          billingPeriod: "one-time",
+                          selectedServices: [verificationType],
+                          productInfo: {
+                            id: product.id,
+                            title: product.title,
+                            description: product.description,
+                            image: product.image,
+                            category: product.category.name,
+                          },
+                          tierInfo,
+                          totalAmount: isNaN(oneTimePrice) ? undefined : oneTimePrice,
+                          returnTo: `/products/${product.id}`,
+                        },
+                      });
+                    } else {
+                      navigate("/checkout", {
+                        state: {
+                          selectedPlan: "one-time",
+                          billingPeriod: "one-time",
+                          selectedServices: [verificationType],
+                          productInfo: {
+                            id: product.id,
+                            title: product.title,
+                          },
+                          returnTo: `/products/${product.id}`,
+                        },
+                      });
+                    }
+                  }}
+                >
+                  Buy Verification
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

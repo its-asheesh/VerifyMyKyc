@@ -29,17 +29,19 @@ const PaymentSuccessPage: React.FC = () => {
   const orderId = searchParams.get('orderId') || 'ORD-' + Date.now()
   const amount = searchParams.get('amount') || '0'
   const service = searchParams.get('service') || 'Verification Service'
+  const returnTo = searchParams.get('returnTo')
   // 1.  Grab service slug from URL (or fall back)
 const serviceSlug = serviceMap[service] || 'pan' // pan / aadhaar / 
 
   useEffect(() => {
-    // Auto-redirect to home after 10 seconds
+    // Auto-redirect back to originating page if provided; else to product
+    const target = returnTo || `/products/${serviceSlug}`
     const timer = setTimeout(() => {
-      navigate(`/products/${serviceSlug}`)
-    }, 10000)
+      navigate(target)
+    }, 3000)
 
     return () => clearTimeout(timer)
-  }, [navigate,serviceSlug])
+  }, [navigate, serviceSlug, returnTo])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -149,11 +151,11 @@ const serviceSlug = serviceMap[service] || 'pan' // pan / aadhaar /
             
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate(returnTo || `/products/${serviceSlug}`)}
                 className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                Home
+                Continue
               </button>
               
               <button

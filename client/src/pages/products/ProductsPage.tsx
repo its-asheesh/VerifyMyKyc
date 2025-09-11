@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { useSearchParams, useNavigate } from "react-router-dom"
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { useAppDispatch, useAppSelector } from "../../redux/hooks"
 import { fetchProducts, fetchCategories, setFilters } from "../../redux/slices/productSlice"
@@ -19,13 +19,24 @@ const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation() as any
   const { products = [], categories = [], isLoading, error, filters } = useAppSelector((state) => state.products)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [showBuyPrompt, setShowBuyPrompt] = useState(false)
 
   useEffect(() => {
     dispatch(fetchProducts())
     dispatch(fetchCategories())
   }, [dispatch])
+
+  // Open elegant buy modal when navigated from Start Verification without active plan
+  useEffect(() => {
+    const statePrompt = location.state?.showBuyPrompt
+    const qpPrompt = searchParams.get('buyVerification') === '1'
+    if (statePrompt || qpPrompt) {
+      setShowBuyPrompt(true)
+    }
+  }, [location.state, searchParams])
 
   // Handle URL parameters on page load
   useEffect(() => {
@@ -228,6 +239,66 @@ const ProductsPage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Elegant Buy Prompt Modal */}
+      {showBuyPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              aria-label="Close"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowBuyPrompt(false)}
+            >
+              ✕
+            </button>
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl">💡</div>
+              <h3 className="text-xl font-semibold text-gray-900">You don’t have an active plan</h3>
+              <p className="text-gray-600">Purchase a verification to get started instantly.</p>
+              <div className="pt-2 flex gap-3 justify-center">
+                <button
+                  className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setShowBuyPrompt(false)}
+                >
+                  Not now
+                </button>
+                <button
+                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                  onClick={() => {
+                    const vt = location.state?.verificationType
+                    const fromProduct = location.state?.fromProduct
+                    const vtFromQp = searchParams.get('service') || undefined
+                    if (vt && fromProduct) {
+                      // Go directly to checkout for one-time purchase
+                      navigate('/checkout', {
+                        state: {
+                          selectedPlan: 'one-time',
+                          billingPeriod: 'one-time',
+                          selectedServices: [vt],
+                          productInfo: fromProduct,
+                          tierInfo: { service: vt, label: fromProduct.title, price: 0, billingPeriod: 'one-time', originalPrice: 0, discount: 0 }
+                        }
+                      })
+                    } else if (vtFromQp) {
+                      navigate('/checkout', {
+                        state: {
+                          selectedPlan: 'one-time',
+                          billingPeriod: 'one-time',
+                          selectedServices: [vtFromQp]
+                        }
+                      })
+                    } else {
+                      navigate('/custom-pricing')
+                    }
+                  }}
+                >
+                  Buy Verification
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

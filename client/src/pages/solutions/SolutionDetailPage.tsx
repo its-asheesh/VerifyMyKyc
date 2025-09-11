@@ -118,7 +118,7 @@ const SolutionDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
         <ProductOverview product={adaptedProduct} />
         <div id="pricing">
-          <ProductPricingSection product={adaptedProduct} />
+          {/* <ProductPricingSection product={adaptedProduct} /> */}
         </div>
         <ProductFeatures product={adaptedProduct} />
         <ProductReviews productId={adaptedProduct.id} showList={true} showStats={true} showForm={false} limit={1000} />

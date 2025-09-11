@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { motion } from "framer-motion"
-import { ArrowRight, Building, CheckCircle, Users } from "lucide-react"
+import { ArrowRight, Building, CheckCircle, Users, Star, Zap } from "lucide-react"
 import { Link } from "react-router-dom"
 import type { Solution } from "../../types/solution"
 
@@ -11,81 +11,94 @@ interface SolutionCardProps {
 }
 
 export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
+  // Align some display stats with ProductCard
+  const avgDisplay = "0.0"
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+      className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group 
+        flex flex-col h-full min-h-[400px]`}
     >
       {/* Image Section */}
-      <div className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative overflow-hidden">
+      <div className="h-32 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative overflow-hidden">
         <img
           src={solution.image || "/placeholder.svg"}
           alt={solution.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-contain rounded-t-xl p-1 md:p-2 group-hover:scale-110 transition-transform duration-300 "
         />
         <div className="absolute top-3 right-3">
-          <span className="bg-white/90 backdrop-blur-sm text-gray-700 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-            <Building className="w-3 h-3" />
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800`}
+          >
             {solution.industry.name}
           </span>
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-6 space-y-4">
-        {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-          {solution.title}
-        </h3>
+      <div className={"p-6 flex flex-col flex-1"}>
+        {/* Top Section */}
+        <div className={"flex-1 space-y-4"}>
+          {/* Category */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+              {solution.industry.name}
+            </span>
+          </div>
 
-        {/* Description */}
-        <p className="text-gray-600 leading-relaxed line-clamp-3">{solution.description}</p>
+          {/* Title */}
+          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+            {solution.title}
+          </h3>
 
-        {/* Use Cases */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-gray-900">Key Use Cases:</h4>
-          <div className="space-y-1">
-            {solution.useCases.slice(0, 2).map((useCase, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-gray-600">{useCase.title}</span>
-              </div>
+          {/* Description */}
+          <p className={`text-gray-600 leading-relaxed line-clamp-3`}>
+            {solution.description}
+          </p>
+
+          {/* Features - map from benefits */}
+          <div className={`flex flex-wrap gap-2 mb-4`}>
+            {solution.benefits.slice(0, 4).map((benefit, index) => (
+              <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                {benefit}
+              </span>
             ))}
-            {solution.useCases.length > 2 && (
-              <span className="text-xs text-gray-500 ml-6">+{solution.useCases.length - 2} more use cases</span>
+            {solution.benefits.length > 4 && (
+              <span className="text-xs text-gray-500">+{solution.benefits.length - 4} more</span>
             )}
           </div>
         </div>
 
-        {/* Benefits */}
-        <div className="flex flex-wrap gap-2">
-          {solution.benefits.slice(0, 3).map((benefit, index) => (
-            <span key={index} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
-              {benefit}
-            </span>
-          ))}
-        </div>
-
-        {/* Stats */}
-        <div className="flex justify-between text-sm text-gray-600 pt-4 border-t">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{solution.caseStudies.length} case studies</span>
+        {/* Bottom Section (match ProductCard) */}
+        <div className={`space-y-3 mt-2`}>
+          {/* Stats */}
+          <div
+            className={`flex gap-4 text-sm text-gray-600 justify-between mb-4`}
+          >
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              <span>{avgDisplay}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span>1.2k users</span>
+            </div>
+            <div className="flex items-center gap-">
+              <Zap className="w-4 h-4" />
+              <span>99.9% uptime</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <span>{solution.implementation.length} steps</span>
-          </div>
-        </div>
 
-        {/* CTA Button */}
-        <Link
-          to={`/solutions/${solution.id}`}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 group/btn w-full justify-center"
-        >
-          Learn More
-          <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-        </Link>
+          {/* CTA Button (match ProductCard layout) */}
+          <Link
+            to={`/solutions/${solution.id}`}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 group/btn w-full sm:w-auto justify-center sm:justify-start"
+          >
+            Start Verifying
+            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+          </Link>
+        </div>
       </div>
     </motion.div>
   )
