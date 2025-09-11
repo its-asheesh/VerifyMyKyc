@@ -141,26 +141,26 @@ export const passportServices: PassportServiceMeta[] = [
     ],
     icon: Search,
   },
-  {
-    key: 'ocr',
-    name: 'Passport OCR',
-    description: 'Extract data from passport images using Optical Character Recognition.',
-    apiEndpoint: '/passport/ocr',
-    category: 'document',
-    formFields: [
-      { name: 'file_front', label: 'Passport Front Image', type: 'file', required: true },
-      { name: 'file_back', label: 'Passport Back Image', type: 'file', required: false },
-      {
-        name: 'consent',
-        label: 'Consent',
-        type: 'radio',
-        required: true,
-        options: [
-          { label: 'Yes', value: 'Y' },
-          { label: 'No', value: 'N' },
-        ],
-      },
-    ],
-    icon: Scan,
-  },
+  // {
+  //   key: 'ocr',
+  //   name: 'Passport OCR',
+  //   description: 'Extract data from passport images using Optical Character Recognition.',
+  //   apiEndpoint: '/passport/ocr',
+  //   category: 'document',
+  //   formFields: [
+  //     { name: 'file_front', label: 'Passport Front Image', type: 'file', required: true },
+  //     { name: 'file_back', label: 'Passport Back Image', type: 'file', required: false },
+  //     {
+  //       name: 'consent',
+  //       label: 'Consent',
+  //       type: 'radio',
+  //       required: true,
+  //       options: [
+  //         { label: 'Yes', value: 'Y' },
+  //         { label: 'No', value: 'N' },
+  //       ],
+  //     },
+  //   ],
+  //   icon: Scan,
+  // },
 ]

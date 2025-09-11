@@ -17,18 +17,18 @@ export interface DrivingLicenseServiceMeta {
 }
 
 export const drivingLicenseServices: DrivingLicenseServiceMeta[] = [
-  {
-    key: "ocr",
-    name: "Driving License OCR",
-    description: "Extract data from Driving License image(s)",
-    apiEndpoint: "/api/drivinglicense/ocr",
-    formFields: [
-      { name: "file_front", label: "DL Front Image", type: "file", required: true },
-      { name: "file_back", label: "DL Back Image", type: "file", required: false },
-      { name: "consent", label: "Consent", type: "text", required: true },
-    ],
-    icon: CreditCard,
-  },
+  // {
+  //   key: "ocr",
+  //   name: "Driving License OCR",
+  //   description: "Extract data from Driving License image(s)",
+  //   apiEndpoint: "/api/drivinglicense/ocr",
+  //   formFields: [
+  //     { name: "file_front", label: "DL Front Image", type: "file", required: true },
+  //     { name: "file_back", label: "DL Back Image", type: "file", required: false },
+  //     { name: "consent", label: "Consent", type: "text", required: true },
+  //   ],
+  //   icon: CreditCard,
+  // },
   {
     key: "fetch-details",
     name: "Fetch Driving License Details",

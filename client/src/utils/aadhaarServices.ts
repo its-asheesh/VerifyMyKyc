@@ -18,17 +18,17 @@ export interface AadhaarServiceMeta {
 }
 
 export const aadhaarServices: AadhaarServiceMeta[] = [
-  {
-    key: "ocr-v1",
-    name: "Aadhaar OCR (Base64)",
-    description: "Extract data from Aadhaar image (base64)",
-    apiEndpoint: "/api/aadhaar/ocr-v1",
-    formFields: [
-      { name: "base64_data", label: "Aadhaar Image (Base64)", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
-    ],
-    icon: Camera,
-  },
+  // {
+  //   key: "ocr-v1",
+  //   name: "Aadhaar OCR (Base64)",
+  //   description: "Extract data from Aadhaar image (base64)",
+  //   apiEndpoint: "/api/aadhaar/ocr-v1",
+  //   formFields: [
+  //     { name: "base64_data", label: "Aadhaar Image (Base64)", type: "text", required: true },
+  //     { name: "consent", label: "Consent", type: "text", required: true },
+  //   ],
+  //   icon: Camera,
+  // },
   {
     key: "ocr-v2",
     name: "Aadhaar OCR (File Upload)",
@@ -41,15 +41,15 @@ export const aadhaarServices: AadhaarServiceMeta[] = [
     ],
     icon: Upload,
   },
-  {
-    key: "fetch-eaadhaar",
-    name: "Fetch eAadhaar",
-    description: "Fetch eAadhaar using transaction ID and JSON payload",
-    apiEndpoint: "/api/aadhaar/fetch-eaadhaar",
-    formFields: [
-      { name: "transaction_id", label: "Transaction ID", type: "text", required: true },
-      { name: "json", label: "JSON Payload", type: "json", required: true },
-    ],
-    icon: Download,
-  },
+  // {
+  //   key: "fetch-eaadhaar",
+  //   name: "Fetch eAadhaar",
+  //   description: "Fetch eAadhaar using transaction ID and JSON payload",
+  //   apiEndpoint: "/api/aadhaar/fetch-eaadhaar",
+  //   formFields: [
+  //     { name: "transaction_id", label: "Transaction ID", type: "text", required: true },
+  //     { name: "json", label: "JSON Payload", type: "json", required: true },
+  //   ],
+  //   icon: Download,
+  // },
 ] 
