@@ -15,7 +15,7 @@ interface AxiosError<T = any> extends Error {
   toJSON: () => object;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://backend.verifymykyc.com/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ApiErrorResponse {
   message: string;

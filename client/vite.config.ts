@@ -6,8 +6,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    host: '0.0.0.0', // Allow external connections
+    port: 3000,
     proxy: {
-      '/api': 'https://backend.verifymykyc.com', // or your backend port
+      '/api': 'http://localhost:5000', // or your backend port
     }
   }
 })

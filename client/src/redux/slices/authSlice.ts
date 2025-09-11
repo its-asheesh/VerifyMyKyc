@@ -53,8 +53,8 @@ const initialState: AuthState = {
   error: null,
 }
 
-// API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// API base URL - use relative path for cross-device compatibility
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 // Helper function to make API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
