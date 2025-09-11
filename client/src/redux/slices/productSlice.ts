@@ -31,7 +31,7 @@ export const mockProducts: Product[] = [
     title: "PAN Card Verification",
     description: "Instantly verify PAN card details against government databases",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -39,8 +39,13 @@ export const mockProducts: Product[] = [
       description: "Government ID verification",
     },
     features: ["Real-time verification", "Government database check", "99.9% accuracy"],
-    services: [" Fetch Father’s Name","Check PAN-Aadhaar Link","Fetch GSTIN, DIN, CIN","Pull PAN from DigiLocker"],
-
+    services: [
+      "Verify PAN Holder Name & Status",
+      "Fetch Father's Name from PAN Database",
+      "Check PAN-Aadhaar Linking Status",
+      "Retrieve Associated GSTIN/DIN/CIN",
+      "Pull PAN Card PDF from DigiLocker"
+    ],
     pricing: {
       free: { price: 0, requests: 100, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 299, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -58,7 +63,7 @@ export const mockProducts: Product[] = [
     title: "Aadhaar Verification",
     description: "Secure Aadhaar card verification with OTP validation",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -66,8 +71,13 @@ export const mockProducts: Product[] = [
       description: "Government ID verification",
     },
     features: ["OTP verification", "Biometric matching", "Secure processing", "Compliance ready"],
-    services: ["Aadhaar OCR (Capture image)","Aadhaar OCR (File Upload)","Fetch E-Aadhaar"],
-
+    services: [
+      "Verify Aadhaar via OTP (eKYC)",
+      "Extract Data via Aadhaar Card OCR (Live Capture)",
+      "Upload Image for Aadhaar OCR Extraction",
+      "Download E-Aadhaar PDF (Masked/Full)",
+      "Validate Aadhaar-PAN Link Status"
+    ],
     pricing: {
       free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 399, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -85,16 +95,20 @@ export const mockProducts: Product[] = [
     title: "Passport Verification",
     description: "International passport verification and validation",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "personal",
       name: "Personal Verification",
       slug: "personal",
       description: "Government ID verification",
     },
-    features: ["International support", "OCR technology", "Fraud detection", "Multi-language"],
-    services: ["Verify Passport Details","Fetch Passport Details","Verify Passport Details OCR (File Upload)","Generate Passport MRZ","Verify Passport MRZ"],
-
+    features: ["International support", "Fraud detection", "Multi-language"],
+    services: [
+      "Verify Passport Holder & Validity",
+      "Generate Machine Readable Zone (MRZ)",
+      "Validate MRZ Checksum & Authenticity",
+      "Retrieve Issue/Expiry Date & Authority"
+    ],
     pricing: {
       free: { price: 0, requests: 25, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 599, requests: 250, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -112,7 +126,7 @@ export const mockProducts: Product[] = [
     title: "Driving License Verification",
     description: "Verify Driving License details from RTO records.",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -120,8 +134,12 @@ export const mockProducts: Product[] = [
       description: "Government ID verification",
     },
     features: ["Real-time verification", "Official RTO data", "High accuracy"],
-    services: [" Fetch Driving License Details","Verify Driving License Details OCR(File Upload)","Fetch GSTIN, DIN, CIN","Pull PAN from DigiLocker"],
-
+    services: [
+      "Fetch DL Holder Name, DOB & Address",
+      "Check DL Validity & Expiry Date",
+      "Retrieve Issuing RTO & Vehicle Class",
+      "Get DL Status (Active/Suspended)"
+    ],
     pricing: {
       free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 499, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -139,7 +157,7 @@ export const mockProducts: Product[] = [
     title: "Voter ID Verification",
     description: "Verify voter details via direct fetch, captcha flow, or OCR scan.",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -147,13 +165,15 @@ export const mockProducts: Product[] = [
       description: "Government ID verification",
     },
     features: [
-      "Direct API fetch (Boson)",
-      "Captcha-based fetch (Meson)",
-      "OCR extraction from card images",
+      "Direct API fetch",
       "Quota-aware billing",
     ],
-    services: [" Fetch Father’s Name","Check PAN-Aadhaar Link","Fetch GSTIN, DIN, CIN","Pull PAN from DigiLocker"],
-
+    services: [
+      "Fetch Voter Name, Age & EPIC Number",
+      "Voter Info Retrieval",
+      "Retrieve Constituency, State & Booth Info",
+      "Verify Voter ID Authenticity & Status"
+    ],
     pricing: {
       free: { price: 0, requests: 20, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -171,7 +191,7 @@ export const mockProducts: Product[] = [
     title: "GSTIN Verification",
     description: "Verify business GSTIN details and contact information.",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "business",
       name: "Business Verification",
@@ -183,8 +203,13 @@ export const mockProducts: Product[] = [
       "Lite GSTIN fetch",
       "High accuracy",
     ],
-    services: [" Fetch Father’s Name","Check PAN-Aadhaar Link","Fetch GSTIN, DIN, CIN","Pull PAN from DigiLocker"],
-
+    services: [
+      "Verify Business Name & Legal Status",
+      "Fetch GST Registration Date & State Code",
+      "Retrieve Proprietor/Partner/Director Info",
+      "Get Business Address & Constitution Type",
+      "Download GST Registration Certificate"
+    ],
     pricing: {
       free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -202,7 +227,7 @@ export const mockProducts: Product[] = [
     title: "Company Verification",
     description: "MCA company verification with CIN and DIN lookups.",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "business",
       name: "Business Verification",
@@ -214,7 +239,13 @@ export const mockProducts: Product[] = [
       "Clean, structured UI results",
       "Quota-aware billing",
     ],
-    services: [" Fetch Father’s Name","Check PAN-Aadhaar Link","Fetch GSTIN, DIN, CIN","Pull PAN from DigiLocker"],
+    services: [
+      "Verify Company Name & Registration Status",
+      "Fetch Incorporation Date & ROC Details",
+      "Retrieve Director List via DIN",
+      "Get Authorized Capital & Company Type",
+      "Download MCA Master Data Report"
+    ],
     pricing: {
       free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
       basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
@@ -232,7 +263,7 @@ export const mockProducts: Product[] = [
     title: "Vehicle Verification",
     description: "Verify vehicle Registration Certificate (RC) details including owner, insurance, PUC, and challans.",
     demandLevel: "high",
-      demand: "Most Demanding",
+    demand: "Most Demanding",
     category: {
       id: "vehicle",
       name: "Vehicle Verification",
@@ -247,7 +278,14 @@ export const mockProducts: Product[] = [
       "Real-time RTO data",
       "Quota-aware billing",
     ],
-    services: [" RC Fetch","RC Detailed Fetch","RC + Challan Fetch","E-Challan Fetch","Chassis to RC","FASTag Details"],
+    services: [
+      "Fetch Basic RC Details (Owner, Reg. No.)",
+      "Get Detailed RC: Engine, Chassis, Fuel Type",
+      "Retrieve Active E-Challans & Pending Fines",
+      "Lookup Vehicle by Chassis Number",
+      "Check FASTag Activation & Balance Status",
+      "Verify PUC Certificate Validity"
+    ],
     pricing: {
       free: { 
         price: 0, 
@@ -270,74 +308,80 @@ export const mockProducts: Product[] = [
     },
     documentation: "Complete API documentation for RC verification",
     isActive: true,
-    icon: "/rc.png", // Add your icon
-    image: "/Vhicle.png", // Add your image
+    icon: "/rc.png",
+    image: "/Vhicle.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
   {
-  id: "ccrv",
-  title: "Criminal Case Record Verification",
-  description: "Comprehensive criminal background check and case record verification",
-  demandLevel: "high",
-      demand: "Essential",
-  category: {
-    id: "criminal",
-    name: "Criminal Record Verification",
-    slug: "criminal",
-    description: "Criminal and background checks"
-  },
-  features: [
-    "Nationwide criminal record search",
-    "Court case history verification",
-    "Real-time status updates",
-    "Detailed case information",
-    "Report generation with PDF download"
-  ],
-  services: ["Basic Criminal Record Search","Comprehensive Background Check","Detailed Case Information","Report PDF Download"],
-  "pricing": {
-    "free": {
-      "price": 0,
-      "requests": 10,
-      "features": [
-        "Basic criminal record search",
-        "Email support",
-        "Limited case details"
-      ],
-      "support": "Email"
+    id: "ccrv",
+    title: "Criminal Case Record Verification",
+    description: "Comprehensive criminal background check and case record verification",
+    demandLevel: "high",
+    demand: "Essential",
+    category: {
+      id: "criminal",
+      name: "Criminal Record Verification",
+      slug: "criminal",
+      description: "Criminal and background checks"
     },
-    "basic": {
-      "price": 499,
-      "requests": 500,
-      "features": [
-        "Comprehensive criminal background check",
-        "Detailed case information",
-        "Priority support",
-        "Report PDF download"
-      ],
-      "support": "Chat"
+    features: [
+      "Nationwide criminal record search",
+      "Court case history verification",
+      "Real-time status updates",
+      "Detailed case information",
+      "Report generation with PDF download"
+    ],
+    services: [
+      "Search Criminal Records by Name & DOB",
+      "Fetch FIR & Court Case Details",
+      "Verify Case Status: Pending/Disposed",
+      "Download Verifiable PDF Report",
+      "Bulk Screening for HR/Recruitment"
+    ],
+    pricing: {
+      free: {
+        price: 0,
+        requests: 10,
+        features: [
+          "Basic criminal record search",
+          "Email support",
+          "Limited case details"
+        ],
+        support: "Email"
+      },
+      basic: {
+        price: 499,
+        requests: 500,
+        features: [
+          "Comprehensive background check",
+          "Detailed case info & court data",
+          "Priority support",
+          "PDF report with digital signature"
+        ],
+        support: "Chat"
+      },
+      premium: {
+        price: 1499,
+        requests: 5000,
+        features: [
+          "Enterprise background screening",
+          "Multi-state & High Court coverage",
+          "24/7 dedicated support",
+          "Bulk API processing",
+          "Custom analytics dashboard"
+        ],
+        support: "Phone"
+      }
     },
-    "premium": {
-      "price": 1499,
-      "requests": 5000,
-      "features": [
-        "Enterprise-level background verification",
-        "Advanced search capabilities",
-        "24/7 dedicated support",
-        "Bulk verification processing",
-        "Custom reporting and analytics"
-      ],
-      "support": "Phone"
-    }
+    documentation: "Complete API documentation for CCRV verification",
+    isActive: true,
+    icon: "/ccrv.png",
+    image: "/CCRV.jpg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01"
   },
-  "documentation": "Complete API documentation for CCRV verification",
-  "isActive": true,
-  "icon": "/ccrv.png",
-  "image": "/CCRV.jpg",
-  "createdAt": "2024-01-01",
-  "updatedAt": "2024-01-01"
-},
-]
+];
 
 const mockCategories: ProductCategory[] = [
   { id: "personal", name: "Personal Verification", slug: "personal", description: "Personal ID verification" },
