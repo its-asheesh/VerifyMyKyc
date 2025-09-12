@@ -5,13 +5,20 @@ import cors from 'cors';
 import router from './src/routes';
 import { Request, Response, NextFunction } from 'express';
 import { connectDB } from './src/config/db';
+import { handleOptions } from './src/common/middleware/auth';
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
+// ✅ ADD THIS — Handle OPTIONS requests BEFORE cors()
+app.use(handleOptions);
 
-app.use(cors());
+// ✅ UPDATE THIS — Add credentials and origin
+app.use(cors({
+  origin: 'https://verifymykyc.com',
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // Mount all API routes under /api

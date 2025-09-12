@@ -56,20 +56,9 @@ const AboutPage: React.FC = () => {
       name: "Ankur Bhatia",
       role: "Founder & CEO",
       image: "/placeholder.svg",
-      bio: "Visionary leader with 12+ years in fintech • Ex-Paytm, Razorpay",
+      //bio: "Visionary leader with 12+ years in fintech • Ex-Paytm, Razorpay",
     },
-    {
-      name: "Arun Sharma",
-      role: "CTO",
-      image: "/placeholder.svg",
-      bio: "10+ years building secure APIs • Ex-PhonePe, Flipkart",
-    },
-    {
-      name: "Amit Verma",
-      role: "Head of Partnerships",
-      image: "/placeholder.svg",
-      bio: "8+ years helping businesses grow • Ex-Cashfree, Instamojo",
-    },
+   
   ];
 
   return (
