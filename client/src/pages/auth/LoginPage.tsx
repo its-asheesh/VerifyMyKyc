@@ -173,13 +173,13 @@ const LoginPage: React.FC = () => {
             </div>
 
             {/* Demo Credentials */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
                 <strong>Demo Credentials:</strong><br />
                 Email: demo@example.com<br />
                 Password: password
               </p>
-            </div>
+            </div> */}
 
             {/* Error Message */}
             {error && (
