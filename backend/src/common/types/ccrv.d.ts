@@ -172,11 +172,11 @@ export interface CCRVSearchRequest {
   address: string;
   father_name?: string;
   date_of_birth?: string;
-  case_category?: string;
-  type?: 'PETITIONER' | 'RESPONDENT' | 'WITNESS' | 'OTHER';
-  name_match_type?: 'EXACT_MATCH' | 'PARTIAL_MATCH' | 'FUZZY_MATCH' | 'EXACT_FUZZY';
-  father_match_type?: 'EXACT_MATCH' | 'PARTIAL_MATCH' | 'FUZZY_MATCH' | 'PARTIAL_EXACT';
-  jurisdiction_type?: 'NEAREST_DISTRICTS' | 'STATE_WIDE' | 'COUNTRY_WIDE';
+  case_category?: 'CIVIL' | 'CRIMINAL';
+  type?: 'PETITIONER' | 'RESPONDENT';
+  name_match_type?: 'EXACT_MATCH' | 'EXACT_FUZZY' | 'PARTIAL_EXACT' | 'PARTIAL_FUZZY' | 'NO_MATCH';
+  father_match_type?: 'EXACT_MATCH' | 'EXACT_FUZZY' | 'PARTIAL_EXACT' | 'PARTIAL_FUZZY' | 'NO_MATCH';
+  jurisdiction_type?: 'STATE' | 'DISTRICT' | 'NEAREST_DISTRICTS' | 'PAN_INDIA';
   consent: 'Y' | 'N';
 }
 

@@ -22,7 +22,9 @@ const service = new ccrv_service_1.CCRVService();
 exports.generateCCRVReportHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userId = req.user._id;
-    const { name, father_name, house_number, locality, city, village, state, district, pincode, date_of_birth, gender, mobile_number, email, consent, callback_url } = req.body || {};
+    const { name, father_name, house_number, locality, city, village, state, district, pincode, date_of_birth, gender, mobile_number, email, consent } = req.body || {};
+    // Automatically set callback URL - users don't need to provide this
+    const callback_url = 'https://verifymykyc.com/api/ccrv/callback';
     // Required fields validation
     if (!name || !consent) {
         return res.status(400).json({
@@ -33,7 +35,7 @@ exports.generateCCRVReportHandler = (0, asyncHandler_1.default)((req, res) => __
         userId,
         name,
         hasConsent: Boolean(consent),
-        callback_url: !!callback_url
+        callback_url: callback_url
     });
     // Check verification quota
     const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'ccrv');
@@ -54,7 +56,7 @@ exports.generateCCRVReportHandler = (0, asyncHandler_1.default)((req, res) => __
             gender,
             mobile_number,
             email,
-            consent,
+            consent: consent === true ? 'Y' : consent === false ? 'N' : consent, // Ensure consent is 'Y' or 'N'
             callback_url
         });
         // Consume verification quota
@@ -75,7 +77,6 @@ exports.generateCCRVReportHandler = (0, asyncHandler_1.default)((req, res) => __
 }));
 // POST /api/ccrv/fetch-result
 exports.fetchCCRVResultHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     const userId = req.user._id;
     const { transaction_id } = req.body || {};
     // Required fields validation
@@ -88,20 +89,13 @@ exports.fetchCCRVResultHandler = (0, asyncHandler_1.default)((req, res) => __awa
         userId,
         transaction_id,
     });
-    // Check verification quota
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'ccrv');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     try {
         const result = yield service.fetchResult({
             transaction_id
         });
-        // Consume verification quota
-        yield (0, quota_service_1.consumeVerificationQuota)(order);
-        console.log('CCRV Fetch Result Controller: consumed 1 verification', {
-            orderId: order.orderId,
-            newRemaining: (_a = order === null || order === void 0 ? void 0 : order.verificationQuota) === null || _a === void 0 ? void 0 : _a.remaining,
-        });
+        // Don't consume quota for polling - quota was already consumed during the initial search
+        console.log('CCRV Fetch Result Controller: fetched result without consuming quota (polling)');
+        console.log('CCRV Fetch Result Data:', JSON.stringify(result, null, 2));
         res.json(result);
     }
     catch (error) {
@@ -123,18 +117,27 @@ exports.searchCCRVHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(
             message: 'name, address, and consent are required'
         });
     }
+    // Validate consent format
+    if (consent !== 'Y' && consent !== 'N') {
+        return res.status(400).json({
+            message: 'consent must be either "Y" or "N"'
+        });
+    }
     console.log('CCRV Search Controller: incoming request', {
         userId,
         name,
         address,
-        hasConsent: Boolean(consent)
+        consent,
+        consentType: typeof consent,
+        hasConsent: Boolean(consent),
+        fullBody: req.body
     });
     // Check verification quota
     const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'ccrv');
     if (!order)
         return res.status(403).json({ message: 'Verification quota exhausted or expired' });
     try {
-        const result = yield service.search({
+        const searchPayload = {
             name,
             address,
             father_name,
@@ -144,14 +147,17 @@ exports.searchCCRVHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(
             name_match_type,
             father_match_type,
             jurisdiction_type,
-            consent
-        });
+            consent: consent === true ? 'Y' : consent === false ? 'N' : consent // Ensure consent is 'Y' or 'N'
+        };
+        console.log('CCRV Search Payload being sent to API:', searchPayload);
+        const result = yield service.search(searchPayload);
         // Consume verification quota
         yield (0, quota_service_1.consumeVerificationQuota)(order);
         console.log('CCRV Search Controller: consumed 1 verification', {
             orderId: order.orderId,
             newRemaining: (_a = order === null || order === void 0 ? void 0 : order.verificationQuota) === null || _a === void 0 ? void 0 : _a.remaining,
         });
+        console.log('CCRV Search Result Data:', JSON.stringify(result, null, 2));
         res.json(result);
     }
     catch (error) {

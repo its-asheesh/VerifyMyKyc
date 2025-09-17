@@ -1,4 +1,5 @@
 import axios from "axios";
+import { validateToken } from "../../utils/tokenUtils";
 class BaseApi {
   protected api: ReturnType<typeof axios.create>
 
@@ -22,6 +23,16 @@ class BaseApi {
         if (!(config as any)?.skipAuth) {
           const token = localStorage.getItem("token")
           if (token) {
+            // Validate token before sending request
+            const { isValid } = validateToken(token);
+            if (!isValid) {
+              // Token is expired, clear it and redirect to login
+              localStorage.removeItem("token");
+              if (window.location.pathname !== "/login") {
+                window.location.href = "/login";
+              }
+              return Promise.reject(new Error("Token expired"));
+            }
             config.headers.Authorization = `Bearer ${token}`
           }
         }

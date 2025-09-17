@@ -25,9 +25,11 @@ export const generateCCRVReportHandler = asyncHandler(async (req: AuthenticatedR
     gender,
     mobile_number,
     email,
-    consent,
-    callback_url
+    consent
   } = req.body || {};
+
+  // Automatically set callback URL - users don't need to provide this
+  const callback_url = 'https://verifymykyc.com/api/ccrv/callback';
 
   // Required fields validation
   if (!name || !consent) {
@@ -40,7 +42,7 @@ export const generateCCRVReportHandler = asyncHandler(async (req: AuthenticatedR
     userId,
     name,
     hasConsent: Boolean(consent),
-    callback_url: !!callback_url
+    callback_url: callback_url
   });
 
   // Check verification quota
@@ -62,7 +64,7 @@ export const generateCCRVReportHandler = asyncHandler(async (req: AuthenticatedR
       gender,
       mobile_number,
       email,
-      consent,
+      consent: consent === true ? 'Y' : consent === false ? 'N' : consent, // Ensure consent is 'Y' or 'N'
       callback_url
     });
 
@@ -101,22 +103,14 @@ export const fetchCCRVResultHandler = asyncHandler(async (req: AuthenticatedRequ
     transaction_id,
   });
 
-  // Check verification quota
-  const order = await ensureVerificationQuota(userId, 'ccrv');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-
   try {
     const result = await service.fetchResult({
       transaction_id
     });
 
-    // Consume verification quota
-    await consumeVerificationQuota(order);
-
-    console.log('CCRV Fetch Result Controller: consumed 1 verification', {
-      orderId: order.orderId,
-      newRemaining: order?.verificationQuota?.remaining,
-    });
+    // Don't consume quota for polling - quota was already consumed during the initial search
+    console.log('CCRV Fetch Result Controller: fetched result without consuming quota (polling)');
+    console.log('CCRV Fetch Result Data:', JSON.stringify(result, null, 2));
 
     res.json(result);
   } catch (error: any) {
@@ -151,11 +145,21 @@ export const searchCCRVHandler = asyncHandler(async (req: AuthenticatedRequest, 
     });
   }
 
+  // Validate consent format
+  if (consent !== 'Y' && consent !== 'N') {
+    return res.status(400).json({
+      message: 'consent must be either "Y" or "N"'
+    });
+  }
+
   console.log('CCRV Search Controller: incoming request', {
     userId,
     name,
     address,
-    hasConsent: Boolean(consent)
+    consent,
+    consentType: typeof consent,
+    hasConsent: Boolean(consent),
+    fullBody: req.body
   });
 
   // Check verification quota
@@ -163,7 +167,7 @@ export const searchCCRVHandler = asyncHandler(async (req: AuthenticatedRequest, 
   if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
 
   try {
-    const result = await service.search({
+    const searchPayload = {
       name,
       address,
       father_name,
@@ -173,8 +177,12 @@ export const searchCCRVHandler = asyncHandler(async (req: AuthenticatedRequest, 
       name_match_type,
       father_match_type,
       jurisdiction_type,
-      consent
-    });
+      consent: consent === true ? 'Y' : consent === false ? 'N' : consent // Ensure consent is 'Y' or 'N'
+    };
+    
+    console.log('CCRV Search Payload being sent to API:', searchPayload);
+    
+    const result = await service.search(searchPayload);
 
     // Consume verification quota
     await consumeVerificationQuota(order);
@@ -183,6 +191,7 @@ export const searchCCRVHandler = asyncHandler(async (req: AuthenticatedRequest, 
       orderId: order.orderId,
       newRemaining: order?.verificationQuota?.remaining,
     });
+    console.log('CCRV Search Result Data:', JSON.stringify(result, null, 2));
 
     res.json(result);
   } catch (error: any) {

@@ -172,63 +172,7 @@ const MenuItem = ({
 const navItems = [
   {
     label: "Products",
-    dropdown: true,
-    items: [
-      {
-        label: "Personal Verification",
-        icon: Shield,
-        description: "Verify government IDs instantly",
-        href: "/products?category=personal",
-      },
-      {
-        label: "Criminal Record Verification",
-        icon: FileText,
-        description: "Authenticate official records",
-        href: "/products?category=criminal",
-      },
-      {
-        label: "Business Verification",
-        icon: Briefcase,
-        description: "Verify business registries",
-        href: "/products?category=business",
-      },
-      {
-        label: "Vehicle Verification",
-        icon: CreditCard,
-        description: "Authenticate vehicle documents",
-        href: "/products?category=vehicle",
-      }
-    ],
-  },
-  {
-    label: "Solutions",
-    dropdown: true,
-    items: [
-      {
-        label: "Banking & Finance",
-        icon: CreditCard,
-        description: "KYC for financial institutions",
-        href: "/solutions?industry=banking",
-      },
-      // {
-      //   label: "Government Services",
-      //   icon: Building,
-      //   description: "Citizen verification solutions",
-      //   href: "/solutions?industry=government",
-      // },
-      // {
-      //   label: "Healthcare",
-      //   icon: Shield,
-      //   description: "Patient identity verification",
-      //   href: "/solutions?industry=healthcare",
-      // },
-      // {
-      //   label: "E-commerce",
-      //   icon: Zap,
-      //   description: "Customer onboarding solutions",
-      //   href: "/solutions?industry=ecommerce",
-      // },
-    ],
+    href: "/products",
   },
   {
     label: "About Us",
@@ -413,7 +357,7 @@ export default function Navbar() {
           <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
             {navItems.map((item, index) => (
               <div key={item.label} className="relative">
-                {item.dropdown ? (
+                {'dropdown' in item && item.dropdown ? (
                   <div
                     className="relative"
                     onMouseEnter={() => handleMenuEnter(index)}
@@ -437,7 +381,7 @@ export default function Navbar() {
                         isOpen={openMenus[index]}
                         onClose={() => setOpenMenus((prev) => ({ ...prev, [index]: false }))}
                       >
-                        {item.items?.map((subItem, subIndex) => (
+                        {'items' in item && Array.isArray(item.items) && item.items.map((subItem: any, subIndex: number) => (
                           <MenuItem
                             key={subIndex}
                             icon={subItem.icon}
@@ -451,7 +395,10 @@ export default function Navbar() {
                     </div>
                   </div>
                 ) : (
-                  <Button variant="ghost" className="px-5 py-3 rounded-xl" onClick={() => handleNavItemClick(item)}>
+                  <Button 
+                    variant="ghost" 
+                    className="px-5 py-3 rounded-xl"
+                    onClick={() => item.href && navigate(item.href)}>
                     {item.label}
                   </Button>
                 )}
@@ -560,14 +507,14 @@ export default function Navbar() {
                     onClick={() => handleMobileNavItemClick(item, index)}
                   >
                     <span className="font-semibold text-gray-900 text-lg">{item.label}</span>
-                    {item.dropdown && (
+                    {'dropdown' in item && item.dropdown ? (
                       <motion.div animate={{ rotate: openMenus[index] ? 180 : 0 }} transition={{ duration: 0.2 }}>
                         <ChevronDown className="w-5 h-5 text-gray-500" />
                       </motion.div>
-                    )}
+                    ) : null}
                   </div>
                   <AnimatePresence>
-                    {item.dropdown && openMenus[index] && (
+                    {'dropdown' in item && item.dropdown && openMenus[index] ? (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -575,7 +522,7 @@ export default function Navbar() {
                         transition={{ duration: 0.2 }}
                         className="pl-4 space-y-3 overflow-hidden border-l-2 border-blue-100"
                       >
-                        {item.items?.map((subItem, subIndex) => (
+                        {'items' in item && Array.isArray(item.items) && item.items.map((subItem: any, subIndex: number) => (
                           <motion.div
                             key={subIndex}
                             initial={{ x: -10, opacity: 0 }}
@@ -604,7 +551,7 @@ export default function Navbar() {
                           </motion.div>
                         ))}
                       </motion.div>
-                    )}
+                    ) : null}
                   </AnimatePresence>
                 </motion.div>
               ))}

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import { getUserLocationData, getFallbackLocationData } from "../../utils/locationUtils"
+import { validateToken } from "../../utils/tokenUtils"
 
 // Types
 export interface User {
@@ -44,14 +45,46 @@ export interface AuthState {
   error: string | null
 }
 
+// Helper function to initialize auth state with token validation
+const initializeAuthState = (): AuthState => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    };
+  }
+
+  const { isValid, payload } = validateToken(token);
+  
+  if (!isValid) {
+    // Token is expired or invalid, clear it
+    localStorage.removeItem('token');
+    return {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    };
+  }
+
+  // Token is valid, set authenticated state
+  return {
+    user: null, // Will be fetched from API
+    token,
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+  };
+};
+
 // Initial state
-const initialState: AuthState = {
-  user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
-  isLoading: false,
-  error: null,
-}
+const initialState: AuthState = initializeAuthState();
 
 // API base URL - use production URL for Hostinger
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend.verifymykyc.com/api'
@@ -184,6 +217,28 @@ export const changePassword = createAsyncThunk(
   }
 )
 
+export const validateTokenAndLogout = createAsyncThunk(
+  'auth/validateToken',
+  async (_, { dispatch, getState }) => {
+    const state = getState() as { auth: AuthState };
+    const { token } = state.auth;
+    
+    if (!token) {
+      return { isValid: false };
+    }
+
+    const { isValid } = validateToken(token);
+    
+    if (!isValid) {
+      // Token is expired, logout user
+      dispatch(logout());
+      return { isValid: false };
+    }
+
+    return { isValid: true };
+  }
+)
+
 // Auth slice
 const authSlice = createSlice({
   name: 'auth',
@@ -287,6 +342,18 @@ const authSlice = createSlice({
       .addCase(changePassword.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
+      })
+
+    // Validate Token
+    builder
+      .addCase(validateTokenAndLogout.fulfilled, (state, action) => {
+        if (!action.payload.isValid) {
+          state.user = null
+          state.token = null
+          state.isAuthenticated = false
+          state.error = null
+          localStorage.removeItem('token')
+        }
       })
   },
 })

@@ -55,7 +55,11 @@ export async function fetchCCRVResultProvider(
   payload: CCRVFetchResultRequest
 ): Promise<CCRVFetchResultResponse> {
   return handleProviderRequest(
-    apiClient.post('/ccrv-api/rapid/result', payload),
+    apiClient.get('/ccrv-api/rapid/result', {
+      headers: {
+        'X-Transaction-ID': payload.transaction_id
+      }
+    }),
     'Failed to fetch CCRV result'
   );
 }
@@ -67,8 +71,34 @@ export async function fetchCCRVResultProvider(
 export async function searchCCRVProvider(
   payload: CCRVSearchRequest
 ): Promise<CCRVSearchResponse> {
+  console.log('CCRV Search Provider: sending payload to API:', JSON.stringify(payload, null, 2));
+  console.log('CCRV Search Provider: API URL:', process.env.GRIDLINES_BASE_URL + '/ccrv-api/rapid/search');
+  console.log('CCRV Search Provider: API Key set:', !!process.env.GRIDLINES_API_KEY);
+  console.log('CCRV Search Provider: API Key value:', process.env.GRIDLINES_API_KEY ? 'SET' : 'NOT SET');
+  
+  // Ensure consent is properly formatted
+  const formattedPayload = {
+    ...payload,
+    consent: payload.consent === 'Y' ? 'Y' : 'N'
+  };
+  
+  console.log('CCRV Search Provider: formatted payload:', JSON.stringify(formattedPayload, null, 2));
+  
+  // Use the correct endpoint from API documentation
+  const endpoint = '/ccrv-api/rapid/search';
+  
+  console.log(`CCRV Search Provider: using endpoint ${endpoint}`);
+  
   return handleProviderRequest(
-    apiClient.post('/ccrv-api/rapid/search', payload),
+    apiClient.post(endpoint, formattedPayload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-API-Key': process.env.GRIDLINES_API_KEY,
+        'X-Auth-Type': 'API-Key',
+        'X-Reference-ID': `ref_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      }
+    }),
     'CCRV search failed'
   );
 }

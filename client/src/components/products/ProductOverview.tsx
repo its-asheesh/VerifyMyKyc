@@ -19,6 +19,7 @@ import { CompanySection } from "../verification/CompanySection";
 import { BankAccountSection } from "../verification/BankAccountSection";
 import { RcSection } from "../verification/RcSection";
 import { PassportSection } from "../verification/PassportSection";
+import { CCRVSection } from "../verification/CcrvSection";
 import { useQuery } from "@tanstack/react-query";
 import { reviewApi } from "../../services/api/reviewApi";
 import { useVerificationPricing } from "../../hooks/usePricing";
@@ -40,6 +41,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [rcModalOpen, setRcModalOpen] = useState(false);
   const [passportModalOpen, setPassportModalOpen] = useState(false);
+  const [ccrvModalOpen, setCcrvModalOpen] = useState(false);
   const [buyPromptOpen, setBuyPromptOpen] = useState(false);
   const [awaitingAccessCheck, setAwaitingAccessCheck] = useState(false);
   const buyPromptTimerRef = React.useRef<number | null>(null);
@@ -92,6 +94,13 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     (product.id || "").toLowerCase() === "passport" ||
     title.includes("passport") ||
     /\bpassport\b/.test(title);
+  const isCcrvProduct =
+    (product.id || "").toLowerCase() === "ccrv" ||
+    title.includes("criminal") ||
+    title.includes("ccrv") ||
+    title.includes("court record") ||
+    categoryName.includes("criminal") ||
+    categoryName.includes("ccrv");
 
   // ✅ Define getVerificationType BEFORE it's used
   const getVerificationType = (prod: Product): string => {
@@ -105,7 +114,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
       'voterid',
       'bankaccount',
       'vehicle',
-      'passport'
+      'passport',
+      'ccrv'
     ];
     if (validTypes.includes(id)) return id;
 
@@ -119,6 +129,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     if (t.includes('bank account') || t.includes('bankaccount') || t.includes('banking')) return 'bankaccount';
     if (t.includes('vehicle') || t.includes('registration certificate')) return 'vehicle';
     if (t.includes('passport')) return 'passport';
+    if (t.includes('criminal') || t.includes('ccrv') || t.includes('court record')) return 'ccrv';
     return 'other';
   };
 
@@ -190,6 +201,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     else if (isBankProduct) setBankModalOpen(true);
     else if (isRcProduct) setRcModalOpen(true);
     else if (isPassportProduct) setPassportModalOpen(true);
+    else if (isCcrvProduct) setCcrvModalOpen(true);
   };
 
   // Determine if user has active access for THIS product's verification type
@@ -398,7 +410,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
                 isCompanyProduct ||
                 isBankProduct ||
                 isRcProduct ||
-                isPassportProduct
+                isPassportProduct ||
+                isCcrvProduct
               )
             }
           >
@@ -530,6 +543,20 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               &times;
             </button>
             <PassportSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {ccrvModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setCcrvModalOpen(false)}
+            >
+              &times;
+            </button>
+            <CCRVSection productId={product.id} />
           </div>
         </div>
       )}

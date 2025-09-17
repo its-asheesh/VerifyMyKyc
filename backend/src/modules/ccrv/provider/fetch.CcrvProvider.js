@@ -50,7 +50,11 @@ function generateCCRVReportProvider(payload) {
  */
 function fetchCCRVResultProvider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        return handleProviderRequest(apiClient_1.default.post('/ccrv-api/rapid/result', payload), 'Failed to fetch CCRV result');
+        return handleProviderRequest(apiClient_1.default.get('/ccrv-api/rapid/result', {
+            headers: {
+                'X-Transaction-ID': payload.transaction_id
+            }
+        }), 'Failed to fetch CCRV result');
     });
 }
 /**
@@ -59,7 +63,25 @@ function fetchCCRVResultProvider(payload) {
  */
 function searchCCRVProvider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        return handleProviderRequest(apiClient_1.default.post('/ccrv-api/rapid/search', payload), 'CCRV search failed');
+        console.log('CCRV Search Provider: sending payload to API:', JSON.stringify(payload, null, 2));
+        console.log('CCRV Search Provider: API URL:', process.env.GRIDLINES_BASE_URL + '/ccrv-api/rapid/search');
+        console.log('CCRV Search Provider: API Key set:', !!process.env.GRIDLINES_API_KEY);
+        console.log('CCRV Search Provider: API Key value:', process.env.GRIDLINES_API_KEY ? 'SET' : 'NOT SET');
+        // Ensure consent is properly formatted
+        const formattedPayload = Object.assign(Object.assign({}, payload), { consent: payload.consent === 'Y' ? 'Y' : 'N' });
+        console.log('CCRV Search Provider: formatted payload:', JSON.stringify(formattedPayload, null, 2));
+        // Use the correct endpoint from API documentation
+        const endpoint = '/ccrv-api/rapid/search';
+        console.log(`CCRV Search Provider: using endpoint ${endpoint}`);
+        return handleProviderRequest(apiClient_1.default.post(endpoint, formattedPayload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-API-Key': process.env.GRIDLINES_API_KEY,
+                'X-Auth-Type': 'API-Key',
+                'X-Reference-ID': `ref_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+            }
+        }), 'CCRV search failed');
     });
 }
 // Export all CCRV provider functions

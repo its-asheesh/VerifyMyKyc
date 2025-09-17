@@ -3,12 +3,11 @@ import type {
   CCRVSearchRequest,
   CCRVFetchResultRequest,
 } from '../types/kyc';
-import { FileText, Search, Shield, AlertTriangle, Download } from 'lucide-react';
+import { FileText, Search } from 'lucide-react';
 
 export type CCRVServiceKey =
   | 'generate-report'
-  | 'search'
-  | 'fetch-result';
+  | 'search';
 
 export interface CCRVServiceMeta {
   key: CCRVServiceKey;
@@ -52,7 +51,6 @@ export const ccrvServices: CCRVServiceMeta[] = [
       { name: 'gender', label: 'Gender', type: 'text', required: false, placeholder: 'MALE/FEMALE/OTHER' },
       { name: 'mobile_number', label: 'Mobile Number', type: 'text', required: false, placeholder: 'Enter mobile number' },
       { name: 'email', label: 'Email', type: 'text', required: false, placeholder: 'Enter email address' },
-      { name: 'callback_url', label: 'Callback URL', type: 'text', required: false, placeholder: 'https://yourdomain.com/callback' },
       {
         name: 'consent',
         label: 'Consent',
@@ -80,9 +78,13 @@ export const ccrvServices: CCRVServiceMeta[] = [
       { 
         name: 'case_category', 
         label: 'Case Category', 
-        type: 'text', 
-        required: false, 
-        placeholder: 'CRIMINAL, CIVIL, etc.' 
+        type: 'select',
+        required: false,
+        options: [
+          { label: 'Criminal', value: 'CRIMINAL' },
+          { label: 'Civil', value: 'CIVIL' },
+        ],
+        placeholder: 'Select case category'
       },
       { 
         name: 'type', 
@@ -92,8 +94,6 @@ export const ccrvServices: CCRVServiceMeta[] = [
         options: [
           { label: 'Petitioner', value: 'PETITIONER' },
           { label: 'Respondent', value: 'RESPONDENT' },
-          { label: 'Witness', value: 'WITNESS' },
-          { label: 'Other', value: 'OTHER' },
         ],
         placeholder: 'Select individual type'
       },
@@ -104,9 +104,10 @@ export const ccrvServices: CCRVServiceMeta[] = [
         required: false,
         options: [
           { label: 'Exact Match', value: 'EXACT_MATCH' },
-          { label: 'Partial Match', value: 'PARTIAL_MATCH' },
-          { label: 'Fuzzy Match', value: 'FUZZY_MATCH' },
           { label: 'Exact & Fuzzy', value: 'EXACT_FUZZY' },
+          { label: 'Partial Exact', value: 'PARTIAL_EXACT' },
+          { label: 'Partial Fuzzy', value: 'PARTIAL_FUZZY' },
+          { label: 'No Match', value: 'NO_MATCH' },
         ],
         placeholder: 'Select name match type'
       },
@@ -117,9 +118,10 @@ export const ccrvServices: CCRVServiceMeta[] = [
         required: false,
         options: [
           { label: 'Exact Match', value: 'EXACT_MATCH' },
-          { label: 'Partial Match', value: 'PARTIAL_MATCH' },
-          { label: 'Fuzzy Match', value: 'FUZZY_MATCH' },
-          { label: 'Partial & Exact', value: 'PARTIAL_EXACT' },
+          { label: 'Exact & Fuzzy', value: 'EXACT_FUZZY' },
+          { label: 'Partial Exact', value: 'PARTIAL_EXACT' },
+          { label: 'Partial Fuzzy', value: 'PARTIAL_FUZZY' },
+          { label: 'No Match', value: 'NO_MATCH' },
         ],
         placeholder: 'Select father match type'
       },
@@ -129,9 +131,10 @@ export const ccrvServices: CCRVServiceMeta[] = [
         type: 'select',
         required: false,
         options: [
+          { label: 'State', value: 'STATE' },
+          { label: 'District', value: 'DISTRICT' },
           { label: 'Nearest Districts', value: 'NEAREST_DISTRICTS' },
-          { label: 'State Wide', value: 'STATE_WIDE' },
-          { label: 'Country Wide', value: 'COUNTRY_WIDE' },
+          { label: 'Pan India', value: 'PAN_INDIA' },
         ],
         placeholder: 'Select jurisdiction type'
       },
@@ -147,22 +150,5 @@ export const ccrvServices: CCRVServiceMeta[] = [
       },
     ],
     icon: Search,
-  },
-  {
-    key: 'fetch-result',
-    name: 'Fetch CCRV Result',
-    description: 'Retrieve the result of a previously initiated CCRV verification.',
-    apiEndpoint: '/ccrv/fetch-result',
-    category: 'document',
-    formFields: [
-      { 
-        name: 'transaction_id', 
-        label: 'Transaction ID', 
-        type: 'text', 
-        required: true, 
-        placeholder: 'Enter transaction ID from generate-report or search' 
-      },
-    ],
-    icon: Download,
   },
 ];

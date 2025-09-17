@@ -5,6 +5,7 @@ import { store } from "../redux/store"
 import { AppProvider } from "../context/AppContext"
 import { ErrorBoundary } from "../components/common/ErrorBoundary"
 import { AdminRoute, UserRoute, AnyRoleRoute } from "../components/auth/ProtectedRoute"
+import { useTokenValidation } from "../hooks/useTokenValidation"
 
 // Layout
 import Navbar from "../components/layout/Navbar"
@@ -49,6 +50,9 @@ import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 import TermsAndConditionsPage from "../pages/TermsAndConditionsPage"
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
+  // Validate token on app initialization
+  useTokenValidation();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

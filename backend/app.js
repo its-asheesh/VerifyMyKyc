@@ -9,10 +9,17 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const routes_1 = __importDefault(require("./src/routes"));
 const db_1 = require("./src/config/db");
+const auth_1 = require("./src/common/middleware/auth");
 // Connect to MongoDB
 (0, db_1.connectDB)();
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
+// ✅ ADD THIS — Handle OPTIONS requests BEFORE cors()
+app.use(auth_1.handleOptions);
+// ✅ UPDATE THIS — Add credentials and origin
+app.use((0, cors_1.default)({
+    origin: 'https://verifymykyc.com',
+    credentials: true
+}));
 app.use(express_1.default.json({ limit: '10mb' }));
 // Mount all API routes under /api
 app.use('/api', routes_1.default);

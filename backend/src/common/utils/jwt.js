@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractTokenFromHeader = exports.verifyToken = exports.generateToken = void 0;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 // Simple token generation (replace with actual JWT library)
 const generateToken = (user) => {
     const payload = {
@@ -28,11 +27,11 @@ const verifyToken = (token) => {
         if (signature !== expectedSignature) {
             throw new Error('Invalid token signature');
         }
-        // Check if token is expired (7 days)
+        // Check if token is expired
         const tokenTime = parseInt(timestamp);
         const currentTime = Date.now();
-        const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
-        if (currentTime - tokenTime > sevenDaysInMs) {
+        const expirationMs = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
+        if (currentTime - tokenTime > expirationMs) {
             throw new Error('Token expired');
         }
         const payload = JSON.parse(Buffer.from(tokenData, 'base64').toString());

@@ -29,7 +29,7 @@ const HeroCarousel: React.FC = () => {
 
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [isPlaying, slides]);
@@ -189,7 +189,7 @@ const HeroCarousel: React.FC = () => {
 
                 {/* Image Container */}
                 <motion.div
-                  whileHover={{ scale: 1.02, rotate: 1 }}
+                  whileHover={{ scale: 1.02, rotate: 0 }}
                   transition={{ duration: 0.4 }}
                   className="relative"
                 >
@@ -197,7 +197,7 @@ const HeroCarousel: React.FC = () => {
                     <img
                       src={currentSlideData.imageUrl}
                       alt={currentSlideData.title}
-                      className="w-full max-w-[400px] h-auto object-contain"
+                      className="w-full max-w-[400px] h-auto object-contain rounded-2xl"
                       onError={(e) => {
                         e.currentTarget.src =
                           "https://via.placeholder.com/400x250?text=Image+Not+Found";

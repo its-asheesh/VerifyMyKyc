@@ -30,9 +30,10 @@ import type {
         | keyof RcFastagFetchRequest
         | string
       label: string
-      type: 'text' | 'radio' | 'json'
+      type: 'text' | 'radio' | 'json' | 'select'
       required: boolean
       options?: { label: string; value: string }[]
+      placeholder?: string
     }[]
     icon?: React.ElementType
   }
@@ -124,7 +125,7 @@ import type {
     {
       key: 'echallan-fetch',
       name: 'Fetch E-Challan by RC & Engine',
-      description: 'Fetch all e-challans using RC number, chassis, and engine number.',
+      description: 'Fetch e-challans using RC number, chassis, and engine number. You can filter by date range and limit results.',
       apiEndpoint: '/vehicle/challan/fetch',
       formFields: [
         { name: 'rc_number', label: 'RC Number', type: 'text', required: true },
@@ -135,6 +136,32 @@ import type {
           label: 'State Portals (CSV)',
           type: 'text',
           required: false,
+        },
+        {
+          name: 'date_range',
+          label: 'Date Range',
+          type: 'select',
+          required: false,
+          options: [
+            { label: 'All Time', value: 'all' },
+            { label: 'Last 30 Days', value: '30' },
+            { label: 'Last 90 Days', value: '90' },
+            { label: 'Last 1 Year', value: '365' },
+          ],
+          placeholder: 'Select date range (optional)'
+        },
+        {
+          name: 'limit',
+          label: 'Max Challans to Fetch',
+          type: 'select',
+          required: false,
+          options: [
+            { label: 'All Challans', value: 'all' },
+            { label: 'Latest 10', value: '10' },
+            { label: 'Latest 20', value: '20' },
+            { label: 'Latest 50', value: '50' },
+          ],
+          placeholder: 'Select limit (optional)'
         },
         {
           name: 'consent',

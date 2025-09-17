@@ -2556,7 +2556,12 @@ if (serviceKey === "fetch-detailed") {
     // E-Challan: echallan-fetch
     if (serviceKey === "echallan-fetch") {
       const data = result.data || result;
-      const challans: {
+      console.log('E-Challan Debug - Full result:', result);
+      console.log('E-Challan Debug - Data:', data);
+      console.log('E-Challan Debug - challan_data:', data.challan_data);
+      
+      // Try different possible data structures
+      let challans: {
         document_id?: string;
         document_type?: string;
         date_issued?: string;
@@ -2566,7 +2571,19 @@ if (serviceKey === "fetch-detailed") {
         area_name?: string;
         amount?: string | number;
         offence_data?: { offence_description: string }[];
-      }[] = Array.isArray(data.challan_data) ? data.challan_data : [];
+      }[] = [];
+      
+      if (Array.isArray(data.challan_data)) {
+        challans = data.challan_data;
+      } else if (Array.isArray(data.challan_details)) {
+        challans = data.challan_details;
+      } else if (Array.isArray(data.challans)) {
+        challans = data.challans;
+      } else if (Array.isArray(data)) {
+        challans = data;
+      }
+      
+      console.log('E-Challan Debug - Final challans array:', challans);
 
       const totalChallans = challans.length;
       const totalAmount = challans.reduce(
@@ -2649,7 +2666,79 @@ if (serviceKey === "fetch-detailed") {
                     key={idx}
                     className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm"
                   >
-                    {/* ... same UI ... */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                          Challan #{idx + 1}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <span className="text-sm text-gray-500">Challan ID:</span>
+                            <p className="font-medium text-gray-900">
+                              {c.document_id || "Not Available"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Type:</span>
+                            <p className="font-medium text-gray-900">
+                              {c.document_type || "Not Available"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Issued On:</span>
+                            <p className="font-medium text-gray-900">
+                              {c.date_issued || "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Status:</span>
+                            <p className="font-medium text-gray-900">
+                              {c.status || "Pending"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">Accused Name:</span>
+                            <p className="font-medium text-gray-900">
+                              {c.accused_name || "Not Provided"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">State:</span>
+                            <p className="font-medium text-gray-900">
+                              {c.state || "—"}
+                            </p>
+                          </div>
+                          {c.area_name && (
+                            <div>
+                              <span className="text-sm text-gray-500">Area:</span>
+                              <p className="font-medium text-gray-900">
+                                {c.area_name}
+                              </p>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-sm text-gray-500">Amount:</span>
+                            <p className="font-medium text-red-600 text-lg">
+                              ₹{Number(c.amount) || 0}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Offence Details */}
+                    {c.offence_data && c.offence_data.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2">Offences:</h5>
+                        <div className="space-y-2">
+                          {c.offence_data.map((offence, i) => (
+                            <div key={i} className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                              {offence.offence_description || `Offence #${i + 1}`}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -3713,6 +3802,319 @@ if (serviceKey === "fetch-detailed") {
     }
   };
 
+  // CCRV (Criminal Case Record Verification) result handling
+  const renderCCRVResult = () => {
+    if (!result || !showResult) return null;
+
+    // Check if this is a CCRV result
+    if (serviceKey === "search" || serviceKey === "generate-report") {
+      const data = (result as any).data || result;
+      const ccrvData = data.ccrv_data || data.data || data;
+      
+      console.log('CCRV Result Debug - Full result:', result);
+      console.log('CCRV Result Debug - Data:', data);
+      console.log('CCRV Result Debug - CCRV Data:', ccrvData);
+
+      // Extract case records
+      const caseRecords = Array.isArray(ccrvData) ? ccrvData : 
+                        Array.isArray(ccrvData.case_records) ? ccrvData.case_records :
+                        Array.isArray(ccrvData.results) ? ccrvData.results :
+                        Array.isArray(ccrvData.data) ? ccrvData.data : [];
+
+      // Get search criteria for filtering
+      const searchName = formData.name?.toLowerCase() || '';
+      const searchAddress = formData.address?.toLowerCase() || '';
+      const searchFatherName = formData.father_name?.toLowerCase() || '';
+
+      // Filter results based on entered details
+      const filteredRecords = caseRecords.filter((record: any) => {
+        const recordName = (record.name || '').toLowerCase();
+        const recordAddress = (record.address || '').toLowerCase();
+        const recordFatherName = (record.father_name || '').toLowerCase();
+        
+        // If no search criteria provided, show all records
+        if (!searchName && !searchAddress && !searchFatherName) {
+          return true;
+        }
+        
+        // Filter based on provided criteria
+        const nameMatch = !searchName || recordName.includes(searchName);
+        const addressMatch = !searchAddress || recordAddress.includes(searchAddress);
+        const fatherMatch = !searchFatherName || recordFatherName.includes(searchFatherName);
+        
+        return nameMatch || addressMatch || fatherMatch;
+      });
+
+      // Always show all records, but track if we had filtered results
+      const hadFilteredResults = filteredRecords.length > 0;
+      const displayRecords = caseRecords; // Always show all results
+      const isLargeDataset = caseRecords.length > 500;
+
+      const requestId = data.request_id || data.requestId;
+      const transactionId = data.transaction_id || data.transactionId;
+      const status = data.status || data.ccrv_status || 'Completed';
+
+      return (
+        <VerificationResultShell
+          title="Criminal Case Record Verification"
+          subtitle="CCRV Search Results"
+          status="success"
+          requestId={requestId}
+          transactionId={transactionId}
+          message={`Found ${displayRecords.length} case record${displayRecords.length !== 1 ? 's' : ''}`}
+        >
+          <div className="space-y-6">
+            {/* Search Summary */}
+            <div className={`border rounded-lg p-4 ${
+              isLargeDataset 
+                ? 'bg-orange-50 border-orange-200' 
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <h4 className={`text-lg font-semibold mb-2 ${
+                isLargeDataset ? 'text-orange-900' : 'text-green-900'
+              }`}>
+                Search Results Summary
+                {isLargeDataset && (
+                  <span className="ml-2 text-sm font-normal text-orange-700">
+                    (Large dataset - {caseRecords.length} records)
+                  </span>
+                )}
+              </h4>
+              
+              {/* Large Dataset Warning */}
+              {isLargeDataset && (
+                <div className="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-orange-800">
+                        Large Dataset Detected
+                      </h3>
+                      <div className="mt-1 text-sm text-orange-700">
+                        <p>This search returned {caseRecords.length} records. All results are displayed below for comprehensive review.</p>
+                        {hadFilteredResults && (
+                          <p className="mt-1 font-medium">
+                            Note: {filteredRecords.length} records matched your search criteria, but all {caseRecords.length} records are shown for complete analysis.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className={`font-medium ${
+                    isLargeDataset ? 'text-orange-800' : 'text-green-800'
+                  }`}>Total Records Found:</span>
+                  <span className={`ml-2 ${
+                    isLargeDataset ? 'text-orange-700' : 'text-green-700'
+                  }`}>{caseRecords.length.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className={`font-medium ${
+                    isLargeDataset ? 'text-orange-800' : 'text-green-800'
+                  }`}>Records Displayed:</span>
+                  <span className={`ml-2 ${
+                    isLargeDataset ? 'text-orange-700' : 'text-green-700'
+                  }`}>{displayRecords.length.toLocaleString()}</span>
+                  <span className="ml-2 text-xs text-gray-600">(All results)</span>
+                </div>
+                {hadFilteredResults && (
+                  <div>
+                    <span className={`font-medium ${
+                      isLargeDataset ? 'text-orange-800' : 'text-green-800'
+                    }`}>Matching Your Search:</span>
+                    <span className={`ml-2 ${
+                      isLargeDataset ? 'text-orange-700' : 'text-green-700'
+                    }`}>{filteredRecords.length.toLocaleString()}</span>
+                  </div>
+                )}
+                {searchName && (
+                  <div>
+                    <span className={`font-medium ${
+                      isLargeDataset ? 'text-orange-800' : 'text-green-800'
+                    }`}>Name Filter:</span>
+                    <span className={`ml-2 ${
+                      isLargeDataset ? 'text-orange-700' : 'text-green-700'
+                    }`}>{formData.name}</span>
+                  </div>
+                )}
+                {searchAddress && (
+                  <div>
+                    <span className={`font-medium ${
+                      isLargeDataset ? 'text-orange-800' : 'text-green-800'
+                    }`}>Address Filter:</span>
+                    <span className={`ml-2 ${
+                      isLargeDataset ? 'text-orange-700' : 'text-green-700'
+                    }`}>{formData.address}</span>
+                  </div>
+                )}
+                {searchFatherName && (
+                  <div>
+                    <span className={`font-medium ${
+                      isLargeDataset ? 'text-orange-800' : 'text-green-800'
+                    }`}>Father Name Filter:</span>
+                    <span className={`ml-2 ${
+                      isLargeDataset ? 'text-orange-700' : 'text-green-700'
+                    }`}>{formData.father_name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Case Records */}
+            {displayRecords.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    Case Records
+                    {isLargeDataset && (
+                      <span className="ml-2 text-sm font-normal text-orange-600">
+                        (All {displayRecords.length.toLocaleString()} records)
+                      </span>
+                    )}
+                  </h4>
+                  {isLargeDataset && (
+                    <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      Large dataset - scroll to view all
+                    </div>
+                  )}
+                </div>
+                
+                {/* Performance Note for Large Datasets */}
+                {isLargeDataset && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-4 w-4 text-blue-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-2">
+                        <p className="text-sm text-blue-800">
+                          <strong>Performance Note:</strong> This dataset contains {displayRecords.length.toLocaleString()} records. 
+                          All records are loaded and displayed for comprehensive analysis. 
+                          Use browser search (Ctrl+F) to quickly find specific cases.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {displayRecords.map((record: any, index: number) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Basic Info */}
+                      <div className="space-y-2">
+                        <h5 className="font-semibold text-gray-900 text-sm">Basic Information</h5>
+                        <div className="space-y-1 text-xs">
+                          <div><span className="font-medium">Name:</span> {record.name || 'N/A'}</div>
+                          <div><span className="font-medium">Father:</span> {record.father_name || 'N/A'}</div>
+                          <div><span className="font-medium">Address:</span> {record.address || 'N/A'}</div>
+                          <div><span className="font-medium">DOB:</span> {record.date_of_birth || 'N/A'}</div>
+                        </div>
+                      </div>
+
+                      {/* Case Details */}
+                      <div className="space-y-2">
+                        <h5 className="font-semibold text-gray-900 text-sm">Case Details</h5>
+                        <div className="space-y-1 text-xs">
+                          <div><span className="font-medium">Case Number:</span> {record.case_number || 'N/A'}</div>
+                          <div><span className="font-medium">Case Year:</span> {record.case_year || 'N/A'}</div>
+                          <div><span className="font-medium">Category:</span> {record.case_category || 'N/A'}</div>
+                          <div><span className="font-medium">Status:</span> {record.case_status || 'N/A'}</div>
+                          <div><span className="font-medium">CNR:</span> {record.cnr || 'N/A'}</div>
+                        </div>
+                      </div>
+
+                      {/* Court Details */}
+                      <div className="space-y-2">
+                        <h5 className="font-semibold text-gray-900 text-sm">Court Information</h5>
+                        <div className="space-y-1 text-xs">
+                          <div><span className="font-medium">Court:</span> {record.court_name || 'N/A'}</div>
+                          <div><span className="font-medium">District:</span> {record.district_name || 'N/A'}</div>
+                          <div><span className="font-medium">State:</span> {record.state_name || 'N/A'}</div>
+                          <div><span className="font-medium">Judge:</span> {record.court_number_and_judge || 'N/A'}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Details */}
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className="font-medium">Acts & Sections:</span>
+                          <div className="mt-1 text-gray-600">
+                            {record.under_acts && record.under_sections ? 
+                              `${record.under_acts} - ${record.under_sections}` : 
+                              record.act_and_sections_raw_info || 'N/A'
+                            }
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Police Station:</span>
+                          <div className="mt-1 text-gray-600">{record.police_station || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Filing Date:</span>
+                          <div className="mt-1 text-gray-600">{record.filing_date || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Next Hearing:</span>
+                          <div className="mt-1 text-gray-600">{record.next_hearing_date || 'N/A'}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Match Information */}
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-4 text-xs">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Name Match:</span>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            record.name_match_type === 'EXACT_MATCH' ? 'bg-green-100 text-green-800' :
+                            record.name_match_type === 'PARTIAL_FUZZY' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {record.name_match_type || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Father Match:</span>
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            record.father_match_type === 'EXACT_MATCH' ? 'bg-green-100 text-green-800' :
+                            record.father_match_type === 'PARTIAL_FUZZY' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {record.father_match_type || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-500 text-lg">No case records found</div>
+                <div className="text-gray-400 text-sm mt-2">
+                  No criminal case records were found for the provided search criteria.
+                </div>
+              </div>
+            )}
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
+    return null;
+  };
+
   // If we have a successful result, show only the formatted result
   if (result && showResult) {
     return (
@@ -3774,7 +4176,7 @@ if (serviceKey === "fetch-detailed") {
           )}
         </AnimatePresence>
 
-        {renderFormattedResult()}
+        {renderCCRVResult() || renderFormattedResult()}
 
         {productId && (
           <div className="mt-6">
