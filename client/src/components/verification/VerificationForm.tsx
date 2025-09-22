@@ -3918,6 +3918,10 @@ if (serviceKey === "fetch-detailed") {
       const transactionId = data.transaction_id || data.transactionId;
       const status = data.status || data.ccrv_status || 'Completed';
 
+      function setError(arg0: null) {
+        throw new Error("Function not implemented.");
+      }
+
       return (
         <VerificationResultShell
           serviceName="Criminal Case Record Verification"
@@ -3928,7 +3932,7 @@ if (serviceKey === "fetch-detailed") {
           transactionId={transactionId}
           result={result}
           onReset={() => {
-            setResult(null);
+            result(null);
             setShowResult(false);
             setError(null);
           }}
