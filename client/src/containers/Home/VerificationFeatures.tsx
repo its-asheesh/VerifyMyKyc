@@ -44,11 +44,18 @@ const VerificationSection = () => {
       <Box
         component={motion.div}
         sx={{
-          display: "flex",
-          gap: { xs: 1.5, md: 3 },
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "repeat(auto-fit, minmax(160px, 1fr))",
+            sm: "repeat(auto-fit, minmax(200px, 1fr))",
+            md: "repeat(auto-fit, minmax(280px, 1fr))",
+            lg: "repeat(4, 1fr)",
+          },
+          gap: { xs: 2, sm: 3, md: 4 },
           justifyContent: "center",
-          flexWrap: "wrap",
-          px: { xs: 2, md: 6 },
+          px: { xs: 2, sm: 3, md: 4, lg: 6 },
+          maxWidth: "1400px",
+          mx: "auto",
         }}
       >
         <AnimatePresence initial={false}>
