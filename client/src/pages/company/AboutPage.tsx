@@ -55,8 +55,8 @@ const AboutPage: React.FC = () => {
     {
       name: "Ankur Bhatia",
       role: "Founder & CEO",
-      image: "/placeholder.svg",
-      bio: "Visionary leader .",
+      image: "/founder.png",
+      bio: "Visionary leader with 15+ years of experience in fintech and identity verification. Leading India's most comprehensive KYC verification platform.",
     },
    
   ];
@@ -144,11 +144,11 @@ const AboutPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8">
+          <div>
             <img
-              src="/placeholder.svg"
+              src="/1.jpg"
               alt="Our Goal"
-              className="w-full h-64 object-contain"
+              className="w-full h-90 md:h-90 object-cover rounded-4xl shadow-lg"
             />
           </div>
         </motion.section>
@@ -205,29 +205,37 @@ const AboutPage: React.FC = () => {
               The people driving India's fastest KYC verification platform
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          {/* Founder Section */}
+          <div className="max-w-5xl mx-auto">
             {team.map((member, index) => (
               <motion.div
                 key={member.name}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-lg text-center"
+                className="bg-white rounded-2xl p-6 shadow-lg"
               >
-                <img
-                  src={member.image || "/placeholder.svg"}
-                  alt={member.name}
-                  className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {member.name}
-                </h3>
-                <p className="text-blue-600 font-semibold mb-4">
-                  {member.role}
-                </p>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {member.bio}
-                </p>
+                <div className="flex items-center gap-6">
+                  <div className="flex-shrink-0">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="w-32 h-46 rounded-xl object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                      {member.name}
+                    </h3>
+                    <p className="text-blue-600 font-semibold text-lg mb-3">
+                      {member.role}
+                    </p>
+                    <p className="text-gray-600 leading-relaxed">
+                      {member.bio}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>

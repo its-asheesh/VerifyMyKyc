@@ -309,7 +309,7 @@ export const mockProducts: Product[] = [
     documentation: "Complete API documentation for RC verification",
     isActive: true,
     icon: "/rc.png",
-    image: "/Vhicle.png",
+    image: "/VehicleVerification.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -408,7 +408,7 @@ export const mockProducts: Product[] = [
     },
     documentation: "Complete API documentation for bank account verification",
     isActive: true,
-    icon: "/banking.png",
+    icon: "/banking.jpg",
     image: "/banking.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01"

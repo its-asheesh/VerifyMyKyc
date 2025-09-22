@@ -19,7 +19,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { VerificationResultShell } from "./VerificationResultShell.tsx";
-
 import ShareActions from "./ShareActions";
 import { ProductReviews } from "../reviews/ProductReviews";
 
@@ -3803,6 +3802,52 @@ if (serviceKey === "fetch-detailed") {
   };
 
   // CCRV (Criminal Case Record Verification) result handling
+
+  const generateExportText = () => {
+    if (!result || !showResult) return '';
+    
+    const data = (result as any).data || result;
+    const ccrvData = data.ccrv_data || data.data || data;
+    const caseRecords = ccrvData.cases || ccrvData.case_records || ccrvData.results || ccrvData.data || [];
+    
+    let text = 'CCRV VERIFICATION RESULTS\n';
+    text += '='.repeat(50) + '\n\n';
+    text += `Generated: ${new Date().toLocaleString()}\n`;
+    text += `Total Records: ${caseRecords.length}\n`;
+    text += `Request ID: ${data.request_id || 'N/A'}\n`;
+    text += `Transaction ID: ${data.transaction_id || 'N/A'}\n\n`;
+    
+    caseRecords.forEach((record: any, index: number) => {
+      text += `CASE ${index + 1}\n`;
+      text += '-'.repeat(30) + '\n';
+      text += `Name: ${record.name || record.all_candidates?.[0]?.name || 'N/A'}\n`;
+      text += `Father: ${record.father_name || record.all_candidates?.[0]?.father_name || 'N/A'}\n`;
+      text += `Address: ${record.address || 'N/A'}\n`;
+      text += `Case Number: ${record.case_number || 'N/A'}\n`;
+      text += `Case Year: ${record.case_year || 'N/A'}\n`;
+      text += `Category: ${record.case_category || 'N/A'}\n`;
+      text += `Status: ${record.case_status || 'N/A'}\n`;
+      text += `CNR: ${record.cnr || 'N/A'}\n`;
+      text += `Court: ${record.court_name || 'N/A'}\n`;
+      text += `District: ${record.address_district || 'N/A'}\n`;
+      text += `State: ${record.address_state || 'N/A'}\n`;
+      text += `Acts & Sections: ${record.act_and_sections_raw_info || 'N/A'}\n`;
+      text += `Police Station: ${record.police_station || 'N/A'}\n`;
+      text += `Filing Date: ${record.filing_date || 'N/A'}\n`;
+      text += `Next Hearing: ${record.next_hearing_date || 'N/A'}\n`;
+      text += `Other Party: ${record.other_party || 'N/A'}\n`;
+      text += `Name Match: ${record.name_match_type || 'N/A'}\n`;
+      text += `Father Match: ${record.father_match_type || 'N/A'}\n`;
+      if (record.all_candidates && record.all_candidates.length > 0) {
+        text += `Candidates: ${record.all_candidates.join(', ')}\n`;
+      }
+      text += '\n';
+    });
+    
+    return text;
+  };
+
+
   const renderCCRVResult = () => {
     if (!result || !showResult) return null;
 
@@ -3814,12 +3859,31 @@ if (serviceKey === "fetch-detailed") {
       console.log('CCRV Result Debug - Full result:', result);
       console.log('CCRV Result Debug - Data:', data);
       console.log('CCRV Result Debug - CCRV Data:', ccrvData);
+      console.log('CCRV Result Debug - CCRV Data Type:', typeof ccrvData);
+      console.log('CCRV Result Debug - CCRV Data Keys:', ccrvData ? Object.keys(ccrvData) : 'No keys');
 
-      // Extract case records
-      const caseRecords = Array.isArray(ccrvData) ? ccrvData : 
-                        Array.isArray(ccrvData.case_records) ? ccrvData.case_records :
-                        Array.isArray(ccrvData.results) ? ccrvData.results :
-                        Array.isArray(ccrvData.data) ? ccrvData.data : [];
+      // Extract case records - handle different data structures
+      let caseRecords = [];
+      
+      if (Array.isArray(ccrvData)) {
+        caseRecords = ccrvData;
+      } else if (ccrvData && typeof ccrvData === 'object') {
+        // Check for cases array in various possible locations
+        caseRecords = ccrvData.cases || 
+                     ccrvData.case_records || 
+                     ccrvData.results || 
+                     ccrvData.data || 
+                     [];
+      }
+      
+      // Ensure we have an array
+      if (!Array.isArray(caseRecords)) {
+        caseRecords = [];
+      }
+      
+      console.log('CCRV Result Debug - Extracted Case Records:', caseRecords);
+      console.log('CCRV Result Debug - Case Records Count:', caseRecords.length);
+      console.log('CCRV Result Debug - First Case Record:', caseRecords[0]);
 
       // Get search criteria for filtering
       const searchName = formData.name?.toLowerCase() || '';
@@ -3856,12 +3920,19 @@ if (serviceKey === "fetch-detailed") {
 
       return (
         <VerificationResultShell
-          title="Criminal Case Record Verification"
-          subtitle="CCRV Search Results"
-          status="success"
+          serviceName="Criminal Case Record Verification"
+          serviceDescription="CCRV Search Results"
+          message={`Found ${displayRecords.length} case record${displayRecords.length !== 1 ? 's' : ''}`}
+          isValid={true}
           requestId={requestId}
           transactionId={transactionId}
-          message={`Found ${displayRecords.length} case record${displayRecords.length !== 1 ? 's' : ''}`}
+          result={result}
+          onReset={() => {
+            setResult(null);
+            setShowResult(false);
+            setError(null);
+          }}
+          summary={generateExportText()}
         >
           <div className="space-y-6">
             {/* Search Summary */}
@@ -3870,16 +3941,19 @@ if (serviceKey === "fetch-detailed") {
                 ? 'bg-orange-50 border-orange-200' 
                 : 'bg-green-50 border-green-200'
             }`}>
-              <h4 className={`text-lg font-semibold mb-2 ${
-                isLargeDataset ? 'text-orange-900' : 'text-green-900'
-              }`}>
-                Search Results Summary
-                {isLargeDataset && (
-                  <span className="ml-2 text-sm font-normal text-orange-700">
-                    (Large dataset - {caseRecords.length} records)
-                  </span>
-                )}
-              </h4>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className={`text-lg font-semibold ${
+                  isLargeDataset ? 'text-orange-900' : 'text-green-900'
+                }`}>
+                  Search Results Summary
+                  {isLargeDataset && (
+                    <span className="ml-2 text-sm font-normal text-orange-700">
+                      (Large dataset - {caseRecords.length} records)
+                    </span>
+                  )}
+                </h4>
+                
+              </div>
               
               {/* Large Dataset Warning */}
               {isLargeDataset && (
@@ -3980,11 +4054,13 @@ if (serviceKey === "fetch-detailed") {
                       </span>
                     )}
                   </h4>
-                  {isLargeDataset && (
-                    <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      Large dataset - scroll to view all
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isLargeDataset && (
+                      <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        Large dataset - scroll to view all
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Performance Note for Large Datasets */}
@@ -4006,98 +4082,205 @@ if (serviceKey === "fetch-detailed") {
                     </div>
                   </div>
                 )}
-                {displayRecords.map((record: any, index: number) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Basic Info */}
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-gray-900 text-sm">Basic Information</h5>
-                        <div className="space-y-1 text-xs">
-                          <div><span className="font-medium">Name:</span> {record.name || 'N/A'}</div>
-                          <div><span className="font-medium">Father:</span> {record.father_name || 'N/A'}</div>
-                          <div><span className="font-medium">Address:</span> {record.address || 'N/A'}</div>
-                          <div><span className="font-medium">DOB:</span> {record.date_of_birth || 'N/A'}</div>
-                        </div>
-                      </div>
-
-                      {/* Case Details */}
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-gray-900 text-sm">Case Details</h5>
-                        <div className="space-y-1 text-xs">
-                          <div><span className="font-medium">Case Number:</span> {record.case_number || 'N/A'}</div>
-                          <div><span className="font-medium">Case Year:</span> {record.case_year || 'N/A'}</div>
-                          <div><span className="font-medium">Category:</span> {record.case_category || 'N/A'}</div>
-                          <div><span className="font-medium">Status:</span> {record.case_status || 'N/A'}</div>
-                          <div><span className="font-medium">CNR:</span> {record.cnr || 'N/A'}</div>
-                        </div>
-                      </div>
-
-                      {/* Court Details */}
-                      <div className="space-y-2">
-                        <h5 className="font-semibold text-gray-900 text-sm">Court Information</h5>
-                        <div className="space-y-1 text-xs">
-                          <div><span className="font-medium">Court:</span> {record.court_name || 'N/A'}</div>
-                          <div><span className="font-medium">District:</span> {record.district_name || 'N/A'}</div>
-                          <div><span className="font-medium">State:</span> {record.state_name || 'N/A'}</div>
-                          <div><span className="font-medium">Judge:</span> {record.court_number_and_judge || 'N/A'}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Additional Details */}
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                        <div>
-                          <span className="font-medium">Acts & Sections:</span>
-                          <div className="mt-1 text-gray-600">
-                            {record.under_acts && record.under_sections ? 
-                              `${record.under_acts} - ${record.under_sections}` : 
-                              record.act_and_sections_raw_info || 'N/A'
-                            }
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium">Police Station:</span>
-                          <div className="mt-1 text-gray-600">{record.police_station || 'N/A'}</div>
-                        </div>
-                        <div>
-                          <span className="font-medium">Filing Date:</span>
-                          <div className="mt-1 text-gray-600">{record.filing_date || 'N/A'}</div>
-                        </div>
-                        <div>
-                          <span className="font-medium">Next Hearing:</span>
-                          <div className="mt-1 text-gray-600">{record.next_hearing_date || 'N/A'}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Match Information */}
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex flex-wrap gap-4 text-xs">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">Name Match:</span>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            record.name_match_type === 'EXACT_MATCH' ? 'bg-green-100 text-green-800' :
-                            record.name_match_type === 'PARTIAL_FUZZY' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {record.name_match_type || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">Father Match:</span>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            record.father_match_type === 'EXACT_MATCH' ? 'bg-green-100 text-green-800' :
-                            record.father_match_type === 'PARTIAL_FUZZY' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {record.father_match_type || 'N/A'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {/* Table View */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          #
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Case Number
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Year
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Category
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Court
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          District
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          State
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Acts & Sections
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Police Station
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Filing Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Next Hearing
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Other Party
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Match Info
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {displayRecords.map((record: any, index: number) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {index + 1}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <div className="font-medium">
+                              {record.name || record.all_candidates?.[0]?.name || 'N/A'}
+                            </div>
+                            {record.father_name && (
+                              <div className="text-xs text-gray-500">
+                                Father: {record.father_name}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <div className="font-mono text-xs">
+                              {record.case_number || 'N/A'}
+                            </div>
+                            {record.cnr && (
+                              <div className="text-xs text-gray-500">
+                                CNR: {record.cnr}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {record.case_year || 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm border-b">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              record.case_category === 'criminal' 
+                                ? 'bg-red-100 text-red-800' 
+                                : record.case_category === 'civil'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {record.case_category || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              record.case_status === 'CASE DISPOSED' 
+                                ? 'bg-green-100 text-green-800' 
+                                : record.case_status === 'Pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {record.case_status || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <div className="max-w-xs truncate">
+                              {record.court_name || 'N/A'}
+                            </div>
+                            {record.court_number_and_judge && (
+                              <div className="text-xs text-gray-500 truncate">
+                                {record.court_number_and_judge}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {record.address_district || 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {record.address_state || 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <div className="max-w-xs">
+                              <div className="text-xs">
+                                {record.under_acts && record.under_sections ? 
+                                  `${record.under_acts} - ${record.under_sections}` : 
+                                  record.act_and_sections_raw_info || 'N/A'
+                                }
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {record.police_station || 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {record.filing_date || 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            {record.next_hearing_date || 'N/A'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <div className="max-w-xs truncate">
+                              {record.other_party || 'N/A'}
+                            </div>
+                            {record.all_candidates && record.all_candidates.length > 0 && (
+                              <div className="text-xs text-gray-500">
+                                {record.all_candidates.slice(0, 2).join(', ')}
+                                {record.all_candidates.length > 2 && ` +${record.all_candidates.length - 2} more`}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <div className="flex flex-col gap-1">
+                              <span className={`inline-flex px-2 py-1 text-xs rounded ${
+                                record.name_match_type === 'EXACT_MATCH' ? 'bg-green-100 text-green-800' :
+                                record.name_match_type === 'PARTIAL_FUZZY' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {record.name_match_type || 'N/A'}
+                              </span>
+                              <span className={`inline-flex px-2 py-1 text-xs rounded ${
+                                record.father_match_type === 'EXACT_MATCH' ? 'bg-green-100 text-green-800' :
+                                record.father_match_type === 'PARTIAL_FUZZY' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {record.father_match_type || 'N/A'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 border-b">
+                            <details className="text-xs">
+                              <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                                View Details
+                              </summary>
+                              <div className="mt-2 p-3 bg-gray-50 rounded border max-w-md">
+                                <div className="space-y-2 text-xs">
+                                  <div><strong>Address:</strong> {record.address || 'N/A'}</div>
+                                  <div><strong>DOB:</strong> {record.date_of_birth || 'N/A'}</div>
+                                  <div><strong>First Hearing:</strong> {record.first_hearing_date || 'N/A'}</div>
+                                  <div><strong>Registration Date:</strong> {record.registration_date || 'N/A'}</div>
+                                  <div><strong>Case Stage:</strong> {record.case_stage || 'N/A'}</div>
+                                  <div><strong>Purpose of Hearing:</strong> {record.purpose_of_hearing || 'N/A'}</div>
+                                  <div><strong>Clean Name:</strong> {record.clean_name || 'N/A'}</div>
+                                  <div><strong>Source:</strong> {record.source || 'N/A'}</div>
+                                  <div><strong>Type:</strong> {record.type || 'N/A'}</div>
+                                  <div><strong>Jurisdiction:</strong> {record.jurisdiction_type || 'N/A'}</div>
+                                  {record.raw_address && (
+                                    <div><strong>Raw Address:</strong> {record.raw_address}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </details>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
@@ -4315,6 +4498,7 @@ if (serviceKey === "fetch-detailed") {
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

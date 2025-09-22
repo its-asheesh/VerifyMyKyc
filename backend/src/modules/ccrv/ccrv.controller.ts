@@ -13,36 +13,25 @@ export const generateCCRVReportHandler = asyncHandler(async (req: AuthenticatedR
   const userId = req.user._id;
   const {
     name,
+    address,
     father_name,
-    house_number,
-    locality,
-    city,
-    village,
-    state,
-    district,
-    pincode,
+    additional_address,
     date_of_birth,
-    gender,
-    mobile_number,
-    email,
     consent
   } = req.body || {};
 
-  // Automatically set callback URL - users don't need to provide this
-  const callback_url = 'https://verifymykyc.com/api/ccrv/callback';
-
   // Required fields validation
-  if (!name || !consent) {
+  if (!name || !address || !consent) {
     return res.status(400).json({
-      message: 'name and consent are required'
+      message: 'name, address, and consent are required'
     });
   }
 
   console.log('CCRV Generate Report Controller: incoming request', {
     userId,
     name,
-    hasConsent: Boolean(consent),
-    callback_url: callback_url
+    address,
+    hasConsent: Boolean(consent)
   });
 
   // Check verification quota
@@ -52,20 +41,11 @@ export const generateCCRVReportHandler = asyncHandler(async (req: AuthenticatedR
   try {
     const result = await service.generateReport({
       name,
+      address,
       father_name,
-      house_number,
-      locality,
-      city,
-      village,
-      state,
-      district,
-      pincode,
+      additional_address,
       date_of_birth,
-      gender,
-      mobile_number,
-      email,
-      consent: consent === true ? 'Y' : consent === false ? 'N' : consent, // Ensure consent is 'Y' or 'N'
-      callback_url
+      consent: consent === true ? 'Y' : consent === false ? 'N' : consent // Ensure consent is 'Y' or 'N'
     });
 
     // Consume verification quota

@@ -34,26 +34,26 @@ export const verificationFeatures = [
     ctaText: "Check Legal Records",
     ctaLink: "/blog/legal-background-checks-guide",
   },
-  {
-    id: 4,
-    title: "BIOMETRIC & LIVENESS CHECKS",
-    description: "Face Match,\nLiveness Detection",
-    image: "/cat4.png",
-    detailedText:
-      "AI-based facial recognition and liveness detection to avoid spoofing and ensure authentic identity verification.",
-    ctaText: "Try Biometric Verification",
-    ctaLink: "/blog/biometric-liveness-checks-guide",
-  },
-  {
-    id: 5,
-    title: "SPECIALIZED CHECKS",
-    description: "Covid Certificate,\nOther Niche Verifications",
-    image: "/cat5.png",
-    detailedText:
-      "From health to travel, verify specialized credentials quickly and reliably with our comprehensive verification network.",
-    ctaText: "Explore Specialized Services",
-    ctaLink: "/blog/specialized-verifications-guide",
-  },
+  // {
+  //   id: 4,
+  //   title: "BIOMETRIC & LIVENESS CHECKS",
+  //   description: "Face Match,\nLiveness Detection",
+  //   image: "/cat4.png",
+  //   detailedText:
+  //     "AI-based facial recognition and liveness detection to avoid spoofing and ensure authentic identity verification.",
+  //   ctaText: "Try Biometric Verification",
+  //   ctaLink: "/blog/biometric-liveness-checks-guide",
+  // },
+  // {
+  //   id: 5,
+  //   title: "SPECIALIZED CHECKS",
+  //   description: "Covid Certificate,\nOther Niche Verifications",
+  //   image: "/cat5.png",
+  //   detailedText:
+  //     "From health to travel, verify specialized credentials quickly and reliably with our comprehensive verification network.",
+  //   ctaText: "Explore Specialized Services",
+  //   ctaLink: "/blog/specialized-verifications-guide",
+  // },
 ];
 
 export const pricingPlans = [

@@ -38,6 +38,26 @@ export const DIGILOCKER_REDIRECT_URI = "http://localhost:5173/pan?service=digilo
 
 export const panServices: PanServiceMeta[] = [
   {
+    key: "fetch-detailed",
+    name: "Fetch PAN Detailed", 
+    description: "Fetch detailed PAN information including holder's name, DOB, and status.",
+    apiEndpoint: "/pan/fetch-pan-detailed",
+    formFields: [
+      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      {
+        name: "consent",
+        label: "Consent",
+        type: "radio",
+        required: true,
+        options: [
+          { label: "Yes", value: "Y" },
+          { label: "No", value: "N" },
+        ],
+      },
+    ],
+    icon: CreditCard,
+  },
+  {
     key: "father-name",
     name: "Fetch Father's Name by PAN",
     description: "Get the father's name associated with a PAN number.",
@@ -102,58 +122,39 @@ export const panServices: PanServiceMeta[] = [
     ],
     icon: FileText,
   },
-  {
-    key: "aadhaar-link",
-    name: "Check PAN-Aadhaar Link",
-    description: "Check if a PAN is linked to an Aadhaar number.",
-    apiEndpoint: "/pan/aadhaar-link",
-    formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      { name: "aadhaar_number", label: "Aadhaar Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
-    ],
-    icon: Link,
-  },
-  {
-    key: "fetch-advanced",
-    name: "Fetch PAN Advance",
-    description: "Fetch detailed PAN information including holder's name, DOB, and status.",
-    apiEndpoint: "/pan/fetch-pan-advance",
-    formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      {
-        name: "consent",
-        label: "Consent",
-        type: "radio",
-        required: true,
-        options: [
-          { label: "Yes", value: "Y" },
-          { label: "No", value: "N" },
-        ],
-      },
-    ],
-    icon: CreditCard,
-  },
-  {
-    key: "fetch-detailed",
-    name: "Fetch PAN Detailed", 
-    description: "Fetch detailed PAN information including holder's name, DOB, and status.",
-    apiEndpoint: "/pan/fetch-pan-detailed",
-    formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      {
-        name: "consent",
-        label: "Consent",
-        type: "radio",
-        required: true,
-        options: [
-          { label: "Yes", value: "Y" },
-          { label: "No", value: "N" },
-        ],
-      },
-    ],
-    icon: CreditCard,
-  },
+  // {
+  //   key: "aadhaar-link",
+  //   name: "Check PAN-Aadhaar Link",
+  //   description: "Check if a PAN is linked to an Aadhaar number.",
+  //   apiEndpoint: "/pan/aadhaar-link",
+  //   formFields: [
+  //     { name: "pan_number", label: "PAN Number", type: "text", required: true },
+  //     { name: "aadhaar_number", label: "Aadhaar Number", type: "text", required: true },
+  //     { name: "consent", label: "Consent", type: "text", required: true },
+  //   ],
+  //   icon: Link,
+  // },
+  // {
+  //   key: "fetch-advanced",
+  //   name: "Fetch PAN Advance",
+  //   description: "Fetch detailed PAN information including holder's name, DOB, and status.",
+  //   apiEndpoint: "/pan/fetch-pan-advance",
+  //   formFields: [
+  //     { name: "pan_number", label: "PAN Number", type: "text", required: true },
+  //     {
+  //       name: "consent",
+  //       label: "Consent",
+  //       type: "radio",
+  //       required: true,
+  //       options: [
+  //         { label: "Yes", value: "Y" },
+  //         { label: "No", value: "N" },
+  //       ],
+  //     },
+  //   ],
+  //   icon: CreditCard,
+  // },
+  
   // {
   //   key: "digilocker-init",
   //   name: "Digilocker Init",

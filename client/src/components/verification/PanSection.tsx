@@ -7,12 +7,15 @@ import { VerificationForm } from "./VerificationForm"
 import { panServices, DIGILOCKER_REDIRECT_URI } from "../../utils/panServices"
 import { panApi } from "../../services/api/panApi"
 import { usePricingContext } from "../../context/PricingContext"
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
 
 export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [selectedService, setSelectedService] = useState(panServices[0])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<any>(null)
 
   // Get PAN pricing from backend
   const { getVerificationPricingByType } = usePricingContext()
@@ -90,6 +93,12 @@ export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
   }
 
   const handleSubmit = async (formData: any) => {
+    setPendingFormData(formData)
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setError(null)
     setResult(null)
@@ -99,8 +108,8 @@ export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
 
       if (selectedService.key === "digilocker-pull") {
         // Store data for after redirect
-        sessionStorage.setItem("digilocker_pan_pull_panno", formData.panno)
-        sessionStorage.setItem("digilocker_pan_pull_name", formData.PANFullName)
+        sessionStorage.setItem("digilocker_pan_pull_panno", pendingFormData.panno)
+        sessionStorage.setItem("digilocker_pan_pull_name", pendingFormData.PANFullName)
 
         const initResp = await panApi.digilockerInit({
           redirect_uri: DIGILOCKER_REDIRECT_URI,
@@ -117,7 +126,7 @@ export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
       }
 
       // Prepare payload: normalize PAN and consent where applicable
-      const payload: any = { ...formData }
+      const payload: any = { ...pendingFormData }
       // Convert boolean consent to string
       if (typeof payload.consent === "boolean") {
         payload.consent = payload.consent ? "Y" : "N"
@@ -200,6 +209,17 @@ export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
         productId={productId}
+      />
+
+      {/* Confirmation Dialog */}
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
+        isLoading={isLoading}
+        serviceName={selectedService.name}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
     </VerificationLayout>
   )

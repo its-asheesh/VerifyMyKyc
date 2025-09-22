@@ -22,20 +22,18 @@ const service = new ccrv_service_1.CCRVService();
 exports.generateCCRVReportHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const userId = req.user._id;
-    const { name, father_name, house_number, locality, city, village, state, district, pincode, date_of_birth, gender, mobile_number, email, consent } = req.body || {};
-    // Automatically set callback URL - users don't need to provide this
-    const callback_url = 'https://verifymykyc.com/api/ccrv/callback';
+    const { name, address, father_name, additional_address, date_of_birth, consent } = req.body || {};
     // Required fields validation
-    if (!name || !consent) {
+    if (!name || !address || !consent) {
         return res.status(400).json({
-            message: 'name and consent are required'
+            message: 'name, address, and consent are required'
         });
     }
     console.log('CCRV Generate Report Controller: incoming request', {
         userId,
         name,
-        hasConsent: Boolean(consent),
-        callback_url: callback_url
+        address,
+        hasConsent: Boolean(consent)
     });
     // Check verification quota
     const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'ccrv');
@@ -44,20 +42,11 @@ exports.generateCCRVReportHandler = (0, asyncHandler_1.default)((req, res) => __
     try {
         const result = yield service.generateReport({
             name,
+            address,
             father_name,
-            house_number,
-            locality,
-            city,
-            village,
-            state,
-            district,
-            pincode,
+            additional_address,
             date_of_birth,
-            gender,
-            mobile_number,
-            email,
-            consent: consent === true ? 'Y' : consent === false ? 'N' : consent, // Ensure consent is 'Y' or 'N'
-            callback_url
+            consent: consent === true ? 'Y' : consent === false ? 'N' : consent // Ensure consent is 'Y' or 'N'
         });
         // Consume verification quota
         yield (0, quota_service_1.consumeVerificationQuota)(order);

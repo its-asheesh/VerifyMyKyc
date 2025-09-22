@@ -41,10 +41,45 @@ async function handleProviderRequest<T>(
 export async function generateCCRVReportProvider(
   payload: CCRVGenerateReportRequest
 ): Promise<CCRVGenerateReportResponse> {
-  return handleProviderRequest(
-    apiClient.post('/ccrv-api/rapid/generate-report', payload),
-    'Failed to generate CCRV report'
+  console.log('CCRV Generate Report Provider: Using Search API instead of Generate Report API');
+  console.log('CCRV Generate Report Provider: Payload:', JSON.stringify(payload, null, 2));
+  
+  // Convert Generate Report payload to Search payload format
+  const searchPayload = {
+    name: payload.name,
+    address: payload.address,
+    father_name: payload.father_name || '',
+    date_of_birth: payload.date_of_birth || '',
+    case_category: 'CRIMINAL' as const,
+    type: 'RESPONDENT' as const,
+    name_match_type: 'PARTIAL_FUZZY' as const,
+    father_match_type: 'PARTIAL_FUZZY' as const,
+    jurisdiction_type: 'PAN_INDIA' as const,
+    consent: payload.consent
+  };
+  
+  console.log('CCRV Generate Report Provider: Converted to Search payload:', JSON.stringify(searchPayload, null, 2));
+  
+  // Use the Search API instead of Generate Report API
+  const searchResponse = await handleProviderRequest(
+    apiClient.post('/ccrv-api/rapid/search', searchPayload),
+    'Failed to generate CCRV report using search API'
   );
+  
+  // Convert Search response to Generate Report response format
+  return {
+    request_id: searchResponse.request_id,
+    transaction_id: searchResponse.transaction_id,
+    status: searchResponse.status,
+    data: {
+      code: '1000' as const,
+      message: 'CCRV request successful via search API',
+      transaction_id: searchResponse.transaction_id,
+      ccrv_status: searchResponse.data.ccrv_status as 'REQUESTED' | 'IN_PROGRESS' | 'COMPLETED'
+    },
+    timestamp: searchResponse.timestamp,
+    path: '/ccrv-api/generate-report'
+  };
 }
 
 /**

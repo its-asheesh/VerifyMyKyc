@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FooterSection } from "../footer/FooterSection";
 import { SocialLinks } from "../footer/SocialLinks";
-import { NewsletterForm } from "../footer/NewsletterForm";
 import { footerData } from "../../utils/constants";
 import { isInternalLink } from "../../utils/helpers";
 import { Mail, Phone, MapPin } from "lucide-react";
@@ -109,7 +108,7 @@ const Footer: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Newsletter and Social */}
+          {/* Social Links and Navigation */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -117,14 +116,43 @@ const Footer: React.FC = () => {
             className="lg:col-span-6 text-center"
           >
             <h3 className="font-bold text-blue-600 mb-6 text-xl">
-              Get Exclusive Deals in your Inbox
+              Follow Us
             </h3>
 
-            <div className="mb-6">
-              <NewsletterForm />
-            </div>
-
             <SocialLinks links={footerData.socialLinks} />
+
+            {/* Navigation Links */}
+            <div className="mt-8 pt-6 border-t border-blue-200">
+              <div className="flex flex-wrap justify-center gap-4 text-sm">
+                <Link
+                  to="/products"
+                  className="text-blue-600 hover:text-orange-500 hover:underline transition-colors duration-300 font-medium"
+                >
+                  Products
+                </Link>
+                <span className="text-blue-300">•</span>
+                <Link
+                  to="/about"
+                  className="text-blue-600 hover:text-orange-500 hover:underline transition-colors duration-300 font-medium"
+                >
+                  About Us
+                </Link>
+                <span className="text-blue-300">•</span>
+                <Link
+                  to="/blog"
+                  className="text-blue-600 hover:text-orange-500 hover:underline transition-colors duration-300 font-medium"
+                >
+                  Blog
+                </Link>
+                <span className="text-blue-300">•</span>
+                <Link
+                  to="/contact"
+                  className="text-blue-600 hover:text-orange-500 hover:underline transition-colors duration-300 font-medium"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
           </motion.div>
 
           {/* Footer Links */}

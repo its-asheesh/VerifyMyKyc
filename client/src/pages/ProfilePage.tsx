@@ -138,8 +138,8 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-gray-50 min-h-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,40 +151,61 @@ const ProfilePage: React.FC = () => {
             <p className="text-gray-600 mt-2">Manage your account and view your services</p>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                {[
-                  { id: 'profile', label: 'Profile', icon: User },
-                  { id: 'services', label: 'My Services', icon: Package },
-                  { id: 'orders', label: 'Order History', icon: CreditCard }
-                ].map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </nav>
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8" style={{ minHeight: 'calc(100vh - 300px)' }}>
+            {/* Left Column - Fixed Navigation */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow p-6 h-fit sticky top-8">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">Account</h2>
+                <nav className="space-y-2">
+                  {[
+                    { id: 'profile', label: 'Profile', icon: User, description: 'Personal information' },
+                    { id: 'services', label: 'My Services', icon: Package, description: 'Active services & plans' },
+                    { id: 'orders', label: 'Order History', icon: CreditCard, description: 'Purchase history' }
+                  ].map((tab) => {
+                    const Icon = tab.icon
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`w-full text-left p-4 rounded-lg transition-all duration-200 ${
+                          activeTab === tab.id
+                            ? 'bg-blue-50 border-2 border-blue-200 text-blue-700'
+                            : 'hover:bg-gray-50 border-2 border-transparent text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className={`w-5 h-5 ${activeTab === tab.id ? 'text-blue-600' : 'text-gray-400'}`} />
+                          <div>
+                            <div className="font-medium">{tab.label}</div>
+                            <div className="text-sm text-gray-500">{tab.description}</div>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </nav>
+                
+                {/* Logout Button */}
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 border border-red-200 hover:border-red-300"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Tab Content */}
-          <div className="bg-white rounded-lg shadow">
+            {/* Right Column - Scrollable Content */}
+            <div className="lg:col-span-3 flex flex-col">
+              <div className="bg-white rounded-lg shadow flex-1 overflow-y-auto">
+                <div className="p-6">
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <div className="p-6">
+              <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
                   <div className="flex gap-2">
@@ -278,21 +299,12 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
-                </div>
               </div>
             )}
 
             {/* Services Tab */}
             {activeTab === 'services' && (
-              <div className="p-6">
+              <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">My Services</h2>
                   {ordersLoading && <Loader2 className="w-5 h-5 animate-spin" />}
@@ -537,7 +549,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Orders Tab */}
             {activeTab === 'orders' && (
-              <div className="p-6">
+              <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Order History</h2>
                   {ordersLoading && <Loader2 className="w-5 h-5 animate-spin" />}
@@ -596,7 +608,10 @@ const ProfilePage: React.FC = () => {
                   </div>
                 )}
               </div>
-            )}
+             )}
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>

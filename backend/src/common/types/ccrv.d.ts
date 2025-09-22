@@ -10,20 +10,11 @@ export interface CCRVCallbackData {
 // --------------------------
 export interface CCRVGenerateReportRequest {
   name: string;
+  address: string;
   father_name?: string;
-  house_number?: string;
-  locality?: string;
-  city?: string;
-  village?: string;
-  state?: string;
-  district?: string;
-  pincode?: string;
+  additional_address?: string;
   date_of_birth?: string;
-  gender?: string;
-  mobile_number?: string;
-  email?: string;
   consent: 'Y' | 'N';
-  callback_url?: string;
 }
 
 export interface CCRVGenerateReportResponse {
@@ -31,10 +22,10 @@ export interface CCRVGenerateReportResponse {
   transaction_id: string;
   status: number;
   data: {
-    code: '1016';
+    code: '1000';
     message: string;
     transaction_id: string;
-    ccrv_status: 'REQUESTED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'MINOR' | 'REGION_NOT_SUPPORTED';
+    ccrv_status: 'REQUESTED' | 'IN_PROGRESS' | 'COMPLETED';
   };
   timestamp: number;
   path: string;

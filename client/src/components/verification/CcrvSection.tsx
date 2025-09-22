@@ -7,6 +7,7 @@ import { VerificationForm } from "./VerificationForm";
 import { ccrvServices } from "../../utils/ccrvServices";
 import { ccrvApi } from "../../services/api/ccrvApi";
 import { usePricingContext } from "../../context/PricingContext";
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog";
 
 export const CCRVSection: React.FC<{ productId?: string }> = ({ productId }) => {
   /* -------------------------------------------------
@@ -20,6 +21,8 @@ export const CCRVSection: React.FC<{ productId?: string }> = ({ productId }) => 
   const [pollingCount, setPollingCount] = useState(0);
   const [notification, setNotification] = useState<string | null>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<any>(null);
 
   /* -------------------------------------------------
    * Pricing (context)
@@ -152,6 +155,12 @@ export const CCRVSection: React.FC<{ productId?: string }> = ({ productId }) => 
    * Submit
    * -------------------------------------------------*/
   const handleSubmit = async (rawFormData: any) => {
+    setPendingFormData(rawFormData);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false);
     setIsLoading(true);
     setError(null);
     setResult(null);
@@ -161,7 +170,7 @@ export const CCRVSection: React.FC<{ productId?: string }> = ({ productId }) => 
       const payload: any = {};
 
       // 2️⃣  Copy all fields
-      for (const [k, v] of Object.entries(rawFormData)) {
+      for (const [k, v] of Object.entries(pendingFormData)) {
         if (typeof v === "boolean") {
           payload[k] = v ? "Y" : "N";
         } else if (typeof v === "string") {
@@ -293,6 +302,17 @@ export const CCRVSection: React.FC<{ productId?: string }> = ({ productId }) => 
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
         productId={productId}
+      />
+
+      {/* Confirmation Dialog */}
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
+        isLoading={isLoading}
+        serviceName={selectedService.name}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
     </VerificationLayout>
   );
