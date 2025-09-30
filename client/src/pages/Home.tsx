@@ -16,7 +16,7 @@ const Home: React.FC = () => {
       <FeaturesSection />
       {/* <PricingSection /> */}
       <TrustSection />
-      <ReviewsSection />
+      {/* <ReviewsSection /> */}
       <FaqSection />
       <SubscribeSection />
     </div>

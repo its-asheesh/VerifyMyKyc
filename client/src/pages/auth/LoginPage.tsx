@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../redux/hooks'
-import { loginUser, clearError } from '../../redux/slices/authSlice'
+import { loginUser, clearError, sendPasswordOtp, resetPasswordWithOtp } from '../../redux/slices/authSlice'
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react'
 import { useToast } from '../../components/common/ToastProvider'
 
@@ -19,6 +19,9 @@ const LoginPage: React.FC = () => {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [formErrors, setFormErrors] = useState<{ email?: string; password?: string }>({})
+  const [showReset, setShowReset] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -104,6 +107,64 @@ const LoginPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10"
         >
+          {showReset ? (
+            <form className="space-y-6" onSubmit={async (e) => {
+              e.preventDefault()
+              if (!formData.email) return setFormErrors({ email: 'Email is required' })
+              if (!otp) return
+              if (!newPassword || newPassword.length < 6) return
+              await dispatch(resetPasswordWithOtp({ email: formData.email, otp, newPassword }))
+              setShowReset(false)
+            }}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={() => dispatch(sendPasswordOtp(formData.email))}
+                    className="text-blue-600 hover:text-blue-700 text-sm"
+                  >
+                    Send OTP
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">OTP</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g,''))}
+                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="At least 6 characters"
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <button type="button" className="text-sm text-gray-600 hover:text-gray-800" onClick={() => setShowReset(false)}>Back to Login</button>
+                <button type="submit" disabled={isLoading} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">Reset Password</button>
+              </div>
+            </form>
+          ) : (
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
@@ -218,8 +279,10 @@ const LoginPage: React.FC = () => {
                   Sign up
                 </Link>
               </p>
+              <button type="button" className="mt-2 text-sm text-blue-600 hover:text-blue-700" onClick={() => setShowReset(true)}>Forgot password?</button>
             </div>
           </form>
+          )}
         </motion.div>
       </div>
     </div>

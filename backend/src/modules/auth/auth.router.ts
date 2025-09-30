@@ -12,7 +12,11 @@ import {
   getUserStats,
   getUserLocationAnalytics,
   updateUserLocation,
-  getUsersWithLocation
+  getUsersWithLocation,
+  sendEmailOtp,
+  verifyEmailOtp,
+  sendPasswordResetOtp,
+  resetPasswordWithOtp
 } from './auth.controller';
 import { authenticate, requireAdmin, requireUser, requireAnyRole } from '../../common/middleware/auth';
 
@@ -21,6 +25,10 @@ const router = Router();
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
+router.post('/send-email-otp', sendEmailOtp);
+router.post('/verify-email-otp', verifyEmailOtp);
+router.post('/password/send-otp', sendPasswordResetOtp);
+router.post('/password/reset', resetPasswordWithOtp);
 router.post('/logout', logout);
 
 // Protected routes

@@ -4,6 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
 import { voterServices } from "../../utils/voterServices"
 import { voterApi } from "../../services/api/voterApi"
 
@@ -12,6 +13,8 @@ export const VoterSection: React.FC<{ productId?: string }> = ({ productId }) =>
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<any>(null)
 
   const [captchaBase64, setCaptchaBase64] = useState<string | null>(null)
   const [transactionId, setTransactionId] = useState<string | null>(null)
@@ -69,14 +72,20 @@ export const VoterSection: React.FC<{ productId?: string }> = ({ productId }) =>
   }
 
   const handleSubmit = async (formData: any) => {
+    setPendingFormData(formData)
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setError(null)
     setResult(null)
 
     try {
       let response: any
+      const formData = { ...pendingFormData }
 
-      // Normalize consent if boolean
       if (typeof formData.consent === 'boolean') {
         formData.consent = formData.consent ? 'Y' : 'N'
       }
@@ -148,6 +157,16 @@ export const VoterSection: React.FC<{ productId?: string }> = ({ productId }) =>
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
         productId={productId}
+      />
+
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
+        isLoading={isLoading}
+        serviceName={selectedService.name}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
     </VerificationLayout>
   )

@@ -24,6 +24,7 @@ const passport_routes_1 = __importDefault(require("./modules/passport/passport.r
 const ccrv_routes_1 = __importDefault(require("./modules/ccrv/ccrv.routes"));
 const subscriber_routes_1 = __importDefault(require("./modules/subscriber/subscriber.routes"));
 const blog_router_1 = __importDefault(require("./modules/blog/blog.router"));
+const epfo_router_1 = __importDefault(require("./modules/epfo/epfo.router"));
 const callback_handler_1 = __importDefault(require("./common/middleware/callback-handler"));
 const router = (0, express_1.Router)();
 // Callback handler route
@@ -38,6 +39,7 @@ router.use('/aadhaar', aadhaar_router_1.default);
 router.use('/ccrv', ccrv_routes_1.default);
 router.use('/pan', pan_router_1.default);
 router.use('/gstin', gstin_router_1.default);
+router.use('/epfo', epfo_router_1.default);
 router.use('/mca', mca_router_1.default);
 router.use('/drivinglicense', drivinglicense_router_1.default);
 router.use('/echallan', echallan_router_1.default);

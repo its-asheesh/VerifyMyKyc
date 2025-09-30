@@ -4299,6 +4299,245 @@ if (serviceKey === "fetch-detailed") {
       );
     }
 
+    // EPFO: Fetch UAN by mobile/PAN
+    if (serviceKey === "fetchUan") {
+      const data: any = (result as any).data || result;
+      const uanList: string[] = Array.isArray(data?.uan_list) ? data.uan_list : [];
+      const uanSource: Array<{ uan: string; source: string[] }>
+        = Array.isArray(data?.uan_source) ? data.uan_source : [];
+
+      // Build a map of UAN -> sources for quick lookup
+      const sourcesByUan = new Map<string, string[]>();
+      uanSource.forEach((item) => {
+        if (item?.uan) sourcesByUan.set(item.uan, Array.isArray(item.source) ? item.source : []);
+      });
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName || "Fetch UAN"}
+          message={data?.message || data?.code}
+          result={result}
+          onReset={() => setShowResult(false)}
+        >
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-700">
+                <div className="font-medium">{data?.message || "UANs fetched"}</div>
+                {typeof data?.code === 'string' && (
+                  <div className="text-gray-500 mt-1">Code: {data.code}</div>
+                )}
+              </div>
+            </div>
+
+            {/* UAN List */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="font-semibold text-gray-900 mb-3">Linked UANs ({uanList.length})</div>
+              {uanList.length > 0 ? (
+                <ul className="space-y-2">
+                  {uanList.map((uan) => {
+                    const sources = sourcesByUan.get(uan) || [];
+                    return (
+                      <li key={uan} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <div className="text-gray-900 font-medium">{uan}</div>
+                        {sources.length > 0 && (
+                          <div className="text-xs text-gray-600">Sources: {sources.join(', ')}</div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="text-gray-500">No UANs found for the provided inputs.</div>
+              )}
+            </div>
+
+            {/* Sources table (if there are extra entries not in list) */}
+            {uanSource.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="font-semibold text-gray-900 mb-3">UAN Sources</div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-600">
+                        <th className="py-2 pr-4">UAN</th>
+                        <th className="py-2 pr-4">Source(s)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uanSource.map((row, idx) => (
+                        <tr key={`${row.uan}-${idx}`} className="border-t border-gray-100">
+                          <td className="py-2 pr-4 text-gray-900">{row.uan || '-'}</td>
+                          <td className="py-2 pr-4 text-gray-700">{Array.isArray(row.source) ? row.source.join(', ') : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
+    // EPFO: UAN by PAN
+    if (serviceKey === "uanByPan") {
+      const data: any = (result as any).data || result;
+      const uanList: string[] = Array.isArray(data?.uan_list) ? data.uan_list : [];
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName || "Fetch UAN by PAN"}
+          message={data?.message || data?.code}
+          result={result}
+          onReset={() => setShowResult(false)}
+        >
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-700">
+                <div className="font-medium">{data?.message || "UAN fetched from PAN"}</div>
+                {typeof data?.code === 'string' && (
+                  <div className="text-gray-500 mt-1">Code: {data.code}</div>
+                )}
+              </div>
+            </div>
+
+            {/* UAN List */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="font-semibold text-gray-900 mb-3">Linked UANs ({uanList.length})</div>
+              {uanList.length > 0 ? (
+                <ul className="space-y-2">
+                  {uanList.map((uan) => (
+                    <li key={uan} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                      <div className="text-gray-900 font-medium">{uan}</div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-gray-500">No UANs found for the provided PAN.</div>
+              )}
+            </div>
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
+    // EPFO: Employment by UAN
+    if (serviceKey === "employmentByUan") {
+      const data: any = (result as any).data || result;
+      const records: Array<{
+        name?: string;
+        guardian_name?: string;
+        establishment_name?: string;
+        member_id?: string;
+        date_of_joining?: string;
+        date_of_exit?: string;
+      }> = Array.isArray(data?.employment_data)
+        ? data.employment_data
+        : Array.isArray(data?.employment_history_data)
+        ? data.employment_history_data
+        : [];
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName || "Employment by UAN"}
+          message={data?.message || data?.code}
+          result={result}
+          onReset={() => setShowResult(false)}
+        >
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-700">
+                <div className="font-medium">{data?.message || "Employment history fetched"}</div>
+                {typeof data?.code === 'string' && (
+                  <div className="text-gray-500 mt-1">Code: {data.code}</div>
+                )}
+              </div>
+            </div>
+
+            {/* Employment Records */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="font-semibold text-gray-900 mb-3">Employment Records ({records.length})</div>
+              {records.length > 0 ? (
+                <div className="space-y-3">
+                  {records.map((rec, idx) => (
+                    <div key={`${rec.member_id || idx}`} className="border border-gray-100 rounded-lg p-3 bg-gray-50">
+                      <div className="text-gray-900 font-medium">{rec.establishment_name || '-'}</div>
+                      <div className="text-sm text-gray-700 mt-1">Member ID: {rec.member_id || '-'}</div>
+                      <div className="text-sm text-gray-700">Name: {rec.name || '-'}</div>
+                      {rec.guardian_name && (
+                        <div className="text-sm text-gray-700">Guardian: {rec.guardian_name}</div>
+                      )}
+                      <div className="text-xs text-gray-600 mt-2">
+                        <span>Joining: {rec.date_of_joining || '-'}</span>
+                        {rec.date_of_exit && <span className="ml-3">Exit: {rec.date_of_exit}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500">No employment records found for this UAN.</div>
+              )}
+            </div>
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
+    // EPFO: Latest Employment by UAN
+    if (serviceKey === "employmentLatest") {
+      const data: any = (result as any).data || result;
+      const rec: {
+        name?: string;
+        establishment_name?: string;
+        member_id?: string;
+        date_of_joining?: string;
+        date_of_exit?: string;
+        exit_reason?: string;
+      } = data?.employment_data || data?.latest_employment_data || {};
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName || "Latest Employment by UAN"}
+          message={data?.message || data?.code}
+          result={result}
+          onReset={() => setShowResult(false)}
+        >
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-sm text-gray-700">
+                <div className="font-medium">{data?.message || "Latest employment record fetched"}</div>
+                {typeof data?.code === 'string' && (
+                  <div className="text-gray-500 mt-1">Code: {data.code}</div>
+                )}
+              </div>
+            </div>
+
+            {/* Latest Employment Card */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="font-semibold text-gray-900 mb-3">Latest Employment</div>
+              <div className="space-y-1 text-sm">
+                <div className="text-gray-900"><span className="font-medium">Name:</span> {rec.name || '-'}</div>
+                <div className="text-gray-900"><span className="font-medium">Establishment:</span> {rec.establishment_name || '-'}</div>
+                <div className="text-gray-900"><span className="font-medium">Member ID:</span> {rec.member_id || '-'}</div>
+                <div className="text-gray-900"><span className="font-medium">Date of Joining:</span> {rec.date_of_joining || '-'}</div>
+                {rec.date_of_exit && (
+                  <div className="text-gray-900"><span className="font-medium">Date of Exit:</span> {rec.date_of_exit}</div>
+                )}
+                {rec.exit_reason && (
+                  <div className="text-gray-900"><span className="font-medium">Exit Reason:</span> {rec.exit_reason}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
     return null;
   };
 
@@ -4363,9 +4602,21 @@ if (serviceKey === "fetch-detailed") {
           )}
         </AnimatePresence>
 
-        {renderCCRVResult() || renderFormattedResult()}
+        {renderCCRVResult() || renderFormattedResult() || (
+          (() => {
+            const data: any = (result as any)?.data || result;
+            return (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <div className="text-sm text-gray-600 mb-2">Generic Result</div>
+                <pre className="bg-gray-50 p-3 rounded-lg overflow-auto text-xs">
+                  {JSON.stringify(data, null, 2)}
+                </pre>
+              </div>
+            );
+          })()
+        )}
 
-        {productId && (
+        {/* {productId && (
           <div className="mt-6">
             <div className="my-6 border-t border-gray-200"></div>
             <ProductReviews
@@ -4375,7 +4626,7 @@ if (serviceKey === "fetch-detailed") {
               showForm={true}
             />
           </div>
-        )}
+        )} */}
       </div>
     );
   }

@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.login = exports.register = void 0;
+exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
 const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
+const email_1 = require("../../common/services/email");
 // Register new user
 exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password, company, phone, location } = req.body;
@@ -38,14 +39,25 @@ exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
         userData.location = location;
     }
     const user = yield auth_model_1.User.create(userData);
-    // Generate token
-    const token = (0, jwt_1.generateToken)(user);
-    // Update last login
-    user.lastLogin = new Date();
+    // Create email OTP
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    user.emailOtpCode = code;
+    user.emailOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
     yield user.save();
+    // Send email (non-blocking – client can always use resend endpoint)
+    let otpSent = true;
+    try {
+        yield (0, email_1.sendEmail)(email, 'Verify your email', (0, email_1.buildOtpEmailHtml)(name, code));
+    }
+    catch (e) {
+        otpSent = false;
+        console.error('Email send failed during registration:', (e === null || e === void 0 ? void 0 : e.message) || e);
+    }
     res.status(201).json({
         success: true,
-        message: 'User registered successfully',
+        message: otpSent
+            ? 'User registered. Please verify your email with the OTP sent.'
+            : 'User registered. We could not send the OTP email. Please tap Resend OTP.',
         data: {
             user: {
                 id: user._id,
@@ -55,10 +67,11 @@ exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
                 company: user.company,
                 phone: user.phone,
                 location: user.location,
+                emailVerified: user.emailVerified,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             },
-            token
+            otpSent
         }
     });
 }));
@@ -81,6 +94,10 @@ exports.login = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void
     // Update location data if provided
     if (location) {
         user.location = location;
+    }
+    // Require verified email
+    if (!user.emailVerified) {
+        return res.status(401).json({ message: 'Please verify your email to continue' });
     }
     // Generate token
     const token = (0, jwt_1.generateToken)(user);
@@ -106,6 +123,92 @@ exports.login = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void
             token
         }
     });
+}));
+// Send/Resend email OTP
+exports.sendEmailOtp = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
+    const user = yield auth_model_1.User.findOne({ email });
+    if (!user)
+        return res.status(404).json({ message: 'User not found' });
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    user.emailOtpCode = code;
+    user.emailOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    yield user.save();
+    yield (0, email_1.sendEmail)(email, 'Verify your email', (0, email_1.buildOtpEmailHtml)(user.name, code));
+    res.json({ success: true, message: 'OTP sent to email' });
+}));
+// Verify email OTP
+exports.verifyEmailOtp = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, otp } = req.body;
+    const user = yield auth_model_1.User.findOne({ email });
+    if (!user)
+        return res.status(404).json({ message: 'User not found' });
+    if (!user.emailOtpCode || !user.emailOtpExpires || user.emailOtpExpires < new Date()) {
+        return res.status(400).json({ message: 'OTP expired. Please resend.' });
+    }
+    if (user.emailOtpCode !== otp) {
+        return res.status(400).json({ message: 'Invalid OTP' });
+    }
+    user.emailVerified = true;
+    user.emailOtpCode = undefined;
+    user.emailOtpExpires = undefined;
+    user.lastLogin = new Date();
+    yield user.save();
+    const token = (0, jwt_1.generateToken)(user);
+    res.json({ success: true, message: 'Email verified', data: { token, user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                emailVerified: user.emailVerified,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            } } });
+}));
+// Send password reset OTP (non-enumerating)
+exports.sendPasswordResetOtp = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
+    const user = yield auth_model_1.User.findOne({ email });
+    if (user) {
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        user.passwordResetToken = code;
+        user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+        yield user.save();
+        try {
+            yield (0, email_1.sendEmail)(email, 'Password reset code', (0, email_1.buildOtpEmailHtml)(user.name, code));
+        }
+        catch (e) {
+            console.error('Password reset email failed:', (e === null || e === void 0 ? void 0 : e.message) || e);
+        }
+    }
+    // Always 200 to prevent account enumeration
+    res.json({ success: true, message: 'If an account exists, an OTP has been sent' });
+}));
+// Reset password with OTP
+exports.resetPasswordWithOtp = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, otp, newPassword } = req.body;
+    const user = yield auth_model_1.User.findOne({ email }).select('+password');
+    if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires < new Date() || user.passwordResetToken !== otp) {
+        return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    yield user.save();
+    const token = (0, jwt_1.generateToken)(user);
+    res.json({ success: true, message: 'Password reset successful', data: { token, user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                emailVerified: user.emailVerified,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            } } });
 }));
 // Get current user profile
 exports.getProfile = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

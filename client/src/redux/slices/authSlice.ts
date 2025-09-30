@@ -43,6 +43,7 @@ export interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  pendingEmail?: string
 }
 
 // Helper function to initialize auth state with token validation
@@ -86,8 +87,9 @@ const initializeAuthState = (): AuthState => {
 // Initial state
 const initialState: AuthState = initializeAuthState();
 
-// API base URL - use production URL for Hostinger
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend.verifymykyc.com/api'
+// API base URL
+// In dev, set VITE_API_URL=/api to use Vite proxy and avoid CORS
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 // Helper function to make API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
@@ -165,12 +167,73 @@ export const registerUser = createAsyncThunk(
         }),
       })
 
-      // Store token
-      localStorage.setItem('token', response.data.token)
-
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.message || 'Registration failed')
+    }
+  }
+)
+
+export const sendEmailOtp = createAsyncThunk(
+  'auth/sendEmailOtp',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      await apiCall('/auth/send-email-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+      return true
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to send OTP')
+    }
+  }
+)
+
+export const verifyEmailOtp = createAsyncThunk(
+  'auth/verifyEmailOtp',
+  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiCall('/auth/verify-email-otp', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      // Store token
+      localStorage.setItem('token', response.data.token)
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Invalid OTP')
+    }
+  }
+)
+
+export const sendPasswordOtp = createAsyncThunk(
+  'auth/sendPasswordOtp',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      await apiCall('/auth/password/send-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+      return true
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to send password OTP')
+    }
+  }
+)
+
+export const resetPasswordWithOtp = createAsyncThunk(
+  'auth/resetPasswordWithOtp',
+  async (payload: { email: string; otp: string; newPassword: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiCall('/auth/password/reset', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      // Store token
+      localStorage.setItem('token', response.data.token)
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to reset password')
     }
   }
 )
@@ -287,12 +350,74 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false
-        state.isAuthenticated = true
-        state.user = action.payload.user
-        state.token = action.payload.token
+        // Registration now requires email verification; do not authenticate yet
+        state.pendingEmail = action.payload.user?.email
         state.error = null
       })
       .addCase(registerUser.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // Send Email OTP
+    builder
+      .addCase(sendEmailOtp.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(sendEmailOtp.fulfilled, (state) => {
+        state.isLoading = false
+      })
+      .addCase(sendEmailOtp.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // Verify Email OTP
+    builder
+      .addCase(verifyEmailOtp.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(verifyEmailOtp.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+        state.pendingEmail = undefined
+      })
+      .addCase(verifyEmailOtp.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // Password reset send OTP
+    builder
+      .addCase(sendPasswordOtp.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(sendPasswordOtp.fulfilled, (state) => {
+        state.isLoading = false
+      })
+      .addCase(sendPasswordOtp.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+    // Reset password with OTP
+    builder
+      .addCase(resetPasswordWithOtp.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(resetPasswordWithOtp.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isAuthenticated = true
+        state.user = action.payload.user
+        state.token = action.payload.token
+      })
+      .addCase(resetPasswordWithOtp.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
       })

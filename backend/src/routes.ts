@@ -19,6 +19,7 @@ import passportRouter from './modules/passport/passport.routes';
 import ccrvRouter from './modules/ccrv/ccrv.routes';
 import subscriberRouter from './modules/subscriber/subscriber.routes';
 import blogRouter from './modules/blog/blog.router';
+import epfoRouter from './modules/epfo/epfo.router';
 
 import callbackRouter from "./common/middleware/callback-handler";
 const router = Router();
@@ -38,6 +39,7 @@ router.use('/aadhaar', aadhaarRouter);
 router.use('/ccrv', ccrvRouter);
 router.use('/pan', panRouter);
 router.use('/gstin', gstinRouter);
+router.use('/epfo', epfoRouter);
 router.use('/mca', mcaRouter);
 router.use('/drivinglicense', drivingLicenseRouter);
 router.use('/echallan', echallanRouter);

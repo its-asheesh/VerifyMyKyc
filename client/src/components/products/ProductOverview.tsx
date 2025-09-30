@@ -15,6 +15,7 @@ import { PanSection } from "../verification/PanSection";
 import { DrivingLicenseSection } from "../verification/DrivingLicenseSection";
 import { VoterSection } from "../verification/VoterSection";
 import { GstinSection } from "../verification/GstinSection";
+import { EpfoSection } from "../verification/EpfoSection";
 import { CompanySection } from "../verification/CompanySection";
 import { BankAccountSection } from "../verification/BankAccountSection";
 import { RcSection } from "../verification/RcSection";
@@ -42,6 +43,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const [rcModalOpen, setRcModalOpen] = useState(false);
   const [passportModalOpen, setPassportModalOpen] = useState(false);
   const [ccrvModalOpen, setCcrvModalOpen] = useState(false);
+  const [epfoModalOpen, setEpfoModalOpen] = useState(false);
   const [buyPromptOpen, setBuyPromptOpen] = useState(false);
   const [awaitingAccessCheck, setAwaitingAccessCheck] = useState(false);
   const buyPromptTimerRef = React.useRef<number | null>(null);
@@ -78,6 +80,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     title.includes("mca") ||
     title.includes("cin") ||
     title.includes("din");
+  const isEpfoProduct = title.includes("epfo") || title.includes("uan") || categoryName.includes("epfo");
   const isBankProduct =
     title.includes("bank") ||
     categoryName.includes("bank") ||
@@ -115,7 +118,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
       'bankaccount',
       'vehicle',
       'passport',
-      'ccrv'
+      'ccrv',
+      'epfo'
     ];
     if (validTypes.includes(id)) return id;
 
@@ -130,6 +134,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     if (t.includes('vehicle') || t.includes('registration certificate')) return 'vehicle';
     if (t.includes('passport')) return 'passport';
     if (t.includes('criminal') || t.includes('ccrv') || t.includes('court record')) return 'ccrv';
+    if (t.includes('epfo') || t.includes('uan')) return 'epfo';
     return 'other';
   };
 
@@ -202,6 +207,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     else if (isRcProduct) setRcModalOpen(true);
     else if (isPassportProduct) setPassportModalOpen(true);
     else if (isCcrvProduct) setCcrvModalOpen(true);
+    else if (isEpfoProduct) setEpfoModalOpen(true);
   };
 
   // Determine if user has active access for THIS product's verification type
@@ -251,7 +257,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
       return; // wait for state to update; decide in effect below
     }
 
-    const hasAccess = hasActiveAccessForProduct(activeServices);
+    const bypassAccess = isAadhaarProduct || isCcrvProduct; // Temporary: allow Aadhaar/CCRV without plan
+    const hasAccess = bypassAccess ? true : hasActiveAccessForProduct(activeServices);
 
     if (!hasAccess) {
       setBuyPromptOpen(true);
@@ -273,7 +280,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
 
     setAwaitingAccessCheck(false);
 
-    const hasAccess = hasActiveAccessForProduct(activeServices);
+    const bypassAccess = isAadhaarProduct || isCcrvProduct;
+    const hasAccess = bypassAccess ? true : hasActiveAccessForProduct(activeServices);
 
     if (!hasAccess) setBuyPromptOpen(true);
     else openVerificationModal();
@@ -363,7 +371,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200">
+        {/* <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200">
           <div className="text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-2">
               <Star className="w-6 h-6 text-yellow-600" />
@@ -387,7 +395,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             <div className="text-2xl font-bold text-gray-900">99.9%</div>
             <div className="text-sm text-gray-600">Uptime</div>
           </div>
-        </div>
+        </div> */}
 
         {/* CTA Buttons */}
         <div className="flex gap-4 pt-6">
@@ -411,7 +419,8 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
                 isBankProduct ||
                 isRcProduct ||
                 isPassportProduct ||
-                isCcrvProduct
+                isCcrvProduct ||
+                isEpfoProduct
               )
             }
           >
@@ -487,6 +496,20 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               &times;
             </button>
             <GstinSection productId={product.id} />
+          </div>
+        </div>
+      )}
+
+      {epfoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setEpfoModalOpen(false)}
+            >
+              &times;
+            </button>
+            <EpfoSection productId={product.id} />
           </div>
         </div>
       )}

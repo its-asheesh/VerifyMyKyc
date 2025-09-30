@@ -105,11 +105,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
           <div
             className={`flex gap-4 text-sm text-gray-600 ${isListView ? "justify-end mb-4" : "justify-between mb-4"}`}
           >
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              {/* <span>{avgDisplay}{count > 0 ? ` (${count})` : ""}</span> */}
+              <span>{avgDisplay}{count > 0 ? ` (${count})` : ""}</span>
               <span>{avgDisplay}</span>
-            </div>
+            </div> */}
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               <span>1.2k users</span>

@@ -301,6 +301,35 @@ const seedPricingData = async () => {
         popular: true,
         color: 'indigo'
       },
+      {
+        verificationType: 'epfo',
+        monthlyPrice: 1499,
+        yearlyPrice: 14999,
+        oneTimePrice: 149,
+        title: 'EPFO Verification',
+        description: 'EPFO UAN, employment history, and passbook verification',
+        oneTimeFeatures: [
+          'Fetch UAN by Mobile/PAN',
+          'Employment History by UAN',
+          'Employer Verification'
+        ],
+        monthlyFeatures: [
+          'UAN Discovery',
+          'Employment History',
+          'Passbook V1 Flow (OTP)',
+          'API Access',
+          'Priority Support'
+        ],
+        yearlyFeatures: [
+          'All Monthly Features',
+          '24/7 Support',
+          'Bulk Processing',
+          'Dedicated Account Manager'
+        ],
+        highlighted: false,
+        popular: true,
+        color: 'rose'
+      },
     ]
     
     await VerificationPricing.insertMany(verificationPricingData)

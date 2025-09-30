@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
 import { companyServices } from "../../utils/companyServices"
 import { mcaApi } from "../../services/api/mcaApi"
  
@@ -13,6 +14,8 @@ export const CompanySection: React.FC<{ productId?: string }> = ({ productId }) 
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<any>(null)
 
   const handleServiceChange = (service: any) => {
     setSelectedService(service)
@@ -40,22 +43,22 @@ export const CompanySection: React.FC<{ productId?: string }> = ({ productId }) 
   }
 
   const handleSubmit = async (formData: any) => {
+    setPendingFormData(formData)
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setError(null)
     setResult(null)
 
     try {
-      let response
-
-      // Convert boolean consent to string if present
-      if (typeof formData.consent === "boolean") {
-        formData.consent = formData.consent ? "Y" : "N"
+      const payload: any = { ...pendingFormData }
+      if (typeof payload.consent === "boolean") {
+        payload.consent = payload.consent ? "Y" : "N"
       }
-
-      // Only one service: fetch-company
-      response = await mcaApi.fetchCompany(formData)
-
-      // Keep full response shape so the MCA renderer can show all fields
+      const response = await mcaApi.fetchCompany(payload)
       const raw = (response as any)?.data || response
       setResult(raw)
     } catch (err: any) {
@@ -84,6 +87,16 @@ export const CompanySection: React.FC<{ productId?: string }> = ({ productId }) 
         serviceName={selectedService.name}
         serviceDescription={selectedService.description}
         productId={productId}
+      />
+
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
+        isLoading={isLoading}
+        serviceName={selectedService.name}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
     </VerificationLayout>
   )

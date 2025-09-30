@@ -154,78 +154,16 @@ export const CCRVSection: React.FC<{ productId?: string }> = ({ productId }) => 
   /* -------------------------------------------------
    * Submit
    * -------------------------------------------------*/
-  const handleSubmit = async (rawFormData: any) => {
-    setPendingFormData(rawFormData);
-    setShowConfirmDialog(true);
+  const handleSubmit = async (_rawFormData: any) => {
+    // Temporary maintenance: block CCRV verifications at submit click
+    setError('Government source temporarily unavailable. Please try again later.');
+    return;
   };
 
   const handleConfirmSubmit = async () => {
+    // Temporary maintenance message (easy to remove later)
     setShowConfirmDialog(false);
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      // 1️⃣  Build clean payload
-      const payload: any = {};
-
-      // 2️⃣  Copy all fields
-      for (const [k, v] of Object.entries(pendingFormData)) {
-        if (typeof v === "boolean") {
-          payload[k] = v ? "Y" : "N";
-        } else if (typeof v === "string") {
-          payload[k] = v.trim();
-        } else {
-          payload[k] = v;
-        }
-      }
-
-      // 3️⃣  Basic validations
-      if (payload.consent !== "Y") {
-        throw new Error("Consent is required.");
-      }
-
-      console.log('CCRV Frontend: Sending payload to API:', payload);
-
-      // 4️⃣  Route to correct API
-      let response;
-      switch (selectedService.key) {
-        case "generate-report":
-          response = await ccrvApi.generateReport(payload);
-          break;
-        case "search":
-          response = await ccrvApi.search(payload);
-          break;
-        default:
-          response = await ccrvApi.post(selectedService.apiEndpoint, payload);
-      }
-
-      // 5️⃣  Check if we got a transaction ID and start polling
-      console.log('CCRV Initial Response:', response);
-      console.log('CCRV Transaction ID:', (response as any).data?.transaction_id || (response as any).transaction_id);
-      console.log('CCRV Status:', (response as any).data?.ccrv_status);
-      
-      const transactionId = (response as any).data?.transaction_id || (response as any).transaction_id;
-      if (transactionId && ((response as any).data?.ccrv_status === 'REQUESTED' || (response as any).data?.ccrv_status === 'IN_PROGRESS')) {
-        setResult(response);
-        setNotification('🔄 Verification initiated! Checking for results...');
-        setIsPolling(true);
-        setPollingCount(0);
-        
-        // Start polling every 6 seconds
-        pollingRef.current = setInterval(() => {
-          pollForResult(transactionId);
-        }, 6000);
-      } else {
-        setResult(response);
-        setNotification('✅ Verification completed immediately!');
-        console.log('CCRV Immediate Result:', response);
-      }
-    } catch (err: any) {
-      setError(err?.message || "Verification failed");
-    } finally {
-      setIsLoading(false);
-    }
+    setError('Government source temporarily unavailable. Please try again later.');
   };
 
   /* -------------------------------------------------

@@ -19,6 +19,7 @@ interface VerificationLayoutProps {
   selectedService: Service
   onServiceChange: (service: Service) => void
   children: React.ReactNode
+  showWhyChooseUs?: boolean
 }
 
 export const VerificationLayout: React.FC<VerificationLayoutProps> = ({
@@ -28,6 +29,7 @@ export const VerificationLayout: React.FC<VerificationLayoutProps> = ({
   selectedService,
   onServiceChange,
   children,
+  showWhyChooseUs = false,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -87,24 +89,26 @@ export const VerificationLayout: React.FC<VerificationLayoutProps> = ({
                   )
                 })}
               </div>
-              {/* Why Choose Us - Mobile */}
-              <div className="p-4 border-t border-gray-200 mt-6">
-                <h4 className="font-semibold text-gray-900 mb-4">Why Choose Us?</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-700">99.9% Accuracy</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm text-gray-700">3 Second Verification</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-sm text-gray-700">Bank-Grade Security</span>
+              {/* Why Choose Us - Mobile (optional) */}
+              {showWhyChooseUs && (
+                <div className="p-4 border-t border-gray-200 mt-6">
+                  <h4 className="font-semibold text-gray-900 mb-4">Why Choose Us?</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-gray-700">99.9% Accuracy</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm text-gray-700">3 Second Verification</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span className="text-sm text-gray-700">Bank-Grade Security</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -158,24 +162,26 @@ export const VerificationLayout: React.FC<VerificationLayoutProps> = ({
               )
             })}
           </div>
-          {/* Why Choose Us - Desktop */}
-          <div className="p-6 border-t border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-4">Why Choose Us?</h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">99.9% Accuracy</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">3 Second Verification</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-sm text-gray-700">Bank-Grade Security</span>
+          {/* Why Choose Us - Desktop (optional) */}
+          {showWhyChooseUs && (
+            <div className="p-6 border-t border-gray-200">
+              <h4 className="font-semibold text-gray-900 mb-4">Why Choose Us?</h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">99.9% Accuracy</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">3 Second Verification</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Bank-Grade Security</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Main Content Area */}

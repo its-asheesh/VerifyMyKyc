@@ -80,49 +80,55 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
   /* ------------------------------------------------------------------ */
   /*  Submit handler                                                     */
   /* ------------------------------------------------------------------ */
-  const handleSubmit = async (formData: any) => {
-    setIsLoading(true)
-    setError(null)
-    setResult(null)
+  // const handleSubmit = async (formData: any) => {
+  //   setIsLoading(true)
+  //   setError(null)
+  //   setResult(null)
 
-    try {
-      let response
+  //   try {
+  //     let response
 
-      if (selectedService.key === "fetch-eaadhaar" && !formData.transaction_id) {
-        const initResp = await panApi.digilockerInit({
-          redirect_uri: DIGILOCKER_EAADHAAR_REDIRECT_URI,
-          consent: "Y",
-        })
-        const url = initResp?.data?.authorization_url
-        if (url) {
-          window.location.href = url
-          return
-        } else {
-          throw new Error("Failed to get Digilocker authorization URL")
-        }
-      }
+  //     if (selectedService.key === "fetch-eaadhaar" && !formData.transaction_id) {
+  //       const initResp = await panApi.digilockerInit({
+  //         redirect_uri: DIGILOCKER_EAADHAAR_REDIRECT_URI,
+  //         consent: "Y",
+  //       })
+  //       const url = initResp?.data?.authorization_url
+  //       if (url) {
+  //         window.location.href = url
+  //         return
+  //       } else {
+  //         throw new Error("Failed to get Digilocker authorization URL")
+  //       }
+  //     }
 
-      switch (selectedService.key) {
-        case "ocr-v1":
-          response = await aadhaarApi.ocrV1(formData)
-          break
-        case "ocr-v2":
-          response = await aadhaarApi.ocrV2(formData)
-          break
-        case "fetch-eaadhaar":
-          response = await aadhaarApi.fetchEAadhaar(formData)
-          break
-        default:
-          throw new Error("Unknown service")
-      }
+  //     switch (selectedService.key) {
+  //       case "ocr-v1":
+  //         response = await aadhaarApi.ocrV1(formData)
+  //         break
+  //       case "ocr-v2":
+  //         response = await aadhaarApi.ocrV2(formData)
+  //         break
+  //       case "fetch-eaadhaar":
+  //         response = await aadhaarApi.fetchEAadhaar(formData)
+  //         break
+  //       default:
+  //         throw new Error("Unknown service")
+  //     }
 
-      setResult(response.data)
-    } catch (err: any) {
-      console.error("Aadhaar API Error:", err)
-      setError(err.response?.data?.message || err.message || "An error occurred")
-    } finally {
-      setIsLoading(false)
-    }
+  //     setResult(response.data)
+  //   } catch (err: any) {
+  //     console.error("Aadhaar API Error:", err)
+  //     setError(err.response?.data?.message || err.message || "An error occurred")
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
+
+  const handleSubmit = async (_formData: any) => {
+    // Temporary maintenance message (easy to remove later)
+    setError("Government source temporarily unavailable. Please try again later.")
+    return
   }
 
   /* ------------------------------------------------------------------ */

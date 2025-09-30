@@ -413,6 +413,42 @@ export const mockProducts: Product[] = [
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01"
   },
+  {
+    id: "epfo",
+    title: "EPFO Verification",
+    description: "Fetch UAN, employment history, passbook (OTP flow) and verify employer",
+    demandLevel: "high",
+    demand: "Trending",
+    category: {
+      id: "business",
+      name: "Business Verification",
+      slug: "business",
+      description: "Business registry verification",
+    },
+    features: [
+      "UAN discovery by mobile/PAN",
+      "Employment history by UAN",
+      "Passbook V1 (OTP-based) flow",
+      "Employer verification",
+    ],
+    services: [
+      "Fetch UAN by mobile and PAN",
+      "Fetch employment history by UAN",
+      "Generate & validate OTP; list employers; fetch passbook",
+      "Verify employer establishment details",
+    ],
+    pricing: {
+      free: { price: 0, requests: 5, features: ["Basic discovery", "Email support"], support: "Email" },
+      basic: { price: 149, requests: 100, features: ["Employment & passbook (OTP)", "Priority support"], support: "Chat" },
+      premium: { price: 1499, requests: 1000, features: ["Employer verify", "24/7 support"], support: "Phone" },
+    },
+    documentation: "EPFO APIs: UAN, employment history, passbook (OTP), employer verify",
+    isActive: true,
+    icon: "/verifymykyclogo.svg",
+    image: "/business.jpg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01"
+  },
 ];
 
 const mockCategories: ProductCategory[] = [
@@ -451,6 +487,28 @@ export const fetchProducts = createAsyncThunk(
           (p) => p.title.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower),
         )
       }
+
+      // Sort by required priority order
+      const priorityOrder = [
+        'aadhaar',
+        'pan',
+        'voterid',
+        'passport',
+        'epfo',
+        'drivinglicense',
+        'vehicle',
+        'bank-account',
+        'company',
+        'gstin',
+      ]
+      const priorityIndex: Record<string, number> = Object.fromEntries(priorityOrder.map((k, i) => [k, i]))
+      filteredProducts.sort((a, b) => {
+        const ai = priorityIndex[(a.id || '').toLowerCase()] ?? Number.MAX_SAFE_INTEGER
+        const bi = priorityIndex[(b.id || '').toLowerCase()] ?? Number.MAX_SAFE_INTEGER
+        if (ai !== bi) return ai - bi
+        // fallback alphabetical by title
+        return (a.title || '').localeCompare(b.title || '')
+      })
 
       return filteredProducts
     } catch (error) {

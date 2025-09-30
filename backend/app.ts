@@ -14,11 +14,25 @@ const app = express();
 // ✅ ADD THIS — Handle OPTIONS requests BEFORE cors()
 app.use(handleOptions);
 
-// ✅ UPDATE THIS — Add credentials and origin
-app.use(cors({
-  origin: 'https://verifymykyc.com',
-  credentials: true
-}));
+// ✅ CORS — allow multiple origins incl. localhost; can override via CORS_ORIGINS env
+const defaultOrigins = ['https://verifymykyc.com','https://www.verifymykyc.com','http://localhost:3000','http://127.0.0.1:3000','http://localhost:5173','http://127.0.0.1:5173'];
+const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: Origin ${origin} not allowed`));
+  },
+  credentials: true,
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 
 // Mount all API routes under /api

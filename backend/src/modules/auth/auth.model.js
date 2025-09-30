@@ -101,6 +101,8 @@ const userSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false
     },
+    emailOtpCode: String,
+    emailOtpExpires: Date,
     location: {
         country: String,
         city: String,

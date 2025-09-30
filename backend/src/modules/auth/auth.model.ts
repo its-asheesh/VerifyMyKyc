@@ -14,6 +14,8 @@ export interface IUser extends Document {
   passwordResetToken?: string;
   passwordResetExpires?: Date;
   emailVerified: boolean;
+  emailOtpCode?: string;
+  emailOtpExpires?: Date;
   // Location fields for analytics
   location?: {
     country?: string;
@@ -80,6 +82,8 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
+  emailOtpCode: String,
+  emailOtpExpires: Date,
   location: {
     country: String,
     city: String,

@@ -9,7 +9,12 @@ export default defineConfig({
     host: '0.0.0.0', // Allow external connections
     port: 3000,
     proxy: {
-      '/api': 'http://localhost:5000', // or your backend port
+      // Point to your LOCAL backend during development to use new endpoints
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
     }
   }
 })

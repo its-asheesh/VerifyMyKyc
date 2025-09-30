@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../redux/hooks'
-import { registerUser, clearError } from '../../redux/slices/authSlice'
+import { registerUser, sendEmailOtp, verifyEmailOtp, clearError } from '../../redux/slices/authSlice'
 import { Eye, EyeOff, Mail, Lock, User, Building, Phone, Loader2 } from 'lucide-react'
 import { useToast } from '../../components/common/ToastProvider'
 
@@ -10,7 +10,7 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useAppDispatch()
-  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth)
+  const { isLoading, error, isAuthenticated, pendingEmail } = useAppSelector((state) => state.auth)
   const { showToast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -24,6 +24,7 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
+  const [otp, setOtp] = useState('')
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -93,7 +94,12 @@ const RegisterPage: React.FC = () => {
     
     if (validateForm()) {
       const { confirmPassword, ...registerData } = formData
-      await dispatch(registerUser(registerData))
+      const res = await dispatch(registerUser(registerData))
+      // Send OTP after registration hint
+      const targetEmail = (res as any)?.payload?.user?.email || formData.email
+      if (targetEmail) {
+        dispatch(sendEmailOtp(targetEmail))
+      }
     }
   }
 
@@ -126,6 +132,38 @@ const RegisterPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10"
         >
+          {pendingEmail ? (
+            <form className="space-y-6" onSubmit={async (e) => {
+              e.preventDefault();
+              if (!otp || otp.length < 4) return;
+              await dispatch(verifyEmailOtp({ email: pendingEmail, otp }))
+            }}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Enter OTP sent to {pendingEmail}</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="6-digit code"
+                />
+                <div className="mt-2 text-sm">
+                  <button type="button" className="text-blue-600 hover:text-blue-700" onClick={() => dispatch(sendEmailOtp(pendingEmail))}>Resend OTP</button>
+                </div>
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+              <div>
+                <button type="submit" disabled={isLoading} className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                  {isLoading ? 'Verifying...' : 'Verify Email'}
+                </button>
+              </div>
+            </form>
+          ) : (
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Name Field */}
             <div>
@@ -314,6 +352,27 @@ const RegisterPage: React.FC = () => {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-sm text-red-600">{error}</p>
+                {error.toLowerCase().includes('already exists') && (
+                  <div className="text-sm mt-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/login', { state: { message: 'Email already exists. Please sign in or reset your password.' } })}
+                      className="text-blue-600 hover:text-blue-700 mr-3"
+                    >
+                      Go to Login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await dispatch(sendEmailOtp(formData.email))
+                        navigate('/login', { state: { message: 'We sent you a password reset OTP.' } })
+                      }}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -349,6 +408,7 @@ const RegisterPage: React.FC = () => {
               </p>
             </div>
           </form>
+          )}
         </motion.div>
       </div>
     </div>

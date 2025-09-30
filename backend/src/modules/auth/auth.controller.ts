@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User, IUser } from './auth.model';
 import { generateToken } from '../../common/utils/jwt';
 import asyncHandler from '../../common/middleware/asyncHandler';
+import { buildOtpEmailHtml, sendEmail } from '../../common/services/email';
 
 // Register new user
 export const register = asyncHandler(async (req: Request, res: Response) => {
@@ -30,16 +31,26 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   const user = await User.create(userData);
 
-  // Generate token
-  const token = generateToken(user);
-
-  // Update last login
-  user.lastLogin = new Date();
+  // Create email OTP
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  user.emailOtpCode = code;
+  user.emailOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
   await user.save();
+
+  // Send email (non-blocking – client can always use resend endpoint)
+  let otpSent = true;
+  try {
+    await sendEmail(email, 'Verify your email', buildOtpEmailHtml(name, code));
+  } catch (e: any) {
+    otpSent = false;
+    console.error('Email send failed during registration:', e?.message || e);
+  }
 
   res.status(201).json({
     success: true,
-    message: 'User registered successfully',
+    message: otpSent
+      ? 'User registered. Please verify your email with the OTP sent.'
+      : 'User registered. We could not send the OTP email. Please tap Resend OTP.',
     data: {
       user: {
         id: user._id,
@@ -49,10 +60,11 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         company: user.company,
         phone: user.phone,
         location: user.location,
+        emailVerified: user.emailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       },
-      token
+      otpSent
     }
   });
 });
@@ -83,6 +95,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     user.location = location;
   }
 
+  // Require verified email
+  if (!user.emailVerified) {
+    return res.status(401).json({ message: 'Please verify your email to continue' });
+  }
+
   // Generate token
   const token = generateToken(user);
 
@@ -109,6 +126,94 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       token
     }
   });
+});
+
+// Send/Resend email OTP
+export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  user.emailOtpCode = code;
+  user.emailOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+  await user.save();
+  await sendEmail(email, 'Verify your email', buildOtpEmailHtml(user.name, code));
+  res.json({ success: true, message: 'OTP sent to email' });
+});
+
+// Verify email OTP
+export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email, otp } = req.body as { email: string; otp: string };
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: 'User not found' });
+  if (!user.emailOtpCode || !user.emailOtpExpires || user.emailOtpExpires < new Date()) {
+    return res.status(400).json({ message: 'OTP expired. Please resend.' });
+  }
+  if (user.emailOtpCode !== otp) {
+    return res.status(400).json({ message: 'Invalid OTP' });
+  }
+  user.emailVerified = true;
+  user.emailOtpCode = undefined;
+  user.emailOtpExpires = undefined;
+  user.lastLogin = new Date();
+  await user.save();
+
+  const token = generateToken(user);
+  res.json({ success: true, message: 'Email verified', data: { token, user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    company: user.company,
+    phone: user.phone,
+    emailVerified: user.emailVerified,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
+  } } });
+});
+
+// Send password reset OTP (non-enumerating)
+export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body as { email: string };
+  const user = await User.findOne({ email });
+  if (user) {
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    user.passwordResetToken = code;
+    user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+    try {
+      await sendEmail(email, 'Password reset code', buildOtpEmailHtml(user.name, code));
+    } catch (e: any) {
+      console.error('Password reset email failed:', e?.message || e);
+    }
+  }
+  // Always 200 to prevent account enumeration
+  res.json({ success: true, message: 'If an account exists, an OTP has been sent' });
+});
+
+// Reset password with OTP
+export const resetPasswordWithOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email, otp, newPassword } = req.body as { email: string; otp: string; newPassword: string };
+  const user = await User.findOne({ email }).select('+password');
+  if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires < new Date() || user.passwordResetToken !== otp) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+  user.password = newPassword;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+  const token = generateToken(user);
+  res.json({ success: true, message: 'Password reset successful', data: { token, user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    company: user.company,
+    phone: user.phone,
+    emailVerified: user.emailVerified,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
+  } } });
 });
 
 // Get current user profile
