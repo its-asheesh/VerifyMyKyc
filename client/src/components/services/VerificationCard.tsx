@@ -122,15 +122,15 @@ export const VerificationCard: FC<VerificationCardProps> = ({
         <div className="flex-1"></div>
 
         <div className="flex items-center justify-between mt-auto flex-shrink-0">
-          <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600">
+          {/* <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-600">
             <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-yellow-400" />
             <span>
               {avgDisplay} ({countDisplay})
             </span>
-          </div>
+          </div> */}
 
           {isMobile ? (
-            <div className="bg-blue-600 text-white px-2 py-1 rounded-md text-xs font-medium">
+            <div className="bg-blue-600 text-white px-2 py-1 rounded-md text-xs font-medium ">
               Get Started
             </div>
           ) : (

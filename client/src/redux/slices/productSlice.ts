@@ -381,38 +381,38 @@ export const mockProducts: Product[] = [
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01"
   },
-  {
-    id: "bank-account",
-    title: "Bank Account Verification",
-    description: "Verify bank account details and ownership for financial institutions",
-    demandLevel: "high",
-    demand: "Most Demanding",
-    category: {
-      id: "banking",
-      name: "Banking Service",
-      slug: "banking",
-      description: "Banking and financial verification services",
-    },
-    features: ["Real-time verification", "Bank database integration", "99.9% accuracy", "Instant results"],
-    services: [
-      "Verify Account Holder Name",
-      "Check Account Status",
-      "Validate IFSC Code",
-      "Verify Account Number",
-      "Check Account Type"
-    ],
-    pricing: {
-      free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 499, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 1999, requests: 10000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
-    documentation: "Complete API documentation for bank account verification",
-    isActive: true,
-    icon: "/banking.jpg",
-    image: "/banking.jpg",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-01"
-  },
+  // {
+  //   id: "bank-account",
+  //   title: "Bank Account Verification",
+  //   description: "Verify bank account details and ownership for financial institutions",
+  //   demandLevel: "high",
+  //   demand: "Most Demanding",
+  //   category: {
+  //     id: "banking",
+  //     name: "Banking Service",
+  //     slug: "banking",
+  //     description: "Banking and financial verification services",
+  //   },
+  //   features: ["Real-time verification", "Bank database integration", "99.9% accuracy", "Instant results"],
+  //   services: [
+  //     "Verify Account Holder Name",
+  //     "Check Account Status",
+  //     "Validate IFSC Code",
+  //     "Verify Account Number",
+  //     "Check Account Type"
+  //   ],
+  //   pricing: {
+  //     free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
+  //     basic: { price: 499, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
+  //     premium: { price: 1999, requests: 10000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
+  //   },
+  //   documentation: "Complete API documentation for bank account verification",
+  //   isActive: true,
+  //   icon: "/banking.jpg",
+  //   image: "/banking.jpg",
+  //   createdAt: "2024-01-01",
+  //   updatedAt: "2024-01-01"
+  // },
   {
     id: "epfo",
     title: "EPFO Verification",
@@ -463,7 +463,7 @@ const mockCategories: ProductCategory[] = [
   { id: "criminal", name: "Criminal Record Verification", slug: "criminal", description: "Criminal record verification" },
   { id: "business", name: "Business Verification", slug: "business", description: "Business registry verification" },
   { id: "vehicle", name: "Vehicle Verification", slug: "vehicle", description: "Vehicle and transport document verification" },
-  { id: "banking", name: "Banking Service", slug: "banking", description: "Banking and financial verification services" },
+  // { id: "banking", name: "Banking Service", slug: "banking", description: "Banking and financial verification services" },
 
 ]
 

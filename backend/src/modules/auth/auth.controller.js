@@ -153,7 +153,9 @@ exports.verifyEmailOtp = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
     user.emailOtpCode = undefined;
     user.emailOtpExpires = undefined;
     user.lastLogin = new Date();
+    console.log('Before save - emailVerified:', user.emailVerified);
     yield user.save();
+    console.log('After save - emailVerified:', user.emailVerified);
     const token = (0, jwt_1.generateToken)(user);
     res.json({ success: true, message: 'Email verified', data: { token, user: {
                 id: user._id,
@@ -190,25 +192,37 @@ exports.sendPasswordResetOtp = (0, asyncHandler_1.default)((req, res) => __await
 exports.resetPasswordWithOtp = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, otp, newPassword } = req.body;
     const user = yield auth_model_1.User.findOne({ email }).select('+password');
-    if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires < new Date() || user.passwordResetToken !== otp) {
+    if (!user ||
+        !user.passwordResetToken ||
+        !user.passwordResetExpires ||
+        user.passwordResetExpires < new Date() ||
+        user.passwordResetToken !== otp) {
         return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
     user.password = newPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
+    user.emailVerified = true; // ✅ Trust the email since OTP was received
     yield user.save();
     const token = (0, jwt_1.generateToken)(user);
-    res.json({ success: true, message: 'Password reset successful', data: { token, user: {
+    res.json({
+        success: true,
+        message: 'Password reset successful',
+        data: {
+            token,
+            user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
                 company: user.company,
                 phone: user.phone,
-                emailVerified: user.emailVerified,
+                emailVerified: user.emailVerified, // now true
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
-            } } });
+            }
+        }
+    });
 }));
 // Get current user profile
 exports.getProfile = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

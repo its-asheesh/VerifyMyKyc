@@ -156,8 +156,9 @@ export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) =
   user.emailOtpCode = undefined;
   user.emailOtpExpires = undefined;
   user.lastLogin = new Date();
+  console.log('Before save - emailVerified:', user.emailVerified);
   await user.save();
-
+console.log('After save - emailVerified:', user.emailVerified);
   const token = generateToken(user);
   res.json({ success: true, message: 'Email verified', data: { token, user: {
     id: user._id,
@@ -195,25 +196,40 @@ export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Respo
 export const resetPasswordWithOtp = asyncHandler(async (req: Request, res: Response) => {
   const { email, otp, newPassword } = req.body as { email: string; otp: string; newPassword: string };
   const user = await User.findOne({ email }).select('+password');
-  if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires < new Date() || user.passwordResetToken !== otp) {
+  
+  if (!user || 
+      !user.passwordResetToken || 
+      !user.passwordResetExpires || 
+      user.passwordResetExpires < new Date() || 
+      user.passwordResetToken !== otp) {
     return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
+
   user.password = newPassword;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
+  user.emailVerified = true; // ✅ Trust the email since OTP was received
   await user.save();
+
   const token = generateToken(user);
-  res.json({ success: true, message: 'Password reset successful', data: { token, user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    company: user.company,
-    phone: user.phone,
-    emailVerified: user.emailVerified,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt
-  } } });
+  res.json({
+    success: true,
+    message: 'Password reset successful',
+    data: {
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+        phone: user.phone,
+        emailVerified: user.emailVerified, // now true
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    }
+  });
 });
 
 // Get current user profile

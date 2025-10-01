@@ -326,22 +326,22 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     // Login
     builder
-      .addCase(loginUser.pending, (state) => {
-        state.isLoading = true
-        state.error = null
-      })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false
-        state.isAuthenticated = true
-        state.user = action.payload.user
-        state.token = action.payload.token
-        state.error = null
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false
-        state.error = action.payload as string
-      })
-
+  .addCase(loginUser.pending, (state) => {
+    state.isLoading = true
+    state.error = null
+  })
+  .addCase(loginUser.fulfilled, (state, action) => {
+    state.isLoading = false
+    state.isAuthenticated = true
+    state.user = action.payload.user
+    state.token = action.payload.token
+    state.error = null
+    state.pendingEmail = undefined // 👈 ADD THIS LINE
+  })
+  .addCase(loginUser.rejected, (state, action) => {
+    state.isLoading = false
+    state.error = action.payload as string
+  })
     // Register
     builder
       .addCase(registerUser.pending, (state) => {

@@ -35,11 +35,11 @@ const BlogListPage: React.FC = () => {
           <p className="text-gray-600 mt-2">Insights on KYC, compliance, onboarding and identity verification.</p>
         </div>
 
-        <form onSubmit={onSearchSubmit} className="bg-white border border-gray-200 rounded-xl p-4 mb-8 grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* <form onSubmit={onSearchSubmit} className="bg-white border border-gray-200 rounded-xl p-4 mb-8 grid grid-cols-1 md:grid-cols-3 gap-3">
           <input name="q" defaultValue={q} placeholder="Search posts…" className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
           <input name="tag" defaultValue={tag} placeholder="Filter by tag (e.g. kyc)" className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Apply</button>
-        </form>
+        </form> */}
 
         {isLoading && <div className="text-center text-gray-600 py-16">Loading posts…</div>}
         {isError && <div className="text-center text-red-600 py-16">Failed to load blog posts.</div>}
