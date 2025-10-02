@@ -48,11 +48,11 @@ const RegisterPage: React.FC = () => {
   }, [location.state, showToast])
 
   // Clear error when component unmounts
-  useEffect(() => {
-    return () => {
-      dispatch(clearError())
-    }
-  }, [dispatch])
+  // useEffect(() => {
+  //   return () => {
+  //     dispatch(clearError())
+  //   }
+  // }, [dispatch])
 
   const validateForm = () => {
     const errors: { [key: string]: string } = {}
@@ -90,19 +90,19 @@ const RegisterPage: React.FC = () => {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  e.preventDefault();
+  
+  if (validateForm()) {
+    const { confirmPassword, ...registerData } = formData;
+    const result = await dispatch(registerUser(registerData));
     
-    if (validateForm()) {
-      const { confirmPassword, ...registerData } = formData
-      const res = await dispatch(registerUser(registerData))
-      // Send OTP after registration hint
-      const targetEmail = (res as any)?.payload?.user?.email || formData.email
-      if (targetEmail) {
-        dispatch(sendEmailOtp(targetEmail))
-      }
+    // ✅ Show toast if registration failed
+    if (registerUser.rejected.match(result)) {
+      showToast(result.payload as string, { type: 'error' });
     }
+    // On success, OTP is handled automatically by backend
   }
-
+};
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
@@ -152,11 +152,11 @@ const RegisterPage: React.FC = () => {
                   <button type="button" className="text-blue-600 hover:text-blue-700" onClick={() => dispatch(sendEmailOtp(pendingEmail))}>Resend OTP</button>
                 </div>
               </div>
-              {error && (
+              {/*{error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-600">{error}</p>
                 </div>
-              )}
+              )}*/}
               <div>
                 <button type="submit" disabled={isLoading} className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   {isLoading ? 'Verifying...' : 'Verify Email'}
