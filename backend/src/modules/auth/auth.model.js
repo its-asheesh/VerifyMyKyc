@@ -51,55 +51,58 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const userSchema = new mongoose_1.Schema({
     name: {
         type: String,
-        required: [true, 'Name is required'],
+        required: [true, "Name is required"],
         trim: true,
-        minlength: [2, 'Name must be at least 2 characters long'],
-        maxlength: [50, 'Name cannot exceed 50 characters']
+        minlength: [2, "Name must be at least 2 characters long"],
+        maxlength: [50, "Name cannot exceed 50 characters"],
     },
     email: {
         type: String,
-        required: [true, 'Email is required'],
+        required: [false, "Email is required"],
         unique: true,
         lowercase: true,
         trim: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+        match: [
+            /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+            "Please enter a valid email",
+        ],
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters long'],
-        select: false // Don't include password in queries by default
+        required: [false, "Password is required"],
+        minlength: [6, "Password must be at least 6 characters long"],
+        select: false, // Don't include password in queries by default
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
+        enum: ["user", "admin"],
+        default: "user",
     },
     company: {
         type: String,
         trim: true,
-        maxlength: [100, 'Company name cannot exceed 100 characters']
+        maxlength: [100, "Company name cannot exceed 100 characters"],
     },
     phone: {
         type: String,
         trim: true,
-        match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number']
+        match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
     },
     avatar: {
-        type: String
+        type: String,
     },
     isActive: {
         type: Boolean,
-        default: true
+        default: true,
     },
     lastLogin: {
-        type: Date
+        type: Date,
     },
     passwordResetToken: String,
     passwordResetExpires: Date,
     emailVerified: {
         type: Boolean,
-        default: false
+        default: false,
     },
     emailOtpCode: String,
     emailOtpExpires: Date,
@@ -108,20 +111,21 @@ const userSchema = new mongoose_1.Schema({
         city: String,
         region: String,
         timezone: String,
-        ipAddress: String
-    }
+        ipAddress: String,
+    },
+    phoneVerified: { type: Boolean, default: false },
 }, {
-    timestamps: true
+    timestamps: true,
 });
 // Index for better query performance
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 // Hash password before saving
-userSchema.pre('save', function (next) {
+userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         // Only hash the password if it has been modified (or is new)
-        if (!this.isModified('password'))
+        if (!this.isModified("password"))
             return next();
         try {
             // Hash password with cost of 12
@@ -146,4 +150,4 @@ userSchema.methods.toJSON = function () {
     delete userObject.password;
     return userObject;
 };
-exports.User = mongoose_1.default.model('User', userSchema);
+exports.User = mongoose_1.default.model("User", userSchema);

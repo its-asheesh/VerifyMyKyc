@@ -6,10 +6,14 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    allowedHosts: [
+      'fanglike-santa-boredly.ngrok-free.dev'
+    ],
     host: '0.0.0.0', // Allow external connections
     port: 3000,
     proxy: {
       // Point to your LOCAL backend during development to use new endpoints
+      
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,

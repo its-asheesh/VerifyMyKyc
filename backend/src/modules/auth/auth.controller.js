@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
+exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
 const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const email_1 = require("../../common/services/email");
+const firebase_admin_1 = __importDefault(require("../../../firebase-admin"));
 // Register new user
 exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password, company, phone, location } = req.body;
@@ -540,4 +541,130 @@ exports.getUsersWithLocation = (0, asyncHandler_1.default)((req, res) => __await
             users: usersWithLocation
         }
     });
+}));
+// =============== FIREBASE PHONE REGISTER (New Users Only) ===============
+/**
+ * Register a NEW user via Firebase Phone Auth
+ * Fails if phone number already exists
+ */
+exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { idToken, name, company, location } = req.body;
+    if (!idToken) {
+        return res.status(400).json({ message: 'ID token is required' });
+    }
+    try {
+        // 🔐 Verify Firebase ID token
+        const decodedToken = yield firebase_admin_1.default.auth().verifyIdToken(idToken);
+        const phone = decodedToken.phone_number;
+        if (!phone) {
+            return res.status(400).json({ message: 'No phone number in token' });
+        }
+        // 🔍 Check if user already exists
+        const existingUser = yield auth_model_1.User.findOne({ phone });
+        if (existingUser) {
+            return res.status(409).json({
+                message: 'User with this phone number already exists. Please log in instead.'
+            });
+        }
+        // ✅ Create new user
+        const newUser = new auth_model_1.User({
+            name: name || `User ${phone.slice(-4)}`,
+            phone,
+            company: company || undefined,
+            location: location || undefined,
+            role: 'user',
+            isActive: true,
+            phoneVerified: true, // Trust Firebase
+        });
+        yield newUser.save();
+        const token = (0, jwt_1.generateToken)(newUser);
+        res.status(201).json({
+            success: true,
+            message: 'Account created successfully',
+            data: {
+                token,
+                user: {
+                    id: newUser._id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    phone: newUser.phone,
+                    role: newUser.role,
+                    company: newUser.company,
+                    phoneVerified: newUser.phoneVerified,
+                    emailVerified: newUser.emailVerified,
+                    createdAt: newUser.createdAt,
+                    updatedAt: newUser.updatedAt,
+                },
+            },
+        });
+    }
+    catch (error) {
+        console.error('Firebase phone register error:', error.message || error);
+        if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
+            return res.status(401).json({ message: 'Invalid or expired ID token' });
+        }
+        res.status(500).json({ message: 'Registration failed' });
+    }
+}));
+// =============== FIREBASE PHONE LOGIN (Client sends ID token) ===============
+exports.firebasePhoneLogin = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { idToken } = req.body;
+    if (!idToken) {
+        return res.status(400).json({ message: 'ID token is required' });
+    }
+    try {
+        // 🔐 Verify Firebase ID token
+        const decodedToken = yield firebase_admin_1.default.auth().verifyIdToken(idToken);
+        // Extract phone number (Firebase guarantees format: +1234567890)
+        const phone = decodedToken.phone_number;
+        if (!phone) {
+            return res.status(400).json({ message: 'No phone number in token' });
+        }
+        // Find or create user
+        let user = yield auth_model_1.User.findOne({ phone });
+        if (!user) {
+            // Create new user (minimal profile)
+            user = new auth_model_1.User({
+                name: `User ${phone.slice(-4)}`,
+                phone,
+                role: 'user',
+                isActive: true,
+                phoneVerified: true, // ✅ Trust Firebase verification
+            });
+        }
+        else {
+            user.lastLogin = new Date();
+            user.phoneVerified = true;
+        }
+        yield user.save();
+        // Generate your app's JWT token
+        const token = (0, jwt_1.generateToken)(user);
+        res.json({
+            success: true,
+            message: user.isNew ? 'Account created and logged in' : 'Login successful',
+            data: {
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    role: user.role,
+                    company: user.company,
+                    phoneVerified: user.phoneVerified,
+                    emailVerified: user.emailVerified,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+                },
+            },
+        });
+    }
+    catch (error) {
+        console.error('Firebase phone login error:', error.message || error);
+        // Handle common Firebase errors
+        if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
+            return res.status(401).json({ message: 'Invalid or expired ID token' });
+        }
+        res.status(500).json({ message: 'Authentication failed' });
+    }
 }));

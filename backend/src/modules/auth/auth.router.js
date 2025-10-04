@@ -24,4 +24,6 @@ router.get('/users/with-location', auth_1.authenticate, auth_1.requireAdmin, aut
 router.put('/users/:userId/role', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.updateUserRole);
 router.put('/users/:userId/toggle-status', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.toggleUserStatus);
 router.put('/users/:userId/location', auth_1.authenticate, auth_1.requireAnyRole, auth_controller_1.updateUserLocation);
+router.post('/phone/register', auth_controller_1.firebasePhoneRegister);
+router.post('/phone/login', auth_controller_1.firebasePhoneLogin);
 exports.default = router;

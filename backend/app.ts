@@ -15,7 +15,7 @@ const app = express();
 app.use(handleOptions);
 
 // ✅ CORS — allow multiple origins incl. localhost; can override via CORS_ORIGINS env
-const defaultOrigins = ['https://verifymykyc.com','https://www.verifymykyc.com','http://localhost:3000','http://127.0.0.1:3000','http://localhost:5173','http://127.0.0.1:5173','https://admin.verifymykyc.com'];
+const defaultOrigins = ['https://verifymykyc.com','https://www.verifymykyc.com','http://localhost:3000','http://127.0.0.1:3000','http://localhost:5173','http://127.0.0.1:5173','https://admin.verifymykyc.com','https://fanglike-santa-boredly.ngrok-free.dev/'];
 const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 

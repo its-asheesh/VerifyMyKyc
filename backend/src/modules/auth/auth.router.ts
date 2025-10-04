@@ -16,7 +16,9 @@ import {
   sendEmailOtp,
   verifyEmailOtp,
   sendPasswordResetOtp,
-  resetPasswordWithOtp
+  resetPasswordWithOtp,
+  firebasePhoneRegister,
+  firebasePhoneLogin
 } from './auth.controller';
 import { authenticate, requireAdmin, requireUser, requireAnyRole } from '../../common/middleware/auth';
 
@@ -44,5 +46,8 @@ router.get('/users/with-location', authenticate, requireAdmin, getUsersWithLocat
 router.put('/users/:userId/role', authenticate, requireAdmin, updateUserRole);
 router.put('/users/:userId/toggle-status', authenticate, requireAdmin, toggleUserStatus);
 router.put('/users/:userId/location', authenticate, requireAnyRole, updateUserLocation);
+router.post('/phone/register', firebasePhoneRegister);
+router.post('/phone/login', firebasePhoneLogin);
+
 
 export default router; 
