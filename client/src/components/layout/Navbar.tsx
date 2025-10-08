@@ -192,7 +192,7 @@ const navItems = [
 
 export default function Navbar() {
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth)
+  const { isAuthenticated, user, token } = useAppSelector((state) => state.auth)
   
   const [openMenus, setOpenMenus] = useState<{ [key: number]: boolean }>({})
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -411,7 +411,7 @@ export default function Navbar() {
 
             {/* CTA Buttons */}
             <div className="hidden sm:flex items-center gap-3">
-              {isAuthenticated ? (
+              {isAuthenticated && token ? (
                 <>
                   {user?.role === 'admin' && (
                     <Button 

@@ -114,11 +114,22 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   return data
 }
 
+// Small guard utility to avoid server 401 spam
+const ensureAuthed = (getState: any) => {
+  const state = getState() as { auth: { token: string | null; isAuthenticated: boolean } }
+  const token = state?.auth?.token || localStorage.getItem('token')
+  const isAuthenticated = state?.auth?.isAuthenticated
+  if (!token || !isAuthenticated) {
+    throw new Error('Not authenticated')
+  }
+}
+
 // Async thunks
 export const createOrder = createAsyncThunk(
   'orders/createOrder',
-  async (orderData: CreateOrderData, { rejectWithValue }) => {
+  async (orderData: CreateOrderData, { rejectWithValue, getState }) => {
     try {
+      ensureAuthed(getState)
       const response = await apiCall('/orders', {
         method: 'POST',
         body: JSON.stringify(orderData),
@@ -132,8 +143,9 @@ export const createOrder = createAsyncThunk(
 
 export const processPayment = createAsyncThunk(
   'orders/processPayment',
-  async (paymentData: ProcessPaymentData, { rejectWithValue }) => {
+  async (paymentData: ProcessPaymentData, { rejectWithValue, getState }) => {
     try {
+      ensureAuthed(getState)
       const response = await apiCall('/orders/process-payment', {
         method: 'POST',
         body: JSON.stringify(paymentData),
@@ -147,8 +159,9 @@ export const processPayment = createAsyncThunk(
 
 export const fetchUserOrders = createAsyncThunk(
   'orders/fetchUserOrders',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      ensureAuthed(getState)
       const response = await apiCall('/orders/my-orders')
       return response.data.orders
     } catch (error: any) {
@@ -159,8 +172,9 @@ export const fetchUserOrders = createAsyncThunk(
 
 export const fetchActiveServices = createAsyncThunk(
   'orders/fetchActiveServices',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      ensureAuthed(getState)
       const response = await apiCall('/orders/my-services')
       return response.data.services
     } catch (error: any) {
@@ -171,8 +185,9 @@ export const fetchActiveServices = createAsyncThunk(
 
 export const cancelOrder = createAsyncThunk(
   'orders/cancelOrder',
-  async (orderId: string, { rejectWithValue }) => {
+  async (orderId: string, { rejectWithValue, getState }) => {
     try {
+      ensureAuthed(getState)
       const response = await apiCall(`/orders/${orderId}/cancel`, {
         method: 'PUT',
       })

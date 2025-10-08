@@ -7,9 +7,13 @@ import {
   registerUser,
   sendEmailOtp,
   verifyEmailOtp,
+  clearError,
   verifyPhoneOtp,
+  fetchUserProfile,
 } from "../../redux/slices/authSlice";
 import {
+  Eye,
+  EyeOff,
   Mail,
   Lock,
   User,
@@ -26,6 +30,9 @@ import {
   PhoneAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
+// Country code selector
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
 import TextField from "../../components/forms/TextField";
 import OtpInputWithTimer from "../../components/forms/OtpInputWithTimer";
 import PasswordStrengthMeter from "../../components/forms/PasswordStrengthMeter";
@@ -386,16 +393,15 @@ const RegisterPage: React.FC = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Phone className="h-5 w-5 text-gray-400" />
                     </div>
-                    <input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) =>
-                        safeSet(setPhone, e.target.value.replace(/[^\d+]/g, ""))
-                      }
-                      className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
-                      placeholder="e.g. +919876543210"
-                    />
+                    <div className="pl-10">
+                      <PhoneInput
+                        defaultCountry="in"
+                        value={phone}
+                        onChange={(val) => safeSet(setPhone, val)}
+                        className="w-full"
+                        inputClassName="appearance-none block w-full pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

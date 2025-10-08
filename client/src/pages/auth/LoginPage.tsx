@@ -20,6 +20,9 @@ import {
   Phone,
 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
+// Country code selector (lightweight)
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,12 +53,11 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      // ✅ Add user check
       const redirectTo = (location.state as any)?.redirectTo || "/";
       navigate(redirectTo, { state: (location.state as any)?.nextState });
     }
     console.log('Auth state:', { isAuthenticated, user });
-  }, [isAuthenticated, user, navigate, location.state]); // ✅ Add user to dependencies
+  }, [isAuthenticated, user, navigate, location.state]);
 
 
   useEffect(() => {
@@ -87,9 +89,7 @@ const LoginPage: React.FC = () => {
         return false;
       }
     } else {
-      // Basic phone validation
-      const digits = value.replace(/\D/g, "");
-      if (digits.length < 10) {
+      if (!/^\+[1-9]\d{1,14}$/.test(value)) {
         setLoginError({ field: "phone", message: "Invalid phone number" });
         return false;
       }
@@ -112,10 +112,8 @@ const LoginPage: React.FC = () => {
     if (!validateAndLogin()) return;
 
     if (authMethod === "email") {
-      // Email login - existing functionality
       await dispatch(loginUser({ email: emailOrPhone, password }));
     } else {
-      // Phone + Password login - new functionality
       await dispatch(
         loginWithPhoneAndPassword({ phone: emailOrPhone, password })
       );
@@ -314,20 +312,15 @@ const LoginPage: React.FC = () => {
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Phone className="h-5 w-5 text-gray-400" />
                     </div>
-                    <input
-                      id="phone"
-                      type="tel"
-                      value={emailOrPhone}
-                      onChange={(e) =>
-                        setEmailOrPhone(e.target.value.replace(/[^\d+]/g, ""))
-                      }
-                      className={`appearance-none block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm ${
-                        loginError.field === "phone"
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      placeholder="e.g. +919876543210"
-                    />
+                    <div className="pl-10">
+                      <PhoneInput
+                        defaultCountry="in"
+                        value={emailOrPhone}
+                        onChange={(val) => setEmailOrPhone(val)}
+                        className="w-full"
+                        inputClassName="appearance-none block w-full pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                      />
+                    </div>
                   </div>
                   {loginError.field === "phone" && (
                     <p className="mt-1 text-sm text-red-600">
