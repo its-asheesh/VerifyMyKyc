@@ -26,16 +26,15 @@ const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'services' | 'orders'>('profile')
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login')
-      return
-    }
+  if (!isAuthenticated) {
+    navigate('/login')
+    return
+  }
 
-    dispatch(fetchUserProfile())
-    dispatch(fetchActiveServices())
-    dispatch(fetchUserOrders())
-  }, [dispatch, isAuthenticated, navigate])
-
+  // ✅ Only fetch services and orders (data that's not in auth state)
+  dispatch(fetchActiveServices())
+  dispatch(fetchUserOrders())
+}, [dispatch, isAuthenticated, navigate])
   useEffect(() => {
     if (user) {
       setFormData({

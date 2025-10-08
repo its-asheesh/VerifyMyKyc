@@ -18,7 +18,8 @@ import {
   sendPasswordResetOtp,
   resetPasswordWithOtp,
   firebasePhoneRegister,
-  firebasePhoneLogin
+  firebasePhoneLogin,
+  loginWithPhoneAndPassword
 } from './auth.controller';
 import { authenticate, requireAdmin, requireUser, requireAnyRole } from '../../common/middleware/auth';
 
@@ -48,6 +49,8 @@ router.put('/users/:userId/toggle-status', authenticate, requireAdmin, toggleUse
 router.put('/users/:userId/location', authenticate, requireAnyRole, updateUserLocation);
 router.post('/phone/register', firebasePhoneRegister);
 router.post('/phone/login', firebasePhoneLogin);
+// In your routes file
+router.post('/login/phone-password', loginWithPhoneAndPassword);
 
 
 export default router; 

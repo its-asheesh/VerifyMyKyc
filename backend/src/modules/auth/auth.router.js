@@ -26,4 +26,6 @@ router.put('/users/:userId/toggle-status', auth_1.authenticate, auth_1.requireAd
 router.put('/users/:userId/location', auth_1.authenticate, auth_1.requireAnyRole, auth_controller_1.updateUserLocation);
 router.post('/phone/register', auth_controller_1.firebasePhoneRegister);
 router.post('/phone/login', auth_controller_1.firebasePhoneLogin);
+// In your routes file
+router.post('/login/phone-password', auth_controller_1.loginWithPhoneAndPassword);
 exports.default = router;

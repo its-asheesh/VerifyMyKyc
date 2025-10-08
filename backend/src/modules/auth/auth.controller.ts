@@ -70,12 +70,17 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-// Login user
+// Login user — supports email OR phone number in the "email" field
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password, location } = req.body;
 
-  // Find user and include password for comparison
-  const user = await User.findOne({ email }).select('+password');
+  // 🔍 Find user by email OR phone
+  const user = await User.findOne({
+    $or: [
+      { email },
+      { phone: email } // allow phone number in "email" field
+    ]
+  }).select('+password');
   
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
@@ -96,9 +101,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     user.location = location;
   }
 
-  // Require verified email
-  if (!user.emailVerified) {
-    return res.status(401).json({ message: 'Please verify your email to continue' });
+  // 🔐 Require verified email OR verified phone
+  if (!user.emailVerified && !user.phoneVerified) {
+    return res.status(401).json({ 
+      message: 'Please verify your email or phone number to continue' 
+    });
   }
 
   // Generate token
@@ -121,6 +128,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         phone: user.phone,
         location: user.location,
         lastLogin: user.lastLogin,
+        emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       },
@@ -609,11 +618,12 @@ export const getUsersWithLocation = asyncHandler(async (req: Request, res: Respo
  * Fails if phone number already exists
  */
 export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Response) => {
-  const { idToken, name, company, location } = req.body as {
+  const { idToken, name, company, location, password } = req.body as {
     idToken: string;
     name?: string;
     company?: string;
     location?: any;
+    password?: string; // ✅ Add this
   };
 
   if (!idToken) {
@@ -637,11 +647,12 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
       });
     }
 
-    // ✅ Create new user
+    // ✅ Create new user - password will be hashed automatically by Mongoose pre-save hook
     const newUser = new User({
       name: name || `User ${phone.slice(-4)}`,
       phone,
       company: company || undefined,
+      password: password || undefined, // ✅ Pass password (can be undefined)
       location: location || undefined,
       role: 'user',
       isActive: true,
@@ -655,7 +666,7 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
-      data: {  // 🔥 FIXED: Added missing 'data' property name
+      data: {
         token,
         user: {
           id: newUser._id,
@@ -677,6 +688,12 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
     
     if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
       return res.status(401).json({ message: 'Invalid or expired ID token' });
+    }
+    
+    // Handle Mongoose validation errors (like password too short)
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err: any) => err.message);
+      return res.status(400).json({ message: messages.join(', ') });
     }
     
     res.status(500).json({ message: 'Registration failed' });
@@ -753,4 +770,54 @@ export const firebasePhoneLogin = asyncHandler(async (req: Request, res: Respons
     
     res.status(500).json({ message: 'Authentication failed' });
   }
+});
+
+// Make sure this is properly formatted in your auth.controller.ts
+export const loginWithPhoneAndPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { phone, password } = req.body;
+  
+  if (!phone || !password) {
+    return res.status(400).json({ message: 'Phone and password are required' });
+  }
+  
+  // Find user by phone and select password field
+  const user = await User.findOne({ phone }).select('+password');
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid phone number or password' });
+  }
+  
+  // Verify password
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    return res.status(401).json({ message: 'Invalid phone number or password' });
+  }
+  
+  if (!user.isActive) {
+    return res.status(403).json({ message: 'Account is deactivated' });
+  }
+  
+  // Update last login
+  user.lastLogin = new Date();
+  await user.save();
+  
+  const token = generateToken(user);
+  
+  res.json({
+    success: true,
+    data: { // ✅ Make sure you have the 'data' property
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        company: user.company,
+        phoneVerified: user.phoneVerified,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }
+    }
+  });
 });

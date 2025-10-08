@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 export interface IUser extends Document {
   name: string;
-  email: string;
+  email?: string; // Make optional
   password: string;
   role: "user" | "admin";
   company?: string;
@@ -17,7 +17,9 @@ export interface IUser extends Document {
   emailOtpCode?: string;
   emailOtpExpires?: Date;
   phoneVerified: boolean;
-  // Location fields for analytics
+  phoneOtpCode?: string;
+  phoneOtpExpires?: Date;
+  // Location fields
   location?: {
     country?: string;
     city?: string;
@@ -41,14 +43,23 @@ const userSchema = new Schema<IUser>(
     },
     email: {
       type: String,
-      required: [false, "Email is required"],
+      required: false, // ← not required
       unique: true,
       lowercase: true,
       trim: true,
+      sparse: true, // ← critical for optional unique fields
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
         "Please enter a valid email",
       ],
+    },
+    phone: {
+      type: String,
+      required: false,
+      unique: true,
+      trim: true,
+      sparse: true, // ← critical
+      match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
     },
     password: {
       type: String,
@@ -65,11 +76,6 @@ const userSchema = new Schema<IUser>(
       type: String,
       trim: true,
       maxlength: [100, "Company name cannot exceed 100 characters"],
-    },
-    phone: {
-      type: String,
-      trim: true,
-      match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
     },
     avatar: {
       type: String,
@@ -97,6 +103,8 @@ const userSchema = new Schema<IUser>(
       ipAddress: String,
     },
     phoneVerified: { type: Boolean, default: false },
+    phoneOtpCode: String, 
+    phoneOtpExpires: Date, 
   },
   {
     timestamps: true,

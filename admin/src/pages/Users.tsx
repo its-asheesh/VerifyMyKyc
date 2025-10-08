@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Search, 
-  Filter, 
-  //MoreVertical, 
-  //Mail, 
-  //Phone, 
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Search,
+  Filter,
+  //MoreVertical,
+  //Mail,
+  //Phone,
   Calendar,
   CheckCircle,
   XCircle,
@@ -18,108 +18,125 @@ import {
   User,
   BarChart,
   //Building
-} from 'lucide-react'
-import { useUsers, useUserStats, useUpdateUserRole, useToggleUserStatus } from '../hooks/useUsers'
+} from "lucide-react";
+import {
+  useUsers,
+  useUserStats,
+  useUpdateUserRole,
+  useToggleUserStatus,
+} from "../hooks/useUsers";
 // import { useToast } from '../context/ToastContext'
-import { useAnalyticsOverview } from '../hooks/useAnalytics'
-import UserAnalyticsChart from '../components/dashboard/UserAnalyticsChart'
+import { useAnalyticsOverview } from "../hooks/useAnalytics";
+import UserAnalyticsChart from "../components/dashboard/UserAnalyticsChart";
 
 const Users: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [roleFilter, setRoleFilter] = useState('all')
-  const [isUserChartOpen, setIsUserChartOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [isUserChartOpen, setIsUserChartOpen] = useState(false);
 
   // Fetch data using React Query
-  const { data: users = [], isLoading: usersLoading, error: usersError } = useUsers()
-  const { data: stats, isLoading: statsLoading } = useUserStats()
-  const analyticsData = useAnalyticsOverview().data
-  const updateUserRole = useUpdateUserRole()
-  const toggleUserStatus = useToggleUserStatus()
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    error: usersError,
+  } = useUsers();
+  const { data: stats, isLoading: statsLoading } = useUserStats();
+  const analyticsData = useAnalyticsOverview().data;
+  const updateUserRole = useUpdateUserRole();
+  const toggleUserStatus = useToggleUserStatus();
 
   const getStatusIcon = (isActive: boolean) => {
     return isActive ? (
       <CheckCircle className="w-4 h-4 text-green-500" />
     ) : (
       <XCircle className="w-4 h-4 text-red-500" />
-    )
-  }
+    );
+  };
 
   const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-  }
+    return isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+  };
 
   const getRoleIcon = (role: string) => {
-    return role === 'admin' ? (
+    return role === "admin" ? (
       <Crown className="w-4 h-4 text-purple-500" />
     ) : (
       <User className="w-4 h-4 text-blue-500" />
-    )
-  }
+    );
+  };
 
   const getRoleColor = (role: string) => {
-    return role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-  }
+    return role === "admin"
+      ? "bg-purple-100 text-purple-800"
+      : "bg-blue-100 text-blue-800";
+  };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.company && user.company.toLowerCase().includes(searchTerm.toLowerCase()))
-    
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && user.isActive) ||
-                         (statusFilter === 'inactive' && !user.isActive)
-    
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter
-    
-    return matchesSearch && matchesStatus && matchesRole
-  })
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.company &&
+        user.company.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && user.isActive) ||
+      (statusFilter === "inactive" && !user.isActive);
+
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  const handleRoleChange = async (
+    userId: string,
+    newRole: "user" | "admin"
+  ) => {
     try {
-      await updateUserRole.mutateAsync({ userId, role: newRole })
+      await updateUserRole.mutateAsync({ userId, role: newRole });
     } catch (error) {
-      console.error('Failed to update user role:', error)
+      console.error("Failed to update user role:", error);
     }
-  }
+  };
 
   const handleStatusToggle = async (userId: string) => {
     try {
-      await toggleUserStatus.mutateAsync(userId)
+      await toggleUserStatus.mutateAsync(userId);
     } catch (error) {
-      console.error('Failed to toggle user status:', error)
+      console.error("Failed to toggle user status:", error);
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   // Export filtered users to Excel (.xls via HTML table)
   const exportUsersToExcel = () => {
     try {
       const headers = [
-        'Name',
-        'Email',
-        'Role',
-        'Status',
-        'Company',
-        'Email Verified',
-        'Last Login',
-        'Created At',
-      ]
+        "Name",
+        "Email",
+        "Role",
+        "Status",
+        "Company",
+        "Email Verified",
+        "Last Login",
+        "Created At",
+      ];
 
       const escapeHtml = (value: string) =>
         value
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;')
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
 
       const rowsHtml = filteredUsers
         .map((user) => {
@@ -127,19 +144,21 @@ const Users: React.FC = () => {
             user.name,
             user.email,
             user.role,
-            user.isActive ? 'Active' : 'Inactive',
-            user.company || '',
-            user.emailVerified ? 'Yes' : 'No',
-            user.lastLogin ? formatDate(user.lastLogin) : 'Never',
+            user.isActive ? "Active" : "Inactive",
+            user.company || "",
+            user.emailVerified ? "Yes" : "No",
+            user.lastLogin ? formatDate(user.lastLogin) : "Never",
             formatDate(user.createdAt),
           ]
-            .map((cell) => `<td>${escapeHtml(String(cell ?? ''))}</td>`)
-            .join('')
-          return `<tr>${cells}</tr>`
+            .map((cell) => `<td>${escapeHtml(String(cell ?? ""))}</td>`)
+            .join("");
+          return `<tr>${cells}</tr>`;
         })
-        .join('')
+        .join("");
 
-      const headerHtml = `<tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`
+      const headerHtml = `<tr>${headers
+        .map((h) => `<th>${escapeHtml(h)}</th>`)
+        .join("")}</tr>`;
       const tableHtml = `
         <html>
           <head>
@@ -151,25 +170,27 @@ const Users: React.FC = () => {
               <tbody>${rowsHtml}</tbody>
             </table>
           </body>
-        </html>`
+        </html>`;
 
-      const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
+      const blob = new Blob([tableHtml], { type: "application/vnd.ms-excel" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
 
-      const pad = (n: number) => n.toString().padStart(2, '0')
-      const now = new Date()
-      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
-      link.href = url
-      link.download = `users_${timestamp}.xls`
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
+        now.getDate()
+      )}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+      link.href = url;
+      link.download = `users_${timestamp}.xls`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to export users:', err)
+      console.error("Failed to export users:", err);
     }
-  }
+  };
 
   if (usersLoading || statsLoading) {
     return (
@@ -177,7 +198,7 @@ const Users: React.FC = () => {
         <Loader2 className="w-8 h-8 animate-spin" />
         <span className="ml-2">Loading users...</span>
       </div>
-    )
+    );
   }
 
   if (usersError) {
@@ -185,11 +206,15 @@ const Users: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Users</h3>
-          <p className="text-gray-600">Failed to load user data. Please try again.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Error Loading Users
+          </h3>
+          <p className="text-gray-600">
+            Failed to load user data. Please try again.
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -198,7 +223,9 @@ const Users: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="text-gray-600">Manage your platform users and their subscriptions</p>
+          <p className="text-gray-600">
+            Manage your platform users and their subscriptions
+          </p>
         </div>
         <button
           onClick={() => setIsUserChartOpen(true)}
@@ -222,7 +249,9 @@ const Users: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.totalUsers || 0}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -257,7 +286,9 @@ const Users: React.FC = () => {
               <Clock className="w-6 h-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Inactive Users</p>
+              <p className="text-sm font-medium text-gray-600">
+                Inactive Users
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {stats?.inactiveUsers || 0}
               </p>
@@ -327,8 +358,19 @@ const Users: React.FC = () => {
               onClick={exportUsersToExcel}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               Export Excel
             </button>
@@ -373,59 +415,90 @@ const Users: React.FC = () => {
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-700">
-                            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            {user?.name
+                              ? user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                              : "NA"}
                           </span>
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                        <div className="text-sm text-gray-500">{user.phone}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.email}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.phone}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.company || 'N/A'}</div>
+                    <div className="text-sm text-gray-900">
+                      {user.company || "N/A"}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {getStatusIcon(user.isActive)}
-                      <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.isActive)}`}>
-                        {user.isActive ? 'Active' : 'Inactive'}
+                      <span
+                        className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                          user.isActive
+                        )}`}
+                      >
+                        {user.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {getRoleIcon(user.role)}
-                      <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                      <span
+                        className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(
+                          user.role
+                        )}`}
+                      >
                         {user.role}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{formatDate(user.createdAt)}</div>
+                    <div className="text-sm text-gray-900">
+                      {formatDate(user.createdAt)}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.lastLogin ? formatDate(user.lastLogin) : 'Never'}</div>
+                    <div className="text-sm text-gray-900">
+                      {user.lastLogin ? formatDate(user.lastLogin) : "Never"}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleStatusToggle(user.id)}
                         className={`px-3 py-1 rounded-md text-xs font-medium ${
-                          user.isActive 
-                            ? 'bg-red-100 text-red-800 hover:bg-red-200' 
-                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                          user.isActive
+                            ? "bg-red-100 text-red-800 hover:bg-red-200"
+                            : "bg-green-100 text-green-800 hover:bg-green-200"
                         }`}
                       >
-                        {user.isActive ? 'Deactivate' : 'Activate'}
+                        {user.isActive ? "Deactivate" : "Activate"}
                       </button>
                       <button
-                        onClick={() => handleRoleChange(user.id, user.role === 'admin' ? 'user' : 'admin')}
+                        onClick={() =>
+                          handleRoleChange(
+                            user.id,
+                            user.role === "admin" ? "user" : "admin"
+                          )
+                        }
                         className="px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
                       >
-                        {user.role === 'admin' ? 'Make User' : 'Make Admin'}
+                        {user.role === "admin" ? "Make User" : "Make Admin"}
                       </button>
                     </div>
                   </td>
@@ -437,13 +510,13 @@ const Users: React.FC = () => {
       </div>
 
       {/* User Analytics Chart Modal */}
-      <UserAnalyticsChart 
+      <UserAnalyticsChart
         isOpen={isUserChartOpen}
         onClose={() => setIsUserChartOpen(false)}
         data={analyticsData}
       />
     </div>
-  )
-}
+  );
+};
 
-export default Users 
+export default Users;

@@ -12,7 +12,7 @@ export interface JWTPayload {
 export const generateToken = (user: IUser): string => {
   const payload: JWTPayload = {
     userId: (user._id as any).toString(),
-    email: user.email,
+    email: user.email || '',
     role: user.role
   };
 
@@ -35,21 +35,24 @@ export const verifyToken = (token: string): JWTPayload => {
     // Verify signature
     const expectedSignature = Buffer.from(`${JWT_SECRET}${timestamp}`).toString('base64');
     if (signature !== expectedSignature) {
+      console.error('Signature mismatch:', { signature, expectedSignature });
       throw new Error('Invalid token signature');
     }
 
-    // Check if token is expired
+    // Check expiration
     const tokenTime = parseInt(timestamp);
     const currentTime = Date.now();
-    const expirationMs = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
+    const expirationMs = 15 * 24 * 60 * 60 * 1000;
     
     if (currentTime - tokenTime > expirationMs) {
+      console.error('Token expired:', { tokenTime, currentTime });
       throw new Error('Token expired');
     }
 
     const payload = JSON.parse(Buffer.from(tokenData, 'base64').toString());
     return payload;
   } catch (error) {
+    console.error('Token verification failed:', error);
     throw new Error('Invalid token');
   }
 };

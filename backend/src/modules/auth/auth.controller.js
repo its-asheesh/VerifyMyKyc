@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
+exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
 const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
@@ -76,11 +76,16 @@ exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
         }
     });
 }));
-// Login user
+// Login user — supports email OR phone number in the "email" field
 exports.login = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password, location } = req.body;
-    // Find user and include password for comparison
-    const user = yield auth_model_1.User.findOne({ email }).select('+password');
+    // 🔍 Find user by email OR phone
+    const user = yield auth_model_1.User.findOne({
+        $or: [
+            { email },
+            { phone: email } // allow phone number in "email" field
+        ]
+    }).select('+password');
     if (!user) {
         return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -96,9 +101,11 @@ exports.login = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void
     if (location) {
         user.location = location;
     }
-    // Require verified email
-    if (!user.emailVerified) {
-        return res.status(401).json({ message: 'Please verify your email to continue' });
+    // 🔐 Require verified email OR verified phone
+    if (!user.emailVerified && !user.phoneVerified) {
+        return res.status(401).json({
+            message: 'Please verify your email or phone number to continue'
+        });
     }
     // Generate token
     const token = (0, jwt_1.generateToken)(user);
@@ -118,6 +125,8 @@ exports.login = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void
                 phone: user.phone,
                 location: user.location,
                 lastLogin: user.lastLogin,
+                emailVerified: user.emailVerified,
+                phoneVerified: user.phoneVerified,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             },
@@ -548,7 +557,7 @@ exports.getUsersWithLocation = (0, asyncHandler_1.default)((req, res) => __await
  * Fails if phone number already exists
  */
 exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { idToken, name, company, location } = req.body;
+    const { idToken, name, company, location, password } = req.body;
     if (!idToken) {
         return res.status(400).json({ message: 'ID token is required' });
     }
@@ -566,11 +575,12 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
                 message: 'User with this phone number already exists. Please log in instead.'
             });
         }
-        // ✅ Create new user
+        // ✅ Create new user - password will be hashed automatically by Mongoose pre-save hook
         const newUser = new auth_model_1.User({
             name: name || `User ${phone.slice(-4)}`,
             phone,
             company: company || undefined,
+            password: password || undefined, // ✅ Pass password (can be undefined)
             location: location || undefined,
             role: 'user',
             isActive: true,
@@ -602,6 +612,11 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
         console.error('Firebase phone register error:', error.message || error);
         if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
             return res.status(401).json({ message: 'Invalid or expired ID token' });
+        }
+        // Handle Mongoose validation errors (like password too short)
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map((err) => err.message);
+            return res.status(400).json({ message: messages.join(', ') });
         }
         res.status(500).json({ message: 'Registration failed' });
     }
@@ -667,4 +682,46 @@ exports.firebasePhoneLogin = (0, asyncHandler_1.default)((req, res) => __awaiter
         }
         res.status(500).json({ message: 'Authentication failed' });
     }
+}));
+// Make sure this is properly formatted in your auth.controller.ts
+exports.loginWithPhoneAndPassword = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { phone, password } = req.body;
+    if (!phone || !password) {
+        return res.status(400).json({ message: 'Phone and password are required' });
+    }
+    // Find user by phone and select password field
+    const user = yield auth_model_1.User.findOne({ phone }).select('+password');
+    if (!user) {
+        return res.status(401).json({ message: 'Invalid phone number or password' });
+    }
+    // Verify password
+    const isMatch = yield user.comparePassword(password);
+    if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid phone number or password' });
+    }
+    if (!user.isActive) {
+        return res.status(403).json({ message: 'Account is deactivated' });
+    }
+    // Update last login
+    user.lastLogin = new Date();
+    yield user.save();
+    const token = (0, jwt_1.generateToken)(user);
+    res.json({
+        success: true,
+        data: {
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                role: user.role,
+                company: user.company,
+                phoneVerified: user.phoneVerified,
+                emailVerified: user.emailVerified,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            }
+        }
+    });
 }));

@@ -58,14 +58,23 @@ const userSchema = new mongoose_1.Schema({
     },
     email: {
         type: String,
-        required: [false, "Email is required"],
+        required: false, // ← not required
         unique: true,
         lowercase: true,
         trim: true,
+        sparse: true, // ← critical for optional unique fields
         match: [
             /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
             "Please enter a valid email",
         ],
+    },
+    phone: {
+        type: String,
+        required: false,
+        unique: true,
+        trim: true,
+        sparse: true, // ← critical
+        match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
     },
     password: {
         type: String,
@@ -82,11 +91,6 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
         maxlength: [100, "Company name cannot exceed 100 characters"],
-    },
-    phone: {
-        type: String,
-        trim: true,
-        match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
     },
     avatar: {
         type: String,
@@ -114,6 +118,8 @@ const userSchema = new mongoose_1.Schema({
         ipAddress: String,
     },
     phoneVerified: { type: Boolean, default: false },
+    phoneOtpCode: String,
+    phoneOtpExpires: Date,
 }, {
     timestamps: true,
 });
