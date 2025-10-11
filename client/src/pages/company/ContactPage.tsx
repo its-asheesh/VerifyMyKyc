@@ -48,7 +48,7 @@ const ContactPage: React.FC = () => {
     {
       icon: Mail,
       title: "Email Us",
-      details: "verifymykyc@gmail.com",
+      details: "verifymykyc@navigantinc.com",
       description: "For general inquiries (reply within 24 hrs).",
     },
     {
@@ -73,7 +73,7 @@ const ContactPage: React.FC = () => {
 
   const departmentContacts = [
     { title: "Sales", email: "verifymykyc@navigantinc.com" },
-    { title: "Support", email: "support@verifymykyc.com" },
+    // { title: "Support", email: "support@verifymykyc.com" },
   ]
 
   return (

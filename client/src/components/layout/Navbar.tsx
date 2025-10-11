@@ -429,7 +429,7 @@ export default function Navbar() {
                     onClick={() => navigate('/profile')}
                   >
                     <User className="w-4 h-4 mr-2" />
-                    Profile
+                    Account
                   </Button>
                 </>
               ) : (
@@ -582,7 +582,7 @@ export default function Navbar() {
                       }}
                     >
                       <User className="w-4 h-4 mr-2" />
-                      Profile
+                      Account
                     </Button>
                   </>
                 ) : (

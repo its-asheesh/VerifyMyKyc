@@ -23,7 +23,7 @@ const ProfilePage: React.FC = () => {
     company: '',
     phone: ''
   })
-  const [activeTab, setActiveTab] = useState<'profile' | 'services' | 'orders'>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'services' | 'orders'>('services')
 
   useEffect(() => {
   if (!isAuthenticated) {
@@ -146,7 +146,7 @@ const ProfilePage: React.FC = () => {
         >
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Account</h1>
             <p className="text-gray-600 mt-2">Manage your account and view your services</p>
           </div>
 
@@ -158,9 +158,9 @@ const ProfilePage: React.FC = () => {
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Account</h2>
                 <nav className="space-y-2">
                   {[
-                    { id: 'profile', label: 'Profile', icon: User, description: 'Personal information' },
                     { id: 'services', label: 'My Services', icon: Package, description: 'Active services & plans' },
-                    { id: 'orders', label: 'Order History', icon: CreditCard, description: 'Purchase history' }
+                    { id: 'orders', label: 'Order History', icon: CreditCard, description: 'Purchase history' },
+                    { id: 'profile', label: 'Account', icon: User, description: 'Personal information' }
                   ].map((tab) => {
                     const Icon = tab.icon
                     return (

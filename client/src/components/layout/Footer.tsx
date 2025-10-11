@@ -7,7 +7,7 @@ import { FooterSection } from "../footer/FooterSection";
 import { SocialLinks } from "../footer/SocialLinks";
 import { footerData } from "../../utils/constants";
 import { isInternalLink } from "../../utils/helpers";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Building2 } from "lucide-react";
 const Footer: React.FC = () => {
   return (
     <footer className="bg-gradient-to-br from-blue-50 to-white border-t-2 border-blue-100">
@@ -65,13 +65,19 @@ const Footer: React.FC = () => {
             {/* Contact Info */}
             <div className="space-y-2 text-blue-600 text-sm max-w-xs mx-auto lg:mx-0">
               {/* Email 1 */}
+              <div className="flex items-center gap-x-2">
+              <Building2 className="w-5 h-5 text-blue-600" />
+  <p> Navigant Digital Private Limited</p>
+              </div>
+
+              {/* Phone */}
               <div className="flex items-center">
-                <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
+                <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
                 <a
-                  href="mailto:verifymykyc@gmail.com"
+                  href="tel:+919560652708"
                   className="hover:underline hover:text-blue-800 transition-colors"
                 >
-                  verifymykyc@gmail.com
+                  +91 95606 52708
                 </a>
               </div>
 
@@ -86,16 +92,7 @@ const Footer: React.FC = () => {
                 </a>
               </div>
 
-              {/* Phone */}
-              <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
-                <a
-                  href="tel:+919560652708"
-                  className="hover:underline hover:text-blue-800 transition-colors"
-                >
-                  +91 95606 52708
-                </a>
-              </div>
+              
 
               {/* Address */}
               <div className="flex items-start pt-1">
@@ -182,7 +179,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-center md:text-left">
               VerifyMyKyc Copyright {new Date().getFullYear()}, All Rights
-              Reserved.
+              Reserved By Navigant Digital Private Limited.
             </p>
             <div className="flex flex-wrap gap-4 justify-center text-sm">
               {footerData.bottomLinks.map((link, index) => (
