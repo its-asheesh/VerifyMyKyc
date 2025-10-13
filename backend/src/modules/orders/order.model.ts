@@ -19,7 +19,7 @@ export interface IOrder extends Document {
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   paymentMethod: 'card' | 'upi' | 'netbanking';
   transactionId?: string;
-  status: 'active' | 'expired' | 'cancelled';
+  status: 'pending' | 'active' | 'expired' | 'cancelled';
   startDate: Date;
   endDate: Date;
   verificationQuota?: {
@@ -109,8 +109,8 @@ const orderSchema = new Schema<IOrder>({
   transactionId: String,
   status: {
     type: String,
-    enum: ['active', 'expired', 'cancelled'],
-    default: 'active'
+    enum: ['pending', 'active', 'expired', 'cancelled'],
+    default: 'pending'
   },
   startDate: {
     type: Date,

@@ -71,17 +71,38 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
+  // Derive a clearer serviceName for verification orders (e.g., PAN, GSTIN)
+  let serviceNameToUse: string = serviceName;
+  try {
+    if (orderType === 'verification') {
+      const rawType = (serviceDetails as any)?.verificationType;
+      if (typeof rawType === 'string' && rawType.trim().length > 0) {
+        const parts = rawType
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0)
+          .map((s: string) => s.toUpperCase());
+        if (parts.length > 0) {
+          serviceNameToUse = parts.join(', ');
+        }
+      }
+    }
+  } catch (e) {
+    // Fallback silently to provided serviceName
+  }
+
   const orderData: any = {
     userId,
     orderId,
     orderType,
-    serviceName,
+    serviceName: serviceNameToUse,
     serviceDetails,
     totalAmount,
     finalAmount,
     billingPeriod,
     paymentMethod,
     paymentStatus: 'pending',
+    status: 'pending',
     startDate: new Date() // Add this to ensure startDate is set
   };
 
@@ -143,36 +164,7 @@ res.status(201).json({
     currency: razorpayOrder.currency
   }
 });
-
-
-  // Update coupon usage if a coupon was applied
-  if (couponApplied && order) {
-    try {
-      const coupon = await Coupon.findById(couponApplied.couponId);
-      if (coupon) {
-        coupon.usedCount += 1;
-        coupon.usageHistory.push({
-          userId: req.user._id,
-          orderId: order._id,
-          usedAt: new Date(),
-          discountApplied: couponApplied.discount
-        });
-        await coupon.save();
-        console.log('Coupon usage updated successfully');
-      }
-    } catch (error) {
-      console.error('Failed to update coupon usage:', error);
-      // Don't fail order creation if coupon update fails
-    }
-  }
-
-  console.log('Order created successfully:', order);
-
-  res.status(201).json({
-    success: true,
-    message: 'Order created successfully',
-    data: { order }
-  });
+  return; // prevent double response
 });
 
 // Process payment and activate order

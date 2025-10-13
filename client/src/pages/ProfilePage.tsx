@@ -124,6 +124,35 @@ const ProfilePage: React.FC = () => {
     })
   }
 
+  const toSlug = (value?: string) => {
+    if (!value) return ''
+    return value
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  }
+
+  const handleOpenService = (item: any) => {
+    try {
+      if (item.orderType === 'verification') {
+        const type = toSlug(item?.serviceDetails?.verificationType)
+        if (type) {
+          navigate(`/products/${type}`)
+          return
+        }
+      } else if (item.orderType === 'plan') {
+        const plan = toSlug(item?.serviceDetails?.planName)
+        if (plan) {
+          navigate(`/plans/${plan}`)
+          return
+        }
+      }
+    } catch {}
+    navigate('/custom-pricing')
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -320,7 +349,7 @@ const ProfilePage: React.FC = () => {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeServices.plans.map((plan) => (
-                            <div key={plan._id} className="border border-gray-200 rounded-lg p-4">
+                            <div key={plan._id} className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition" onClick={() => handleOpenService(plan)}>
                               <div className="flex items-start justify-between mb-3">
                                 <h4 className="font-medium text-gray-900">{plan.serviceName}</h4>
                                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(plan.status, plan.endDate)}`}>
@@ -389,7 +418,7 @@ const ProfilePage: React.FC = () => {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {activeServices.verifications.map((verification) => (
-                            <div key={verification._id} className="border border-gray-200 rounded-lg p-4">
+                            <div key={verification._id} className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition" onClick={() => handleOpenService(verification)}>
                               <div className="flex items-start justify-between mb-3">
                                 <h4 className="font-medium text-gray-900">{verification.serviceName}</h4>
                                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(verification.status, verification.endDate)}`}>
@@ -398,10 +427,6 @@ const ProfilePage: React.FC = () => {
                                 </span>
                               </div>
                               <div className="space-y-2 text-sm text-gray-600">
-                                <div className="flex justify-between">
-                                  <span>Type:</span>
-                                  <span className="font-medium capitalize">{verification.serviceDetails.verificationType}</span>
-                                </div>
                                 <div className="flex justify-between">
                                   <span>Amount:</span>
                                   <span className="font-medium">₹{verification.finalAmount}</span>
@@ -427,6 +452,25 @@ const ProfilePage: React.FC = () => {
                                   </div>
                                 ) : null}
                               </div>
+                              {/* Buy Now when quota is fully used */}
+                              {(() => {
+                                const total = Number(verification?.verificationQuota?.totalAllowed ?? 0)
+                                const used = Number(verification?.verificationQuota?.used ?? 0)
+                                const remaining = Number(verification?.verificationQuota?.remaining ?? (total - used))
+                                const isExhausted = total > 0 && (used >= total || remaining <= 0)
+                                if (!isExhausted) return null
+                                const vType = toSlug(verification?.serviceDetails?.verificationType)
+                                return (
+                                  <div className="mt-3">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); if (vType) navigate(`/products/${vType}`) }}
+                                      className="px-3 py-2 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                    >
+                                      Buy Now
+                                    </button>
+                                  </div>
+                                )
+                              })()}
                             </div>
                           ))}
                         </div>
@@ -564,9 +608,9 @@ const ProfilePage: React.FC = () => {
                             <p className="text-sm text-gray-600">Order ID: {order.orderId}</p>
                           </div>
                           <div className="text-right">
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status, order.endDate)}`}>
-                              {getStatusIcon(order.status, order.endDate)}
-                              {getStatusText(order.status, order.endDate)}
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.paymentStatus !== 'completed' ? 'pending' : order.status, order.endDate)}`}>
+                              {getStatusIcon(order.paymentStatus !== 'completed' ? 'pending' : order.status, order.endDate)}
+                              {getStatusText(order.paymentStatus !== 'completed' ? 'pending' : order.status, order.endDate)}
                             </span>
                             <p className="text-sm text-gray-600 mt-1">₹{order.finalAmount}</p>
                           </div>

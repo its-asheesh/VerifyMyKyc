@@ -3,6 +3,8 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useVerificationPricing } from "../../hooks/usePricing";
 import {
   Upload,
   Camera,
@@ -57,6 +59,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
   serviceDescription,
   productId,
 }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({});
   const [showResult, setShowResult] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -84,6 +87,62 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
       setShowMoreDetails(false);
     }
   }, [result]);
+
+  const isQuotaError = typeof error === "string" && /quota|exhaust|exhausted|limit|token/i.test(error);
+  const serviceSlug = ((serviceKey || serviceName || "verification") as string)
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  // Prefer productId (e.g., pan, gstin, ...) if provided, fallback to service slug
+  const verificationType = (productId || serviceSlug).toLowerCase();
+
+  // Pull the same pricing used on the product detail page
+  const { data: pricingData } = useVerificationPricing(verificationType);
+  
+  // Reuse Buy Now logic from ProductOverview: navigate to checkout with minimal required state
+  const handleBuyNow = () => {
+    if (pricingData && pricingData.oneTimePrice != null) {
+      const oneTimePrice = Number(pricingData.oneTimePrice);
+      const tierInfo = {
+        service: verificationType,
+        label: serviceName || verificationType.toUpperCase(),
+        price: isNaN(oneTimePrice) ? 0 : oneTimePrice,
+        billingPeriod: "one-time",
+        originalPrice: isNaN(oneTimePrice) ? 0 : oneTimePrice,
+        discount: 0,
+      };
+      navigate("/checkout", {
+        state: {
+          selectedPlan: "one-time",
+          billingPeriod: "one-time",
+          selectedServices: [verificationType],
+          productInfo: {
+            id: verificationType,
+            title: serviceName || verificationType.toUpperCase(),
+          },
+          tierInfo,
+          totalAmount: isNaN(oneTimePrice) ? undefined : oneTimePrice,
+          returnTo: `/products/${verificationType}`,
+        },
+      });
+    } else {
+      // Fallback minimal payload
+      navigate("/checkout", {
+        state: {
+          selectedPlan: "one-time",
+          billingPeriod: "one-time",
+          selectedServices: [verificationType],
+          productInfo: {
+            id: verificationType,
+            title: serviceName || verificationType.toUpperCase(),
+          },
+          returnTo: `/products/${verificationType}`,
+        },
+      });
+    }
+  };
 
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [name]: value }));
@@ -4749,6 +4808,28 @@ if (serviceKey === "fetch-detailed") {
               <p className="text-red-600 text-xs sm:text-sm mt-1 break-words">
                 {error}
               </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Quota exhausted action */}
+      <AnimatePresence>
+        {isQuotaError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center justify-start gap-3 w-full"
+          >
+            <button
+              onClick={handleBuyNow}
+              className="px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-md hover:bg-blue-700"
+            >
+              Buy Now
+            </button>
+            <div className="text-yellow-800 text-xs sm:text-sm">
+              Your verification quota has been exhausted. Purchase more to continue.
             </div>
           </motion.div>
         )}

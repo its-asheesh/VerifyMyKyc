@@ -107,8 +107,8 @@ const orderSchema = new mongoose_1.Schema({
     transactionId: String,
     status: {
         type: String,
-        enum: ['active', 'expired', 'cancelled'],
-        default: 'active'
+        enum: ['pending', 'active', 'expired', 'cancelled'],
+        default: 'pending'
     },
     startDate: {
         type: Date,

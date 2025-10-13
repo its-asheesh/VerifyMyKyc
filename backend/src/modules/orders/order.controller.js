@@ -99,17 +99,38 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
             console.error('Failed to load verification pricing for quota initialization:', e);
         }
     }
+    // Derive a clearer serviceName for verification orders (e.g., PAN, GSTIN)
+    let serviceNameToUse = serviceName;
+    try {
+        if (orderType === 'verification') {
+            const rawType = serviceDetails === null || serviceDetails === void 0 ? void 0 : serviceDetails.verificationType;
+            if (typeof rawType === 'string' && rawType.trim().length > 0) {
+                const parts = rawType
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter((s) => s.length > 0)
+                    .map((s) => s.toUpperCase());
+                if (parts.length > 0) {
+                    serviceNameToUse = parts.join(', ');
+                }
+            }
+        }
+    }
+    catch (e) {
+        // Fallback silently to provided serviceName
+    }
     const orderData = {
         userId,
         orderId,
         orderType,
-        serviceName,
+        serviceName: serviceNameToUse,
         serviceDetails,
         totalAmount,
         finalAmount,
         billingPeriod,
         paymentMethod,
         paymentStatus: 'pending',
+        status: 'pending',
         startDate: new Date() // Add this to ensure startDate is set
     };
     if (verificationQuota) {
@@ -163,33 +184,7 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
             currency: razorpayOrder.currency
         }
     });
-    // Update coupon usage if a coupon was applied
-    if (couponApplied && order) {
-        try {
-            const coupon = yield coupon_model_1.Coupon.findById(couponApplied.couponId);
-            if (coupon) {
-                coupon.usedCount += 1;
-                coupon.usageHistory.push({
-                    userId: req.user._id,
-                    orderId: order._id,
-                    usedAt: new Date(),
-                    discountApplied: couponApplied.discount
-                });
-                yield coupon.save();
-                console.log('Coupon usage updated successfully');
-            }
-        }
-        catch (error) {
-            console.error('Failed to update coupon usage:', error);
-            // Don't fail order creation if coupon update fails
-        }
-    }
-    console.log('Order created successfully:', order);
-    res.status(201).json({
-        success: true,
-        message: 'Order created successfully',
-        data: { order }
-    });
+    return; // prevent double response
 }));
 // Process payment and activate order
 exports.processPayment = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
