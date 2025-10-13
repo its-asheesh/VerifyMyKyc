@@ -43,11 +43,15 @@ const userSchema = new Schema<IUser>(
     },
     email: {
       type: String,
-      required: false, // ← not required
-      unique: true,
+      required: false, // optional
       lowercase: true,
       trim: true,
-      sparse: true, // ← critical for optional unique fields
+      // Normalize empty strings/null to undefined so they don't hit the unique index
+      set: (value: any) => {
+        if (typeof value !== 'string') return undefined;
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
+      },
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
         "Please enter a valid email",
@@ -111,8 +115,12 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Index for better query performance
-userSchema.index({ email: 1 });
+// Indexes
+// Make email UNIQUE only when it's a non-empty string
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $exists: true, $type: "string", $ne: "" } } }
+);
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 

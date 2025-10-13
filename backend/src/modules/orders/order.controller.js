@@ -163,7 +163,33 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
             currency: razorpayOrder.currency
         }
     });
-    return; // prevent sending headers twice
+    // Update coupon usage if a coupon was applied
+    if (couponApplied && order) {
+        try {
+            const coupon = yield coupon_model_1.Coupon.findById(couponApplied.couponId);
+            if (coupon) {
+                coupon.usedCount += 1;
+                coupon.usageHistory.push({
+                    userId: req.user._id,
+                    orderId: order._id,
+                    usedAt: new Date(),
+                    discountApplied: couponApplied.discount
+                });
+                yield coupon.save();
+                console.log('Coupon usage updated successfully');
+            }
+        }
+        catch (error) {
+            console.error('Failed to update coupon usage:', error);
+            // Don't fail order creation if coupon update fails
+        }
+    }
+    console.log('Order created successfully:', order);
+    res.status(201).json({
+        success: true,
+        message: 'Order created successfully',
+        data: { order }
+    });
 }));
 // Process payment and activate order
 exports.processPayment = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

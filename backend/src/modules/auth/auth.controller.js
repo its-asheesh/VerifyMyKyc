@@ -613,6 +613,10 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
         if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
             return res.status(401).json({ message: 'Invalid or expired ID token' });
         }
+        // Handle duplicate key (email unique index) gracefully
+        if ((error.code === 11000 || error.name === 'MongoServerError') && String(error.message || '').includes('email_1')) {
+            return res.status(409).json({ message: 'Email already in use' });
+        }
         // Handle Mongoose validation errors (like password too short)
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map((err) => err.message);
