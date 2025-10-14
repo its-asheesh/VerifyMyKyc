@@ -145,13 +145,35 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
     // make sure to import at top
     const paymentCapture = 1; // 1 for automatic capture
     const currency = "INR";
-    const options = {
-        amount: finalAmount * 100, // amount in paise
-        currency,
-        receipt: order.orderId,
-        payment_capture: paymentCapture,
-    };
-    const razorpayOrder = yield razorpay_1.razorpay.orders.create(options);
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        console.error("Razorpay env missing: RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET not set");
+        return res.status(500).json({
+            success: false,
+            message: 'Payment gateway is not configured. Please contact support.',
+            code: 'RAZORPAY_CONFIG_MISSING'
+        });
+    }
+    let razorpayOrder;
+    try {
+        const options = {
+            amount: Math.round(Number(finalAmount) * 100) || 0, // amount in paise
+            currency,
+            receipt: order.orderId,
+            payment_capture: paymentCapture,
+        };
+        if (!options.amount || options.amount <= 0) {
+            console.warn('createOrder: Invalid amount for Razorpay', { finalAmount });
+        }
+        razorpayOrder = yield razorpay_1.razorpay.orders.create(options);
+    }
+    catch (err) {
+        console.error('Razorpay order creation failed:', (err === null || err === void 0 ? void 0 : err.message) || err);
+        return res.status(500).json({
+            success: false,
+            message: 'Payment initialization failed',
+            code: 'RAZORPAY_ORDER_CREATE_FAILED'
+        });
+    }
     // Update coupon usage if a coupon was applied
     if (couponApplied && order) {
         try {

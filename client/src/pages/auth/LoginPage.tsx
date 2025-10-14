@@ -111,12 +111,31 @@ const LoginPage: React.FC = () => {
   const handleLogin = async () => {
     if (!validateAndLogin()) return;
 
-    if (authMethod === "email") {
-      await dispatch(loginUser({ email: emailOrPhone, password }));
-    } else {
-      await dispatch(
-        loginWithPhoneAndPassword({ phone: emailOrPhone, password })
-      );
+    try {
+      let result: any;
+      if (authMethod === "email") {
+        result = await dispatch(loginUser({ email: emailOrPhone, password }));
+        if ((loginUser as any).fulfilled.match(result)) {
+          const redirectTo = (location.state as any)?.redirectTo || "/";
+          navigate(redirectTo, { state: (location.state as any)?.nextState, replace: true });
+          return;
+        }
+      } else {
+        result = await dispatch(
+          loginWithPhoneAndPassword({ phone: emailOrPhone, password })
+        );
+        if ((loginWithPhoneAndPassword as any).fulfilled.match(result)) {
+          const redirectTo = (location.state as any)?.redirectTo || "/";
+          navigate(redirectTo, { state: (location.state as any)?.nextState, replace: true });
+          return;
+        }
+      }
+
+      // If we reach here, it wasn't fulfilled
+      const msg = (result && result.payload) || "Login failed";
+      showToast(typeof msg === 'string' ? msg : 'Login failed', { type: 'error' });
+    } catch (e: any) {
+      showToast(e?.message || "Login failed", { type: "error" });
     }
   };
 

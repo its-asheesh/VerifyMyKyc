@@ -435,10 +435,11 @@ const authSlice = createSlice({
       })
 
       .addCase(loginUser.fulfilled, (state, action) => {
+        // loginUser thunk returns response.data (backend's data object)
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload.data.user;
-        state.token = action.payload.data.token;
+        state.user = (action.payload as any).user;
+        state.token = (action.payload as any).token;
         state.error = null;
         state.pendingEmail = undefined;
       })
