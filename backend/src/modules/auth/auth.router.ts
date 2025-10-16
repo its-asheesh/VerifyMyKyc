@@ -17,6 +17,7 @@ import {
   verifyEmailOtp,
   sendPasswordResetOtp,
   resetPasswordWithOtp,
+  resetPasswordWithPhoneToken,
   firebasePhoneRegister,
   firebasePhoneLogin,
   loginWithPhoneAndPassword
@@ -32,6 +33,7 @@ router.post('/send-email-otp', sendEmailOtp);
 router.post('/verify-email-otp', verifyEmailOtp);
 router.post('/password/send-otp', sendPasswordResetOtp);
 router.post('/password/reset', resetPasswordWithOtp);
+router.post('/password/reset-phone', resetPasswordWithPhoneToken);
 router.post('/logout', logout);
 
 // Protected routes

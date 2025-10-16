@@ -1,5 +1,6 @@
 // Lightweight Firebase client initializer used by hooks like useGoogleAuth
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
+import { getAnalytics, type Analytics, isSupported, setUserId as gaSetUserId, logEvent as gaLogEvent } from 'firebase/analytics'
 import { getAuth, GoogleAuthProvider, signInWithPopup, type Auth } from 'firebase/auth'
 
 // Prefer env-based config; falls back to provided public config if not set
@@ -23,5 +24,30 @@ if (!getApps().length) {
 export const auth: Auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
 export { signInWithPopup }
+
+// Analytics (optional; only if supported and measurementId present)
+let _analytics: Analytics | null = null
+export const getAnalyticsInstance = async (): Promise<Analytics | null> => {
+  try {
+    if (_analytics) return _analytics
+    const supported = await isSupported()
+    if (!supported) return null
+    if (!firebaseConfig.measurementId) return null
+    _analytics = getAnalytics(app)
+    return _analytics
+  } catch {
+    return null
+  }
+}
+
+export const analyticsSetUserId = async (userId: string) => {
+  const a = await getAnalyticsInstance()
+  if (a && userId) gaSetUserId(a, userId)
+}
+
+export const analyticsLogEvent = async (name: string, params?: Record<string, any>) => {
+  const a = await getAnalyticsInstance()
+  if (a) gaLogEvent(a, name as any, params as any)
+}
 
 

@@ -12,15 +12,11 @@ import {
   fetchUserProfile,
 } from "../../redux/slices/authSlice";
 import {
-  Eye,
-  EyeOff,
-  Mail,
   Lock,
   User,
   Building,
-  Phone,
   Loader2,
-  Smartphone,
+  UserPlus,
 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
 import { auth } from "../../lib/firebaseClient";
@@ -30,12 +26,13 @@ import {
   PhoneAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
-// Country code selector
-import { PhoneInput } from "react-international-phone";
-import "react-international-phone/style.css";
 import TextField from "../../components/forms/TextField";
+import { isValidEmail, isValidE164Phone } from "../../utils/validators";
 import OtpInputWithTimer from "../../components/forms/OtpInputWithTimer";
 import PasswordStrengthMeter from "../../components/forms/PasswordStrengthMeter";
+import AuthCardLayout from "../../components/auth/AuthCardLayout";
+import registerHero from "../../assets/animations/register-hero.json";
+import BackButton from "../../components/buttons/BackButton";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,20 +43,18 @@ const RegisterPage: React.FC = () => {
   );
   const { showToast } = useToast();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
 
-  // Step 1
+  // Step 1 (Details)
   const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-
-  // Step 2
-  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [identifier, setIdentifier] = useState(""); // email or phone in one field
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [company, setCompany] = useState("");
+  const [selectedDialCode, setSelectedDialCode] = useState<string>("91"); // Default India
+  const [isPhoneLike, setIsPhoneLike] = useState<boolean>(false);
 
-  // Step 3
+  // Step 2 (Verify)
   const [otp, setOtp] = useState("");
   const [pendingEmail, setPendingEmail] = useState<string | undefined>(
     undefined
@@ -68,6 +63,7 @@ const RegisterPage: React.FC = () => {
     undefined
   );
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const recaptchaRef = useRef<HTMLDivElement>(null);
 
@@ -79,34 +75,47 @@ const RegisterPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate, location.state]);
 
-  // reCAPTCHA cleanup
+  // reCAPTCHA cleanup on unmount
   useEffect(() => {
-    if (step === 2 && authMethod === "phone") {
-      if (window.recaptchaVerifier) window.recaptchaVerifier.clear();
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
-        }
-      );
-    }
     return () => {
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
         window.recaptchaVerifier = undefined;
       }
     };
-  }, [step, authMethod]);
+  }, []);
+
+  // Simple country dialing code options (extend as needed)
+  const DIAL_CODES: Array<{ code: string; label: string }> = [
+    { code: "91", label: "+91 (IN)" },
+    { code: "1", label: "+1 (US)" },
+    { code: "44", label: "+44 (UK)" },
+    { code: "61", label: "+61 (AU)" },
+    { code: "65", label: "+65 (SG)" },
+    { code: "971", label: "+971 (AE)" },
+  ];
+
+  // Detect if identifier is phone-like to show country selector
+  useEffect(() => {
+    const val = (identifier || "").trim();
+    const looksLikePhone = /^\+?\d[\d\s-]*$/.test(val) && !val.includes("@");
+    setIsPhoneLike(looksLikePhone);
+  }, [identifier]);
 
   const formatToE164 = (phone: string, countryCode = "91"): string => {
-    const digits = phone.replace(/\D/g, "");
-    if (phone.startsWith("+")) return phone;
-    if (digits.startsWith(countryCode)) return `+${digits}`;
-    if (digits.length === 10 && countryCode === "91")
+    const input = (phone || "").trim();
+    if (input.startsWith("+")) return input;
+    let digits = input.replace(/\D/g, "");
+    digits = digits.replace(/^0+/, "");
+    if (digits.length === 10) {
       return `+${countryCode}${digits}`;
-    if (digits.startsWith("0") && digits.length === 11 && countryCode === "91")
-      return `+${countryCode}${digits.substring(1)}`;
+    }
+    if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
+      while (digits.startsWith(countryCode + countryCode)) {
+        digits = digits.slice(countryCode.length);
+      }
+      return `+${digits}`;
+    }
     return `+${countryCode}${digits}`;
   };
 
@@ -122,30 +131,21 @@ const RegisterPage: React.FC = () => {
     }
   };
 
-  const handleContinueStep1 = () => {
-    if (!name.trim() || name.trim().length < 2) {
-      showToast("Name is required (min 2 characters)", { type: "error" });
-      return;
-    }
-    setStep(2);
-  };
+  // No explicit continue; we submit details to send OTP directly
 
   const validateStep2 = () => {
-    if (authMethod === "email") {
-      if (!email || !/\S+@\S+\.\S+/.test(email)) {
-        showToast("Please enter a valid email", { type: "error" });
-        return false;
-      }
-    } else {
-      if (!phone) {
-        showToast("Please enter a phone number", { type: "error" });
-        return false;
-      }
-      const e164 = formatToE164(phone);
-      if (!/^\+[1-9]\d{1,14}$/.test(e164)) {
-        showToast("Invalid phone number", { type: "error" });
-        return false;
-      }
+    const trimmed = identifier.trim();
+    const looksLikeEmail = isValidEmail(trimmed);
+    let looksLikePhone = false;
+    let e164Candidate = "";
+    if (!looksLikeEmail) {
+      e164Candidate = formatToE164(trimmed, selectedDialCode);
+      looksLikePhone = isValidE164Phone(e164Candidate);
+    }
+
+    if (!looksLikeEmail && !looksLikePhone) {
+      showToast("Enter a valid email or mobile number", { type: "error" });
+      return false;
     }
 
     if (!password || password.length < 6) {
@@ -163,33 +163,46 @@ const RegisterPage: React.FC = () => {
 
   const handleSendOtp = async () => {
     if (!validateStep2()) return;
+    setIsSendingOtp(true);
 
-    if (authMethod === "email") {
+    const trimmed = identifier.trim();
+    const isEmail = isValidEmail(trimmed);
+
+    if (isEmail) {
       const result = await dispatch(
-        registerUser({ name, email, password, company })
+        registerUser({ name, email: trimmed, password, company })
       );
       if (registerUser.fulfilled.match(result)) {
-        setPendingEmail(email);
-        setStep(3);
+        setPendingEmail(trimmed);
+        setStep(2);
       }
-    } else {
-      try {
-        const e164Phone = formatToE164(phone);
-        const appVerifier = window.recaptchaVerifier;
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          e164Phone,
-          appVerifier
-        );
-        setConfirmationResult(confirmation);
-        setPendingPhone(e164Phone);
-        setStep(3);
-      } catch (err: any) {
-        let msg = "Failed to send OTP";
-        if (err.code === "auth/invalid-phone-number")
-          msg = "Invalid phone number";
-        showToast(msg, { type: "error" });
+      setIsSendingOtp(false);
+      return;
+    }
+
+    // Phone flow
+    try {
+      const e164Phone = formatToE164(trimmed, selectedDialCode);
+      let appVerifier = window.recaptchaVerifier;
+      if (!appVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
+        try { (window.recaptchaVerifier as any).render?.(); } catch {}
+        appVerifier = window.recaptchaVerifier;
       }
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        e164Phone,
+        appVerifier
+      );
+      setConfirmationResult(confirmation);
+      setPendingPhone(e164Phone);
+      setStep(2);
+    } catch (err: any) {
+      let msg = "Failed to send OTP";
+      if (err.code === "auth/invalid-phone-number") msg = "Invalid phone number";
+      showToast(msg, { type: "error" });
+    } finally {
+      setIsSendingOtp(false);
     }
   };
 
@@ -247,164 +260,83 @@ const RegisterPage: React.FC = () => {
   const goBack = () => {
     if (step === 2) {
       setStep(1);
-    } else if (step === 3) {
-      setStep(2);
       setOtp("");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex justify-between mb-2 text-xs font-medium">
-            <span className={step >= 1 ? "text-blue-600" : "text-gray-400"}>
-              1. Name
-            </span>
-            <span className={step >= 2 ? "text-blue-600" : "text-gray-400"}>
-              2. Auth
-            </span>
-            <span className={step >= 3 ? "text-blue-600" : "text-gray-400"}>
-              3. Verify
-            </span>
+    <AuthCardLayout
+      animationData={registerHero as any}
+      leftHeader={
+        <div>
+          {step > 1 && <BackButton onClick={goBack} label="Back" className="mb-2" />}
+          <div className="flex justify-between mb-1 text-[10px] md:text-xs font-medium">
+            <span className={step >= 1 ? "text-blue-600" : "text-gray-400"}>1. Details</span>
+            <span className={step >= 2 ? "text-blue-600" : "text-gray-400"}>2. Verify</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(step / 3) * 100}%` }}
+              style={{ width: `${(step / 2) * 100}%` }}
             />
           </div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {step === 1
-              ? "Tell us about you"
-              : step === 2
-              ? "Choose your sign-up method"
-              : "Verify your account"}
+      }
+      rightHeader={
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">
+            {step === 1 ? "Create your account" : "Verify your account"}
           </h2>
-          <p className="text-gray-600">
-            {step === 1
-              ? "Start with your name"
-              : step === 2
-              ? "Secure your account"
-              : `Enter the OTP sent to ${pendingEmail || pendingPhone}`}
-          </p>
-        </motion.div>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10"
-        >
+        </div>
+      }
+    >
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className=""
+      >
+        {/* Title moved to rightHeader to align with progress bar; back button moved to header */}
           {step === 1 && (
             <div className="space-y-6">
-              <TextField
-                label="Full Name"
-                id="name"
-                value={name}
-                onChange={(val) => safeSet(setName, val)}
-                icon={User}
-                required
-                autoComplete="name"
-              />
-              <TextField
-                label="Company (Optional)"
-                id="company"
-                value={company}
-                onChange={(val) => safeSet(setCompany, val)}
-                icon={Building}
-                autoComplete="organization"
-              />
-              <button
-                type="button"
-                onClick={handleContinueStep1}
-                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Continue
-              </button>
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <Link to="/login" className="text-blue-600 hover:underline">
-                    Sign in
-                  </Link>
-                </p>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <div className="flex justify-center space-x-4">
-                <button
-                  onClick={() => setAuthMethod("email")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    authMethod === "email"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  <Mail className="inline mr-1 h-4 w-4" /> Email
-                </button>
-                <button
-                  onClick={() => setAuthMethod("phone")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    authMethod === "phone"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  <Smartphone className="inline mr-1 h-4 w-4" /> Phone
-                </button>
-              </div>
-
-              {authMethod === "email" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextField
-                  label="Email address"
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(val) => safeSet(setEmail, val)}
-                  icon={Mail}
+                  label="Full Name"
+                  id="name"
+                  value={name}
+                  onChange={(val) => safeSet(setName, val)}
+                  icon={User}
                   required
-                  autoComplete="email"
+                  autoComplete="name"
                 />
-              ) : (
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-gray-400" />
+                <div className="grid grid-cols-5 gap-2">
+                  {isPhoneLike && (
+                    <div className="col-span-2">
+                      <label htmlFor="dialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                      <select
+                        id="dialCode"
+                        value={selectedDialCode}
+                        onChange={(e) => setSelectedDialCode(e.target.value)}
+                        className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
+                      >
+                        {DIAL_CODES.map((o) => (
+                          <option key={o.code} value={o.code}>{o.label}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="pl-10">
-                      <PhoneInput
-                        defaultCountry="in"
-                        value={phone}
-                        onChange={(val) => safeSet(setPhone, val)}
-                        className="w-full"
-                        inputClassName="appearance-none block w-full pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
-                      />
-                    </div>
+                  )}
+                  <div className={isPhoneLike ? "col-span-3" : "col-span-5"}>
+                    <TextField
+                      label="Email or Mobile"
+                      id="identifier"
+                      value={identifier}
+                      onChange={(val) => safeSet(setIdentifier, val)}
+                      autoComplete="username"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
 
               <TextField
                 label="Password"
@@ -429,40 +361,62 @@ const RegisterPage: React.FC = () => {
                 autoComplete="new-password"
               />
 
+              <TextField
+                label="Company (Optional)"
+                id="company"
+                value={company}
+                onChange={(val) => safeSet(setCompany, val)}
+                icon={Building}
+                autoComplete="organization"
+              />
+
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-600">{error}</p>
                 </div>
               )}
 
-              <div className="flex space-x-3">
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={isLoading}
-                  className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {isLoading ? "Sending OTP..." : "Send OTP"}
-                </button>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.98 }}
+                onClick={handleSendOtp}
+                disabled={isLoading || isSendingOtp}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSendingOtp ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating account...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5" />
+                    <span>Create account</span>
+                  </>
+                )}
+              </motion.button>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Link to="/login" className="text-blue-600 hover:underline">
+                    Sign in
+                  </Link>
+                </p>
               </div>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <div className="space-y-6">
-              <OtpInputWithTimer
-                value={otp}
-                onChange={(val) => safeSet(setOtp, val)}
-                onResend={handleResendOtp}
-                error={error}
-              />
+              <div className="mt-12 md:mt-12">
+                <OtpInputWithTimer
+                  value={otp}
+                  onChange={(val) => safeSet(setOtp, val)}
+                  onResend={handleResendOtp}
+                  error={error}
+                />
+              </div>
               <button
                 type="button"
                 onClick={handleVerifyOtp}
@@ -481,10 +435,9 @@ const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          <div id="recaptcha-container" ref={recaptchaRef} className="hidden" />
-        </motion.div>
-      </div>
-    </div>
+        <div id="recaptcha-container" ref={recaptchaRef} className="hidden" />
+      </motion.div>
+    </AuthCardLayout>
   );
 };
 

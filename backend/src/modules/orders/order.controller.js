@@ -51,9 +51,11 @@ const coupon_model_1 = require("../coupons/coupon.model");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const pricing_model_1 = require("../pricing/pricing.model");
 const razorpay_1 = require("../../common/services/razorpay");
+const ga4_1 = require("../../common/services/ga4");
 const crypto_1 = __importDefault(require("crypto"));
 // Create new order
 exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { orderType, serviceName, serviceDetails, totalAmount, finalAmount, billingPeriod, paymentMethod, couponApplied } = req.body;
     console.log('Creating order with data:', {
         orderType,
@@ -141,6 +143,17 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
         orderData.couponApplied = couponApplied;
     }
     const order = yield order_model_1.Order.create(orderData);
+    // GA4: order_created
+    try {
+        yield (0, ga4_1.sendGaEvent)(String(req.user._id), 'order_created', {
+            order_id: order.orderId,
+            value: Number(order.finalAmount) || 0,
+            currency: order.currency || 'INR',
+            order_type: order.orderType,
+            service: ((_a = order.serviceDetails) === null || _a === void 0 ? void 0 : _a.verificationType) || order.serviceName,
+        });
+    }
+    catch (_b) { }
     // Razorpay order creation starts here
     // make sure to import at top
     const paymentCapture = 1; // 1 for automatic capture
@@ -321,6 +334,16 @@ exports.processPayment = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
         message: 'Payment processed successfully',
         data: { order }
     });
+    // GA4: payment_verified (fire and forget)
+    try {
+        yield (0, ga4_1.sendGaEvent)(String(req.user._id), 'payment_verified', {
+            order_id: order.orderId,
+            value: Number(order.finalAmount) || 0,
+            currency: order.currency || 'INR',
+            payment_method: order.paymentMethod,
+        });
+    }
+    catch (_e) { }
 }));
 // Get user's orders
 exports.getUserOrders = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

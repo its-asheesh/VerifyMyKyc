@@ -4,6 +4,7 @@ import { Coupon } from '../coupons/coupon.model';
 import asyncHandler from '../../common/middleware/asyncHandler';
 import { VerificationPricing, HomepagePlan } from '../pricing/pricing.model';
 import { razorpay } from '../../common/services/razorpay';
+import { sendGaEvent } from '../../common/services/ga4';
 import crypto from 'crypto';
 // Create new order
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -116,6 +117,17 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const order = await Order.create(orderData);
+
+  // GA4: order_created
+  try {
+    await sendGaEvent(String(req.user._id), 'order_created', {
+      order_id: order.orderId,
+      value: Number(order.finalAmount) || 0,
+      currency: order.currency || 'INR',
+      order_type: order.orderType,
+      service: (order.serviceDetails as any)?.verificationType || order.serviceName,
+    });
+  } catch {}
 
 // Razorpay order creation starts here
 // make sure to import at top
@@ -308,6 +320,16 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
     message: 'Payment processed successfully',
     data: { order }
   });
+
+  // GA4: payment_verified (fire and forget)
+  try {
+    await sendGaEvent(String(req.user._id), 'payment_verified', {
+      order_id: order.orderId,
+      value: Number(order.finalAmount) || 0,
+      currency: order.currency || 'INR',
+      payment_method: order.paymentMethod,
+    });
+  } catch {}
 });
 
 // Get user's orders

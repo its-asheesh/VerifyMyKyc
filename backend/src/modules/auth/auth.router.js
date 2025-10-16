@@ -11,6 +11,7 @@ router.post('/send-email-otp', auth_controller_1.sendEmailOtp);
 router.post('/verify-email-otp', auth_controller_1.verifyEmailOtp);
 router.post('/password/send-otp', auth_controller_1.sendPasswordResetOtp);
 router.post('/password/reset', auth_controller_1.resetPasswordWithOtp);
+router.post('/password/reset-phone', auth_controller_1.resetPasswordWithPhoneToken);
 router.post('/logout', auth_controller_1.logout);
 // Protected routes
 router.get('/profile', auth_1.authenticate, auth_1.requireUser, auth_controller_1.getProfile);

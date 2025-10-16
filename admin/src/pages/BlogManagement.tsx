@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff, FileText, Loader2, X, CheckCircle } fr
 import { useBlogPosts, useCreateBlogPost, useUpdateBlogPost, useDeleteBlogPost, useToggleBlogPostStatus } from '../hooks/useBlog'
 import type { BlogPost } from '../services/api/blogApi'
 import Quill from 'quill'
+import '../styles/blog.css'
 import 'quill/dist/quill.snow.css'
 
 interface BlogFormProps {
@@ -54,7 +55,7 @@ const BlogForm: React.FC<BlogFormProps> = ({ isOpen, onClose, onSubmit, isLoadin
             [{ header: [1, 2, 3, false] }],
             ['bold', 'italic', 'underline', 'strike'],
             [{ list: 'ordered' }, { list: 'bullet' }],
-            ['link'],
+            ['link', 'image'],
             ['clean'],
           ],
         },
@@ -243,7 +244,7 @@ const BlogManagement: React.FC = () => {
                 )}
                 {post.excerpt && <p className="text-sm text-gray-600 mb-3 line-clamp-3">{post.excerpt}</p>}
                 {!post.excerpt && (
-                  <div className="prose prose-sm max-w-none text-gray-700 mb-3 line-clamp-3 overflow-hidden" dangerouslySetInnerHTML={{ __html: post.content }} />
+                  <div className="prose prose-sm max-w-none text-gray-700 mb-3 line-clamp-3 overflow-hidden blog-content" dangerouslySetInnerHTML={{ __html: post.content }} />
                 )}
                 <div className="text-xs text-blue-600 font-medium mb-3">
                   {post.tags?.slice(0, 4).map((t: string) => (<span key={t} className="mr-2">#{t}</span>))}

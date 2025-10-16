@@ -8,6 +8,7 @@ import {
   getFallbackLocationData,
 } from "../../utils/locationUtils";
 import { validateToken } from "../../utils/tokenUtils";
+import { analyticsSetUserId, analyticsLogEvent } from "../../lib/firebaseClient";
 
 // Types
 export interface User {
@@ -335,6 +336,23 @@ export const resetPasswordWithOtp = createAsyncThunk(
   }
 );
 
+// Reset password using Firebase Phone ID token (phone-registered users)
+export const resetPasswordWithPhoneToken = createAsyncThunk(
+  "auth/resetPasswordWithPhoneToken",
+  async (payload: { idToken: string; newPassword: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiCall("/auth/password/reset-phone", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      localStorage.setItem("token", response.data.token);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to update password");
+    }
+  }
+);
+
 export const fetchUserProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, { rejectWithValue }) => {
@@ -442,6 +460,12 @@ const authSlice = createSlice({
         state.token = (action.payload as any).token;
         state.error = null;
         state.pendingEmail = undefined;
+        // Fire-and-forget analytics
+        try {
+          const uid = (action.payload as any)?.user?.id;
+          if (uid) void analyticsSetUserId(uid);
+          void analyticsLogEvent("login", { method: "email" });
+        } catch {}
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -484,6 +508,12 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.pendingEmail = undefined;
+        // Fire-and-forget analytics
+        try {
+          const uid = action.payload?.user?.id;
+          if (uid) void analyticsSetUserId(uid);
+          void analyticsLogEvent("sign_up", { method: "email" });
+        } catch {}
       })
       .addCase(verifyEmailOtp.rejected, (state, action) => {
         state.isLoading = false;
@@ -594,6 +624,12 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.pendingPhone = undefined;
         state.error = null;
+        // Fire-and-forget analytics
+        try {
+          const uid = action.payload?.user?.id;
+          if (uid) void analyticsSetUserId(uid);
+          void analyticsLogEvent("sign_up", { method: "phone" });
+        } catch {}
       })
       .addCase(verifyPhoneOtp.rejected, (state, action) => {
         state.isLoading = false;
@@ -611,6 +647,12 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.error = null;
+        // Fire-and-forget analytics
+        try {
+          const uid = action.payload?.user?.id;
+          if (uid) void analyticsSetUserId(uid);
+          void analyticsLogEvent("login", { method: "phone" });
+        } catch {}
       })
       .addCase(loginWithPhone.rejected, (state, action) => {
         state.isLoading = false;
@@ -642,6 +684,12 @@ const authSlice = createSlice({
         state.user = action.payload.data.user;
         state.token = action.payload.data.token;
         state.error = null;
+        // Fire-and-forget analytics
+        try {
+          const uid = action.payload?.data?.user?.id;
+          if (uid) void analyticsSetUserId(uid);
+          void analyticsLogEvent("login", { method: "phone_password" });
+        } catch {}
       })
       .addCase(loginWithPhoneAndPassword.rejected, (state, action) => {
         state.isLoading = false;

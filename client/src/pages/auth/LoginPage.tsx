@@ -9,20 +9,17 @@ import {
   sendPasswordOtp,
   resetPasswordWithOtp,
   loginWithPhoneAndPassword,
+  resetPasswordWithPhoneToken,
 } from "../../redux/slices/authSlice";
 import {
-  Eye,
-  EyeOff,
-  Mail,
   Lock,
   Loader2,
-  Smartphone,
-  Phone,
 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
-// Country code selector (lightweight)
-import { PhoneInput } from "react-international-phone";
-import "react-international-phone/style.css";
+import TextField from "../../components/forms/TextField";
+import { isValidEmail, isValidE164Phone } from "../../utils/validators";
+import AuthCardLayout from "../../components/auth/AuthCardLayout";
+import registerHero from "../../assets/animations/register-hero.json";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,21 +30,29 @@ const LoginPage: React.FC = () => {
   );
   const { showToast } = useToast();
 
-  const [authMethod, setAuthMethod] = useState<"email" | "phone">("email");
   const [showReset, setShowReset] = useState(false);
 
   // Login form
-  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<{
     field?: string;
     message?: string;
   }>({});
+  const [selectedDialCode, setSelectedDialCode] = useState<string>("91");
+  const [isPhoneLike, setIsPhoneLike] = useState<boolean>(false);
 
   // Reset form
-  const [resetEmail, setResetEmail] = useState("");
+  const [resetIdentifier, setResetIdentifier] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
+  const [isPhoneFlow, setIsPhoneFlow] = useState(false);
+  const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
+  const [phoneConfirmation, setPhoneConfirmation] = useState<any>(null);
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [selectedResetDialCode, setSelectedResetDialCode] = useState<string>("91");
+  const [isResetPhoneLike, setIsResetPhoneLike] = useState<boolean>(false);
 
   // Redirect if authenticated
 
@@ -71,38 +76,67 @@ const LoginPage: React.FC = () => {
     };
   }, [dispatch]);
 
+  // Simple dialing codes (extend as needed)
+  const DIAL_CODES: Array<{ code: string; label: string }> = [
+    { code: "91", label: "+91 (IN)" },
+    { code: "1", label: "+1 (US)" },
+    { code: "44", label: "+44 (UK)" },
+    { code: "61", label: "+61 (AU)" },
+    { code: "65", label: "+65 (SG)" },
+    { code: "971", label: "+971 (AE)" },
+  ];
+
+  // Utility: format to E.164 using selected dial code
+  const formatToE164 = (raw: string, countryCode = "91"): string => {
+    const input = (raw || "").trim();
+    if (input.startsWith("+")) return input;
+    let digits = input.replace(/\D/g, "");
+    digits = digits.replace(/^0+/, "");
+    // Heuristic: if 10-digit local number, prefix selected country code
+    if (digits.length === 10) {
+      return `+${countryCode}${digits}`;
+    }
+    // If user typed country code already and then the local number
+    if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
+      // Collapse duplicated country code if present (e.g., 9191...)
+      while (digits.startsWith(countryCode + countryCode)) {
+        digits = digits.slice(countryCode.length);
+      }
+      return `+${digits}`;
+    }
+    return `+${countryCode}${digits}`;
+  };
+
+  // Detect phone-like input to show country selector
+  useEffect(() => {
+    const val = (identifier || "").trim();
+    const looksLikePhone = /^\+?\d[\d\s-]*$/.test(val) && !val.includes("@");
+    setIsPhoneLike(looksLikePhone);
+  }, [identifier]);
+
+  useEffect(() => {
+    const val = (resetIdentifier || "").trim();
+    const looksLikePhone = /^\+?\d[\d\s-]*$/.test(val) && !val.includes("@");
+    setIsResetPhoneLike(looksLikePhone);
+  }, [resetIdentifier]);
+
   const validateAndLogin = () => {
-    let field = authMethod === "email" ? "email" : "phone";
-    let value = emailOrPhone.trim();
-
+    const value = identifier.trim();
     if (!value) {
-      setLoginError({
-        field,
-        message: `${field === "email" ? "Email" : "Phone"} is required`,
-      });
+      setLoginError({ field: "identifier", message: "Email or phone is required" });
       return false;
     }
-
-    if (authMethod === "email") {
-      if (!/\S+@\S+\.\S+/.test(value)) {
-        setLoginError({ field: "email", message: "Invalid email" });
-        return false;
-      }
-    } else {
-      if (!/^\+[1-9]\d{1,14}$/.test(value)) {
-        setLoginError({ field: "phone", message: "Invalid phone number" });
-        return false;
-      }
+    const emailOk = isValidEmail(value);
+    const phoneE164 = emailOk ? "" : formatToE164(value, selectedDialCode);
+    const phoneOk = emailOk ? false : isValidE164Phone(phoneE164);
+    if (!emailOk && !phoneOk) {
+      setLoginError({ field: "identifier", message: "Enter a valid email or phone" });
+      return false;
     }
-
     if (!password || password.length < 6) {
-      setLoginError({
-        field: "password",
-        message: "Password must be at least 6 characters",
-      });
+      setLoginError({ field: "password", message: "Password must be at least 6 characters" });
       return false;
     }
-
     setLoginError({});
     return true;
   };
@@ -113,17 +147,18 @@ const LoginPage: React.FC = () => {
 
     try {
       let result: any;
-      if (authMethod === "email") {
-        result = await dispatch(loginUser({ email: emailOrPhone, password }));
+      const value = identifier.trim();
+      const isEmail = isValidEmail(value);
+      if (isEmail) {
+        result = await dispatch(loginUser({ email: value, password }));
         if ((loginUser as any).fulfilled.match(result)) {
           const redirectTo = (location.state as any)?.redirectTo || "/";
           navigate(redirectTo, { state: (location.state as any)?.nextState, replace: true });
           return;
         }
       } else {
-        result = await dispatch(
-          loginWithPhoneAndPassword({ phone: emailOrPhone, password })
-        );
+        const e164 = formatToE164(value, selectedDialCode);
+        result = await dispatch(loginWithPhoneAndPassword({ phone: e164, password }));
         if ((loginWithPhoneAndPassword as any).fulfilled.match(result)) {
           const redirectTo = (location.state as any)?.redirectTo || "/";
           navigate(redirectTo, { state: (location.state as any)?.nextState, replace: true });
@@ -140,79 +175,108 @@ const LoginPage: React.FC = () => {
   };
 
   const handleReset = async () => {
-    if (!resetEmail || !/\S+@\S+\.\S+/.test(resetEmail)) {
-      showToast("Please enter a valid email", { type: "error" });
-      return;
-    }
-    if (!otp || otp.length !== 6) {
-      showToast("Please enter a 6-digit OTP", { type: "error" });
+    const value = resetIdentifier.trim();
+    const isEmail = isValidEmail(value);
+    const e164Reset = isEmail ? "" : formatToE164(value, selectedResetDialCode);
+    const isPhone = isEmail ? false : isValidE164Phone(e164Reset);
+
+    if (!isEmail && !isPhone) {
+      showToast("Enter a valid email or phone", { type: "error" });
       return;
     }
     if (!newPassword || newPassword.length < 6) {
       showToast("Password must be at least 6 characters", { type: "error" });
       return;
     }
-    await dispatch(
-      resetPasswordWithOtp({ email: resetEmail, otp, newPassword })
-    );
-    setShowReset(false);
+
+    if (isEmail) {
+      if (!otp || otp.length !== 6) {
+        showToast("Please enter a 6-digit OTP", { type: "error" });
+        return;
+      }
+      await dispatch(resetPasswordWithOtp({ email: value, otp, newPassword }));
+      setShowReset(false);
+      return;
+    }
+
+    try {
+      if (!phoneConfirmation) {
+        showToast("Please send OTP first", { type: "error" });
+        return;
+      }
+      if (!phoneOtp || phoneOtp.replace(/\D/g, '').length !== 6) {
+        showToast("Please enter the 6-digit OTP", { type: "error" });
+        return;
+      }
+
+      setIsPhoneFlow(true);
+      const { PhoneAuthProvider, signInWithCredential } = await import('firebase/auth');
+      const { auth } = await import('../../lib/firebaseClient');
+
+      const credential = PhoneAuthProvider.credential(phoneConfirmation.verificationId, phoneOtp.replace(/\D/g, ''));
+      const userCred = await signInWithCredential(auth, credential);
+      const idToken = await userCred.user.getIdToken();
+
+      const result = await dispatch(resetPasswordWithPhoneToken({ idToken, newPassword }));
+      if ((resetPasswordWithPhoneToken as any).fulfilled.match(result)) {
+        showToast('Password updated successfully', { type: 'success' });
+        setShowReset(false);
+      } else {
+        const msg = (result as any)?.payload || 'Failed to update password';
+        showToast(typeof msg === 'string' ? msg : 'Failed to update password', { type: 'error' });
+      }
+      setIsPhoneFlow(false);
+    } catch (e: any) {
+      showToast(e?.message || 'Phone verification failed', { type: 'error' });
+      setIsPhoneFlow(false);
+    }
   };
 
-  const [showPassword, setShowPassword] = useState(false);
+  // Send OTP for phone-based reset
+  const handleSendPhoneOtp = async () => {
+    try {
+      if (!resetIdentifier) {
+        showToast('Please enter your phone number', { type: 'error' });
+        return;
+      }
+      setIsSendingPhoneOtp(true);
+      const { RecaptchaVerifier, signInWithPhoneNumber } = await import('firebase/auth');
+      const { auth } = await import('../../lib/firebaseClient');
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.clear();
+      }
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      const phoneE164 = formatToE164(resetIdentifier, selectedResetDialCode);
+      const confirmation = await signInWithPhoneNumber(auth, phoneE164, (window as any).recaptchaVerifier);
+      setPhoneConfirmation(confirmation);
+      showToast('OTP sent to your phone', { type: 'success' });
+    } catch (e: any) {
+      showToast(e?.message || 'Failed to send OTP', { type: 'error' });
+    } finally {
+      setIsSendingPhoneOtp(false);
+    }
+  };
+
+  // Password visibility handled by TextField
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+    <AuthCardLayout
+      animationData={registerHero as any}
+      leftHeader={
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">
             Welcome back
           </h2>
-          <p className="text-gray-600">Sign in to your account</p>
-
-          {/* Auth Method Toggle */}
-          <div className="mt-6 flex justify-center space-x-4">
-            <button
-              onClick={() => {
-                setAuthMethod("email");
-                setLoginError({});
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                authMethod === "email"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              <Mail className="inline mr-1 h-4 w-4" /> Email
-            </button>
-            <button
-              onClick={() => {
-                setAuthMethod("phone");
-                setLoginError({});
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                authMethod === "phone"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              <Smartphone className="inline mr-1 h-4 w-4" /> Phone
-            </button>
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white py-8 px-4 shadow-xl rounded-xl sm:px-10"
-        >
+          <p className="text-gray-600 text-sm md:text-base">Sign in to your account</p>
+        </div>
+      }
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className=""
+      >
           {showReset ? (
             <form
               className="space-y-6"
@@ -221,41 +285,72 @@ const LoginPage: React.FC = () => {
                 handleReset();
               }}
             >
-              <input
-                type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
-              />
-              <div className="mt-2">
-                <button
-                  type="button"
-                  onClick={() => dispatch(sendPasswordOtp(resetEmail))}
-                  className="text-blue-600 hover:text-blue-700 text-sm"
-                >
-                  Send OTP
-                </button>
+              {/* Unified reset: Email or Mobile */}
+              <div className="space-y-3">
+                <div className="grid grid-cols-5 gap-2">
+                  {isResetPhoneLike && (
+                    <div className="col-span-1">
+                      <label htmlFor="resetDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                      <select
+                        id="resetDialCode"
+                        value={selectedResetDialCode}
+                        onChange={(e) => setSelectedResetDialCode(e.target.value)}
+                        className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
+                      >
+                        {DIAL_CODES.map((o) => (
+                          <option key={o.code} value={o.code}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <div className={isResetPhoneLike ? "col-span-4" : "col-span-5"}>
+                    <TextField
+                      label="Email or Mobile"
+                      id="resetIdentifier"
+                      value={resetIdentifier}
+                      onChange={setResetIdentifier}
+                      autoComplete="username"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => { const value = resetIdentifier.trim(); const isEmail = isValidEmail(value); const e164 = isEmail ? '' : formatToE164(value, selectedResetDialCode); if (!value || (!isEmail && !isValidE164Phone(e164))) { showToast('Enter a valid email or phone', { type: 'error' }); return; } if (isEmail) { setIsSendingEmailOtp(true); await dispatch(sendPasswordOtp(value)); setIsSendingEmailOtp(false); } else { await handleSendPhoneOtp(); } }}
+                    className="text-blue-600 hover:text-blue-700 text-sm"
+                    disabled={isSendingPhoneOtp || isSendingEmailOtp}
+                  >
+                    {isSendingEmailOtp || isSendingPhoneOtp ? 'Sending...' : 'Send OTP'}
+                  </button>
+                  {phoneConfirmation && <span className="text-xs text-green-600">OTP sent</span>}
+                </div>
+                {/* OTP input shows for both flows */}
+                <TextField
+                  label="OTP"
+                  id="resetOtp"
+                  type="text"
+                  inputMode="numeric"
+                  value={isValidEmail(resetIdentifier) ? otp : phoneOtp}
+                  onChange={(v) => (isValidEmail(resetIdentifier) ? setOtp(v.replace(/\D/g, '').slice(0, 6)) : setPhoneOtp(v.replace(/\D/g, '').slice(0, 6)))}
+                  maxLength={6}
+                  showVisibilityToggle={false}
+                />
+                {!isValidEmail(resetIdentifier) && <p className="text-xs text-gray-500">We will verify your phone with OTP, then update your password.</p>}
               </div>
 
-              <input
-                type="text"
-                inputMode="numeric"
-                value={otp}
-                onChange={(e) =>
-                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                }
-                placeholder="6-digit OTP"
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
-              />
-
-              <input
+              <TextField
+                label="New Password"
+                id="newPassword"
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="New password (6+ chars)"
-                className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
+                onChange={setNewPassword}
+                icon={Lock}
+                autoComplete="new-password"
               />
+
+              {!isValidEmail(resetIdentifier) && isPhoneFlow && (
+                <div className="text-sm text-gray-600">Verifying your phone and updating password...</div>
+              )}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -279,117 +374,55 @@ const LoginPage: React.FC = () => {
                   Reset Password
                 </button>
               </div>
+
+              <div className="mt-3 text-center" />
             </form>
           ) : (
             <form
-              className="space-y-6"
+              className="space-y-8"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleLogin();
               }}
             >
-              {authMethod === "email" ? (
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Email address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      type="email"
-                      value={emailOrPhone}
-                      onChange={(e) => setEmailOrPhone(e.target.value)}
-                      className={`appearance-none block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm ${
-                        loginError.field === "email"
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      placeholder="Enter your email"
-                    />
+              <div className="grid grid-cols-5 gap-2">
+                {isPhoneLike && (
+                  <div className="col-span-1">
+                    <label htmlFor="loginDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <select
+                      id="loginDialCode"
+                      value={selectedDialCode}
+                      onChange={(e) => setSelectedDialCode(e.target.value)}
+                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
+                    >
+                      {DIAL_CODES.map((o) => (
+                        <option key={o.code} value={o.code}>{o.label}</option>
+                      ))}
+                    </select>
                   </div>
-                  {loginError.field === "email" && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {loginError.message}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <div className="pl-10">
-                      <PhoneInput
-                        defaultCountry="in"
-                        value={emailOrPhone}
-                        onChange={(val) => setEmailOrPhone(val)}
-                        className="w-full"
-                        inputClassName="appearance-none block w-full pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                  {loginError.field === "phone" && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {loginError.message}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`appearance-none block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm ${
-                      loginError.field === "password"
-                        ? "border-red-300"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-                {loginError.field === "password" && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {loginError.message}
-                  </p>
                 )}
+                <div className={isPhoneLike ? "col-span-4" : "col-span-5"}>
+                  <TextField
+                    label="Email or Mobile"
+                    id="identifier"
+                    value={identifier}
+                    onChange={setIdentifier}
+                    autoComplete="username"
+                    error={loginError.field === 'identifier' ? loginError.message : undefined}
+                  />
+                </div>
               </div>
+
+              <TextField
+                label="Password"
+                id="loginPassword"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                icon={Lock}
+                autoComplete="current-password"
+                error={loginError.field === "password" ? loginError.message : undefined}
+              />
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -412,7 +445,7 @@ const LoginPage: React.FC = () => {
                 )}
               </button>
 
-              <div className="text-center">
+              <div className="text-center space-y-3">
                 <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
                   <Link
@@ -425,7 +458,7 @@ const LoginPage: React.FC = () => {
                 </p>
                 <button
                   type="button"
-                  className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+                  className="block mx-auto text-sm text-blue-600 hover:text-blue-700"
                   onClick={() => setShowReset(true)}
                 >
                   Forgot password?
@@ -434,8 +467,8 @@ const LoginPage: React.FC = () => {
             </form>
           )}
         </motion.div>
-      </div>
-    </div>
+        <div id="recaptcha-container" className="hidden" />
+    </AuthCardLayout>
   );
 };
 

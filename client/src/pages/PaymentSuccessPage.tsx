@@ -38,7 +38,7 @@ const serviceSlug = serviceMap[service] || 'pan' // pan / aadhaar /
     const target = returnTo || `/products/${serviceSlug}`
     const timer = setTimeout(() => {
       navigate(target)
-    }, 3000)
+    }, 5000)
 
     return () => clearTimeout(timer)
   }, [navigate, serviceSlug, returnTo])
@@ -65,7 +65,7 @@ const serviceSlug = serviceMap[service] || 'pan' // pan / aadhaar /
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
           <p className="text-gray-600">Your verification service has been activated</p>
           <p className="text-sm text-gray-500">
-    Redirecting to your service page in <span className="font-medium">1.5 seconds</span>
+    Redirecting to your service page in <span className="font-medium">3 seconds</span>
   </p>
         </motion.div>
       </div>

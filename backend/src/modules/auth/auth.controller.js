@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
+exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithPhoneToken = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
 const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const email_1 = require("../../common/services/email");
 const firebase_admin_1 = __importDefault(require("../../../firebase-admin"));
+const ga4_1 = require("../../common/services/ga4");
 // Register new user
 exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password, company, phone, location } = req.body;
@@ -45,6 +46,16 @@ exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
     user.emailOtpCode = code;
     user.emailOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
     yield user.save();
+    // GA4: user_registered (email flow)
+    try {
+        yield (0, ga4_1.sendGaEvent)(String(user._id), 'user_registered', {
+            signup_method: 'email',
+            role: user.role,
+            email_verified: !!user.emailVerified,
+            phone_verified: !!user.phoneVerified,
+        });
+    }
+    catch (_a) { }
     // Send email (non-blocking – client can always use resend endpoint)
     let otpSent = true;
     try {
@@ -233,6 +244,57 @@ exports.resetPasswordWithOtp = (0, asyncHandler_1.default)((req, res) => __await
             }
         }
     });
+}));
+// Reset/update password using Firebase Phone ID token (for phone-registered users)
+exports.resetPasswordWithPhoneToken = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { idToken, newPassword } = req.body;
+    if (!idToken || !newPassword) {
+        return res.status(400).json({ message: 'ID token and newPassword are required' });
+    }
+    // Basic password rule (keep consistent with client and model validation)
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    try {
+        const decoded = yield firebase_admin_1.default.auth().verifyIdToken(idToken);
+        const phone = decoded.phone_number;
+        if (!phone) {
+            return res.status(400).json({ message: 'No phone number in token' });
+        }
+        const user = yield auth_model_1.User.findOne({ phone }).select('+password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        user.password = newPassword;
+        user.phoneVerified = true; // trust Firebase verification
+        yield user.save();
+        const token = (0, jwt_1.generateToken)(user);
+        return res.json({
+            success: true,
+            message: 'Password updated successfully',
+            data: {
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    role: user.role,
+                    company: user.company,
+                    phoneVerified: user.phoneVerified,
+                    emailVerified: user.emailVerified,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+                },
+            },
+        });
+    }
+    catch (error) {
+        if ((error === null || error === void 0 ? void 0 : error.code) === 'auth/argument-error' || (error === null || error === void 0 ? void 0 : error.name) === 'FirebaseTokenError') {
+            return res.status(401).json({ message: 'Invalid or expired ID token' });
+        }
+        return res.status(500).json({ message: 'Failed to update password' });
+    }
 }));
 // Get current user profile
 exports.getProfile = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -587,6 +649,16 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
             phoneVerified: true, // Trust Firebase
         });
         yield newUser.save();
+        // GA4: user_registered (phone flow)
+        try {
+            yield (0, ga4_1.sendGaEvent)(String(newUser._id), 'user_registered', {
+                signup_method: 'phone',
+                role: newUser.role,
+                email_verified: !!newUser.emailVerified,
+                phone_verified: !!newUser.phoneVerified,
+            });
+        }
+        catch (_a) { }
         const token = (0, jwt_1.generateToken)(newUser);
         res.status(201).json({
             success: true,
