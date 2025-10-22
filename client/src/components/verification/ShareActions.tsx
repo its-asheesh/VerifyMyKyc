@@ -44,25 +44,108 @@ const ShareActions: React.FC<ShareActionsProps> = ({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [shareOpen]);
 
-  // ✅ Use only `summary` for text extraction (what user sees)
+  // ✅ Use only `summary` for text extraction (what user sees) - WITH AGGRESSIVE SANITIZATION
   const buildDetailsLines = useCallback((): string[] => {
     if (summary && summary.trim()) {
       return summary
         .trim()
         .split(/\r?\n/)
         .map((line) => line.trim())
-        .filter((line) => line.length > 0);
+        .filter((line) => line.length > 0)
+        .filter((line) => {
+          // AGGRESSIVE SANITIZATION - Remove any line that contains garbled characters
+          return !line.includes('Ø') && 
+                 !line.includes('Ü') && 
+                 !line.includes('Ë') && 
+                 !line.includes('&V&e&r&i&f&i&c&a&t&i') &&
+                 !line.match(/[&]{2,}/) &&
+                 !line.match(/[Ø=ÜË]/) &&
+                 !line.match(/[&][a-zA-Z][&]/) &&
+                 !line.includes('&V&e&r&i&f&i&c&a&t&i&o&n&') &&
+                 !line.includes('&D&e&t&a&i&l&s') &&
+                 !line.match(/[&][A-Za-z][&][A-Za-z][&]/) &&
+                 !line.includes('Ø=ÜË') &&
+                 !line.match(/V\s+e\s+r\s+i\s+f\s+i\s+c\s+a\s+t\s+i\s+o\s+n/) &&
+                 !line.match(/D\s+e\s+t\s+a\s+i\s+l\s+s/) &&
+                 !line.match(/[Ø=ÜË]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/) &&
+                 !line.includes('V e r i f i c a t i o n') &&
+                 !line.includes('D e t a i l s') &&
+                 !line.match(/Ø=ÜË.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n/) &&
+                 !line.match(/.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n.*&.*D.*&.*e.*&.*t.*&.*a.*&.*i.*&.*l.*&.*s/) &&
+                 !line.includes('Ø=ÜË& &V&e&r&i&f&i&c&a&t&i&o&n& &D&e&t&a&i&l&s') &&
+                 !line.match(/.*Ø.*=.*Ü.*Ë.*&.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n.*&.*&.*D.*&.*e.*&.*t.*&.*a.*&.*i.*&.*l.*&.*s.*/) &&
+                 !line.match(/.*[Ø=ÜË].*[&].*[V].*[&].*[e].*[&].*[r].*[&].*[i].*[&].*[f].*[&].*[i].*[&].*[c].*[&].*[a].*[&].*[t].*[&].*[i].*[&].*[o].*[&].*[n].*[&].*[D].*[&].*[e].*[&].*[t].*[&].*[a].*[&].*[i].*[&].*[l].*[&].*[s].*/) &&
+                 !line.includes('Ø=ÜË V e r i f i c a t i o n D e t a i l');
+        });
     }
     return ["No details available."];
   }, [summary]);
 
-  // ✅ Build full share text
+  // ✅ Build full share text with company info
   const buildShareText = useCallback((): string => {
     const lines = buildDetailsLines();
-    return `${serviceName} Verification - Verification Successful\n\n${lines.join("\n")}`;
+    
+     // Filter out redundant status messages and garbled text from share text too
+     const filteredLines = lines.filter(line => {
+       const lowerLine = line.toLowerCase();
+       
+       // Remove garbled/corrupted text patterns - COMPREHENSIVE FILTERING
+       if (line.includes('Ø') || line.includes('Ü') || line.includes('Ë') || 
+           line.includes('&V&e&r&i&f&i&c&a&t&i') || 
+           line.match(/[&]{2,}/) || // Multiple consecutive ampersands
+           line.match(/[Ø=ÜË]/) || // Special characters that cause garbling
+           line.match(/[&][a-zA-Z][&]/) || // Pattern like &V&e&r&i&f&i&c&a&t&i&o&n&
+           line.includes('&V&e&r&i&f&i&c&a&t&i&o&n&') ||
+           line.includes('&D&e&t&a&i&l&s') ||
+           line.match(/[&][A-Za-z][&][A-Za-z][&]/) || // More garbled patterns
+           line.includes('Ø=ÜË') || // Specific pattern from user
+           line.match(/V\s+e\s+r\s+i\s+f\s+i\s+c\s+a\s+t\s+i\s+o\s+n/) || // Spaced out "Verification"
+           line.match(/D\s+e\s+t\s+a\s+i\s+l\s+s/) || // Spaced out "Details"
+           line.match(/[Ø=ÜË]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/) || // Pattern with special chars + spaced letters
+           line.includes('V e r i f i c a t i o n') ||
+           line.includes('D e t a i l s') || // More specific patterns
+           line.match(/Ø=ÜË.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n/) || // Complex garbled pattern
+           line.match(/.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n.*&.*D.*&.*e.*&.*t.*&.*a.*&.*i.*&.*l.*&.*s/) || // Full garbled pattern
+           line.includes('Ø=ÜË& &V&e&r&i&f&i&c&a&t&i&o&n& &D&e&t&a&i&l&s') || // Exact pattern from image
+           line.match(/.*Ø.*=.*Ü.*Ë.*&.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n.*&.*&.*D.*&.*e.*&.*t.*&.*a.*&.*i.*&.*l.*&.*s.*/) || // Regex for exact pattern
+           line.match(/.*[Ø=ÜË].*[&].*[V].*[&].*[e].*[&].*[r].*[&].*[i].*[&].*[f].*[&].*[i].*[&].*[c].*[&].*[a].*[&].*[t].*[&].*[i].*[&].*[o].*[&].*[n].*[&].*[D].*[&].*[e].*[&].*[t].*[&].*[a].*[&].*[i].*[&].*[l].*[&].*[s].*/) || // More comprehensive pattern
+           line.includes('Ø=ÜË V e r i f i c a t i o n D e t a i l')) { // Spaced version
+         return false;
+       }
+      
+      return !lowerLine.includes('verification successful') &&
+             !lowerLine.includes('fetch ') &&
+             !lowerLine.includes('status code') &&
+             !lowerLine.includes('status:') &&
+             !lowerLine.includes('request id') &&
+             !lowerLine.includes('transaction id') &&
+             !lowerLine.includes('reference id') &&
+             !lowerLine.includes('=== ') &&  // Section headers like "=== PERSONAL INFORMATION ==="
+             !lowerLine.includes('--- ') &&  // Sub-section headers like "--- Director 1 ---"
+             !lowerLine.match(/^\d+$/) &&    // Pure numbers (like status codes)
+             !lowerLine.match(/^[Ø=ÜË\s]+$/) && // Lines with only special chars and spaces
+             !lowerLine.match(/^[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/) && // Spaced out words
+             !line.match(/.*[&]{3,}.*/) && // Lines with 3+ consecutive ampersands
+             !line.match(/.*[Ø=ÜË]{2,}.*/) && // Lines with multiple special chars
+             !line.match(/.*verification.*details.*/i) && // Any line containing "verification details" (case insensitive)
+             !line.match(/.*[Ø=ÜË].*verification.*/i) && // Any line with special chars + verification
+             !line.match(/.*[Ø=ÜË].*details.*/i) && // Any line with special chars + details
+             line.trim() !== '';
+    });
+    
+    const companyInfo = `VerifyMyKyc - Navigant Digital Private Limited
+A 24/5, Mohan Cooperative Industrial Area, Badarpur, Second Floor
+New Delhi 110044, India
+Phone: +91 95606 52708 | Email: verifymykyc@navigantinc.com
+
+${serviceName} Verification - Verification Successful
+
+${filteredLines.join("\n")}`;
+    
+    return companyInfo;
   }, [serviceName, buildDetailsLines]);
 
-  // ✅ Generate PDF from clean text
+  // ✅ Generate PDF with enhanced design and proper logo loading
   const generatePdfBlob = useCallback(async (): Promise<Blob | null> => {
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -72,60 +155,407 @@ const ShareActions: React.FC<ShareActionsProps> = ({
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const marginX = 14;
-    let y = 18;
+    const marginX = 15;
+    let y = 20;
 
-    // Title
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(`${serviceName} Verification`, marginX, y);
-    y += 10;
+     // TWO-COLUMN LAYOUT: Logo on LEFT, Company Details on RIGHT
+     let logoLoaded = false;
+     const logoWidth = 45;
+     const logoHeight = 18;
+     const rightColumnStart = marginX + logoWidth + 15; // Start right column with more gap from logo
+     
+     try {
+       // Try multiple logo formats and sources with better error handling
+       const logoSources = [
+         '/verifymykyclogo.svg',  // Primary logo
+         '/verifymykyc.jpg',      // Alternative logo
+         '/SVG.svg',              // Generic SVG
+         '/SVG1.svg',             // Alternative SVG
+         '/SVG2.svg',             // Alternative SVG
+         './verifymykyclogo.svg', // Relative path
+         './verifymykyc.jpg',     // Relative path
+         './SVG.svg'              // Relative path
+       ];
+       
+       let logoFormat = 'PNG';
+       
+       for (const logoSource of logoSources) {
+         try {
+           console.log(`Attempting to load logo from: ${logoSource}`);
+           const logoResponse = await fetch(logoSource);
+           console.log(`Logo response status: ${logoResponse.status}`);
+           
+           if (logoResponse.ok) {
+             const logoBlob = await logoResponse.blob();
+             console.log(`Logo blob size: ${logoBlob.size} bytes`);
+             
+             if (logoBlob.size > 0) {
+               const logoUrl = URL.createObjectURL(logoBlob);
+               
+               // Determine image format more accurately
+               const contentType = logoResponse.headers.get('content-type') || '';
+               console.log(`Logo content type: ${contentType}`);
+               
+               if (contentType.includes('svg') || logoSource.includes('.svg')) {
+                 logoFormat = 'SVG';
+               } else if (contentType.includes('jpeg') || contentType.includes('jpg') || logoSource.includes('.jpg')) {
+                 logoFormat = 'JPEG';
+               } else {
+                 logoFormat = 'PNG';
+               }
+               
+               // Convert blob to base64 for better compatibility
+               const base64 = await new Promise<string>((resolve, reject) => {
+                 const reader = new FileReader();
+                 reader.onload = () => resolve(reader.result as string);
+                 reader.onerror = reject;
+                 reader.readAsDataURL(logoBlob);
+               });
+               
+               try {
+                 // Add logo on the LEFT side
+                 pdf.addImage(base64, logoFormat, marginX, y, logoWidth, logoHeight);
+                 console.log('Logo successfully added to PDF');
+                 logoLoaded = true;
+                 URL.revokeObjectURL(logoUrl);
+                 break;
+               } catch (imgError) {
+                 console.warn('Failed to add logo to PDF:', imgError);
+                 URL.revokeObjectURL(logoUrl);
+               }
+             } else {
+               console.warn(`Logo blob is empty for ${logoSource}`);
+             }
+           } else {
+             console.warn(`Logo response not ok for ${logoSource}: ${logoResponse.status}`);
+           }
+         } catch (error) {
+           console.warn(`Could not load logo from ${logoSource}:`, error);
+         }
+       }
+       
+       if (!logoLoaded) {
+         console.warn('All logo sources failed, using text fallback');
+         // Fallback: Draw a simple logo placeholder on the LEFT
+         pdf.setFillColor(59, 130, 246); // Blue color
+         pdf.rect(marginX, y, logoWidth, logoHeight, 'F');
+         pdf.setTextColor(255, 255, 255);
+         pdf.setFont("helvetica", "bold");
+         pdf.setFontSize(12);
+         pdf.text("VMK", marginX + 8, y + 13);
+         pdf.setTextColor(0, 0, 0);
+       }
+     } catch (error) {
+       console.warn('Logo loading failed:', error);
+       // Fallback: Draw a simple logo placeholder on the LEFT
+       pdf.setFillColor(59, 130, 246); // Blue color
+       pdf.rect(marginX, y, logoWidth, logoHeight, 'F');
+       pdf.setTextColor(255, 255, 255);
+       pdf.setFont("helvetica", "bold");
+       pdf.setFontSize(12);
+       pdf.text("VMK", marginX + 8, y + 13);
+       pdf.setTextColor(0, 0, 0);
+     }
 
-    // Success badge (box)
-    const badgeText = "Verification Successful";
+    // RIGHT COLUMN: Company details positioned next to logo with proper alignment
+    let rightY = y; // Start at same level as logo
+    
+    // Company name positioned next to logo - RIGHT ALIGNED
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12);
-    const badgePadX = 4;
-    const badgeRectH = 7;
-    const textW = pdf.getTextWidth(badgeText);
-    const badgeW = textW + badgePadX * 2;
-    const rectY = y - 5;
-    pdf.setDrawColor(0);
-    pdf.setLineWidth(0.3);
-    pdf.rect(marginX, rectY, badgeW, badgeRectH);
-    pdf.text(badgeText, marginX + badgePadX, y);
-    y += 12;
-
-    // Divider
-    pdf.setDrawColor(0);
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 100, 100);
+    
+    const companyName = "Navigant Digital Private Limited";
+    const companyNameWidth = pdf.getTextWidth(companyName);
+    const rightMargin = pageWidth - marginX;
+    
+    pdf.text(companyName, rightMargin - companyNameWidth, rightY + 4);
+    rightY += 8; // Increased spacing
+    
+    // Address positioned below company name with better spacing - RIGHT ALIGNED
+    pdf.setFontSize(9);
+    pdf.setTextColor(75, 85, 99);
+    
+    // Right-align address lines
+    const addressLine1 = "A 24/5, Mohan Cooperative Industrial Area, Badarpur, Second Floor";
+    const addressLine2 = "New Delhi 110044, India";
+    const contactLine = "Phone: +91 95606 52708 | Email: verifymykyc@navigantinc.com";
+    
+    // Calculate right-aligned positions (using same rightMargin as company name)
+    const address1Width = pdf.getTextWidth(addressLine1);
+    const address2Width = pdf.getTextWidth(addressLine2);
+    const contactWidth = pdf.getTextWidth(contactLine);
+    
+    pdf.text(addressLine1, rightMargin - address1Width, rightY);
+    rightY += 6; // Increased spacing between address lines
+    pdf.text(addressLine2, rightMargin - address2Width, rightY);
+    rightY += 8; // Increased spacing before contact info
+    
+    // Contact info positioned below address with proper spacing - RIGHT ALIGNED
+    pdf.text(contactLine, rightMargin - contactWidth, rightY);
+    
+    // Update y position for the rest of the document
+    y = Math.max(y + logoHeight, rightY) + 8; // Increased spacing before decorative line
+    
+    // Decorative line
+    y += 8;
+    pdf.setDrawColor(59, 130, 246);
+    pdf.setLineWidth(0.8);
     pdf.line(marginX, y, pageWidth - marginX, y);
     y += 6;
 
-    // Details Header
+    // Service Title with enhanced styling
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(14);
-    pdf.text("Details", marginX, y);
+    pdf.setFontSize(18);
+    pdf.setTextColor(31, 41, 55); // Dark gray
+    pdf.text(`${serviceName} Verification Report`, marginX, y);
     y += 8;
 
-    // Content
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(11);
-    const lines = buildDetailsLines();
-    const maxWidth = pageWidth - marginX * 2;
+    // Success badge with clean design
+    const badgeText = "VERIFICATION SUCCESSFUL";
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    const badgePadX = 6;
+    const badgePadY = 3;
+    const textW = pdf.getTextWidth(badgeText);
+    const badgeW = textW + badgePadX * 2;
+    const badgeH = 8;
+    const rectY = y - badgePadY;
+    
+    // Badge background with gradient effect
+    pdf.setFillColor(34, 197, 94); // Green
+    pdf.rect(marginX, rectY, badgeW, badgeH, 'F');
+    
+    // Badge border
+    pdf.setDrawColor(22, 163, 74);
+    pdf.setLineWidth(0.3);
+    pdf.rect(marginX, rectY, badgeW, badgeH);
+    
+    // Badge text
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(badgeText, marginX + badgePadX, y + 2);
+    pdf.setTextColor(0, 0, 0);
+    y += 12;
 
-    for (const line of lines) {
-      const wrapped = pdf.splitTextToSize(line, maxWidth);
-      for (const part of wrapped) {
-        if (y > pageHeight - 14) {
-          pdf.addPage();
-          y = 18;
+    // Section divider
+    pdf.setDrawColor(229, 231, 235);
+    pdf.setLineWidth(0.5);
+    pdf.line(marginX, y, pageWidth - marginX, y);
+    y += 8;
+
+     // Skip the problematic "Verification Details" header entirely
+     // pdf.setFont("helvetica", "bold");
+     // pdf.setFontSize(14);
+     // pdf.setTextColor(31, 41, 55);
+     // pdf.text("📋 Verification Details", marginX, y);
+     // y += 8;
+
+    // Parse data into tabular format
+    const lines = buildDetailsLines();
+    const tableData: Array<{label: string, value: string}> = [];
+    
+     // Filter out redundant status messages and garbled text
+     const filteredLines = lines.filter(line => {
+       const lowerLine = line.toLowerCase();
+       
+       // Remove garbled/corrupted text patterns - COMPREHENSIVE FILTERING
+       if (line.includes('Ø') || line.includes('Ü') || line.includes('Ë') || 
+           line.includes('&V&e&r&i&f&i&c&a&t&i') || 
+           line.match(/[&]{2,}/) || // Multiple consecutive ampersands
+           line.match(/[Ø=ÜË]/) || // Special characters that cause garbling
+           line.match(/[&][a-zA-Z][&]/) || // Pattern like &V&e&r&i&f&i&c&a&t&i&o&n&
+           line.includes('&V&e&r&i&f&i&c&a&t&i&o&n&') ||
+           line.includes('&D&e&t&a&i&l&s') ||
+           line.match(/[&][A-Za-z][&][A-Za-z][&]/) || // More garbled patterns
+           line.includes('Ø=ÜË') || // Specific pattern from user
+           line.match(/V\s+e\s+r\s+i\s+f\s+i\s+c\s+a\s+t\s+i\s+o\s+n/) || // Spaced out "Verification"
+           line.match(/D\s+e\s+t\s+a\s+i\s+l\s+s/) || // Spaced out "Details"
+           line.match(/[Ø=ÜË]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/) || // Pattern with special chars + spaced letters
+           line.includes('V e r i f i c a t i o n') ||
+           line.includes('D e t a i l s') || // More specific patterns
+           line.match(/Ø=ÜË.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n/) || // Complex garbled pattern
+           line.match(/.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n.*&.*D.*&.*e.*&.*t.*&.*a.*&.*i.*&.*l.*&.*s/) || // Full garbled pattern
+           line.includes('Ø=ÜË& &V&e&r&i&f&i&c&a&t&i&o&n& &D&e&t&a&i&l&s') || // Exact pattern from image
+           line.match(/.*Ø.*=.*Ü.*Ë.*&.*&.*V.*&.*e.*&.*r.*&.*i.*&.*f.*&.*i.*&.*c.*&.*a.*&.*t.*&.*i.*&.*o.*&.*n.*&.*&.*D.*&.*e.*&.*t.*&.*a.*&.*i.*&.*l.*&.*s.*/) || // Regex for exact pattern
+           line.match(/.*[Ø=ÜË].*[&].*[V].*[&].*[e].*[&].*[r].*[&].*[i].*[&].*[f].*[&].*[i].*[&].*[c].*[&].*[a].*[&].*[t].*[&].*[i].*[&].*[o].*[&].*[n].*[&].*[D].*[&].*[e].*[&].*[t].*[&].*[a].*[&].*[i].*[&].*[l].*[&].*[s].*/) || // More comprehensive pattern
+           line.includes('Ø=ÜË V e r i f i c a t i o n D e t a i l')) { // Spaced version
+         return false;
+       }
+      
+      return !lowerLine.includes('verification successful') &&
+             !lowerLine.includes('fetch ') &&
+             !lowerLine.includes('status code') &&
+             !lowerLine.includes('status:') &&
+             !lowerLine.includes('request id') &&
+             !lowerLine.includes('transaction id') &&
+             !lowerLine.includes('reference id') &&
+             !lowerLine.includes('=== ') &&  // Section headers like "=== PERSONAL INFORMATION ==="
+             !lowerLine.includes('--- ') &&  // Sub-section headers like "--- Director 1 ---"
+             !lowerLine.match(/^\d+$/) &&    // Pure numbers (like status codes)
+             !lowerLine.match(/^[Ø=ÜË\s]+$/) && // Lines with only special chars and spaces
+             !lowerLine.match(/^[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]\s+[A-Za-z]/) && // Spaced out words
+             !line.match(/.*[&]{3,}.*/) && // Lines with 3+ consecutive ampersands
+             !line.match(/.*[Ø=ÜË]{2,}.*/) && // Lines with multiple special chars
+             !line.match(/.*verification.*details.*/i) && // Any line containing "verification details" (case insensitive)
+             !line.match(/.*[Ø=ÜË].*verification.*/i) && // Any line with special chars + verification
+             !line.match(/.*[Ø=ÜË].*details.*/i) && // Any line with special chars + details
+             line.trim() !== '';
+    });
+    
+    // Parse lines into key-value pairs
+    filteredLines.forEach(line => {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex > 0) {
+        const label = line.substring(0, colonIndex).trim();
+        const value = line.substring(colonIndex + 1).trim();
+        if (label && value) {
+          tableData.push({ label, value });
         }
-        pdf.text(part, marginX, y);
-        y += 6;
+      } else {
+        // If no colon, treat as a standalone value
+        if (line.trim()) {
+          tableData.push({ label: '', value: line.trim() });
+        }
       }
-      y += 1; // extra spacing between entries
+    });
+
+    // Create enhanced table
+    if (tableData.length > 0) {
+      const tableStartY = y;
+      const rowHeight = 7;
+      const labelWidth = 65;
+      const valueWidth = pageWidth - marginX * 2 - labelWidth;
+      
+      // Enhanced table header with gradient effect
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.setFillColor(59, 130, 246); // Blue header
+      pdf.rect(marginX, tableStartY, pageWidth - marginX * 2, rowHeight, 'F');
+      
+      // Header text in white
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("FIELD", marginX + 3, tableStartY + 5);
+      pdf.text("VALUE", marginX + labelWidth + 3, tableStartY + 5);
+      pdf.setTextColor(0, 0, 0);
+      
+      // Header border
+      pdf.setDrawColor(37, 99, 235);
+      pdf.setLineWidth(0.4);
+      pdf.rect(marginX, tableStartY, pageWidth - marginX * 2, rowHeight);
+      pdf.line(marginX + labelWidth, tableStartY, marginX + labelWidth, tableStartY + rowHeight);
+      
+      y = tableStartY + rowHeight;
+      
+      // Enhanced table rows
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      
+      tableData.forEach((row, index) => {
+        if (y > pageHeight - 25) {
+          pdf.addPage();
+          y = 20;
+        }
+        
+        // Enhanced row styling
+        const isEvenRow = index % 2 === 0;
+        if (isEvenRow) {
+          pdf.setFillColor(248, 250, 252); // Very light blue
+          pdf.rect(marginX, y, pageWidth - marginX * 2, rowHeight, 'F');
+        }
+        
+        // Row borders with better styling
+        pdf.setDrawColor(226, 232, 240);
+        pdf.setLineWidth(0.3);
+        pdf.rect(marginX, y, pageWidth - marginX * 2, rowHeight);
+        pdf.line(marginX + labelWidth, y, marginX + labelWidth, y + rowHeight);
+        
+        // Add text with better formatting
+        const labelText = row.label || '';
+        const valueText = row.value || '';
+        
+        // Enhanced text wrapping
+        const wrappedLabel = pdf.splitTextToSize(labelText, labelWidth - 6);
+        const wrappedValue = pdf.splitTextToSize(valueText, valueWidth - 6);
+        
+        const maxLines = Math.max(wrappedLabel.length, wrappedValue.length);
+        
+        // Label styling
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9);
+        pdf.setTextColor(75, 85, 99); // Gray for labels
+        
+        for (let i = 0; i < wrappedLabel.length; i++) {
+          pdf.text(wrappedLabel[i], marginX + 3, y + 5 + (i * 3.5));
+        }
+        
+        // Value styling
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        pdf.setTextColor(31, 41, 55); // Dark gray for values
+        
+        for (let i = 0; i < wrappedValue.length; i++) {
+          pdf.text(wrappedValue[i], marginX + labelWidth + 3, y + 5 + (i * 3.5));
+        }
+        
+        y += Math.max(maxLines * 3.5, rowHeight);
+      });
+    } else {
+      // Fallback to simple text if no structured data
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      const maxWidth = pageWidth - marginX * 2;
+
+      for (const line of filteredLines) {
+        const wrapped = pdf.splitTextToSize(line, maxWidth);
+        for (const part of wrapped) {
+          if (y > pageHeight - 14) {
+            pdf.addPage();
+            y = 18;
+          }
+          pdf.text(part, marginX, y);
+          y += 6;
+        }
+        y += 1; // extra spacing between entries
+      }
     }
+
+    // Enhanced footer with better styling
+    y = pageHeight - 20;
+    
+    // Footer divider line
+    pdf.setDrawColor(226, 232, 240);
+    pdf.setLineWidth(0.5);
+    pdf.line(marginX, y - 5, pageWidth - marginX, y - 5);
+    
+    // Footer content
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(107, 114, 128);
+    
+    // Generation timestamp
+    const now = new Date();
+    const timestamp = now.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    pdf.text(`Generated on ${timestamp}`, marginX, y);
+    
+    // Copyright with enhanced styling
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    pdf.setTextColor(59, 130, 246);
+    pdf.text("© VerifyMyKyc", marginX, y + 4);
+    
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(107, 114, 128);
+    pdf.text("Navigant Digital Private Limited", marginX + 25, y + 4);
+    
+    // Watermark removed as requested
 
     return pdf.output("blob");
   }, [serviceName, buildDetailsLines]);

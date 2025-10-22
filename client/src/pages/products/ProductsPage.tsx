@@ -11,6 +11,7 @@ import { SearchInput } from "../../components/common/SearchInput"
 import { FilterTabs } from "../../components/common/FilterTabs"
 import { LoadingSpinner } from "../../components/common/LoadingSpinner"
 import { ProductCard } from "../../components/products/ProductCard"
+import SEOHead from "../../components/seo/SEOHead"
 
 // Import mockProducts for total count
 import { mockProducts } from "../../redux/slices/productSlice"
@@ -107,7 +108,14 @@ const ProductsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <>
+      <SEOHead 
+        title="KYC Verification Products - Aadhaar, PAN, Driving License | VerifyMyKYC"
+        description="Browse our comprehensive range of KYC verification products including Aadhaar verification, PAN verification, Driving License verification, Passport verification, GSTIN verification and background checks."
+        keywords="KYC products, verification services, Aadhaar verification, PAN verification, driving license verification, passport verification, GSTIN verification, background check services"
+        canonicalUrl="/products"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <PageHeader title="Our Products" subtitle="Comprehensive verification solutions for every business need">
         {/* Layout toggle buttons and search bar aligned */}
         <div className="flex flex-col space-y-4 w-full">
@@ -300,6 +308,7 @@ const ProductsPage: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   )
 }
 

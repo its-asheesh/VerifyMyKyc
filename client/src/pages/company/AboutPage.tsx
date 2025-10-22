@@ -3,6 +3,7 @@
 import type React from "react";
 import { motion } from "framer-motion";
 import { PageHeader } from "../../components/common/PageHeader";
+import SEOHead from "../../components/seo/SEOHead";
 import {
   Users,
   Target,
@@ -62,7 +63,14 @@ const AboutPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEOHead 
+        title="About VerifyMyKYC - India's Leading KYC Verification Company"
+        description="Learn about VerifyMyKYC, India's leading KYC and identity verification platform. We provide instant verification services for Aadhaar, PAN, Driving License, Passport, GSTIN and background checks. Trusted by 10,000+ users."
+        keywords="about VerifyMyKYC, KYC verification company, identity verification platform, digital verification services, India KYC company"
+        canonicalUrl="/about"
+      />
+      <div className="min-h-screen bg-gray-50">
       <PageHeader
         title="About VerifyMyKyc"
         subtitle="Empowering trust through innovation in identity and business verification"
@@ -242,6 +250,7 @@ const AboutPage: React.FC = () => {
         </motion.section>
       </div>
     </div>
+    </>
   );
 };
 

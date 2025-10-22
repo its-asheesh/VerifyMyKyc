@@ -19,12 +19,36 @@ const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHan
 const email_1 = require("../../common/services/email");
 const firebase_admin_1 = __importDefault(require("../../../firebase-admin"));
 const ga4_1 = require("../../common/services/ga4");
+// Helper: notify admins about new user sign-ups
+function notifyAdminsOfNewUser(user_1, method_1) {
+    return __awaiter(this, arguments, void 0, function* (user, method, status = 'successful') {
+        try {
+            const recipients = (process.env.ADMIN_NOTIFY_EMAILS || '').split(',').map((s) => s.trim()).filter(Boolean);
+            if (!recipients.length)
+                return;
+            const lines = [
+                `<p><strong>Name:</strong> ${user.name || '-'}</p>`,
+                `<p><strong>Email:</strong> ${user.email || '-'}</p>`,
+                `<p><strong>Phone:</strong> ${user.phone || '-'}</p>`,
+                `<p><strong>Company:</strong> ${user.company || '-'}</p>`,
+                `<p><strong>Status:</strong> ${status}</p>`,
+            ];
+            const html = `<div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#111;">${lines.join('')}</div>`;
+            yield Promise.all(recipients.map((to) => (0, email_1.sendEmail)(to, 'New user signed up', html)));
+        }
+        catch (e) {
+            console.error('Failed to notify admins of new user:', (e === null || e === void 0 ? void 0 : e.message) || e);
+        }
+    });
+}
 // Register new user
 exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, password, company, phone, location } = req.body;
     // Check if user already exists
     const existingUser = yield auth_model_1.User.findOne({ email });
     if (existingUser) {
+        // Attempted registration with existing email
+        void notifyAdminsOfNewUser({ name, email, phone, company }, 'email', 'attempted');
         return res.status(400).json({ message: 'User with this email already exists' });
     }
     // Create new user with location data if provided
@@ -56,6 +80,8 @@ exports.register = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, v
         });
     }
     catch (_a) { }
+    // Notify admins (successful registration)
+    void notifyAdminsOfNewUser(user, 'email', 'successful');
     // Send email (non-blocking – client can always use resend endpoint)
     let otpSent = true;
     try {
@@ -633,6 +659,8 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
         // 🔍 Check if user already exists
         const existingUser = yield auth_model_1.User.findOne({ phone });
         if (existingUser) {
+            // Attempted registration with existing phone
+            void notifyAdminsOfNewUser({ name, email: undefined, phone, company }, 'phone', 'attempted');
             return res.status(409).json({
                 message: 'User with this phone number already exists. Please log in instead.'
             });
@@ -659,6 +687,8 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
             });
         }
         catch (_a) { }
+        // Notify admins (successful registration)
+        void notifyAdminsOfNewUser(newUser, 'phone', 'successful');
         const token = (0, jwt_1.generateToken)(newUser);
         res.status(201).json({
             success: true,
@@ -683,17 +713,23 @@ exports.firebasePhoneRegister = (0, asyncHandler_1.default)((req, res) => __awai
     catch (error) {
         console.error('Firebase phone register error:', error.message || error);
         if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
+            // Failed phone registration (invalid token)
+            void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
             return res.status(401).json({ message: 'Invalid or expired ID token' });
         }
         // Handle duplicate key (email unique index) gracefully
         if ((error.code === 11000 || error.name === 'MongoServerError') && String(error.message || '').includes('email_1')) {
+            // Attempted phone registration but email duplicate
+            void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'attempted');
             return res.status(409).json({ message: 'Email already in use' });
         }
         // Handle Mongoose validation errors (like password too short)
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map((err) => err.message);
+            void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
             return res.status(400).json({ message: messages.join(', ') });
         }
+        void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
         res.status(500).json({ message: 'Registration failed' });
     }
 }));

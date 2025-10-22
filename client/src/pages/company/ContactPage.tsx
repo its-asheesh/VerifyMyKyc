@@ -5,6 +5,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { PageHeader } from "../../components/common/PageHeader"
 import { Mail, Phone, MapPin, Send, CheckCircle, MessageCircle } from "lucide-react"
+import SEOHead from "../../components/seo/SEOHead"
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -77,7 +78,14 @@ const ContactPage: React.FC = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
+    <>
+      <SEOHead 
+        title="Contact VerifyMyKYC - Get Support for KYC Verification Services"
+        description="Contact VerifyMyKYC for support with KYC verification services. Get help with Aadhaar verification, PAN verification, Driving License verification, Passport verification, GSTIN verification and background checks."
+        keywords="contact VerifyMyKYC, KYC support, verification help, customer service, technical support"
+        canonicalUrl="/contact"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30">
       <PageHeader
         title="Contact Us"
         subtitle="We'd love to hear from you. Let's connect and build something amazing together!"
@@ -328,6 +336,7 @@ const ContactPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

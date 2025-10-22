@@ -106,8 +106,8 @@ const OrderManagement: React.FC = () => {
     const matchesSearch = 
       order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.userId.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (order.userId?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.userId?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = !filters.status || order.status === filters.status
     const matchesOrderType = !filters.orderType || order.orderType === filters.orderType
@@ -415,8 +415,12 @@ const OrderManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{order.userId.name}</div>
-                      <div className="text-sm text-gray-500">{order.userId.email}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {order.userId?.name || 'Unknown User'}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {order.userId?.email || 'No email'}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
