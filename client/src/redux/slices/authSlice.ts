@@ -9,6 +9,7 @@ import {
 } from "../../utils/locationUtils";
 import { validateToken } from "../../utils/tokenUtils";
 import { analyticsSetUserId, analyticsLogEvent } from "../../lib/firebaseClient";
+import { getTokenCookie, getUserCookie, areCookiesSupported } from "../../utils/cookieUtils";
 
 // Types
 export interface User {
@@ -58,13 +59,34 @@ export interface AuthState {
 
 // Helper function to initialize auth state with token validation
 const initializeAuthState = (): AuthState => {
-  const token = localStorage.getItem("token");
+  // Try to get token from cookies first, then localStorage
+  let token = null;
+  let user = null;
+
+  // Check cookies first (more reliable)
+  if (areCookiesSupported()) {
+    token = getTokenCookie();
+    user = getUserCookie();
+  }
+
+  // Fallback to localStorage if no cookie token
+  if (!token) {
+    token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        user = JSON.parse(storedUser);
+      } catch {
+        user = null;
+      }
+    }
+  }
 
   if (!token) {
     return {
       user: null,
       token: null,
-      isAuthenticated: true,
+      isAuthenticated: false,
       isLoading: false,
       error: null,
       pendingPhone: undefined,
@@ -74,7 +96,15 @@ const initializeAuthState = (): AuthState => {
   const { isValid, payload } = validateToken(token);
 
   if (!isValid) {
+    // Clean up invalid tokens from both storage methods
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    if (areCookiesSupported()) {
+      import("../../utils/cookieUtils").then(({ removeTokenCookie, removeUserCookie }) => {
+        removeTokenCookie();
+        removeUserCookie();
+      });
+    }
     return {
       user: null,
       token: null,
@@ -86,7 +116,7 @@ const initializeAuthState = (): AuthState => {
   }
 
   return {
-    user: null,
+    user: user,
     token,
     isAuthenticated: true,
     isLoading: false,
@@ -353,6 +383,42 @@ export const resetPasswordWithPhoneToken = createAsyncThunk(
   }
 );
 
+export const refreshToken = createAsyncThunk(
+  "auth/refreshToken",
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const state = getState() as { auth: AuthState };
+      const currentToken = state.auth.token;
+      
+      if (!currentToken) {
+        return rejectWithValue("No token to refresh");
+      }
+
+      const response = await apiCall("/auth/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: currentToken }),
+      });
+
+      const newToken = response.data.token;
+      
+      // Update both localStorage and cookies
+      localStorage.setItem("token", newToken);
+      if (areCookiesSupported()) {
+        import("../../utils/cookieUtils").then(({ setTokenCookie }) => {
+          setTokenCookie(newToken, true);
+        });
+      }
+
+      return { token: newToken };
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Failed to refresh token");
+    }
+  }
+);
+
 export const fetchUserProfile = createAsyncThunk(
   "auth/fetchProfile",
   async (_, { rejectWithValue }) => {
@@ -431,9 +497,20 @@ const authSlice = createSlice({
       state.error = null;
       state.pendingEmail = undefined;
       state.pendingPhone = undefined;
+      
+      // Clean localStorage
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       localStorage.removeItem("phoneVerificationId");
       localStorage.removeItem("pendingPhone");
+      
+      // Clean cookies if supported
+      if (areCookiesSupported()) {
+        import("../../utils/cookieUtils").then(({ removeTokenCookie, removeUserCookie }) => {
+          removeTokenCookie();
+          removeUserCookie();
+        });
+      }
     },
     clearError: (state) => {
       state.error = null;
@@ -460,6 +537,19 @@ const authSlice = createSlice({
         state.token = (action.payload as any).token;
         state.error = null;
         state.pendingEmail = undefined;
+        
+        // Store in localStorage
+        localStorage.setItem("token", (action.payload as any).token);
+        localStorage.setItem("user", JSON.stringify((action.payload as any).user));
+        
+        // Store in cookies if supported (more reliable)
+        if (areCookiesSupported()) {
+          import("../../utils/cookieUtils").then(({ setTokenCookie, setUserCookie }) => {
+            setTokenCookie((action.payload as any).token, true); // rememberMe = true for regular login
+            setUserCookie((action.payload as any).user, true);
+          });
+        }
+        
         // Fire-and-forget analytics
         try {
           const uid = (action.payload as any)?.user?.id;
@@ -559,6 +649,32 @@ const authSlice = createSlice({
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      // Refresh Token
+      .addCase(refreshToken.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(refreshToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.token = action.payload.token;
+        state.error = null;
+      })
+      .addCase(refreshToken.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        // If refresh fails, logout the user
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        if (areCookiesSupported()) {
+          import("../../utils/cookieUtils").then(({ removeTokenCookie, removeUserCookie }) => {
+            removeTokenCookie();
+            removeUserCookie();
+          });
+        }
       })
       // Update Profile
       .addCase(updateUserProfile.pending, (state) => {

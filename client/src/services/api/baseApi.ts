@@ -1,5 +1,6 @@
 import axios from "axios";
 import { validateToken } from "../../utils/tokenUtils";
+import { getTokenCookie, areCookiesSupported } from "../../utils/cookieUtils";
 class BaseApi {
   protected api: ReturnType<typeof axios.create>
 
@@ -18,16 +19,58 @@ class BaseApi {
   private setupInterceptors() {
     // Request interceptor
     this.api.interceptors.request.use(
-      (config: any) => {
+      async (config: any) => {
         // Allow callers to skip auth for public endpoints
         if (!(config as any)?.skipAuth) {
-          const token = localStorage.getItem("token")
+          // Try to get token from cookies first, then localStorage
+          let token = null;
+          
+          if (areCookiesSupported()) {
+            token = getTokenCookie();
+          }
+          
+          if (!token) {
+            token = localStorage.getItem("token");
+          }
+          
           if (token) {
             // Validate token before sending request
             const { isValid } = validateToken(token);
             if (!isValid) {
-              // Token is expired, clear it and redirect to login
+              // Try to refresh token before giving up
+              try {
+                const refreshResponse = await fetch("/api/auth/refresh", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ token }),
+                });
+                
+                if (refreshResponse.ok) {
+                  const refreshData = await refreshResponse.json();
+                  const newToken = refreshData.data.token;
+                  
+                  // Update token in both storage methods
+                  localStorage.setItem("token", newToken);
+                  if (areCookiesSupported()) {
+                    import("../../utils/cookieUtils").then(({ setTokenCookie }) => {
+                      setTokenCookie(newToken, true);
+                    });
+                  }
+                  
+                  config.headers.Authorization = `Bearer ${newToken}`;
+                  return config;
+                }
+              } catch (refreshError) {
+                // Refresh failed, proceed with cleanup
+              }
+              
+              // Token is expired and refresh failed, clear it from both storage methods and redirect to login
               localStorage.removeItem("token");
+              if (areCookiesSupported()) {
+                import("../../utils/cookieUtils").then(({ removeTokenCookie }) => {
+                  removeTokenCookie();
+                });
+              }
               if (window.location.pathname !== "/login") {
                 window.location.href = "/login";
               }

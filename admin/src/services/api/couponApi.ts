@@ -22,32 +22,14 @@ export interface CouponData {
 }
 
 export interface CouponStats {
-  stats: {
-    totalCoupons: number
-    activeCoupons: number
-    expiredCoupons: number
-  }
-  topUsedCoupons: Array<{
-    _id: string
-    code: string
-    name: string
-    usedCount: number
-    usageLimit: number
-  }>
-  recentUsage: Array<{
-    code: string
-    name: string
-    usageHistory: {
-      usedAt: string
-      discountApplied: number
-    }
-    userName: string
-    orderNumber: string
-  }>
+  totalCoupons: number
+  activeCoupons: number
+  totalUsage: number
+  newCouponsThisMonth: number
 }
 
 export interface CouponListResponse {
-  coupons: Array<{
+  items: Array<{
     _id: string
     code: string
     name: string
@@ -91,7 +73,16 @@ class CouponApi extends BaseApi {
     if (params?.status) queryParams.append('status', params.status)
 
     const response = await this.get<any>(`/coupons?${queryParams.toString()}`)
-    return response.data
+    // Transform the response to match expected structure
+    return {
+      items: response.data.coupons || [],
+      pagination: response.data.pagination || {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 0
+      }
+    }
   }
 
   // Get coupon by ID
@@ -121,7 +112,13 @@ class CouponApi extends BaseApi {
   // Get coupon statistics
   async getCouponStats(): Promise<CouponStats> {
     const response = await this.get<any>('/coupons/stats')
-    return response.data
+    // Transform the response to match expected structure
+    return {
+      totalCoupons: response.data.stats?.totalCoupons || 0,
+      activeCoupons: response.data.stats?.activeCoupons || 0,
+      totalUsage: response.data.stats?.totalUsage || 0,
+      newCouponsThisMonth: response.data.stats?.newCouponsThisMonth || 0
+    }
   }
 
   // Generate coupon codes

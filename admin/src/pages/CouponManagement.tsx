@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useCoupons, useCouponStats, useDeleteCoupon } from '../hooks/useCoupons'
 import { useToast } from '../context/ToastContext'
 import { 
   Plus, 
-  Search, 
   Edit, 
   Trash2, 
   Copy, 
@@ -18,13 +17,20 @@ import {
 import CouponForm from '../components/coupons/CouponForm'
 import CouponDetails from '../components/coupons/CouponDetails'
 
+// Import reusable components
+import { StatCard, DataTable, StatusBadge, AdvancedFilters, FormModal } from '../components/common'
+import { exportToExcel, formatters } from '../utils/exportUtils'
+import { formatDate, formatCurrency } from '../utils/dateUtils'
+import type { Column } from '../components/common/DataTable'
+
 const CouponManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired'>('all')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage] = useState(1)
   const [showForm, setShowForm] = useState(false)
   const [editingCoupon, setEditingCoupon] = useState<string | null>(null)
   const [viewingCoupon, setViewingCoupon] = useState<string | null>(null)
+  const [sortConfig, setSortConfig] = useState<{ field: string; direction: 'asc' | 'desc' }>({ field: 'createdAt', direction: 'desc' })
 
   const { data: couponsData, isLoading, error } = useCoupons({
     page: currentPage,
@@ -36,6 +42,223 @@ const CouponManagement: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useCouponStats()
   const deleteCouponMutation = useDeleteCoupon()
   const { showSuccess, showError } = useToast()
+
+  // Filter configuration
+  const filterConfig = [
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select' as const,
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'expired', label: 'Expired' },
+        { value: 'inactive', label: 'Inactive' }
+      ]
+    }
+  ]
+
+  // Table columns configuration
+  const columns: Column[] = [
+    {
+      key: 'code',
+      label: 'Coupon Code',
+      sortable: true,
+      render: (value, _row) => (
+        <div className="flex items-center space-x-2">
+          <span className="font-mono text-sm font-medium text-gray-900">{value}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              copyToClipboard(value)
+            }}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="Copy to clipboard"
+          >
+            <Copy className="w-3 h-3 text-gray-500" />
+          </button>
+        </div>
+      )
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      render: (value) => (
+        <div className="text-sm text-gray-900 max-w-xs truncate">
+          {value || 'No description'}
+        </div>
+      )
+    },
+    {
+      key: 'discountType',
+      label: 'Discount',
+      sortable: true,
+      render: (value, row) => (
+        <div className="text-sm">
+          <span className="font-medium text-gray-900">
+            {value === 'percentage' 
+              ? `${row.discountValue}%` 
+              : formatCurrency(row.discountValue)
+            }
+          </span>
+          <div className="text-xs text-gray-500 capitalize">{value}</div>
+        </div>
+      )
+    },
+    {
+      key: 'usageLimit',
+      label: 'Usage',
+      sortable: true,
+      render: (value, row) => (
+        <div className="text-sm">
+          <span className="font-medium text-gray-900">
+            {row.usedCount || 0} / {value || '∞'}
+          </span>
+          <div className="text-xs text-gray-500">
+            {value ? `${Math.round(((row.usedCount || 0) / value) * 100)}% used` : 'Unlimited'}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'validFrom',
+      label: 'Valid Period',
+      sortable: true,
+      render: (value, row) => (
+        <div className="text-sm">
+          <div className="text-gray-900">{formatDate(value, 'short')}</div>
+          <div className="text-xs text-gray-500">to {formatDate(row.validUntil, 'short')}</div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (_value, row) => getCouponStatusBadge(row)
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setViewingCoupon(row._id)
+            }}
+            className="p-1 hover:bg-gray-100 rounded text-gray-600"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditingCoupon(row._id)
+              setShowForm(true)
+            }}
+            className="p-1 hover:bg-blue-100 rounded text-blue-600"
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDelete(row._id)
+            }}
+            className="p-1 hover:bg-red-100 rounded text-red-600"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ]
+
+  const coupons = couponsData?.items || []
+
+  const filteredAndSortedCoupons = useMemo(() => {
+    let filtered = coupons.filter(coupon => {
+      const matchesSearch = 
+        coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (coupon.description && coupon.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      
+      const matchesStatus = statusFilter === 'all' || getCouponStatus(coupon) === statusFilter
+      
+      return matchesSearch && matchesStatus
+    })
+
+    // Sort coupons
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortConfig.field) {
+        case 'code':
+          aValue = a.code.toLowerCase()
+          bValue = b.code.toLowerCase()
+          break
+        case 'discountType':
+          aValue = a.discountType
+          bValue = b.discountType
+          break
+        case 'usageLimit':
+          aValue = a.usageLimit || 0
+          bValue = b.usageLimit || 0
+          break
+        case 'validFrom':
+          aValue = new Date(a.validFrom)
+          bValue = new Date(b.validFrom)
+          break
+        default:
+          return 0
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return filtered
+  }, [coupons, searchTerm, statusFilter, sortConfig])
+
+  const getCouponStatus = (coupon: any) => {
+    const now = new Date()
+    const validFrom = new Date(coupon.validFrom)
+    const validUntil = new Date(coupon.validUntil)
+    
+    if (!coupon.isActive) return 'inactive'
+    if (now < validFrom) return 'upcoming'
+    if (now > validUntil) return 'expired'
+    if (coupon.usedCount >= coupon.usageLimit) return 'limit-reached'
+    return 'active'
+  }
+
+  const getCouponStatusBadge = (coupon: any) => {
+    const status = getCouponStatus(coupon)
+    return <StatusBadge status={status} />
+  }
+
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }))
+  }
+
+  const handleFilterChange = (key: string, value: any) => {
+    if (key === 'search') {
+      setSearchTerm(value)
+    } else if (key === 'status') {
+      setStatusFilter(value)
+    }
+  }
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setStatusFilter('all')
+  }
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this coupon?')) {
@@ -54,28 +277,31 @@ const CouponManagement: React.FC = () => {
     showSuccess('Coupon code copied to clipboard!')
   }
 
-  const getStatusBadge = (coupon: any) => {
-    const now = new Date()
-    const validFrom = new Date(coupon.validFrom)
-    const validUntil = new Date(coupon.validUntil)
-    
-    if (!coupon.isActive) {
-      return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Inactive</span>
-    }
-    
-    if (now < validFrom) {
-      return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Upcoming</span>
-    }
-    
-    if (now > validUntil) {
-      return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Expired</span>
-    }
-    
-    if (coupon.usedCount >= coupon.usageLimit) {
-      return <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">Limit Reached</span>
-    }
-    
-    return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
+  const handleFormSubmit = async (_data: any) => {
+    // Handle form submission logic here
+    setShowForm(false)
+    setEditingCoupon(null)
+  }
+
+  // Export coupons to Excel
+  const exportCouponsToExcel = () => {
+    const exportColumns = [
+      { key: 'code', label: 'Coupon Code' },
+      { key: 'description', label: 'Description' },
+      { key: 'discountType', label: 'Discount Type' },
+      { key: 'discountValue', label: 'Discount Value' },
+      { key: 'usageLimit', label: 'Usage Limit' },
+      { key: 'usedCount', label: 'Used Count' },
+      { key: 'validFrom', label: 'Valid From', formatter: formatters.date },
+      { key: 'validUntil', label: 'Valid Until', formatter: formatters.date },
+      { key: 'isActive', label: 'Is Active', formatter: formatters.boolean },
+      { key: 'createdAt', label: 'Created At', formatter: formatters.datetime }
+    ]
+
+    exportToExcel(filteredAndSortedCoupons, exportColumns, {
+      filename: 'coupons',
+      includeTimestamp: true
+    })
   }
 
   if (isLoading || statsLoading) {
@@ -101,269 +327,120 @@ const CouponManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Coupon Management</h1>
-          <p className="text-gray-600">Create and manage discount coupons</p>
+          <p className="text-gray-600">Manage discount coupons and promotional codes</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Create Coupon
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={exportCouponsToExcel}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Export Excel
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Coupon
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Coupons</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.stats.totalCoupons || 0}</p>
-            </div>
-            <Tag className="w-8 h-8 text-blue-600" />
-          </div>
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <StatCard
+            title="Total Coupons"
+            value={stats.totalCoupons}
+            icon={Tag}
+            color="blue"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Active Coupons"
+            value={stats.activeCoupons}
+            icon={TrendingUp}
+            color="green"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Total Usage"
+            value={stats.totalUsage}
+            icon={Users}
+            color="purple"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="This Month"
+            value={stats.newCouponsThisMonth}
+            icon={Calendar}
+            color="orange"
+            loading={statsLoading}
+          />
         </div>
+      )}
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Coupons</p>
-              <p className="text-2xl font-bold text-green-600">{stats?.stats.activeCoupons || 0}</p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Expired Coupons</p>
-              <p className="text-2xl font-bold text-red-600">{stats?.stats.expiredCoupons || 0}</p>
-            </div>
-            <Calendar className="w-8 h-8 text-red-600" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Usage</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {stats?.topUsedCoupons.reduce((sum, coupon) => sum + coupon.usedCount, 0) || 0}
-              </p>
-            </div>
-            <Users className="w-8 h-8 text-purple-600" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search coupons by code, name, or description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      {/* Filters */}
+      <AdvancedFilters
+        filters={filterConfig}
+        values={{
+          search: searchTerm,
+          status: statusFilter
+        }}
+        onChange={handleFilterChange}
+        onClear={clearFilters}
+        searchPlaceholder="Search coupons by code or description..."
+      />
 
       {/* Coupons Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Coupon Code
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Discount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usage
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Valid Until
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {couponsData?.coupons.map((coupon) => (
-                <tr key={coupon._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-medium text-gray-900">
-                        {coupon.code}
-                      </span>
-                      <button
-                        onClick={() => copyToClipboard(coupon.code)}
-                        className="text-gray-400 hover:text-gray-600"
-                        title="Copy code"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{coupon.name}</div>
-                      <div className="text-sm text-gray-500">{coupon.description}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
-                      {coupon.maximumDiscount && coupon.discountType === 'percentage' && (
-                        <div className="text-xs text-gray-500">Max: ₹{coupon.maximumDiscount}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {coupon.usedCount} / {coupon.usageLimit}
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${(coupon.usedCount / coupon.usageLimit) * 100}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(coupon)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(coupon.validUntil).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setViewingCoupon(coupon._id)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="View details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setEditingCoupon(coupon._id)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(coupon._id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                        disabled={coupon.usedCount > 0}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <DataTable
+        data={filteredAndSortedCoupons}
+        columns={columns}
+        loading={isLoading}
+        error={(error as unknown as Error)?.message}
+        sortConfig={sortConfig}
+        onSort={handleSort}
+        emptyMessage="No coupons found"
+      />
 
-        {/* Pagination */}
-        {couponsData?.pagination && couponsData.pagination.pages > 1 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === couponsData.pagination.pages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing{' '}
-                  <span className="font-medium">{(currentPage - 1) * couponsData.pagination.limit + 1}</span>
-                  {' '}to{' '}
-                  <span className="font-medium">
-                    {Math.min(currentPage * couponsData.pagination.limit, couponsData.pagination.total)}
-                  </span>
-                  {' '}of{' '}
-                  <span className="font-medium">{couponsData.pagination.total}</span>
-                  {' '}results
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  {Array.from({ length: couponsData.pagination.pages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        page === currentPage
-                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Modals */}
-      {(showForm || editingCoupon) && (
+      {/* Coupon Form Modal */}
+      <FormModal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false)
+          setEditingCoupon(null)
+        }}
+        onSubmit={handleFormSubmit}
+        title={editingCoupon ? 'Edit Coupon' : 'Add New Coupon'}
+        isLoading={false}
+      >
         <CouponForm
+          editingCouponId={editingCoupon}
           onClose={() => {
             setShowForm(false)
             setEditingCoupon(null)
           }}
-          editingCouponId={editingCoupon}
         />
-      )}
+      </FormModal>
 
+      {/* Coupon Details Modal */}
       {viewingCoupon && (
         <CouponDetails
           couponId={viewingCoupon}
@@ -374,4 +451,4 @@ const CouponManagement: React.FC = () => {
   )
 }
 
-export default CouponManagement 
+export default CouponManagement

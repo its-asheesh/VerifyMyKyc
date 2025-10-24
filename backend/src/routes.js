@@ -25,7 +25,6 @@ const ccrv_routes_1 = __importDefault(require("./modules/ccrv/ccrv.routes"));
 const subscriber_routes_1 = __importDefault(require("./modules/subscriber/subscriber.routes"));
 const blog_router_1 = __importDefault(require("./modules/blog/blog.router"));
 const epfo_router_1 = __importDefault(require("./modules/epfo/epfo.router"));
-const seo_router_1 = __importDefault(require("./routes/seo"));
 const callback_handler_1 = __importDefault(require("./common/middleware/callback-handler"));
 const router = (0, express_1.Router)();
 // Callback handler route
@@ -55,6 +54,4 @@ router.use('/coupons', coupon_router_1.default);
 router.use('/blog', blog_router_1.default);
 // Subscriber routes
 router.use('/subscribers', subscriber_routes_1.default);
-// SEO routes
-router.use('/', seo_router_1.default);
 exports.default = router;

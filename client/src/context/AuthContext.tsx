@@ -4,6 +4,7 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { getTokenCookie, getUserCookie, setTokenCookie, setUserCookie, removeTokenCookie, removeUserCookie, areCookiesSupported } from "../utils/cookieUtils";
 
 export interface User {
   _id: string;
@@ -42,11 +43,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    // Try to get token from cookies first, then localStorage
+    let storedToken = null;
+    let storedUser = null;
+
+    if (areCookiesSupported()) {
+      storedToken = getTokenCookie();
+      storedUser = getUserCookie();
+    }
+
+    // Fallback to localStorage if no cookie data
+    if (!storedToken) {
+      storedToken = localStorage.getItem("token") || sessionStorage.getItem("token");
+    }
+    if (!storedUser) {
+      const userData = localStorage.getItem("user") || sessionStorage.getItem("user");
+      if (userData) {
+        try {
+          storedUser = JSON.parse(userData);
+        } catch {
+          storedUser = null;
+        }
+      }
+    }
+
     if (storedToken && storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        setUser(storedUser);
         setToken(storedToken);
       } catch {
         logout();
@@ -76,11 +99,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
+      
+      // Also store in cookies for better persistence
+      if (areCookiesSupported()) {
+        setTokenCookie(data.data.token, true);
+        setUserCookie(userData, true);
+      }
     } else {
       sessionStorage.setItem("token", data.data.token);
       sessionStorage.setItem("user", JSON.stringify(userData));
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      
+      // Store in cookies for session persistence
+      if (areCookiesSupported()) {
+        setTokenCookie(data.data.token, false);
+        setUserCookie(userData, false);
+      }
     }
   };
 
@@ -141,6 +176,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("user");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
+    
+    // Also clean cookies
+    if (areCookiesSupported()) {
+      removeTokenCookie();
+      removeUserCookie();
+    }
   };
 
   const applyAuth = ({ user, token }: { user: User; token: string }) => {

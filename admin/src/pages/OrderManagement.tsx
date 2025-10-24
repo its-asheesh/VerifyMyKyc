@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useMemo } from 'react'
 import { 
-  Package, Search, 
-  CheckCircle, Clock, AlertCircle, X,
+  Package, 
+  CheckCircle, Clock, AlertCircle,
   IndianRupee,  Loader2, BarChart
 } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
@@ -11,13 +10,23 @@ import { useAnalyticsOverview } from '../hooks/useAnalytics'
 import OrderAnalyticsChart from '../components/dashboard/OrderAnalyticsChart'
 import { useQueryClient } from '@tanstack/react-query'
 
+// Import reusable components
+import StatCard from '../components/common/StatCard'
+import DataTable from '../components/common/DataTable'
+import StatusBadge from '../components/common/StatusBadge'
+import AdvancedFilters from '../components/common/AdvancedFilters'
+import { exportToExcel, formatters } from '../utils/exportUtils'
+import { formatDate, formatCurrency } from '../utils/dateUtils'
+import type { Column } from '../components/common/DataTable'
+
 const OrderManagement: React.FC = () => {
   const [filters, setFilters] = useState({
     status: '',
     orderType: '',
-    paymentStatus: ''
+    paymentStatus: '',
+    search: ''
   })
-  const [searchTerm, setSearchTerm] = useState('')
+  const [sortConfig, setSortConfig] = useState<{ field: string; direction: 'asc' | 'desc' }>({ field: 'createdAt', direction: 'desc' })
   const [isOrderChartOpen, setIsOrderChartOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -41,168 +50,211 @@ const OrderManagement: React.FC = () => {
     }
   }, [isOrderChartOpen, refetchStats, queryClient])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800'
-      case 'expired':
-        return 'bg-red-100 text-red-800'
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
-      case 'expired':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
-      case 'cancelled':
-        return <X className="w-4 h-4 text-gray-500" />
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />
-    }
-  }
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'failed':
-        return 'bg-red-100 text-red-800'
-      case 'refunded':
-        return 'bg-blue-100 text-blue-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const formatCurrency = (amount: number | undefined | null) => {
-    if (amount === undefined || amount === null || isNaN(amount)) {
-      return '₹0.00'
-    }
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(amount)
-  }
-
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.userId?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.userId?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = !filters.status || order.status === filters.status
-    const matchesOrderType = !filters.orderType || order.orderType === filters.orderType
-    const matchesPaymentStatus = !filters.paymentStatus || order.paymentStatus === filters.paymentStatus
-    
-    return matchesSearch && matchesStatus && matchesOrderType && matchesPaymentStatus
-  })
-
-  // Export filtered orders to Excel (.xls via HTML table) without extra deps
-  const exportOrdersToExcel = () => {
-    try {
-      const headers = [
-        'Order ID',
-        'Service',
-        'Order Type',
-        'Customer Name',
-        'Customer Email',
-        'Amount (INR)',
-        'Billing Period',
-        'Status',
-        'Payment Status',
-        'Payment Method',
-        'Created At',
+  // Filter configuration
+  const filterConfig = [
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select' as const,
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'expired', label: 'Expired' },
+        { value: 'cancelled', label: 'Cancelled' }
       ]
-
-      const escapeHtml = (value: string) =>
-        value
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;')
-
-      const rowsHtml = filteredOrders
-        .map((o: any) => {
-          const cells = [
-            o.orderId,
-            o.serviceName,
-            o.orderType,
-            o.userId?.name,
-            o.userId?.email,
-            o.finalAmount ?? 0,
-            o.billingPeriod,
-            o.status,
-            o.paymentStatus,
-            o.paymentMethod,
-            formatDate(o.createdAt),
-          ]
-            .map((cell) => `<td>${escapeHtml(String(cell ?? ''))}</td>`) 
-            .join('')
-          return `<tr>${cells}</tr>`
-        })
-        .join('')
-
-      const headerHtml = `<tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr>`
-      const tableHtml = `
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-          </head>
-          <body>
-            <table>
-              <thead>${headerHtml}</thead>
-              <tbody>${rowsHtml}</tbody>
-            </table>
-          </body>
-        </html>`
-
-      const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-
-      const pad = (n: number) => n.toString().padStart(2, '0')
-      const now = new Date()
-      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`
-      link.href = url
-      link.download = `orders_${timestamp}.xls`
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error('Failed to export orders:', err)
-      // Optional: show toast if available
+    },
+    {
+      key: 'orderType',
+      label: 'Order Type',
+      type: 'select' as const,
+      options: [
+        { value: 'subscription', label: 'Subscription' },
+        { value: 'one-time', label: 'One-time' }
+      ]
+    },
+    {
+      key: 'paymentStatus',
+      label: 'Payment Status',
+      type: 'select' as const,
+      options: [
+        { value: 'completed', label: 'Completed' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'failed', label: 'Failed' },
+        { value: 'refunded', label: 'Refunded' }
+      ]
     }
+  ]
+
+  // Table columns configuration
+  const columns: Column[] = [
+    {
+      key: 'serviceName',
+      label: 'Service',
+      sortable: true,
+      render: (value, row) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{value}</div>
+          <div className="text-sm text-gray-500">ID: {row.orderId}</div>
+          <div className="text-xs text-gray-400 capitalize">{row.orderType}</div>
+        </div>
+      )
+    },
+    {
+      key: 'userId',
+      label: 'Customer',
+      render: (value) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">
+            {value?.name || 'Unknown User'}
+          </div>
+          <div className="text-sm text-gray-500">
+            {value?.email || 'No email'}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'finalAmount',
+      label: 'Amount',
+      sortable: true,
+      render: (value, row) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{formatCurrency(value)}</div>
+          <div className="text-xs text-gray-500 capitalize">{row.billingPeriod}</div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (value) => <StatusBadge status={value} />
+    },
+    {
+      key: 'paymentStatus',
+      label: 'Payment',
+      sortable: true,
+      render: (value) => <StatusBadge status={value} />
+    },
+    {
+      key: 'createdAt',
+      label: 'Created',
+      sortable: true,
+      render: (value) => formatDate(value, 'datetime')
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="flex items-center justify-end space-x-2">
+          <select
+            value={row.status}
+            onChange={(e) => handleStatusUpdate(row._id, e.target.value)}
+            className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      )
+    }
+  ]
+
+  // Filtered and sorted orders
+  const filteredAndSortedOrders = useMemo(() => {
+    let filtered = orders.filter(order => {
+      const matchesSearch = 
+        order.orderId.toLowerCase().includes(filters.search.toLowerCase()) ||
+        order.serviceName.toLowerCase().includes(filters.search.toLowerCase()) ||
+        (order.userId?.name || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+        (order.userId?.email || '').toLowerCase().includes(filters.search.toLowerCase())
+      
+      const matchesStatus = !filters.status || order.status === filters.status
+      const matchesOrderType = !filters.orderType || order.orderType === filters.orderType
+      const matchesPaymentStatus = !filters.paymentStatus || order.paymentStatus === filters.paymentStatus
+      
+      return matchesSearch && matchesStatus && matchesOrderType && matchesPaymentStatus
+    })
+
+    // Sort orders
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortConfig.field) {
+        case 'serviceName':
+          aValue = a.serviceName.toLowerCase()
+          bValue = b.serviceName.toLowerCase()
+          break
+        case 'finalAmount':
+          aValue = a.finalAmount ?? 0
+          bValue = b.finalAmount ?? 0
+          break
+        case 'createdAt':
+          aValue = new Date(a.createdAt)
+          bValue = new Date(b.createdAt)
+          break
+        case 'status':
+        case 'paymentStatus':
+          aValue = a[sortConfig.field]
+          bValue = b[sortConfig.field]
+          break
+        default:
+          return 0
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return filtered
+  }, [orders, filters, sortConfig])
+
+  const handleSort = (field: string) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }))
   }
 
-  const handleStatusUpdate = async (orderId: string, newStatus: 'active' | 'expired' | 'cancelled') => {
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+  const clearFilters = () => {
+    setFilters({ status: '', orderType: '', paymentStatus: '', search: '' })
+  }
+
+  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      await updateOrderStatus.mutateAsync({ orderId, data: { status: newStatus } })
-      showSuccess(`Order status updated to ${newStatus} successfully!`)
+      await updateOrderStatus.mutateAsync({ orderId, data: { status: newStatus as 'active' | 'expired' | 'cancelled' } })
+      showSuccess('Order status updated successfully!')
     } catch (error) {
       console.error('Failed to update order status:', error)
       showError('Failed to update order status. Please try again.')
     }
+  }
+
+  // Export orders to Excel
+  const exportOrdersToExcel = () => {
+    const exportColumns = [
+      { key: 'orderId', label: 'Order ID' },
+      { key: 'serviceName', label: 'Service' },
+      { key: 'orderType', label: 'Order Type' },
+      { key: 'userId.name', label: 'Customer Name' },
+      { key: 'userId.email', label: 'Customer Email' },
+      { key: 'finalAmount', label: 'Amount (INR)', formatter: formatters.currency },
+      { key: 'billingPeriod', label: 'Billing Period' },
+      { key: 'status', label: 'Status', formatter: formatters.status },
+      { key: 'paymentStatus', label: 'Payment Status', formatter: formatters.status },
+      { key: 'paymentMethod', label: 'Payment Method' },
+      { key: 'createdAt', label: 'Created At', formatter: formatters.datetime }
+    ]
+
+    exportToExcel(filteredAndSortedOrders, exportColumns, {
+      filename: 'orders',
+      includeTimestamp: true
+    })
   }
 
   if (ordersLoading || statsLoading) {
@@ -219,8 +271,12 @@ const OrderManagement: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Orders</h3>
-          <p className="text-gray-600">Failed to load order data. Please try again.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Error Loading Orders
+          </h3>
+          <p className="text-gray-600">
+            Failed to load order data. Please try again.
+          </p>
         </div>
       </div>
     )
@@ -234,259 +290,90 @@ const OrderManagement: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
           <p className="text-gray-600">Manage all user orders and payments</p>
         </div>
-        <button
-          onClick={() => setIsOrderChartOpen(true)}
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <BarChart className="w-4 h-4 mr-2" />
-          View Analytics
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={exportOrdersToExcel}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Export Excel
+          </button>
+          <button
+            onClick={() => setIsOrderChartOpen(true)}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <BarChart className="w-4 h-4 mr-2" />
+            View Analytics
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completedOrders}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <IndianRupee className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
-              </div>
-            </div>
-          </motion.div>
+          <StatCard
+            title="Total Orders"
+            value={stats.totalOrders}
+            icon={Package}
+            color="blue"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Active Orders"
+            value={stats.activeOrders}
+            icon={CheckCircle}
+            color="green"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Total Revenue"
+            value={formatCurrency(stats.totalRevenue)}
+            icon={IndianRupee}
+            color="purple"
+            loading={statsLoading}
+          />
+          <StatCard
+            title="Pending Orders"
+            value={stats.pendingOrders}
+            icon={Clock}
+            color="orange"
+            loading={statsLoading}
+          />
         </div>
       )}
 
-      {/* Filters and Search */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search orders, users, or services..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            
-            <select
-              value={filters.orderType}
-              onChange={(e) => setFilters({ ...filters, orderType: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Types</option>
-              <option value="verification">Verification</option>
-              <option value="plan">Plan</option>
-            </select>
-            
-            <select
-              value={filters.paymentStatus}
-              onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Payments</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-            </select>
-
-            <button
-              onClick={exportOrdersToExcel}
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Export Excel
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Filters */}
+      <AdvancedFilters
+        filters={filterConfig}
+        values={filters}
+        onChange={handleFilterChange}
+        onClear={clearFilters}
+        searchPlaceholder="Search orders by ID, service, customer name or email..."
+      />
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order Details
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
-                <tr key={order._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{order.serviceName}</div>
-                      <div className="text-sm text-gray-500">ID: {order.orderId}</div>
-                      <div className="text-xs text-gray-400 capitalize">{order.orderType}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.userId?.name || 'Unknown User'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {order.userId?.email || 'No email'}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{formatCurrency(order.finalAmount)}</div>
-                    <div className="text-xs text-gray-500 capitalize">{order.billingPeriod}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                      {getStatusIcon(order.status)}
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
-                        {order.paymentStatus}
-                      </span>
-                      <div className="text-xs text-gray-500 capitalize">{order.paymentMethod}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(order.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleStatusUpdate(order.orderId, 'active')}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Activate
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(order.orderId, 'cancelled')}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-12">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-            <p className="text-gray-600">Try adjusting your search or filters</p>
-          </div>
-        )}
-      </div>
-
-      {/* Error Message */}
-      {ordersError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex">
-            <AlertCircle className="w-5 h-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <div className="mt-2 text-sm text-red-700">Failed to load orders</div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DataTable
+        data={filteredAndSortedOrders}
+        columns={columns}
+        loading={ordersLoading}
+        error={(ordersError as unknown as Error)?.message}
+        sortConfig={sortConfig}
+        onSort={handleSort}
+        emptyMessage="No orders found"
+      />
 
       {/* Order Analytics Chart Modal */}
       <OrderAnalyticsChart 
@@ -499,4 +386,4 @@ const OrderManagement: React.FC = () => {
   )
 }
 
-export default OrderManagement 
+export default OrderManagement

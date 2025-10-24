@@ -519,8 +519,62 @@ ${filteredLines.join("\n")}`;
       }
     }
 
+    // Legal Disclaimer Section
+    y += 15; // Add space before disclaimer
+    
+    // Check if we need a new page for disclaimer
+    if (y > pageHeight - 80) {
+      pdf.addPage();
+      y = 20;
+    }
+    
+    // Disclaimer header
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(31, 41, 55);
+    pdf.text("Legal Disclaimer", marginX, y);
+    y += 8;
+    
+    // Disclaimer divider line
+    pdf.setDrawColor(226, 232, 240);
+    pdf.setLineWidth(0.5);
+    pdf.line(marginX, y - 2, pageWidth - marginX, y - 2);
+    y += 6;
+    
+    // Disclaimer content
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(75, 85, 99);
+    
+    const disclaimerText = `All rights reserved. 
+The report and its contents are the property of VerifyMyKyc (operated by Navigant Digital Pvt. Ltd.) and may not be reproduced in any manner without the express written permission of VerifyMyKyc.
+The reports and information contained herein are confidential and are meant only for the internal use of the VerifyMyKyc client for assessing the background of their applicant. The information and report are subject to change based on changes in factual information.
+
+Information and reports, including text, graphics, links, or other items, are provided on an "as is," "as available" basis. VerifyMyKyc expressly disclaims liability for errors or omissions in the report, information, and materials, as the information is obtained from various sources as per industry practice. No warranty of any kind implied, express, or statutory including but not limited to the warranties of non-infringement of third party rights, title, merchantability, fitness for a particular purpose or freedom from computer virus, is given with respect to the contents of this report.
+
+Our findings are based on the information available to us and industry practice; therefore, we cannot guarantee the accuracy of the information collected. Should additional information or documentation become available that impacts conclusions, we reserve the right to amend our findings accordingly.
+
+These reports are not intended for publication or circulation. They should not be shared with any person, entity, association, corporation, or any other purposes, in whole or in part, without prior written consent from VerifyMyKyc in each specific instance. Our reports cannot be used by clients to claim all responsibility or liability that may arise due omissions, additions, correction, and accuracy. All the information has been obtained from various sources as per industry practice to make an informed decision, and we hereby disclaim all responsibility or liability that may arise due to errors in the report.
+
+Due to the limitations mentioned above, the result of our work with respect to background checks should be considered only as a guideline. Our reports and comments should not be considered a definitive pronouncement on the individual.
+
+Verify My Kyc - Confidential`;
+
+    // Split disclaimer into lines and add to PDF
+    const disclaimerLines = pdf.splitTextToSize(disclaimerText, pageWidth - marginX * 2);
+    
+    for (const line of disclaimerLines) {
+      if (y > pageHeight - 20) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.text(line, marginX, y);
+      y += 4; // Smaller line spacing for disclaimer
+    }
+
     // Enhanced footer with better styling
-    y = pageHeight - 20;
+    y += 10; // Add space before footer
+    y = Math.min(y, pageHeight - 20); // Ensure footer doesn't go off page
     
     // Footer divider line
     pdf.setDrawColor(226, 232, 240);
