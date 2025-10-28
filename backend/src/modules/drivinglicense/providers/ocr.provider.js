@@ -15,10 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.drivingLicenseOcrProvider = drivingLicenseOcrProvider;
 const apiClient_1 = __importDefault(require("../../../common/http/apiClient"));
 const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 const form_data_1 = __importDefault(require("form-data"));
 function drivingLicenseOcrProvider(file_front, file_front_name, consent, file_back, file_back_name) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         try {
             const form = new form_data_1.default();
             form.append('file_front', file_front, file_front_name);
@@ -33,7 +34,18 @@ function drivingLicenseOcrProvider(file_front, file_front_name, consent, file_ba
             return response.data;
         }
         catch (error) {
-            throw new error_1.HTTPError(((_b = (_a = error.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || 'Driving License OCR failed', ((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) || 500, (_d = error.response) === null || _d === void 0 ? void 0 : _d.data);
+            console.error('Driving License OCR Error:', {
+                message: error.message,
+                status: (_a = error.response) === null || _a === void 0 ? void 0 : _a.status,
+                data: (_b = error.response) === null || _b === void 0 ? void 0 : _b.data,
+                config: {
+                    url: (_c = error.config) === null || _c === void 0 ? void 0 : _c.url,
+                    method: (_d = error.config) === null || _d === void 0 ? void 0 : _d.method,
+                    baseURL: (_e = error.config) === null || _e === void 0 ? void 0 : _e.baseURL
+                }
+            });
+            const { message, statusCode } = (0, BaseProvider_1.createStandardErrorMapper)('Driving License OCR failed')(error);
+            throw new error_1.HTTPError(message, statusCode, (_f = error.response) === null || _f === void 0 ? void 0 : _f.data);
         }
     });
 }

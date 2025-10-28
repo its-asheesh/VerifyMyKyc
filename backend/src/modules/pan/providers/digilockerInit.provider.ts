@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import { DigilockerInitRequest, DigilockerInitResponse } from '../../../common/types/pan';
 
 // Custom API client for Digilocker endpoints
@@ -43,10 +44,7 @@ export async function digilockerInitProvider(payload: DigilockerInitRequest): Pr
       }
     });
     
-    throw new HTTPError(
-      error.response?.data?.message || 'Digilocker Init failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
+    const { message, statusCode } = createStandardErrorMapper('Digilocker Init failed')(error);
+    throw new HTTPError(message, statusCode, error.response?.data);
   }
 } 

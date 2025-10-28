@@ -6,6 +6,7 @@ const service = new BankAccountService();
 
 // POST /api/bankaccount/verify
 // Body: { account_number: string, ifsc: string, consent: 'Y' | 'N' }
+// Note: This endpoint does not require authentication (public API)
 export const verifyBankAccountHandler = asyncHandler(async (req: Request, res: Response) => {
   const { account_number, ifsc, consent } = (req.body || {}) as {
     account_number?: string

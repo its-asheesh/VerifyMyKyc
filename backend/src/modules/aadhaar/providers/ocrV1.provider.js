@@ -8,25 +8,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.aadhaarOcrV1Provider = aadhaarOcrV1Provider;
-const apiClient_1 = __importDefault(require("../../../common/http/apiClient"));
-const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 function aadhaarOcrV1Provider(base64_data, consent) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
-        try {
-            const response = yield apiClient_1.default.post('/aadhaar-api/ocr', {
+        return (0, BaseProvider_1.makeProviderApiCall)({
+            endpoint: '/aadhaar-api/ocr',
+            payload: {
                 base64_data,
                 consent,
-            });
-            return response.data;
-        }
-        catch (error) {
-            throw new error_1.HTTPError(((_b = (_a = error.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || 'Aadhaar OCR V1 failed', ((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) || 500, (_d = error.response) === null || _d === void 0 ? void 0 : _d.data);
-        }
+            },
+            operationName: 'Aadhaar OCR V1',
+            customErrorMapper: (0, BaseProvider_1.createStandardErrorMapper)('Aadhaar OCR V1 failed')
+        });
     });
 }

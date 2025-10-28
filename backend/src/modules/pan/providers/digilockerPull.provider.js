@@ -15,9 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.digilockerPullPanProvider = digilockerPullPanProvider;
 const axios_1 = __importDefault(require("axios"));
 const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 function digilockerPullPanProvider(payload, transactionId) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         try {
             // Custom API client for Digilocker endpoints with transaction ID
             const digilockerApiClient = axios_1.default.create({
@@ -66,7 +67,9 @@ function digilockerPullPanProvider(payload, transactionId) {
                     }
                 });
             }
-            throw new error_1.HTTPError(((_o = (_m = error.response) === null || _m === void 0 ? void 0 : _m.data) === null || _o === void 0 ? void 0 : _o.message) || 'Digilocker Pull PAN failed', ((_p = error.response) === null || _p === void 0 ? void 0 : _p.status) || 500, (_q = error.response) === null || _q === void 0 ? void 0 : _q.data);
+            // Use standard error mapper if no special handling needed
+            const { message, statusCode } = (0, BaseProvider_1.createStandardErrorMapper)('Digilocker Pull PAN failed')(error);
+            throw new error_1.HTTPError(message, statusCode, (_m = error.response) === null || _m === void 0 ? void 0 : _m.data);
         }
     });
 }

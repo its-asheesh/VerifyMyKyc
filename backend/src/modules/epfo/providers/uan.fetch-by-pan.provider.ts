@@ -1,15 +1,11 @@
-import apiClient from '../../../common/http/apiClient';
-import { HTTPError } from '../../../common/http/error';
+import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 
 export async function uanByPanProvider(payload: { pan_number: string; consent: string }) {
-  try {
-    const response = await apiClient.post('/epfo-api/uan/fetch-by-pan', payload);
-    return response.data;
-  } catch (error: any) {
-    const message = error?.response?.data?.message || 'Fetch UAN by PAN failed';
-    const status = error?.response?.status || 500;
-    throw new HTTPError(message, status, error?.response?.data);
-  }
+  return makeProviderApiCall({
+    endpoint: '/epfo-api/uan/fetch-by-pan',
+    payload,
+    operationName: 'EPFO UAN by PAN',
+    customErrorMapper: createStandardErrorMapper('Fetch UAN by PAN failed')
+  });
 }
-
 

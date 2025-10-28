@@ -15,10 +15,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.aadhaarOcrV2Provider = aadhaarOcrV2Provider;
 const apiClient_1 = __importDefault(require("../../../common/http/apiClient"));
 const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 const form_data_1 = __importDefault(require("form-data"));
 function aadhaarOcrV2Provider(file_front, file_front_name, consent, file_back, file_back_name) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         try {
             const form = new form_data_1.default();
             form.append('file_front', file_front, file_front_name);
@@ -33,8 +34,18 @@ function aadhaarOcrV2Provider(file_front, file_front_name, consent, file_back, f
             return response.data;
         }
         catch (error) {
-            console.error('Aadhaar OCR V2 error details:', (_a = error.response) === null || _a === void 0 ? void 0 : _a.data);
-            throw new error_1.HTTPError(((_c = (_b = error.response) === null || _b === void 0 ? void 0 : _b.data) === null || _c === void 0 ? void 0 : _c.message) || 'Aadhaar OCR V2 failed', ((_d = error.response) === null || _d === void 0 ? void 0 : _d.status) || 500, (_e = error.response) === null || _e === void 0 ? void 0 : _e.data);
+            console.error('Aadhaar OCR V2 Error:', {
+                message: error.message,
+                status: (_a = error.response) === null || _a === void 0 ? void 0 : _a.status,
+                data: (_b = error.response) === null || _b === void 0 ? void 0 : _b.data,
+                config: {
+                    url: (_c = error.config) === null || _c === void 0 ? void 0 : _c.url,
+                    method: (_d = error.config) === null || _d === void 0 ? void 0 : _d.method,
+                    baseURL: (_e = error.config) === null || _e === void 0 ? void 0 : _e.baseURL
+                }
+            });
+            const { message, statusCode } = (0, BaseProvider_1.createStandardErrorMapper)('Aadhaar OCR V2 failed')(error);
+            throw new error_1.HTTPError(message, statusCode, (_f = error.response) === null || _f === void 0 ? void 0 : _f.data);
         }
     });
 }

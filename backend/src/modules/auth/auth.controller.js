@@ -17,7 +17,7 @@ const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const email_1 = require("../../common/services/email");
-const firebase_admin_1 = __importDefault(require("../../../firebase-admin"));
+const firebase_admin_1 = __importDefault(require("../../firebase-admin"));
 const ga4_1 = require("../../common/services/ga4");
 // Helper: notify admins about new user sign-ups
 function notifyAdminsOfNewUser(user_1, method_1) {

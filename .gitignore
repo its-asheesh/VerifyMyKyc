@@ -1,1 +1,4 @@
 client.zip
+
+# Firebase service account keys (security)
+*.firebase-adminsdk*.json

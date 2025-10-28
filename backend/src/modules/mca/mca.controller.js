@@ -15,47 +15,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchCompanyHandler = exports.fetchCinByPanHandler = exports.fetchDinByPanHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const mca_service_1 = require("./mca.service");
-const quota_service_1 = require("../orders/quota.service");
+const BaseController_1 = require("../../common/controllers/BaseController");
 const service = new mca_service_1.McaService();
-// POST /api/mca/fetch-din-by-pan
-exports.fetchDinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    // Prefer consuming from 'company' quota; fallback to 'pan' to support PAN flows using MCA lookups
-    let order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'company');
-    if (!order) {
-        order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
+class McaController extends BaseController_1.BaseController {
+    constructor() {
+        super(...arguments);
+        // POST /api/mca/fetch-din-by-pan
+        this.fetchDinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            // Prefer 'company' quota; fallback to 'pan'
+            yield this.handleVerificationWithFallback(req, res, 'company', ['pan'], () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchDinByPan(req.body);
+            }));
+        }));
+        // POST /api/mca/cin-by-pan
+        this.fetchCinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            // Prefer 'company' quota; fallback to 'pan'
+            yield this.handleVerificationWithFallback(req, res, 'company', ['pan'], () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchCinByPan(req.body);
+            }));
+        }));
+        // POST /api/mca/fetch-company
+        this.fetchCompanyHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            // Prefer 'company' quota; fallback to 'pan'
+            yield this.handleVerificationWithFallback(req, res, 'company', ['pan'], () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchCompany(req.body);
+            }));
+        }));
     }
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-    const result = yield service.fetchDinByPan(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/mca/cin-by-pan
-exports.fetchCinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    // Prefer 'company' quota; fallback to 'pan' for PAN product usage
-    let order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'company');
-    if (!order) {
-        order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    }
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-    const result = yield service.fetchCinByPan(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/mca/fetch-company
-exports.fetchCompanyHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    // Prefer 'company' quota; fallback to 'pan' if PAN plan includes company fetch usage
-    let order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'company');
-    if (!order) {
-        order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    }
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-    const result = yield service.fetchCompany(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
+}
+// Create controller instance and export handlers
+const controller = new McaController();
+exports.fetchDinByPanHandler = controller.fetchDinByPanHandler.bind(controller);
+exports.fetchCinByPanHandler = controller.fetchCinByPanHandler.bind(controller);
+exports.fetchCompanyHandler = controller.fetchCompanyHandler.bind(controller);

@@ -1,5 +1,6 @@
 import apiClient from '../../../common/http/apiClient';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import FormData from 'form-data';
 
 export async function voterOcrProvider(
@@ -23,10 +24,18 @@ export async function voterOcrProvider(
     });
     return response.data;
   } catch (error: any) {
-    throw new HTTPError(
-      error.response?.data?.message || 'Voter OCR failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
+    console.error('Voter OCR Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL
+      }
+    });
+
+    const { message, statusCode } = createStandardErrorMapper('Voter OCR failed')(error);
+    throw new HTTPError(message, statusCode, error.response?.data);
   }
 }

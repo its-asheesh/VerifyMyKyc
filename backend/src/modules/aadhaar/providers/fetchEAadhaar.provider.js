@@ -8,28 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchEAadhaarProvider = fetchEAadhaarProvider;
-const apiClient_1 = __importDefault(require("../../../common/http/apiClient"));
-const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 function fetchEAadhaarProvider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
-        try {
-            const params = payload.json !== undefined ? { json: payload.json } : {};
-            const response = yield apiClient_1.default.get('/digilocker/eaadhaar', {
-                headers: {
-                    'X-Transaction-ID': payload.transaction_id,
-                },
-                params,
-            });
-            return response.data;
-        }
-        catch (error) {
-            throw new error_1.HTTPError(((_b = (_a = error.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.message) || 'Fetch E-Aadhaar failed', ((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) || 500, (_d = error.response) === null || _d === void 0 ? void 0 : _d.data);
-        }
+        const params = payload.json !== undefined ? { json: payload.json } : {};
+        return (0, BaseProvider_1.makeProviderApiCall)({
+            endpoint: '/digilocker/eaadhaar',
+            payload: params,
+            operationName: 'Fetch E-Aadhaar',
+            method: 'GET',
+            headers: {
+                'X-Transaction-ID': payload.transaction_id,
+            },
+            customErrorMapper: (0, BaseProvider_1.createStandardErrorMapper)('Fetch E-Aadhaar failed')
+        });
     });
 }

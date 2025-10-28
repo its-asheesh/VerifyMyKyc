@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import { PanDigilockerPullRequest, PanDigilockerPullResponse } from '../../../common/types/pan';
 
 export async function digilockerPullPanProvider(
@@ -63,10 +64,8 @@ export async function digilockerPullPanProvider(
       );
     }
     
-    throw new HTTPError(
-      error.response?.data?.message || 'Digilocker Pull PAN failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
+    // Use standard error mapper if no special handling needed
+    const { message, statusCode } = createStandardErrorMapper('Digilocker Pull PAN failed')(error);
+    throw new HTTPError(message, statusCode, error.response?.data);
   }
 } 

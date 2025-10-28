@@ -15,9 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchGstinContactProvider = fetchGstinContactProvider;
 const apiClient_1 = __importDefault(require("../../../common/http/apiClient"));
 const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 function fetchGstinContactProvider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
         try {
             // Transform payload to match external API format
             const externalPayload = {
@@ -77,36 +78,30 @@ function fetchGstinContactProvider(payload) {
                         headers: (_h = error.config) === null || _h === void 0 ? void 0 : _h.headers
                     }
                 });
-                // Provide more specific error messages
+                // Use standard error mapper with slight customization for 400 errors
                 let errorMessage = 'Fetch GSTIN Contact Details failed';
                 let statusCode = 500;
                 if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
                     errorMessage = 'Request to Gridlines API timed out. Please try again.';
                     statusCode = 408;
                 }
-                else if (((_j = error.response) === null || _j === void 0 ? void 0 : _j.status) === 401) {
-                    errorMessage = 'Invalid API key or authentication failed';
-                    statusCode = 401;
-                }
-                else if (((_k = error.response) === null || _k === void 0 ? void 0 : _k.status) === 404) {
-                    errorMessage = 'GSTIN contact details not found';
-                    statusCode = 404;
-                }
-                else if (((_l = error.response) === null || _l === void 0 ? void 0 : _l.status) === 400) {
-                    errorMessage = ((_m = error.response.data) === null || _m === void 0 ? void 0 : _m.message) || 'Invalid request parameters';
+                else if (((_j = error.response) === null || _j === void 0 ? void 0 : _j.status) === 400) {
+                    errorMessage = ((_k = error.response.data) === null || _k === void 0 ? void 0 : _k.message) || 'Invalid request parameters';
                     statusCode = 400;
                 }
-                else if ((_o = error.response) === null || _o === void 0 ? void 0 : _o.data) {
-                    errorMessage = error.response.data.message || errorMessage;
-                    statusCode = error.response.status || statusCode;
+                else {
+                    // Use standard error mapper for other cases
+                    const mapperResult = (0, BaseProvider_1.createStandardErrorMapper)(errorMessage)(error);
+                    errorMessage = mapperResult.message;
+                    statusCode = mapperResult.statusCode;
                 }
                 throw new error_1.HTTPError(errorMessage, statusCode, {
                     code: error.code,
-                    response: (_p = error.response) === null || _p === void 0 ? void 0 : _p.data,
+                    response: (_l = error.response) === null || _l === void 0 ? void 0 : _l.data,
                     request: {
-                        method: (_q = error.config) === null || _q === void 0 ? void 0 : _q.method,
-                        url: (_r = error.config) === null || _r === void 0 ? void 0 : _r.url,
-                        data: (_s = error.config) === null || _s === void 0 ? void 0 : _s.data
+                        method: (_m = error.config) === null || _m === void 0 ? void 0 : _m.method,
+                        url: (_o = error.config) === null || _o === void 0 ? void 0 : _o.url,
+                        data: (_p = error.config) === null || _p === void 0 ? void 0 : _p.data
                     }
                 });
             }

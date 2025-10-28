@@ -1,153 +1,137 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import asyncHandler from '../../common/middleware/asyncHandler';
 import { PanService } from './pan.service';
 import { DigilockerFetchDocumentRequest } from './providers/digilockerFetchDocument.provider';
 import { AuthenticatedRequest } from '../../common/middleware/auth';
-import { ensureVerificationQuota, consumeVerificationQuota } from '../orders/quota.service';
+import { BaseController } from '../../common/controllers/BaseController';
 
 const service = new PanService();
 
-// POST /api/pan/father-name
-// Expects body: { pan_number: string, consent: string }
-export const fetchFatherNameHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const { pan_number, consent } = req.body || {};
+class PanController extends BaseController {
+  // POST /api/pan/father-name
+  fetchFatherNameHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { pan_number, consent } = req.body || {};
 
-  // Basic payload validation to prevent avoidable 500s
-  if (!pan_number || !consent) {
-    return res.status(400).json({ message: 'pan_number and consent are required' });
-  }
+    this.logRequest('PAN Father-Name', req.user._id.toString(), { pan_number });
 
-  console.log('PAN Father-Name Controller: incoming request', {
-    userId,
-    pan_number,
-    hasConsent: Boolean(consent)
-  });
-  const order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-  console.log('PAN Father-Name Controller: using order for quota', {
-    orderId: order.orderId,
-    remaining: order?.verificationQuota?.remaining,
-    expiresAt: order?.verificationQuota?.expiresAt,
+    await this.handleVerificationRequest(req, res, {
+      verificationType: 'pan',
+      requireConsent: true,
+      requiredFields: ['pan_number']
+    }, async () => {
+      return service.fetchFatherName({ pan_number, consent });
+    });
   });
 
-  const result = await service.fetchFatherName({ pan_number, consent });
-  await consumeVerificationQuota(order);
-  console.log('PAN Father-Name Controller: consumed 1 verification', {
-    orderId: order.orderId,
-    newRemaining: order?.verificationQuota?.remaining,
+  // POST /api/pan/gstin-by-pan
+  fetchGstinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { pan_number, consent } = req.body || {};
+
+    this.logRequest('PAN GSTIN-by-PAN', req.user._id.toString(), { pan_number });
+
+    await this.handleVerificationRequest(req, res, {
+      verificationType: 'pan',
+      requireConsent: true,
+      requiredFields: ['pan_number']
+    }, async () => {
+      return service.fetchGstinByPan({ pan_number, consent });
+    });
   });
-  res.json(result);
-});
 
-// POST /api/pan/gstin-by-pan
-// Expects body: { pan_number: string, consent: string }
-export const fetchGstinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const { pan_number, consent } = req.body || {};
-  if (!pan_number || !consent) {
-    return res.status(400).json({ message: 'pan_number and consent are required' });
-  }
-  console.log('PAN GSTIN-by-PAN Controller: incoming request', { userId, pan_number });
-  const order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-  const result = await service.fetchGstinByPan({ pan_number, consent });
-  await consumeVerificationQuota(order);
-  res.json(result);
-});
+  // POST /api/pan/din-by-pan
+  fetchDinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { pan_number, consent } = req.body || {};
 
-// POST /api/pan/din-by-pan
-// Expects body: { pan_number: string, consent: string }
-export const fetchDinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const { pan_number, consent } = req.body || {};
-  if (!pan_number || !consent) {
-    return res.status(400).json({ message: 'pan_number and consent are required' });
-  }
-  console.log('PAN DIN-by-PAN Controller: incoming request', { userId, pan_number });
-  // Prefer company quota (MCA), fallback to pan
-  let order = await ensureVerificationQuota(userId, 'company');
-  if (!order) order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-  const result = await service.fetchDinByPan({ pan_number, consent });
-  await consumeVerificationQuota(order);
-  res.json(result);
-});
+    this.logRequest('PAN DIN-by-PAN', req.user._id.toString(), { pan_number });
 
-// POST /api/pan/cin-by-pan
-// Expects body: { pan_number: string, consent: 'Y' | 'N' } (also accepts { pan: string } for backward compatibility)
-export const fetchCinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const pan_number = req.body?.pan_number || req.body?.pan;
-  const consent = req.body?.consent;
-  if (!pan_number || !consent) {
-    return res.status(400).json({ message: 'pan_number and consent are required' });
-  }
-  console.log('PAN CIN-by-PAN Controller: incoming request', { userId, pan_number });
-  // Prefer company quota (MCA), fallback to pan
-  let order = await ensureVerificationQuota(userId, 'company');
-  if (!order) order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-  const result = await service.fetchCinByPan({ pan_number, consent });
-  await consumeVerificationQuota(order);
-  res.json(result);
-});
+    // Uses fallback quota handling (company -> pan)
+    await this.handleVerificationWithFallback(req, res, 'company', ['pan'], async () => {
+      return service.fetchDinByPan({ pan_number, consent });
+    });
+  });
 
-// POST /api/pan/aadhaar-link
-// Expects body: { pan_number: string, aadhaar_number: string, consent: string }
-export const checkPanAadhaarLinkHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-  const result = await service.checkPanAadhaarLink(req.body);
-  await consumeVerificationQuota(order);
-  res.json(result);
-});
+  // POST /api/pan/cin-by-pan
+  fetchCinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const pan_number = req.body?.pan_number || req.body?.pan;
+    const consent = req.body?.consent;
 
+    this.logRequest('PAN CIN-by-PAN', req.user._id.toString(), { pan_number });
+
+    // Uses fallback quota handling (company -> pan)
+    await this.handleVerificationWithFallback(req, res, 'company', ['pan'], async () => {
+      return service.fetchCinByPan({ pan_number, consent });
+    });
+  });
+
+  // POST /api/pan/aadhaar-link
+  checkPanAadhaarLinkHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    this.logRequest('PAN Aadhaar-Link', req.user._id.toString());
+
+    await this.handleVerificationRequest(req, res, {
+      verificationType: 'pan',
+      requireConsent: true,
+      requiredFields: ['pan_number', 'aadhaar_number']
+    }, async () => {
+      return service.checkPanAadhaarLink(req.body);
+    });
+  });
+
+  // POST /api/pan/digilocker-fetch-document
+  digilockerFetchDocumentHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    await this.handleVerificationRequest(req, res, {
+      verificationType: 'pan',
+      requiredFields: ['document_uri', 'transaction_id']
+    }, async () => {
+      return service.digilockerFetchDocument(req.body as DigilockerFetchDocumentRequest);
+    });
+  });
+
+  // POST /api/pan/fetch-advanced
+  fetchPanAdvanceHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    await this.handleVerificationRequest(req, res, {
+      verificationType: 'pan',
+      requireConsent: true,
+      requiredFields: ['pan_number']
+    }, async () => {
+      return service.fetchPanAdvance(req.body);
+    });
+  });
+
+  // POST /api/pan/fetch-detailed
+  fetchPanDetailedHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    await this.handleVerificationRequest(req, res, {
+      verificationType: 'pan',
+      requireConsent: true,
+      requiredFields: ['pan_number']
+    }, async () => {
+      return service.fetchPanDetailed(req.body);
+    });
+  });
+}
+
+// Create controller instance
+const controller = new PanController();
+
+// Export handlers
+export const fetchFatherNameHandler = controller.fetchFatherNameHandler.bind(controller);
+export const fetchGstinByPanHandler = controller.fetchGstinByPanHandler.bind(controller);
+export const fetchDinByPanHandler = controller.fetchDinByPanHandler.bind(controller);
+export const fetchCinByPanHandler = controller.fetchCinByPanHandler.bind(controller);
+export const checkPanAadhaarLinkHandler = controller.checkPanAadhaarLinkHandler.bind(controller);
+export const digilockerFetchDocumentHandler = controller.digilockerFetchDocumentHandler.bind(controller);
+export const fetchPanAdvanceHandler = controller.fetchPanAdvanceHandler.bind(controller);
+export const fetchPanDetailedHandler = controller.fetchPanDetailedHandler.bind(controller);
+
+// Handlers without quota (digilocker-init and digilocker-pull)
 // POST /api/pan/digilocker-init
-// Expects body: { redirect_uri: string, consent: string }
 export const digilockerInitHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const result = await service.digilockerInit(req.body);
   res.json(result);
 });
 
 // POST /api/pan/digilocker-pull
-// Expects body: { parameters: { panno: string, PANFullName: string }, transactionId: string }
 export const digilockerPullHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { transactionId, ...payload } = req.body;
   const result = await service.digilockerPull(payload, transactionId);
-  res.json(result);
-});
-
-// POST /api/pan/digilocker-fetch-document
-// Expects body: { document_uri: string, transaction_id: string }
-export const digilockerFetchDocumentHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-  const result = await service.digilockerFetchDocument(req.body as DigilockerFetchDocumentRequest);
-  await consumeVerificationQuota(order);
-  res.json(result);
-});
-
-// POST /api/pan/fetch-advanced
-// Expects body: { pan_number: string, consent: string, [other optional params] }
-export const fetchPanAdvanceHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-  const result = await service.fetchPanAdvance(req.body);
-  await consumeVerificationQuota(order);
-  res.json(result);
-});
-
-// POST /api/pan/fetch-detailed
-// Expects body: { pan_number: string, consent: string }
-export const fetchPanDetailedHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.user._id;
-  const order = await ensureVerificationQuota(userId, 'pan');
-  if (!order) return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-  const result = await service.fetchPanDetailed(req.body);
-  await consumeVerificationQuota(order);
   res.json(result);
 });

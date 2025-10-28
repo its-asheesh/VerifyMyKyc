@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import { DigilockerIssuedFilesRequest, DigilockerIssuedFilesResponse } from '../../../common/types/pan';
 
 const digilockerApiClient = axios.create({
@@ -28,10 +29,18 @@ export async function digilockerIssuedFilesProvider(
     });
     return response.data;
   } catch (error: any) {
-    throw new HTTPError(
-      error.response?.data?.message || 'Digilocker Issued Files fetch failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
+    console.error('Digilocker Issued Files Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL
+      }
+    });
+
+    const { message, statusCode } = createStandardErrorMapper('Digilocker Issued Files fetch failed')(error);
+    throw new HTTPError(message, statusCode, error.response?.data);
   }
 } 

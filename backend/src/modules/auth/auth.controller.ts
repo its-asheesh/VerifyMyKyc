@@ -3,7 +3,7 @@ import { User, IUser } from './auth.model';
 import { generateToken } from '../../common/utils/jwt';
 import asyncHandler from '../../common/middleware/asyncHandler';
 import { buildOtpEmailHtml, sendEmail } from '../../common/services/email';
-import admin from '../../../firebase-admin';
+import admin from '../../firebase-admin';
 import { sendGaEvent } from '../../common/services/ga4';
 
 // Helper: notify admins about new user sign-ups

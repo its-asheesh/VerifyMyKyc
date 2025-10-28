@@ -5,6 +5,7 @@ import { EChallanService } from './echallan.service';
 const service = new EChallanService();
 
 // POST /api/echallan/fetch
+// Note: This endpoint does not require authentication (public API)
 export const fetchEChallanHandler = asyncHandler(async (req: Request, res: Response) => {
   const result = await service.fetch(req.body);
   res.json(result);

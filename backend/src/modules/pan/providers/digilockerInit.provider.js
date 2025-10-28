@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.digilockerInitProvider = digilockerInitProvider;
 const axios_1 = __importDefault(require("axios"));
 const error_1 = require("../../../common/http/error");
+const BaseProvider_1 = require("../../../common/providers/BaseProvider");
 // Custom API client for Digilocker endpoints
 const digilockerApiClient = axios_1.default.create({
     baseURL: process.env.GRIDLINES_BASE_URL,
@@ -28,7 +29,7 @@ const digilockerApiClient = axios_1.default.create({
 });
 function digilockerInitProvider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g;
         try {
             console.log('Digilocker Init API Request:', {
                 url: '/digilocker/init',
@@ -54,7 +55,8 @@ function digilockerInitProvider(payload) {
                     headers: (_f = error.config) === null || _f === void 0 ? void 0 : _f.headers
                 }
             });
-            throw new error_1.HTTPError(((_h = (_g = error.response) === null || _g === void 0 ? void 0 : _g.data) === null || _h === void 0 ? void 0 : _h.message) || 'Digilocker Init failed', ((_j = error.response) === null || _j === void 0 ? void 0 : _j.status) || 500, (_k = error.response) === null || _k === void 0 ? void 0 : _k.data);
+            const { message, statusCode } = (0, BaseProvider_1.createStandardErrorMapper)('Digilocker Init failed')(error);
+            throw new error_1.HTTPError(message, statusCode, (_g = error.response) === null || _g === void 0 ? void 0 : _g.data);
         }
     });
 }

@@ -1,18 +1,13 @@
-import apiClient from '../../../common/http/apiClient';
-import { HTTPError } from '../../../common/http/error';
+import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 
 export async function aadhaarOcrV1Provider(base64_data: string, consent: string) {
-  try {
-    const response = await apiClient.post('/aadhaar-api/ocr', {
+  return makeProviderApiCall({
+    endpoint: '/aadhaar-api/ocr',
+    payload: {
       base64_data,
       consent,
-    });
-    return response.data;
-  } catch (error: any) {
-    throw new HTTPError(
-      error.response?.data?.message || 'Aadhaar OCR V1 failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
-  }
+    },
+    operationName: 'Aadhaar OCR V1',
+    customErrorMapper: createStandardErrorMapper('Aadhaar OCR V1 failed')
+  });
 }

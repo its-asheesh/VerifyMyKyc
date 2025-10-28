@@ -1,5 +1,6 @@
 import apiClient from '../../../common/http/apiClient';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import { GstinContactRequest, GstinContactResponse } from '../../../common/types/pan';
 
 export async function fetchGstinContactProvider(payload: GstinContactRequest): Promise<GstinContactResponse> {
@@ -68,25 +69,21 @@ export async function fetchGstinContactProvider(payload: GstinContactRequest): P
         }
       });
       
-      // Provide more specific error messages
+      // Use standard error mapper with slight customization for 400 errors
       let errorMessage = 'Fetch GSTIN Contact Details failed';
       let statusCode = 500;
       
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         errorMessage = 'Request to Gridlines API timed out. Please try again.';
         statusCode = 408;
-      } else if (error.response?.status === 401) {
-        errorMessage = 'Invalid API key or authentication failed';
-        statusCode = 401;
-      } else if (error.response?.status === 404) {
-        errorMessage = 'GSTIN contact details not found';
-        statusCode = 404;
       } else if (error.response?.status === 400) {
         errorMessage = error.response.data?.message || 'Invalid request parameters';
         statusCode = 400;
-      } else if (error.response?.data) {
-        errorMessage = error.response.data.message || errorMessage;
-        statusCode = error.response.status || statusCode;
+      } else {
+        // Use standard error mapper for other cases
+        const mapperResult = createStandardErrorMapper(errorMessage)(error);
+        errorMessage = mapperResult.message;
+        statusCode = mapperResult.statusCode;
       }
       
       throw new HTTPError(errorMessage, statusCode, {

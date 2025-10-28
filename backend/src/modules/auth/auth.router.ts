@@ -23,23 +23,38 @@ import {
   loginWithPhoneAndPassword
 } from './auth.controller';
 import { authenticate, requireAdmin, requireUser, requireAnyRole } from '../../common/middleware/auth';
+import { validate } from '../../common/validation/middleware';
+import {
+  registerSchema,
+  loginSchema,
+  changePasswordSchema,
+  resetPasswordSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+} from '../../common/validation/schemas';
+import {
+  authLimiter,
+  otpLimiter,
+  passwordResetLimiter,
+  registerLimiter,
+} from '../../common/middleware/rateLimiter';
 
 const router = Router();
 
-// Public routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/send-email-otp', sendEmailOtp);
-router.post('/verify-email-otp', verifyEmailOtp);
-router.post('/password/send-otp', sendPasswordResetOtp);
-router.post('/password/reset', resetPasswordWithOtp);
-router.post('/password/reset-phone', resetPasswordWithPhoneToken);
-router.post('/logout', logout);
+// Public routes with validation and rate limiting
+router.post('/register', registerLimiter, validate(registerSchema), register);
+router.post('/login', authLimiter, validate(loginSchema), login);
+router.post('/send-email-otp', otpLimiter, validate(sendOtpSchema), sendEmailOtp);
+router.post('/verify-email-otp', otpLimiter, validate(verifyOtpSchema), verifyEmailOtp);
+router.post('/password/send-otp', passwordResetLimiter, sendPasswordResetOtp);
+router.post('/password/reset', passwordResetLimiter, validate(resetPasswordSchema), resetPasswordWithOtp);
+router.post('/password/reset-phone', passwordResetLimiter, resetPasswordWithPhoneToken);
+router.post('/logout', authLimiter, logout);
 
 // Protected routes
 router.get('/profile', authenticate, requireUser, getProfile);
 router.put('/profile', authenticate, requireUser, updateProfile);
-router.put('/change-password', authenticate, requireUser, changePassword);
+router.put('/change-password', authenticate, requireUser, validate(changePasswordSchema), changePassword);
 
 // Admin-only routes
 router.get('/users', authenticate, requireAdmin, getAllUsers);
@@ -49,10 +64,9 @@ router.get('/users/with-location', authenticate, requireAdmin, getUsersWithLocat
 router.put('/users/:userId/role', authenticate, requireAdmin, updateUserRole);
 router.put('/users/:userId/toggle-status', authenticate, requireAdmin, toggleUserStatus);
 router.put('/users/:userId/location', authenticate, requireAnyRole, updateUserLocation);
-router.post('/phone/register', firebasePhoneRegister);
-router.post('/phone/login', firebasePhoneLogin);
-// In your routes file
-router.post('/login/phone-password', loginWithPhoneAndPassword);
+router.post('/phone/register', registerLimiter, firebasePhoneRegister);
+router.post('/phone/login', authLimiter, firebasePhoneLogin);
+router.post('/login/phone-password', authLimiter, loginWithPhoneAndPassword);
 
 
 export default router; 

@@ -1,5 +1,6 @@
 import apiClient from '../../../common/http/apiClient';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import FormData from 'form-data';
 
 export async function aadhaarOcrV2Provider(file_front: Buffer, file_front_name: string, consent: string, file_back?: Buffer, file_back_name?: string) {
@@ -17,11 +18,18 @@ export async function aadhaarOcrV2Provider(file_front: Buffer, file_front_name: 
     });
     return response.data;
   } catch (error: any) {
-    console.error('Aadhaar OCR V2 error details:', error.response?.data);
-    throw new HTTPError(
-      error.response?.data?.message || 'Aadhaar OCR V2 failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
+    console.error('Aadhaar OCR V2 Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL
+      }
+    });
+
+    const { message, statusCode } = createStandardErrorMapper('Aadhaar OCR V2 failed')(error);
+    throw new HTTPError(message, statusCode, error.response?.data);
   }
 }

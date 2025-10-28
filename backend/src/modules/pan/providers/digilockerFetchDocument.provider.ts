@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
+import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 
 export interface DigilockerFetchDocumentRequest {
   document_uri: string;
@@ -67,10 +68,7 @@ export async function digilockerFetchDocumentProvider(
       }
     });
     
-    throw new HTTPError(
-      error.response?.data?.message || 'Digilocker Fetch Document failed',
-      error.response?.status || 500,
-      error.response?.data
-    );
+    const { message, statusCode } = createStandardErrorMapper('Digilocker Fetch Document failed')(error);
+    throw new HTTPError(message, statusCode, error.response?.data);
   }
 } 

@@ -23,152 +23,120 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchPanDetailedHandler = exports.fetchPanAdvanceHandler = exports.digilockerFetchDocumentHandler = exports.digilockerPullHandler = exports.digilockerInitHandler = exports.checkPanAadhaarLinkHandler = exports.fetchCinByPanHandler = exports.fetchDinByPanHandler = exports.fetchGstinByPanHandler = exports.fetchFatherNameHandler = void 0;
+exports.digilockerPullHandler = exports.digilockerInitHandler = exports.fetchPanDetailedHandler = exports.fetchPanAdvanceHandler = exports.digilockerFetchDocumentHandler = exports.checkPanAadhaarLinkHandler = exports.fetchCinByPanHandler = exports.fetchDinByPanHandler = exports.fetchGstinByPanHandler = exports.fetchFatherNameHandler = void 0;
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
 const pan_service_1 = require("./pan.service");
-const quota_service_1 = require("../orders/quota.service");
+const BaseController_1 = require("../../common/controllers/BaseController");
 const service = new pan_service_1.PanService();
-// POST /api/pan/father-name
-// Expects body: { pan_number: string, consent: string }
-exports.fetchFatherNameHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
-    const userId = req.user._id;
-    const { pan_number, consent } = req.body || {};
-    // Basic payload validation to prevent avoidable 500s
-    if (!pan_number || !consent) {
-        return res.status(400).json({ message: 'pan_number and consent are required' });
+class PanController extends BaseController_1.BaseController {
+    constructor() {
+        super(...arguments);
+        // POST /api/pan/father-name
+        this.fetchFatherNameHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            const { pan_number, consent } = req.body || {};
+            this.logRequest('PAN Father-Name', req.user._id.toString(), { pan_number });
+            yield this.handleVerificationRequest(req, res, {
+                verificationType: 'pan',
+                requireConsent: true,
+                requiredFields: ['pan_number']
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchFatherName({ pan_number, consent });
+            }));
+        }));
+        // POST /api/pan/gstin-by-pan
+        this.fetchGstinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            const { pan_number, consent } = req.body || {};
+            this.logRequest('PAN GSTIN-by-PAN', req.user._id.toString(), { pan_number });
+            yield this.handleVerificationRequest(req, res, {
+                verificationType: 'pan',
+                requireConsent: true,
+                requiredFields: ['pan_number']
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchGstinByPan({ pan_number, consent });
+            }));
+        }));
+        // POST /api/pan/din-by-pan
+        this.fetchDinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            const { pan_number, consent } = req.body || {};
+            this.logRequest('PAN DIN-by-PAN', req.user._id.toString(), { pan_number });
+            // Uses fallback quota handling (company -> pan)
+            yield this.handleVerificationWithFallback(req, res, 'company', ['pan'], () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchDinByPan({ pan_number, consent });
+            }));
+        }));
+        // POST /api/pan/cin-by-pan
+        this.fetchCinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c;
+            const pan_number = ((_a = req.body) === null || _a === void 0 ? void 0 : _a.pan_number) || ((_b = req.body) === null || _b === void 0 ? void 0 : _b.pan);
+            const consent = (_c = req.body) === null || _c === void 0 ? void 0 : _c.consent;
+            this.logRequest('PAN CIN-by-PAN', req.user._id.toString(), { pan_number });
+            // Uses fallback quota handling (company -> pan)
+            yield this.handleVerificationWithFallback(req, res, 'company', ['pan'], () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchCinByPan({ pan_number, consent });
+            }));
+        }));
+        // POST /api/pan/aadhaar-link
+        this.checkPanAadhaarLinkHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            this.logRequest('PAN Aadhaar-Link', req.user._id.toString());
+            yield this.handleVerificationRequest(req, res, {
+                verificationType: 'pan',
+                requireConsent: true,
+                requiredFields: ['pan_number', 'aadhaar_number']
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                return service.checkPanAadhaarLink(req.body);
+            }));
+        }));
+        // POST /api/pan/digilocker-fetch-document
+        this.digilockerFetchDocumentHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            yield this.handleVerificationRequest(req, res, {
+                verificationType: 'pan',
+                requiredFields: ['document_uri', 'transaction_id']
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                return service.digilockerFetchDocument(req.body);
+            }));
+        }));
+        // POST /api/pan/fetch-advanced
+        this.fetchPanAdvanceHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            yield this.handleVerificationRequest(req, res, {
+                verificationType: 'pan',
+                requireConsent: true,
+                requiredFields: ['pan_number']
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchPanAdvance(req.body);
+            }));
+        }));
+        // POST /api/pan/fetch-detailed
+        this.fetchPanDetailedHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
+            yield this.handleVerificationRequest(req, res, {
+                verificationType: 'pan',
+                requireConsent: true,
+                requiredFields: ['pan_number']
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                return service.fetchPanDetailed(req.body);
+            }));
+        }));
     }
-    console.log('PAN Father-Name Controller: incoming request', {
-        userId,
-        pan_number,
-        hasConsent: Boolean(consent)
-    });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-    console.log('PAN Father-Name Controller: using order for quota', {
-        orderId: order.orderId,
-        remaining: (_a = order === null || order === void 0 ? void 0 : order.verificationQuota) === null || _a === void 0 ? void 0 : _a.remaining,
-        expiresAt: (_b = order === null || order === void 0 ? void 0 : order.verificationQuota) === null || _b === void 0 ? void 0 : _b.expiresAt,
-    });
-    const result = yield service.fetchFatherName({ pan_number, consent });
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    console.log('PAN Father-Name Controller: consumed 1 verification', {
-        orderId: order.orderId,
-        newRemaining: (_c = order === null || order === void 0 ? void 0 : order.verificationQuota) === null || _c === void 0 ? void 0 : _c.remaining,
-    });
-    res.json(result);
-}));
-// POST /api/pan/gstin-by-pan
-// Expects body: { pan_number: string, consent: string }
-exports.fetchGstinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    const { pan_number, consent } = req.body || {};
-    if (!pan_number || !consent) {
-        return res.status(400).json({ message: 'pan_number and consent are required' });
-    }
-    console.log('PAN GSTIN-by-PAN Controller: incoming request', { userId, pan_number });
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-    const result = yield service.fetchGstinByPan({ pan_number, consent });
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/pan/din-by-pan
-// Expects body: { pan_number: string, consent: string }
-exports.fetchDinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    const { pan_number, consent } = req.body || {};
-    if (!pan_number || !consent) {
-        return res.status(400).json({ message: 'pan_number and consent are required' });
-    }
-    console.log('PAN DIN-by-PAN Controller: incoming request', { userId, pan_number });
-    // Prefer company quota (MCA), fallback to pan
-    let order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'company');
-    if (!order)
-        order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-    const result = yield service.fetchDinByPan({ pan_number, consent });
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/pan/cin-by-pan
-// Expects body: { pan_number: string, consent: 'Y' | 'N' } (also accepts { pan: string } for backward compatibility)
-exports.fetchCinByPanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
-    const userId = req.user._id;
-    const pan_number = ((_a = req.body) === null || _a === void 0 ? void 0 : _a.pan_number) || ((_b = req.body) === null || _b === void 0 ? void 0 : _b.pan);
-    const consent = (_c = req.body) === null || _c === void 0 ? void 0 : _c.consent;
-    if (!pan_number || !consent) {
-        return res.status(400).json({ message: 'pan_number and consent are required' });
-    }
-    console.log('PAN CIN-by-PAN Controller: incoming request', { userId, pan_number });
-    // Prefer company quota (MCA), fallback to pan
-    let order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'company');
-    if (!order)
-        order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired for company or pan' });
-    const result = yield service.fetchCinByPan({ pan_number, consent });
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/pan/aadhaar-link
-// Expects body: { pan_number: string, aadhaar_number: string, consent: string }
-exports.checkPanAadhaarLinkHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-    const result = yield service.checkPanAadhaarLink(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
+}
+// Create controller instance
+const controller = new PanController();
+// Export handlers
+exports.fetchFatherNameHandler = controller.fetchFatherNameHandler.bind(controller);
+exports.fetchGstinByPanHandler = controller.fetchGstinByPanHandler.bind(controller);
+exports.fetchDinByPanHandler = controller.fetchDinByPanHandler.bind(controller);
+exports.fetchCinByPanHandler = controller.fetchCinByPanHandler.bind(controller);
+exports.checkPanAadhaarLinkHandler = controller.checkPanAadhaarLinkHandler.bind(controller);
+exports.digilockerFetchDocumentHandler = controller.digilockerFetchDocumentHandler.bind(controller);
+exports.fetchPanAdvanceHandler = controller.fetchPanAdvanceHandler.bind(controller);
+exports.fetchPanDetailedHandler = controller.fetchPanDetailedHandler.bind(controller);
+// Handlers without quota (digilocker-init and digilocker-pull)
 // POST /api/pan/digilocker-init
-// Expects body: { redirect_uri: string, consent: string }
 exports.digilockerInitHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield service.digilockerInit(req.body);
     res.json(result);
 }));
 // POST /api/pan/digilocker-pull
-// Expects body: { parameters: { panno: string, PANFullName: string }, transactionId: string }
 exports.digilockerPullHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const _a = req.body, { transactionId } = _a, payload = __rest(_a, ["transactionId"]);
     const result = yield service.digilockerPull(payload, transactionId);
-    res.json(result);
-}));
-// POST /api/pan/digilocker-fetch-document
-// Expects body: { document_uri: string, transaction_id: string }
-exports.digilockerFetchDocumentHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-    const result = yield service.digilockerFetchDocument(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/pan/fetch-advanced
-// Expects body: { pan_number: string, consent: string, [other optional params] }
-exports.fetchPanAdvanceHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-    const result = yield service.fetchPanAdvance(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
-    res.json(result);
-}));
-// POST /api/pan/fetch-detailed
-// Expects body: { pan_number: string, consent: string }
-exports.fetchPanDetailedHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.user._id;
-    const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'pan');
-    if (!order)
-        return res.status(403).json({ message: 'Verification quota exhausted or expired' });
-    const result = yield service.fetchPanDetailed(req.body);
-    yield (0, quota_service_1.consumeVerificationQuota)(order);
     res.json(result);
 }));

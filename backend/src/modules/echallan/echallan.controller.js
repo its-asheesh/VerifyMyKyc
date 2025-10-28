@@ -17,6 +17,7 @@ const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHan
 const echallan_service_1 = require("./echallan.service");
 const service = new echallan_service_1.EChallanService();
 // POST /api/echallan/fetch
+// Note: This endpoint does not require authentication (public API)
 exports.fetchEChallanHandler = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield service.fetch(req.body);
     res.json(result);
