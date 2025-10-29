@@ -1,5 +1,4 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useEffect } from 'react';
 
 interface SEOHeadProps {
   title?: string;
@@ -30,59 +29,101 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   const fullCanonicalUrl = canonicalUrl ? `${baseUrl}${canonicalUrl}` : baseUrl;
   const fullOgImage = ogImage.startsWith('http') ? ogImage : `${baseUrl}${ogImage}`;
 
-  return (
-    <Helmet>
-      {/* Basic Meta Tags */}
-      <title>{title}</title>
-      <meta name="description" content={description} />
-      <meta name="keywords" content={keywords} />
-      <meta name="author" content="VerifyMyKYC" />
-      <meta name="robots" content={`${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`} />
-      <link rel="canonical" href={fullCanonicalUrl} />
-      
-      {/* Open Graph Meta Tags */}
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:type" content={ogType} />
-      <meta property="og:url" content={fullCanonicalUrl} />
-      <meta property="og:image" content={fullOgImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:site_name" content="VerifyMyKYC" />
-      <meta property="og:locale" content="en_IN" />
-      
-      {/* Twitter Card Meta Tags */}
-      <meta name="twitter:card" content={twitterCard} />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={fullOgImage} />
-      <meta name="twitter:site" content="@VerifyMyKYC" />
-      <meta name="twitter:creator" content="@VerifyMyKYC" />
-      
-      {/* Additional SEO Meta Tags */}
-      <meta name="theme-color" content="#2563eb" />
-      <meta name="msapplication-TileColor" content="#2563eb" />
-      <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      <meta name="apple-mobile-web-app-title" content="VerifyMyKYC" />
-      
-      {/* Geo Tags for India */}
-      <meta name="geo.region" content="IN" />
-      <meta name="geo.country" content="India" />
-      <meta name="geo.placename" content="New Delhi" />
-      
-      {/* Business Information */}
-      <meta name="business:contact_data:locality" content="New Delhi" />
-      <meta name="business:contact_data:country_name" content="India" />
-      
-      {/* Structured Data */}
-      {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      )}
-    </Helmet>
-  );
+  useEffect(() => {
+    // Update document title
+    if (title) {
+      document.title = title;
+    }
+
+    // Helper function to update or create meta tag
+    const updateMetaTag = (name: string, content: string, isProperty: boolean = false) => {
+      const attribute = isProperty ? 'property' : 'name';
+      let meta = document.querySelector(`meta[${attribute}="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attribute, name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+
+    // Helper function to update or create link tag
+    const updateLinkTag = (rel: string, href: string) => {
+      let link = document.querySelector(`link[rel="${rel}"]`);
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', rel);
+        document.head.appendChild(link);
+      }
+      link.setAttribute('href', href);
+    };
+
+    // Basic Meta Tags
+    if (description) updateMetaTag('description', description);
+    if (keywords) updateMetaTag('keywords', keywords);
+    updateMetaTag('author', 'VerifyMyKYC');
+    updateMetaTag('robots', `${noIndex ? 'noindex' : 'index'}, ${noFollow ? 'nofollow' : 'follow'}`);
+
+    // Canonical URL
+    if (fullCanonicalUrl) {
+      updateLinkTag('canonical', fullCanonicalUrl);
+    }
+
+    // Open Graph Meta Tags
+    updateMetaTag('og:title', title, true);
+    if (description) updateMetaTag('og:description', description, true);
+    updateMetaTag('og:type', ogType, true);
+    updateMetaTag('og:url', fullCanonicalUrl, true);
+    updateMetaTag('og:image', fullOgImage, true);
+    updateMetaTag('og:image:width', '1200', true);
+    updateMetaTag('og:image:height', '630', true);
+    updateMetaTag('og:site_name', 'VerifyMyKYC', true);
+    updateMetaTag('og:locale', 'en_IN', true);
+
+    // Twitter Card Meta Tags
+    updateMetaTag('twitter:card', twitterCard);
+    updateMetaTag('twitter:title', title);
+    if (description) updateMetaTag('twitter:description', description);
+    updateMetaTag('twitter:image', fullOgImage);
+    updateMetaTag('twitter:site', '@VerifyMyKYC');
+    updateMetaTag('twitter:creator', '@VerifyMyKYC');
+
+    // Additional SEO Meta Tags
+    updateMetaTag('theme-color', '#2563eb');
+    updateMetaTag('msapplication-TileColor', '#2563eb');
+    updateMetaTag('apple-mobile-web-app-capable', 'yes');
+    updateMetaTag('apple-mobile-web-app-status-bar-style', 'default');
+    updateMetaTag('apple-mobile-web-app-title', 'VerifyMyKYC');
+
+    // Geo Tags for India
+    updateMetaTag('geo.region', 'IN');
+    updateMetaTag('geo.country', 'India');
+    updateMetaTag('geo.placename', 'New Delhi');
+
+    // Business Information
+    updateMetaTag('business:contact_data:locality', 'New Delhi');
+    updateMetaTag('business:contact_data:country_name', 'India');
+
+    // Structured Data
+    if (structuredData) {
+      let script = document.querySelector('script[type="application/ld+json"]');
+      if (!script) {
+        script = document.createElement('script');
+        script.setAttribute('type', 'application/ld+json');
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(structuredData);
+    }
+
+    // Cleanup function to restore defaults (optional)
+    return () => {
+      // Optionally restore default title
+      document.title = "VerifyMyKYC - India's Leading KYC & Identity Verification Platform";
+    };
+  }, [title, description, keywords, fullCanonicalUrl, fullOgImage, ogType, twitterCard, structuredData, noIndex, noFollow]);
+
+  // This component doesn't render anything
+  return null;
 };
 
 export default SEOHead;
