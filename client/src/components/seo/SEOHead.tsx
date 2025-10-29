@@ -113,6 +113,59 @@ const SEOHead: React.FC<SEOHeadProps> = ({
         document.head.appendChild(script);
       }
       script.textContent = JSON.stringify(structuredData);
+    } else {
+      // Default Organization structured data for better SEO
+      const defaultStructuredData = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "VerifyMyKYC",
+        "url": "https://verifymykyc.com",
+        "logo": `${baseUrl}/verifymykyclogo.svg`,
+        "description": description,
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "New Delhi",
+          "addressCountry": "IN"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "Customer Service",
+          "areaServed": "IN",
+          "availableLanguage": ["English", "Hindi"]
+        },
+        "sameAs": [
+          "https://www.linkedin.com/company/verifymykyc",
+          "https://twitter.com/VerifyMyKYC"
+        ],
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "reviewCount": "1000",
+          "bestRating": "5",
+          "worstRating": "1"
+        }
+      };
+      
+      let script = document.querySelector('script[type="application/ld+json"]#default-structured-data');
+      if (!script) {
+        script = document.createElement('script');
+        script.setAttribute('type', 'application/ld+json');
+        script.setAttribute('id', 'default-structured-data');
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(defaultStructuredData);
+    }
+
+    // Add hreflang tags for better international SEO (if needed)
+    // updateLinkTag('alternate', fullCanonicalUrl + '?lang=en');
+    
+    // Add preconnect for performance
+    const preconnectGoogle = document.querySelector('link[rel="preconnect"][href="https://www.google.com"]');
+    if (!preconnectGoogle) {
+      const preconnect = document.createElement('link');
+      preconnect.setAttribute('rel', 'preconnect');
+      preconnect.setAttribute('href', 'https://www.google.com');
+      document.head.appendChild(preconnect);
     }
 
     // Cleanup function to restore defaults (optional)
@@ -120,7 +173,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       // Optionally restore default title
       document.title = "VerifyMyKYC - India's Leading KYC & Identity Verification Platform";
     };
-  }, [title, description, keywords, fullCanonicalUrl, fullOgImage, ogType, twitterCard, structuredData, noIndex, noFollow]);
+  }, [title, description, keywords, canonicalUrl, ogImage, ogType, twitterCard, structuredData, noIndex, noFollow]);
 
   // This component doesn't render anything
   return null;

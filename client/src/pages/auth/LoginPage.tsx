@@ -32,6 +32,19 @@ const LoginPage: React.FC = () => {
 
   const [showReset, setShowReset] = useState(false);
 
+  // Check for expired token parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('expired') === 'true') {
+      showToast(
+        'Your session has expired after 15 days of inactivity. Please login again.',
+        { type: 'info' }
+      );
+      // Clean up URL
+      navigate('/login', { replace: true });
+    }
+  }, [location.search, navigate, showToast]);
+
   // Login form
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
