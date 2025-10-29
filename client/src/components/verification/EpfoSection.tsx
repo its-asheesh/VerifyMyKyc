@@ -6,6 +6,7 @@ import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
 import { epfoApi } from "../../services/api/epfoApi"
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
+import { NoQuotaDialog } from "./NoQuotaDialog"
 
 type ServiceKey =
   | "fetchUan"
@@ -91,6 +92,7 @@ export const EpfoSection: React.FC<{ productId?: string }> = ({ productId }) => 
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false)
   const [pendingFormData, setPendingFormData] = useState<any>(null)
 
   const handleServiceChange = (service: any) => {
@@ -166,8 +168,14 @@ export const EpfoSection: React.FC<{ productId?: string }> = ({ productId }) => 
       const inner = raw?.data || raw
       setResult({ data: inner })
     } catch (err: any) {
-      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message
-      setError(backendMsg || err?.message || "An error occurred")
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message || err?.message || ""
+      console.error("[EPFO] Error", err?.response?.status, backendMsg, err?.response?.data)
+      // Check for quota error and show NoQuotaDialog
+      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(backendMsg)) {
+        setShowNoQuotaDialog(true)
+      } else {
+        setError(backendMsg || "An error occurred")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -202,6 +210,13 @@ export const EpfoSection: React.FC<{ productId?: string }> = ({ productId }) => 
         serviceName={selectedService.name}
         formData={pendingFormData || {}}
         tokenCost={1}
+      />
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={() => setShowNoQuotaDialog(false)}
+        serviceName={selectedService.name}
+        verificationType="epfo"
       />
     </VerificationLayout>
   )

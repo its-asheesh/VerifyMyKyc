@@ -4,6 +4,7 @@ import asyncHandler from '../../common/middleware/asyncHandler';
 import { FetchEAadhaarRequest } from '../../common/types/eaadhaar';
 import { AuthenticatedRequest } from '../../common/middleware/auth';
 import { BaseController } from '../../common/controllers/BaseController';
+import { ensureVerificationQuota, consumeVerificationQuota } from '../orders/quota.service';
 
 const service = new AadhaarService();
 
@@ -49,6 +50,90 @@ class AadhaarController extends BaseController {
       return service.fetchEAadhaar({ transaction_id, json });
     });
   });
+
+  // POST /api/aadhaar/v2/generate-otp - QuickEKYC Aadhaar V2
+  // NOTE: Does NOT consume quota - only checks quota exists
+  generateOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { id_number } = req.body;
+    const userId = req.user._id;
+
+    // Validate required fields
+    if (!id_number) {
+      res.status(400).json({ message: 'id_number is required' });
+      return;
+    }
+
+    // Validate consent
+    if (!req.body.consent) {
+      res.status(400).json({ message: 'consent is required' });
+      return;
+    }
+
+    // Check quota exists (but don't consume yet)
+    const order = await ensureVerificationQuota(userId, 'aadhaar');
+    if (!order) {
+      res.status(403).json({ message: 'Verification quota exhausted or expired' });
+      return;
+    }
+
+    // Log request
+    this.logRequest('Aadhaar V2 Generate OTP', userId, { 
+      aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X') 
+    });
+
+    // Generate OTP without consuming quota
+    try {
+      const result = await service.generateOtpV2({ id_number });
+      res.json(result);
+    } catch (error) {
+      throw error; // Let asyncHandler handle it
+    }
+  });
+
+  // POST /api/aadhaar/v2/submit-otp - QuickEKYC Aadhaar V2
+  // NOTE: Consumes quota ONLY after successful OTP verification
+  submitOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { request_id, otp, client_id } = req.body;
+    const userId = req.user._id;
+
+    // Validate required fields
+    if (!request_id || !otp) {
+      res.status(400).json({ message: 'request_id and otp are required' });
+      return;
+    }
+
+    // Validate consent
+    if (!req.body.consent) {
+      res.status(400).json({ message: 'consent is required' });
+      return;
+    }
+
+    // Check quota exists
+    const order = await ensureVerificationQuota(userId, 'aadhaar');
+    if (!order) {
+      res.status(403).json({ message: 'Verification quota exhausted or expired' });
+      return;
+    }
+
+    // Log request
+    this.logRequest('Aadhaar V2 Submit OTP', userId, { request_id });
+
+    try {
+      // Submit OTP and verify
+      const result = await service.submitOtpV2({ request_id, otp, client_id });
+
+      // Only consume quota if verification was successful
+      if (result.status === 'success' && result.data?.aadhaar_number) {
+        await consumeVerificationQuota(order);
+        this.logQuotaConsumption(order, 'Aadhaar V2');
+      }
+
+      res.json(result);
+    } catch (error) {
+      // Don't consume quota if verification failed
+      throw error; // Let asyncHandler handle it
+    }
+  });
 }
 
 // Create controller instance and export handlers
@@ -57,3 +142,5 @@ const controller = new AadhaarController();
 export const aadhaarOcrV1Handler = controller.aadhaarOcrV1Handler.bind(controller);
 export const aadhaarOcrV2Handler = controller.aadhaarOcrV2Handler.bind(controller);
 export const fetchEAadhaarHandler = controller.fetchEAadhaarHandler.bind(controller);
+export const generateOtpV2Handler = controller.generateOtpV2Handler.bind(controller);
+export const submitOtpV2Handler = controller.submitOtpV2Handler.bind(controller);

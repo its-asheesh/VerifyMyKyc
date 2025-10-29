@@ -24,6 +24,10 @@ export const envSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
+  
+  // QuickEKYC API
+  QUICKEKYC_API_KEY: z.string().optional(),
+  QUICKEKYC_BASE_URL: z.string().url().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -150,6 +154,27 @@ export const aadhaarOcrV1Schema = z.object({
       { message: 'Invalid base64 image format' }
     ),
   consent: z.enum(['Y', 'N']),
+});
+
+// Aadhaar V2 Schemas (QuickEKYC)
+export const aadhaarNumberSchema = z.string()
+  .regex(/^[0-9]{12}$/, 'Aadhaar number must be exactly 12 digits')
+  .transform((val) => val.trim());
+
+export const aadhaarGenerateOtpV2Schema = z.object({
+  id_number: aadhaarNumberSchema,
+  consent: z.enum(['Y', 'N']).optional(), // Consent handled in controller
+});
+
+export const aadhaarSubmitOtpV2Schema = z.object({
+  request_id: z.union([
+    z.string().min(1, 'Request ID is required'),
+    z.number().positive('Request ID must be positive')
+  ]).transform((val) => String(val)),
+  otp: z.string()
+    .regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+  client_id: z.string().optional(),
+  consent: z.enum(['Y', 'N']).optional(), // Consent handled in controller
 });
 
 // GSTIN Schemas

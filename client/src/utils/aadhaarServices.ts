@@ -1,7 +1,7 @@
 import type { AadhaarOcrV1Request, AadhaarOcrV2Request, FetchEAadhaarRequest } from "../types/kyc"
-import { Camera, Upload, Download } from "lucide-react"
+import { Camera, Upload, Download , FormInputIcon } from "lucide-react"
 
-export type AadhaarServiceKey = "ocr-v1" | "ocr-v2" | "fetch-eaadhaar"
+export type AadhaarServiceKey = "ocr-v1" | "ocr-v2" | "fetch-eaadhaar" | "v2-verify"
 
 export interface AadhaarServiceMeta {
   key: AadhaarServiceKey
@@ -9,7 +9,7 @@ export interface AadhaarServiceMeta {
   description: string
   apiEndpoint: string
   formFields: {
-    name: keyof AadhaarOcrV1Request | keyof AadhaarOcrV2Request | keyof FetchEAadhaarRequest
+    name: keyof AadhaarOcrV1Request | keyof AadhaarOcrV2Request | keyof FetchEAadhaarRequest | "id_number"
     label: string
     type: "text" | "file" | "json"
     required: boolean
@@ -18,38 +18,27 @@ export interface AadhaarServiceMeta {
 }
 
 export const aadhaarServices: AadhaarServiceMeta[] = [
-  // {
-  //   key: "ocr-v1",
-  //   name: "Aadhaar OCR (Base64)",
-  //   description: "Extract data from Aadhaar image (base64)",
-  //   apiEndpoint: "/api/aadhaar/ocr-v1",
-  //   formFields: [
-  //     { name: "base64_data", label: "Aadhaar Image (Base64)", type: "text", required: true },
-  //     { name: "consent", label: "Consent", type: "text", required: true },
-  //   ],
-  //   icon: Camera,
-  // },
   {
-    key: "ocr-v2",
-    name: "Aadhaar OCR (File Upload)",
-    description: "Extract data from Aadhaar image (file upload)",
-    apiEndpoint: "/api/aadhaar/ocr-v2",
+    key: "v2-verify",
+    name: "Aadhaar Verification (OTP)",
+    description: "Verify Aadhaar using OTP sent to registered mobile number",
+    apiEndpoint: "/api/aadhaar/v2/generate-otp",
     formFields: [
-      { name: "file_front", label: "Aadhaar Front Image", type: "file", required: true },
-      { name: "file_back", label: "Aadhaar Back Image", type: "file", required: false },
+      { name: "id_number", label: "Aadhaar Number", type: "text", required: true },
       { name: "consent", label: "Consent", type: "text", required: true },
     ],
-    icon: Upload,
+    icon: FormInputIcon,
   },
   // {
-  //   key: "fetch-eaadhaar",
-  //   name: "Fetch eAadhaar",
-  //   description: "Fetch eAadhaar using transaction ID and JSON payload",
-  //   apiEndpoint: "/api/aadhaar/fetch-eaadhaar",
+  //   key: "ocr-v2",
+  //   name: "Aadhaar OCR (File Upload)",
+  //   description: "Extract data from Aadhaar image (file upload) - Legacy",
+  //   apiEndpoint: "/api/aadhaar/ocr-v2",
   //   formFields: [
-  //     { name: "transaction_id", label: "Transaction ID", type: "text", required: true },
-  //     { name: "json", label: "JSON Payload", type: "json", required: true },
+  //     { name: "file_front", label: "Aadhaar Front Image", type: "file", required: true },
+  //     { name: "file_back", label: "Aadhaar Back Image", type: "file", required: false },
+  //     { name: "consent", label: "Consent", type: "text", required: true },
   //   ],
-  //   icon: Download,
+  //   icon: Upload,
   // },
 ] 

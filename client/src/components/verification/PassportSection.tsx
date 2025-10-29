@@ -4,6 +4,8 @@ import type React from "react";
 import { useState } from "react";
 import { VerificationLayout } from "./VerificationLayout";
 import { VerificationForm } from "./VerificationForm";
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog";
+import { NoQuotaDialog } from "./NoQuotaDialog";
 import { passportServices } from "../../utils/passportServices";
 import { passportApi } from "../../services/api/passportApi";
 import { usePricingContext } from "../../context/PricingContext";
@@ -16,6 +18,9 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<any>(null);
 
   /* -------------------------------------------------
    * Pricing (context)
@@ -83,9 +88,17 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
    * Submit
    * -------------------------------------------------*/
   const handleSubmit = async (rawFormData: any) => {
+    setPendingFormData(rawFormData);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false);
     setIsLoading(true);
     setError(null);
     setResult(null);
+
+    const rawFormData = pendingFormData;
 
     try {
       // 1️⃣  Build clean payload
@@ -140,7 +153,13 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
 
       setResult(response);
     } catch (err: any) {
-      setError(err?.message || "Verification failed");
+      const errorMessage = err?.response?.data?.message || err?.message || "";
+      // Check for quota error and show NoQuotaDialog
+      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
+        setShowNoQuotaDialog(true);
+      } else {
+        setError(errorMessage || "Verification failed");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -150,24 +169,43 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
    * Render
    * -------------------------------------------------*/
   return (
-    <VerificationLayout
-      title="Passport Verification Services"
-      description="International passport verification, MRZ generation, and OCR capabilities"
-      services={passportServices}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
+    <>
+      <VerificationLayout
+        title="Passport Verification Services"
+        description="International passport verification, MRZ generation, and OCR capabilities"
+        services={passportServices}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange}
+      >
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
+
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
         serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
-    </VerificationLayout>
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={() => setShowNoQuotaDialog(false)}
+        serviceName={selectedService.name}
+        verificationType="passport"
+      />
+    </>
   );
 };

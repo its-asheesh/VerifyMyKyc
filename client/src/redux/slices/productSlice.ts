@@ -73,10 +73,8 @@ export const mockProducts: Product[] = [
     features: ["OTP verification", "Biometric matching", "Secure processing", "Compliance ready"],
     services: [
       "Verify Aadhaar via OTP (eKYC)",
-      "Extract Data via Aadhaar Card OCR (Live Capture)",
-      "Upload Image for Aadhaar OCR Extraction",
-      "Download E-Aadhaar PDF (Masked/Full)",
-      "Validate Aadhaar-PAN Link Status"
+      "Extract Data via Aadhaar Card ",
+      "Download Aadhaar Information PDF (Masked/Full)",
     ],
     pricing: {
       free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },

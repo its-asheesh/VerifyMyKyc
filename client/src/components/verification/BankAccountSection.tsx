@@ -4,6 +4,8 @@ import type React from "react"
 import { useState } from "react"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
+import { NoQuotaDialog } from "./NoQuotaDialog"
 import { bankServices } from "../../utils/bankServices"
 import { bankApi } from "../../services/api/bankApi"
 
@@ -12,6 +14,9 @@ export const BankAccountSection: React.FC<{ productId?: string }> = ({ productId
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<any>(null)
 
   const handleServiceChange = (service: any) => {
     setSelectedService(service)
@@ -36,9 +41,17 @@ export const BankAccountSection: React.FC<{ productId?: string }> = ({ productId
   }
 
   const handleSubmit = async (formData: any) => {
+    setPendingFormData(formData)
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setError(null)
     setResult(null)
+
+    const formData = pendingFormData
 
     try {
       const payload: any = { ...formData }
@@ -114,33 +127,57 @@ export const BankAccountSection: React.FC<{ productId?: string }> = ({ productId
 
       setResult(transformed)
     } catch (err: any) {
-      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message
-      console.error("[Bank] Error", err?.response?.status, backendMsg || err?.message, err?.response?.data)
-      setError(backendMsg || err?.message || "An error occurred")
+      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message || err?.message || ""
+      console.error("[Bank] Error", err?.response?.status, backendMsg, err?.response?.data)
+      // Check for quota error and show NoQuotaDialog
+      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(backendMsg)) {
+        setShowNoQuotaDialog(true)
+      } else {
+        setError(backendMsg || "An error occurred")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <VerificationLayout
-      title="Bank Verification Services"
-      description="Verify bank account holder details, validate IFSC, and verify UPI IDs"
-      services={bankServices}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
+    <>
+      <VerificationLayout
+        title="Bank Verification Services"
+        description="Verify bank account holder details, validate IFSC, and verify UPI IDs"
+        services={bankServices}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange}
+      >
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
+
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
         serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
-    </VerificationLayout>
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={() => setShowNoQuotaDialog(false)}
+        serviceName={selectedService.name}
+        verificationType="bank"
+      />
+    </>
   )
 }

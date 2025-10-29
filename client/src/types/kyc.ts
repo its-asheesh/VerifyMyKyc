@@ -38,6 +38,64 @@ export interface FetchEAadhaarResponse {
   [key: string]: any;
 }
 
+// Aadhaar V2 - QuickEKYC
+export interface AadhaarV2GenerateOtpRequest {
+  id_number: string; // 12-digit Aadhaar number
+  consent: string;
+}
+
+export interface AadhaarV2GenerateOtpResponse {
+  data: {
+    otp_sent: boolean;
+    if_number: boolean;
+    valid_aadhaar: boolean;
+  };
+  status_code: number;
+  message: string;
+  status: string;
+  request_id: number;
+}
+
+export interface AadhaarV2Address {
+  dist?: string;
+  house?: string;
+  country?: string;
+  subdist?: string;
+  vtc?: string;
+  po?: string;
+  state?: string;
+  street?: string;
+  loc?: string;
+}
+
+export interface AadhaarV2SubmitOtpRequest {
+  request_id: string | number;
+  otp: string;
+  client_id?: string;
+  consent: string;
+}
+
+export interface AadhaarV2SubmitOtpResponse {
+  data: {
+    aadhaar_number: string;
+    dob: string; // yyyy-mm-dd
+    zip?: string;
+    full_name: string;
+    gender?: string;
+    address?: AadhaarV2Address;
+    client_id?: string;
+    profile_image?: string;
+    zip_data?: string;
+    raw_xml?: string;
+    share_code?: string;
+    care_of?: string;
+  };
+  status_code: number;
+  message: string;
+  status: string;
+  request_id: number;
+}
+
 // PAN: Father's Name
 export interface PanFatherNameRequest {
   pan_number: string;

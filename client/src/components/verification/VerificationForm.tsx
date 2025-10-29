@@ -46,6 +46,7 @@ interface VerificationFormProps {
   serviceName?: string;
   serviceDescription?: string;
   productId?: string;
+  onCustomReset?: () => void;
 }
 
 export const VerificationForm: React.FC<VerificationFormProps> = ({
@@ -58,6 +59,7 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
   serviceName,
   serviceDescription,
   productId,
+  onCustomReset,
 }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<any>({});
@@ -85,6 +87,10 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
     if (result) {
       setShowResult(true);
       setShowMoreDetails(false);
+    } else {
+      // Reset form when result is cleared (e.g., from parent component)
+      setShowResult(false);
+      setFormData({});
     }
   }, [result]);
 
@@ -210,6 +216,10 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
   const handleReset = () => {
     setShowResult(false);
     setFormData({});
+    // Call custom reset handler if provided (for services like Aadhaar V2 that need additional state reset)
+    if (onCustomReset) {
+      onCustomReset();
+    }
   };
 
   const renderFormattedResult = () => {
@@ -3267,6 +3277,235 @@ if (serviceKey === "fetch-detailed") {
                 </>
               )}
             </div>
+          </div>
+        </VerificationResultShell>
+      );
+    }
+
+    // Aadhaar V2 - QuickEKYC OTP Verification
+    if (serviceKey === "v2-verify") {
+      const responseData = result.data || result;
+      const aadhaarData = responseData?.data || responseData || {};
+      const address = aadhaarData.address || {};
+
+      // Meta IDs
+      const requestId = result.request_id || responseData?.request_id;
+      const message = result.message || responseData?.message || "Aadhaar verified successfully";
+
+      // Build PDF export lines
+      const pdfLines: string[] = [];
+      pdfLines.push(`${serviceName || "Aadhaar Verification V2"}`);
+      pdfLines.push("Verification Successful");
+      pdfLines.push("");
+
+      pdfLines.push("PERSONAL INFORMATION");
+      if (aadhaarData.full_name) pdfLines.push(`Full Name: ${aadhaarData.full_name}`);
+      if (aadhaarData.aadhaar_number) pdfLines.push(`Aadhaar Number: ${aadhaarData.aadhaar_number}`);
+      if (aadhaarData.dob) pdfLines.push(`Date of Birth: ${aadhaarData.dob}`);
+      if (aadhaarData.gender) pdfLines.push(`Gender: ${aadhaarData.gender}`);
+
+      if (address) {
+        pdfLines.push("");
+        pdfLines.push("ADDRESS INFORMATION");
+        if (address.house) pdfLines.push(`House: ${address.house}`);
+        if (address.street) pdfLines.push(`Street: ${address.street}`);
+        if (address.loc) pdfLines.push(`Location: ${address.loc}`);
+        if (address.vtc) pdfLines.push(`VTC: ${address.vtc}`);
+        if (address.subdist) pdfLines.push(`Sub-District: ${address.subdist}`);
+        if (address.dist) pdfLines.push(`District: ${address.dist}`);
+        if (address.state) pdfLines.push(`State: ${address.state}`);
+        if (address.po) pdfLines.push(`Post Office: ${address.po}`);
+        if (address.country) pdfLines.push(`Country: ${address.country}`);
+        if (aadhaarData.zip) pdfLines.push(`ZIP Code: ${aadhaarData.zip}`);
+      }
+
+      if (aadhaarData.care_of) {
+        pdfLines.push("");
+        pdfLines.push(`Care Of: ${aadhaarData.care_of}`);
+      }
+
+      const extractedInfo = [
+        {
+          label: "Full Name",
+          value: aadhaarData.full_name || "Not Available",
+          icon: <User className="w-6 h-6 text-blue-600" />,
+          bgColor: "bg-blue-50",
+          borderColor: "border-blue-200",
+          textColor: "text-blue-700",
+          valueColor: "text-blue-900",
+        },
+        {
+          label: "Aadhaar Number",
+          value: aadhaarData.aadhaar_number || "Not Available",
+          icon: <CreditCard className="w-6 h-6 text-green-600" />,
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+          textColor: "text-green-700",
+          valueColor: "text-green-900",
+        },
+        {
+          label: "Date of Birth",
+          value: aadhaarData.dob || "Not Available",
+          icon: <FileText className="w-6 h-6 text-purple-600" />,
+          bgColor: "bg-purple-50",
+          borderColor: "border-purple-200",
+          textColor: "text-purple-700",
+          valueColor: "text-purple-900",
+        },
+        ...(aadhaarData.gender ? [{
+          label: "Gender",
+          value: aadhaarData.gender,
+          icon: <User className="w-6 h-6 text-pink-600" />,
+          bgColor: "bg-pink-50",
+          borderColor: "border-pink-200",
+          textColor: "text-pink-700",
+          valueColor: "text-pink-900",
+        }] : []),
+      ];
+
+      return (
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={message}
+          isValid={true}
+          requestId={requestId}
+          result={result}
+          onReset={handleReset}
+          targetRef={shareTargetRef}
+          summary={pdfLines.join("\n")}
+        >
+          <div ref={shareTargetRef} className="space-y-6">
+            {/* Summary Cards */}
+            {extractedInfo.length > 0 && (
+              <div className="bg-white rounded-lg p-6 border border-green-200">
+                <div className="space-y-6">
+                  {extractedInfo.map((info, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-4 p-4 ${info.bgColor} rounded-lg border ${info.borderColor}`}
+                    >
+                      <div className={`w-12 h-12 ${info.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                        {info.icon}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${info.textColor} mb-1`}>
+                          {info.label}
+                        </p>
+                        <p className={`text-lg font-bold ${info.valueColor}`}>
+                          {info.value}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Address Information */}
+            {address && Object.keys(address).length > 0 && (
+              <div className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm">
+                <h5 className="font-semibold text-gray-900 mb-4">Address Information</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {address.house && (
+                    <div>
+                      <div className="text-sm text-gray-500">House</div>
+                      <div className="font-semibold text-gray-900">{address.house}</div>
+                    </div>
+                  )}
+                  {address.street && (
+                    <div>
+                      <div className="text-sm text-gray-500">Street</div>
+                      <div className="font-semibold text-gray-900">{address.street}</div>
+                    </div>
+                  )}
+                  {address.loc && (
+                    <div>
+                      <div className="text-sm text-gray-500">Location</div>
+                      <div className="font-semibold text-gray-900">{address.loc}</div>
+                    </div>
+                  )}
+                  {address.vtc && (
+                    <div>
+                      <div className="text-sm text-gray-500">VTC</div>
+                      <div className="font-semibold text-gray-900">{address.vtc}</div>
+                    </div>
+                  )}
+                  {address.subdist && (
+                    <div>
+                      <div className="text-sm text-gray-500">Sub-District</div>
+                      <div className="font-semibold text-gray-900">{address.subdist}</div>
+                    </div>
+                  )}
+                  {address.dist && (
+                    <div>
+                      <div className="text-sm text-gray-500">District</div>
+                      <div className="font-semibold text-gray-900">{address.dist}</div>
+                    </div>
+                  )}
+                  {address.state && (
+                    <div>
+                      <div className="text-sm text-gray-500">State</div>
+                      <div className="font-semibold text-gray-900">{address.state}</div>
+                    </div>
+                  )}
+                  {address.po && (
+                    <div>
+                      <div className="text-sm text-gray-500">Post Office</div>
+                      <div className="font-semibold text-gray-900">{address.po}</div>
+                    </div>
+                  )}
+                  {address.country && (
+                    <div>
+                      <div className="text-sm text-gray-500">Country</div>
+                      <div className="font-semibold text-gray-900">{address.country}</div>
+                    </div>
+                  )}
+                  {aadhaarData.zip && (
+                    <div>
+                      <div className="text-sm text-gray-500">ZIP Code</div>
+                      <div className="font-semibold text-gray-900">{aadhaarData.zip}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Information */}
+            {(aadhaarData.care_of || aadhaarData.share_code) && (
+              <div className="p-4 rounded-xl border bg-white border-gray-200 shadow-sm">
+                <h5 className="font-semibold text-gray-900 mb-4">Additional Information</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {aadhaarData.care_of && (
+                    <div>
+                      <div className="text-sm text-gray-500">Care Of</div>
+                      <div className="font-semibold text-gray-900">{aadhaarData.care_of}</div>
+                    </div>
+                  )}
+                  {aadhaarData.share_code && (
+                    <div>
+                      <div className="text-sm text-gray-500">Share Code</div>
+                      <div className="font-semibold text-gray-900">{aadhaarData.share_code}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Download Links - XML only (ZIP removed per requirements) */}
+            {aadhaarData.raw_xml && (
+              <div className="mt-4">
+                <a
+                  href={aadhaarData.raw_xml}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  Download XML
+                </a>
+              </div>
+            )}
           </div>
         </VerificationResultShell>
       );

@@ -4,6 +4,8 @@ import type React from "react"
 import { useState } from "react"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
+import { NoQuotaDialog } from "./NoQuotaDialog"
 import { drivingLicenseServices } from "../../utils/drivingLicenseServices"
 import { drivingLicenseApi } from "../../services/api/drivingLicenseApi"
 import { usePricingContext } from "../../context/PricingContext"
@@ -13,6 +15,9 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState<any>(null)
 
   // Get DL pricing from backend
   const { getVerificationPricingByType } = usePricingContext()
@@ -65,9 +70,17 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
   }
 
   const handleSubmit = async (formData: any) => {
+    setPendingFormData(formData)
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false)
     setIsLoading(true)
     setError(null)
     setResult(null)
+
+    const formData = pendingFormData
 
     try {
       let response
@@ -98,42 +111,67 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
 
       setResult(response)
     } catch (err: any) {
-      setError(err?.message || "Verification failed")
+      const errorMessage = err?.response?.data?.message || err?.message || ""
+      // Check for quota error and show NoQuotaDialog
+      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
+        setShowNoQuotaDialog(true)
+      } else {
+        setError(errorMessage || "Verification failed")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <VerificationLayout
-      title="Driving License Verification Services"
-      description="Comprehensive driving license verification and OCR services"
-      services={drivingLicenseServices}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      {/* Display pricing if available */}
-      {/* {dlPricing && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
-          <div className="flex gap-4 text-sm">
-            <span className="text-blue-600">One-time: ₹{dlPricing.oneTimePrice}</span>
-            <span className="text-blue-600">Monthly: ₹{dlPricing.monthlyPrice}</span>
-            <span className="text-blue-600">Yearly: ₹{dlPricing.yearlyPrice}</span>
+    <>
+      <VerificationLayout
+        title="Driving License Verification Services"
+        description="Comprehensive driving license verification and OCR services"
+        services={drivingLicenseServices}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange}
+      >
+        {/* Display pricing if available */}
+        {/* {dlPricing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
+            <div className="flex gap-4 text-sm">
+              <span className="text-blue-600">One-time: ₹{dlPricing.oneTimePrice}</span>
+              <span className="text-blue-600">Monthly: ₹{dlPricing.monthlyPrice}</span>
+              <span className="text-blue-600">Yearly: ₹{dlPricing.yearlyPrice}</span>
+            </div>
           </div>
-        </div>
-      )} */}
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
+        )} */}
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
+
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
         serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
-    </VerificationLayout>
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={() => setShowNoQuotaDialog(false)}
+        serviceName={selectedService.name}
+        verificationType="drivinglicense"
+      />
+    </>
   )
 }

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.consentSchema = exports.cinByPanSchema = exports.epfoValidateOtpSchema = exports.epfoGenerateOtpSchema = exports.epfoFetchUanSchema = exports.bankAccountVerifySchema = exports.voterBosonFetchSchema = exports.voterOcrSchema = exports.drivingLicenseSchema = exports.gstinByPanSchema = exports.gstinFetchSchema = exports.gstinSchema = exports.aadhaarOcrV1Schema = exports.panAadhaarLinkSchema = exports.panFatherNameSchema = exports.panNumberSchema = exports.verifyOtpSchema = exports.sendOtpSchema = exports.resetPasswordSchema = exports.changePasswordSchema = exports.loginSchema = exports.registerSchema = exports.envSchema = void 0;
+exports.consentSchema = exports.cinByPanSchema = exports.epfoValidateOtpSchema = exports.epfoGenerateOtpSchema = exports.epfoFetchUanSchema = exports.bankAccountVerifySchema = exports.voterBosonFetchSchema = exports.voterOcrSchema = exports.drivingLicenseSchema = exports.gstinByPanSchema = exports.gstinFetchSchema = exports.gstinSchema = exports.aadhaarSubmitOtpV2Schema = exports.aadhaarGenerateOtpV2Schema = exports.aadhaarNumberSchema = exports.aadhaarOcrV1Schema = exports.panAadhaarLinkSchema = exports.panFatherNameSchema = exports.panNumberSchema = exports.verifyOtpSchema = exports.sendOtpSchema = exports.resetPasswordSchema = exports.changePasswordSchema = exports.loginSchema = exports.registerSchema = exports.envSchema = void 0;
 const zod_1 = require("zod");
 // Environment Variables Schema
 exports.envSchema = zod_1.z.object({
@@ -21,6 +21,9 @@ exports.envSchema = zod_1.z.object({
     FIREBASE_PROJECT_ID: zod_1.z.string().optional(),
     FIREBASE_PRIVATE_KEY: zod_1.z.string().optional(),
     FIREBASE_CLIENT_EMAIL: zod_1.z.string().optional(),
+    // QuickEKYC API
+    QUICKEKYC_API_KEY: zod_1.z.string().optional(),
+    QUICKEKYC_BASE_URL: zod_1.z.string().url().optional(),
 });
 // Auth Schemas
 exports.registerSchema = zod_1.z.object({
@@ -121,6 +124,24 @@ exports.aadhaarOcrV1Schema = zod_1.z.object({
         }
     }, { message: 'Invalid base64 image format' }),
     consent: zod_1.z.enum(['Y', 'N']),
+});
+// Aadhaar V2 Schemas (QuickEKYC)
+exports.aadhaarNumberSchema = zod_1.z.string()
+    .regex(/^[0-9]{12}$/, 'Aadhaar number must be exactly 12 digits')
+    .transform((val) => val.trim());
+exports.aadhaarGenerateOtpV2Schema = zod_1.z.object({
+    id_number: exports.aadhaarNumberSchema,
+    consent: zod_1.z.enum(['Y', 'N']).optional(), // Consent handled in controller
+});
+exports.aadhaarSubmitOtpV2Schema = zod_1.z.object({
+    request_id: zod_1.z.union([
+        zod_1.z.string().min(1, 'Request ID is required'),
+        zod_1.z.number().positive('Request ID must be positive')
+    ]).transform((val) => String(val)),
+    otp: zod_1.z.string()
+        .regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+    client_id: zod_1.z.string().optional(),
+    consent: zod_1.z.enum(['Y', 'N']).optional(), // Consent handled in controller
 });
 // GSTIN Schemas
 exports.gstinSchema = zod_1.z.string()

@@ -6,6 +6,10 @@ import type {
   AadhaarOcrV2Response,
   FetchEAadhaarRequest,
   FetchEAadhaarResponse,
+  AadhaarV2GenerateOtpRequest,
+  AadhaarV2GenerateOtpResponse,
+  AadhaarV2SubmitOtpRequest,
+  AadhaarV2SubmitOtpResponse,
 } from "../../types/kyc"
 
 class AadhaarApi extends BaseApi {
@@ -17,6 +21,15 @@ class AadhaarApi extends BaseApi {
   }
   async fetchEAadhaar(data: FetchEAadhaarRequest): Promise<FetchEAadhaarResponse> {
     return this.post("/aadhaar/fetch-eaadhaar", data)
+  }
+  
+  // QuickEKYC Aadhaar V2 Methods
+  async generateOtpV2(data: AadhaarV2GenerateOtpRequest): Promise<AadhaarV2GenerateOtpResponse> {
+    return this.post("/aadhaar/v2/generate-otp", data)
+  }
+  
+  async submitOtpV2(data: AadhaarV2SubmitOtpRequest): Promise<AadhaarV2SubmitOtpResponse> {
+    return this.post("/aadhaar/v2/submit-otp", data)
   }
 }
 

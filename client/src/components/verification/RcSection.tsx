@@ -4,6 +4,8 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import  { VerificationLayout } from "./VerificationLayout";
 import { VerificationForm } from "./VerificationForm";
+import { VerificationConfirmDialog } from "./VerificationConfirmDialog";
+import { NoQuotaDialog } from "./NoQuotaDialog";
 import { rcServices } from "../../utils/rcServices";
 import { rcApi } from "../../services/api/rcApi";
 import { usePricingContext } from "../../context/PricingContext";
@@ -13,6 +15,9 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<any>(null);
 
   // Get RC pricing from backend
   const { getVerificationPricingByType } = usePricingContext()
@@ -60,9 +65,17 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
   };
 
   const handleSubmit = async (formData: any) => {
+    setPendingFormData(formData);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirmDialog(false);
     setIsLoading(true);
     setError(null);
     setResult(null);
+
+    const formData = pendingFormData;
 
     try {
       let response;
@@ -138,55 +151,80 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
 
       setResult(response);
     } catch (err: any) {
-      setError(err?.message || "Verification failed");
+      const errorMessage = err?.response?.data?.message || err?.message || "";
+      // Check for quota error and show NoQuotaDialog
+      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
+        setShowNoQuotaDialog(true);
+      } else {
+        setError(errorMessage || "Verification failed");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <VerificationLayout
-      title="Vehicle Verification Services"
-      description="Comprehensive vehicle RC, challan, and FASTag verification services"
-      services={rcServices}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      {/* Display pricing if available */}
-      {/* {rcPricing && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
-          <div className="flex flex-col gap-1 text-sm">
-            <span className="text-blue-700">
-              One-time: ₹{rcPricing.oneTimePrice}
-              {rcPricing.oneTimeQuota?.count ? ` • Includes ${rcPricing.oneTimeQuota.count} verification${rcPricing.oneTimeQuota.count > 1 ? 's' : ''}` : ''}
-              {rcPricing.oneTimeQuota?.validityDays && rcPricing.oneTimeQuota.validityDays > 0 ? ` • valid ${rcPricing.oneTimeQuota.validityDays} days` : ''}
-            </span>
-            <span className="text-blue-700">
-              Monthly: ₹{rcPricing.monthlyPrice}
-              {rcPricing.monthlyQuota?.count ? ` • Includes ${rcPricing.monthlyQuota.count} verification${rcPricing.monthlyQuota.count > 1 ? 's' : ''}` : ''}
-              {rcPricing.monthlyQuota?.validityDays && rcPricing.monthlyQuota.validityDays > 0 ? ` • valid ${rcPricing.monthlyQuota.validityDays} days` : ''}
-            </span>
-            <span className="text-blue-700">
-              Yearly: ₹{rcPricing.yearlyPrice}
-              {rcPricing.yearlyQuota?.count ? ` • Includes ${rcPricing.yearlyQuota.count} verification${rcPricing.yearlyQuota.count > 1 ? 's' : ''}` : ''}
-              {rcPricing.yearlyQuota?.validityDays && rcPricing.yearlyQuota.validityDays > 0 ? ` • valid ${rcPricing.yearlyQuota.validityDays} days` : ''}
-            </span>
+    <>
+      <VerificationLayout
+        title="Vehicle Verification Services"
+        description="Comprehensive vehicle RC, challan, and FASTag verification services"
+        services={rcServices}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange}
+      >
+        {/* Display pricing if available */}
+        {/* {rcPricing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
+            <div className="flex flex-col gap-1 text-sm">
+              <span className="text-blue-700">
+                One-time: ₹{rcPricing.oneTimePrice}
+                {rcPricing.oneTimeQuota?.count ? ` • Includes ${rcPricing.oneTimeQuota.count} verification${rcPricing.oneTimeQuota.count > 1 ? 's' : ''}` : ''}
+                {rcPricing.oneTimeQuota?.validityDays && rcPricing.oneTimeQuota.validityDays > 0 ? ` • valid ${rcPricing.oneTimeQuota.validityDays} days` : ''}
+              </span>
+              <span className="text-blue-700">
+                Monthly: ₹{rcPricing.monthlyPrice}
+                {rcPricing.monthlyQuota?.count ? ` • Includes ${rcPricing.monthlyQuota.count} verification${rcPricing.monthlyQuota.count > 1 ? 's' : ''}` : ''}
+                {rcPricing.monthlyQuota?.validityDays && rcPricing.monthlyQuota.validityDays > 0 ? ` • valid ${rcPricing.monthlyQuota.validityDays} days` : ''}
+              </span>
+              <span className="text-blue-700">
+                Yearly: ₹{rcPricing.yearlyPrice}
+                {rcPricing.yearlyQuota?.count ? ` • Includes ${rcPricing.yearlyQuota.count} verification${rcPricing.yearlyQuota.count > 1 ? 's' : ''}` : ''}
+                {rcPricing.yearlyQuota?.validityDays && rcPricing.yearlyQuota.validityDays > 0 ? ` • valid ${rcPricing.yearlyQuota.validityDays} days` : ''}
+              </span>
+            </div>
           </div>
-        </div>
-      )} */}
+        )} */}
 
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
+
+      <VerificationConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
         serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
+        formData={pendingFormData || {}}
+        tokenCost={1}
       />
-    </VerificationLayout>
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={() => setShowNoQuotaDialog(false)}
+        serviceName={selectedService.name}
+        verificationType="vehicle"
+      />
+    </>
   );
 };
