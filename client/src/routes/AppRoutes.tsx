@@ -6,6 +6,7 @@ import { AppProvider } from "../context/AppContext"
 import { ErrorBoundary } from "../components/common/ErrorBoundary"
 import { AdminRoute, UserRoute, AnyRoleRoute } from "../components/auth/ProtectedRoute"
 import { useTokenValidation } from "../hooks/useTokenValidation"
+import { useAutoLogout } from "../hooks/useAutoLogout"
 
 // Layout
 import Navbar from "../components/layout/Navbar"
@@ -52,6 +53,8 @@ import TermsAndConditionsPage from "../pages/TermsAndConditionsPage"
 const Layout = ({ children }: { children: React.ReactNode }) => {
   // Validate token on app initialization
   useTokenValidation();
+  // Auto-logout after 15 days (must be inside Redux Provider)
+  useAutoLogout();
   
   return (
     <div className="min-h-screen flex flex-col">
