@@ -317,12 +317,6 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
 
     return (
       <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            OTP has been sent to your registered mobile number ending with{" "}
-            <strong>{aadhaarNumber.slice(-4)}</strong>
-          </p>
-        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
