@@ -31,7 +31,7 @@ export const mockProducts: Product[] = [
     title: "PAN Card Verification",
     description: "Instantly verify PAN card details against government databases",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -63,7 +63,7 @@ export const mockProducts: Product[] = [
     title: "Aadhaar Verification",
     description: "Secure Aadhaar card verification with OTP validation",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -93,7 +93,7 @@ export const mockProducts: Product[] = [
     title: "Passport Verification",
     description: "International passport verification and validation",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -124,7 +124,7 @@ export const mockProducts: Product[] = [
     title: "Driving License Verification",
     description: "Verify Driving License details from RTO records.",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -155,7 +155,7 @@ export const mockProducts: Product[] = [
     title: "Voter ID Verification",
     description: "Verify voter details via direct fetch, captcha flow, or OCR scan.",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "personal",
       name: "Personal Verification",
@@ -189,7 +189,7 @@ export const mockProducts: Product[] = [
     title: "GSTIN Verification",
     description: "Verify business GSTIN details and contact information.",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "business",
       name: "Business Verification",
@@ -225,7 +225,7 @@ export const mockProducts: Product[] = [
     title: "Company Verification",
     description: "MCA company verification with CIN and DIN lookups.",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "business",
       name: "Business Verification",
@@ -261,7 +261,7 @@ export const mockProducts: Product[] = [
     title: "Vehicle Verification",
     description: "Verify vehicle Registration Certificate (RC) details including owner, insurance, PUC, and challans.",
     demandLevel: "high",
-    demand: "Most Demanding",
+    demand: "High In Demand",
     category: {
       id: "vehicle",
       name: "Vehicle Verification",
@@ -384,7 +384,7 @@ export const mockProducts: Product[] = [
   //   title: "Bank Account Verification",
   //   description: "Verify bank account details and ownership for financial institutions",
   //   demandLevel: "high",
-  //   demand: "Most Demanding",
+  //   demand: "High In Demand",
   //   category: {
   //     id: "banking",
   //     name: "Banking Service",

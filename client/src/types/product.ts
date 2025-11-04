@@ -39,7 +39,7 @@ export interface PricingTier {
 export type DemandLevel = "high" | "medium" | "low";
 export type DemandLabel =
   | "Most Demanding"
-  | "High Demand"
+  | "High In Demand"
   | "Trending"
   | "Essential";
   
