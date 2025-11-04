@@ -62,7 +62,7 @@ function adaptSolutionToProduct(solution: Solution): Product {
     image: solution.image,
     createdAt: (solution as any).createdAt,
     updatedAt: (solution as any).updatedAt,
-    demand: 'High Demand', // Default demand level
+    demand: 'High In Demand', // Default demand level
     demandLevel: 'medium',  // Default demand level
   }
 
