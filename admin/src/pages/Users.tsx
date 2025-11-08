@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Calendar,
   CheckCircle,
@@ -17,6 +17,8 @@ import {
   useUserStats,
   useUpdateUserRole,
   useToggleUserStatus,
+  useVerifyUserEmail,
+  useVerifyUserPhone,
 } from "../hooks/useUsers";
 import { useAnalyticsOverview } from "../hooks/useAnalytics";
 import UserAnalyticsChart from "../components/dashboard/UserAnalyticsChart";
@@ -60,6 +62,8 @@ const Users: React.FC = () => {
   const analyticsData = useAnalyticsOverview().data;
   const updateUserRole = useUpdateUserRole();
   const toggleUserStatus = useToggleUserStatus();
+  const verifyUserEmail = useVerifyUserEmail();
+  const verifyUserPhone = useVerifyUserPhone();
 
   // Filter configuration
   const filterConfig = [
@@ -95,6 +99,7 @@ const Users: React.FC = () => {
       label: 'Registration Date',
       type: 'select' as const,
       options: [
+        { value: 'all', label: 'All Time' },
         { value: 'last7days', label: 'Last 7 Days' },
         { value: 'last30days', label: 'Last 30 Days' },
         { value: 'last90days', label: 'Last 90 Days' },
@@ -133,10 +138,18 @@ const Users: React.FC = () => {
               </div>
             )}
             <div className="flex items-center space-x-2 mt-1">
-              <StatusBadge 
-                status={row.emailVerified ? 'verified' : 'unverified'} 
-                size="sm" 
-              />
+              {row.email && (
+                <StatusBadge 
+                  status={row.emailVerified === true ? 'verified' : 'unverified'} 
+                  size="sm" 
+                />
+              )}
+              {row.phone && (
+                <StatusBadge 
+                  status={row.phoneVerified === true ? 'verified' : 'unverified'} 
+                  size="sm" 
+                />
+              )}
             </div>
           </div>
         </div>
@@ -201,7 +214,7 @@ const Users: React.FC = () => {
       key: 'actions',
       label: 'Actions',
       render: (_, row) => (
-        <div className="flex items-center justify-end space-x-2">
+        <div className="flex items-center justify-end space-x-2 flex-wrap gap-1">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -213,6 +226,32 @@ const Users: React.FC = () => {
             <Eye className="w-3 h-3 mr-1" />
             View
           </button>
+          {row.email && !row.emailVerified && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVerifyEmail(row.id);
+              }}
+              className="px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 flex items-center"
+              title="Verify Email"
+            >
+              <Mail className="w-3 h-3 mr-1" />
+              Verify Email
+            </button>
+          )}
+          {row.phone && row.phoneVerified !== true && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleVerifyPhone(row.id);
+              }}
+              className="px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 flex items-center"
+              title="Verify Phone"
+            >
+              <Phone className="w-3 h-3 mr-1" />
+              Verify Phone
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -345,9 +384,27 @@ const Users: React.FC = () => {
   };
 
   const handleUserClick = (user: UserType) => {
-    setSelectedUser(user);
+    // Get the latest user data from the users array to ensure we have the most up-to-date information
+    const latestUser = users.find(u => u.id === user.id) || user;
+    setSelectedUser(latestUser);
     setIsUserDetailsOpen(true);
   };
+
+  // Keep selectedUser in sync with the latest data from users array
+  useEffect(() => {
+    if (selectedUser && isUserDetailsOpen) {
+      const latestUser = users.find(u => u.id === selectedUser.id);
+      if (latestUser && (
+        latestUser.emailVerified !== selectedUser.emailVerified ||
+        latestUser.phoneVerified !== selectedUser.phoneVerified ||
+        latestUser.isActive !== selectedUser.isActive ||
+        latestUser.role !== selectedUser.role
+      )) {
+        setSelectedUser(latestUser);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [users, isUserDetailsOpen]);
 
   const handleRoleChange = async (
     userId: string,
@@ -368,6 +425,22 @@ const Users: React.FC = () => {
     }
   };
 
+  const handleVerifyEmail = async (userId: string) => {
+    try {
+      await verifyUserEmail.mutateAsync(userId);
+    } catch (error) {
+      console.error("Failed to verify email:", error);
+    }
+  };
+
+  const handleVerifyPhone = async (userId: string) => {
+    try {
+      await verifyUserPhone.mutateAsync(userId);
+    } catch (error) {
+      console.error("Failed to verify phone:", error);
+    }
+  };
+
   const handleFilterChange = (key: string, value: any) => {
     switch (key) {
       case 'search':
@@ -384,11 +457,15 @@ const Users: React.FC = () => {
         break;
       case 'dateRange':
         setDateRangeFilter(value);
+        // Clear custom date range if switching away from "custom"
+        if (value !== 'custom') {
+          setCustomDateRange({ start: '', end: '' });
+        }
         break;
-      case 'customDateRange_start':
+      case 'dateRange_start':
         setCustomDateRange(prev => ({ ...prev, start: value }));
         break;
-      case 'customDateRange_end':
+      case 'dateRange_end':
         setCustomDateRange(prev => ({ ...prev, end: value }));
         break;
     }
@@ -531,8 +608,8 @@ const Users: React.FC = () => {
           role: roleFilter,
           emailVerified: emailVerifiedFilter,
           dateRange: dateRangeFilter,
-          customDateRange_start: customDateRange.start,
-          customDateRange_end: customDateRange.end
+          dateRange_start: customDateRange.start,
+          dateRange_end: customDateRange.end
         }}
         onChange={handleFilterChange}
         onClear={clearFilters}

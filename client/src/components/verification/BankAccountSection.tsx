@@ -96,6 +96,36 @@ export const BankAccountSection: React.FC<{ productId?: string }> = ({ productId
       const raw = response?.data || response
       const inner = raw?.data || raw
 
+      // Special handling for UPI verification - check response code
+      if (selectedService.key === "upi-verify") {
+        const responseCode = inner?.code || raw?.data?.code || raw?.code
+        const upiData = inner?.upi_data || raw?.upi_data
+        const upiId = payload?.vpa || payload?.upi
+        
+        // Code 1013 = Valid UPI, Code 1014 = Invalid UPI
+        const isValid = responseCode === "1013" || responseCode === 1013
+        const statusMessage = isValid ? "Valid UPI" : "Invalid UPI"
+        
+        const transformed: any = { 
+          data: { 
+            ...inner,
+            upi_data: upiData,
+            code: responseCode,
+            status: statusMessage,
+            isValid: isValid,
+            upi_id: upiId
+          } 
+        }
+        
+        // Add account holder name if available
+        if (upiData?.name) {
+          transformed.data.name = upiData.name
+        }
+        
+        setResult(transformed)
+        return
+      }
+
       const derivedName =
         inner?.account_holder_name ||
         inner?.name ||
@@ -128,9 +158,22 @@ export const BankAccountSection: React.FC<{ productId?: string }> = ({ productId
       setResult(transformed)
     } catch (err: any) {
       const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message || err?.message || ""
+      const errorCode = err?.response?.data?.error?.code || err?.response?.data?.code
       console.error("[Bank] Error", err?.response?.status, backendMsg, err?.response?.data)
-      // Check for quota error and show NoQuotaDialog
-      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(backendMsg)) {
+      
+      // Check for quota error specifically - only show NoQuotaDialog for actual quota exhaustion
+      // Quota errors have message "Verification quota exhausted or expired"
+      // FORBIDDEN_ACCESS from Gridlines is NOT a quota error - it's a product access issue
+      const isQuotaError = 
+        /verification quota exhausted|quota.*exhaust|exhaust.*quota/i.test(backendMsg) ||
+        (err?.response?.status === 403 && 
+         errorCode !== 'FORBIDDEN_ACCESS' && 
+         /quota|exhaust|exhausted|limit|token/i.test(backendMsg))
+      
+      // If it's a FORBIDDEN_ACCESS error from Gridlines, show the actual error message
+      if (errorCode === 'FORBIDDEN_ACCESS' || (err?.response?.status === 403 && /credential.*access|product.*not available/i.test(backendMsg))) {
+        setError(backendMsg || "Access denied. This product is not available with your current credentials.")
+      } else if (isQuotaError) {
         setShowNoQuotaDialog(true)
       } else {
         setError(backendMsg || "An error occurred")

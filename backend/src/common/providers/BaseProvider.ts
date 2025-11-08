@@ -85,6 +85,15 @@ export abstract class BaseProvider {
     } else if (error.response?.status === 401) {
       errorMessage = 'Invalid API key or authentication failed';
       statusCode = 401;
+    } else if (error.response?.status === 403) {
+      // Handle 403 Forbidden Access (product access denied)
+      const errorData = error.response?.data?.error;
+      if (errorData?.code === 'FORBIDDEN_ACCESS' || errorData?.message) {
+        errorMessage = errorData.message || 'Access denied. This product is not available with your current credentials.';
+      } else {
+        errorMessage = error.response?.data?.message || 'Access denied. This product is not available with your current credentials.';
+      }
+      statusCode = 403;
     } else if (error.response?.status === 404) {
       errorMessage = `${operationName} endpoint not found`;
       statusCode = 404;
@@ -245,6 +254,15 @@ export function createStandardErrorMapper(defaultMessage: string): (error: any) 
     } else if (error.response?.status === 401) {
       errorMessage = 'Invalid API key or authentication failed';
       statusCode = 401;
+    } else if (error.response?.status === 403) {
+      // Handle 403 Forbidden Access (product access denied)
+      const errorData = error.response?.data?.error;
+      if (errorData?.code === 'FORBIDDEN_ACCESS' || errorData?.message) {
+        errorMessage = errorData.message || 'Access denied. This product is not available with your current credentials.';
+      } else {
+        errorMessage = error.response?.data?.message || 'Access denied. This product is not available with your current credentials.';
+      }
+      statusCode = 403;
     } else if (error.response?.status === 404) {
       errorMessage = 'API endpoint not found';
       statusCode = 404;

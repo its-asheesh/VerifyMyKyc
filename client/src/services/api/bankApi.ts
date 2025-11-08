@@ -14,12 +14,12 @@ class BankApi extends BaseApi {
     return this.post<BankAccountVerifyResponse>("/bankaccount/verify", data)
   }
   async validateIfsc(data: IfscValidateRequest): Promise<IfscValidateResponse> {
-    // TODO: Backend route not implemented yet
-    return this.post<IfscValidateResponse>("/bank/validate-ifsc", data)
+    // Backend mounts at /api/bankaccount/verify-ifsc
+    return this.post<IfscValidateResponse>("/bankaccount/verify-ifsc", data)
   }
   async verifyUpi(data: UpiVerifyRequest): Promise<UpiVerifyResponse> {
-    // TODO: Backend route not implemented yet
-    return this.post<UpiVerifyResponse>("/bank/verify-upi", data)
+    // Backend mounts at /api/bankaccount/verify-upi
+    return this.post<UpiVerifyResponse>("/bankaccount/verify-upi", data)
   }
   // Expose a public post method for generic use
   public async post<T>(url: string, data?: any, config?: any): Promise<T> {

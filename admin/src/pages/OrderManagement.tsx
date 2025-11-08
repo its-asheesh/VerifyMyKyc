@@ -4,6 +4,7 @@ import {
   CheckCircle, Clock, AlertCircle,
   IndianRupee,  Loader2, BarChart
 } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
 import { useOrders, useOrderStats, useUpdateOrderStatus } from '../hooks/useOrders'
 import { useAnalyticsOverview } from '../hooks/useAnalytics'
@@ -20,15 +21,32 @@ import { formatDate, formatCurrency } from '../utils/dateUtils'
 import type { Column } from '../components/common/DataTable'
 
 const OrderManagement: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const dateRangeFromUrl = searchParams.get('dateRange')
+  
   const [filters, setFilters] = useState({
     status: '',
     orderType: '',
     paymentStatus: '',
+    serviceName: '',
     search: ''
   })
+  const [dateRangeFilter, setDateRangeFilter] = useState(dateRangeFromUrl || 'all')
+  const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' })
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(!!dateRangeFromUrl)
   const [sortConfig, setSortConfig] = useState<{ field: string; direction: 'asc' | 'desc' }>({ field: 'createdAt', direction: 'desc' })
   const [isOrderChartOpen, setIsOrderChartOpen] = useState(false)
   const queryClient = useQueryClient()
+
+  // Update date range filter when URL parameter changes
+  useEffect(() => {
+    if (dateRangeFromUrl) {
+      setDateRangeFilter(dateRangeFromUrl)
+      setShowAdvancedFilters(true)
+      // Clear the URL parameter after applying
+      setSearchParams({}, { replace: true })
+    }
+  }, [dateRangeFromUrl, setSearchParams])
 
   // Fetch data using React Query
   const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useOrders()
@@ -50,6 +68,47 @@ const OrderManagement: React.FC = () => {
     }
   }, [isOrderChartOpen, refetchStats, queryClient])
 
+  // All available products in the system
+  const allProducts = [
+    { value: '', label: 'All Products' },
+    { value: 'pan', label: 'PAN Card Verification' },
+    { value: 'aadhaar', label: 'Aadhaar Verification' },
+    { value: 'passport', label: 'Passport Verification' },
+    { value: 'drivinglicense', label: 'Driving License Verification' },
+    { value: 'driving license', label: 'Driving License Verification' },
+    { value: 'voterid', label: 'Voter ID Verification' },
+    { value: 'voter id', label: 'Voter ID Verification' },
+    { value: 'gstin', label: 'GSTIN Verification' },
+    { value: 'company', label: 'Company Verification (MCA)' },
+    { value: 'mca', label: 'Company Verification (MCA)' },
+    { value: 'vehicle', label: 'Vehicle Verification' },
+    { value: 'ccrv', label: 'Criminal Case Record Verification' },
+    { value: 'bank-account', label: 'Bank Account Verification' },
+    { value: 'bank account', label: 'Bank Account Verification' },
+    { value: 'epfo', label: 'EPFO Verification' }
+  ]
+
+  // Get unique service names from orders that might not be in the static list
+  const dynamicServiceOptions = useMemo(() => {
+    const uniqueServices = Array.from(new Set(orders.map(order => order.serviceName).filter(Boolean)))
+    const staticServiceValues = allProducts.map(p => p.value.toLowerCase())
+    
+    // Find services that aren't in our static list
+    const additionalServices = uniqueServices
+      .filter(service => {
+        const serviceLower = service.toLowerCase()
+        return !staticServiceValues.some(staticValue => 
+          serviceLower.includes(staticValue) || staticValue.includes(serviceLower)
+        )
+      })
+      .map(service => ({
+        value: service.toLowerCase(),
+        label: service
+      }))
+    
+    return additionalServices
+  }, [orders])
+
   // Filter configuration
   const filterConfig = [
     {
@@ -60,6 +119,15 @@ const OrderManagement: React.FC = () => {
         { value: 'active', label: 'Active' },
         { value: 'expired', label: 'Expired' },
         { value: 'cancelled', label: 'Cancelled' }
+      ]
+    },
+    {
+      key: 'serviceName',
+      label: 'Product/Service',
+      type: 'select' as const,
+      options: [
+        ...allProducts,
+        ...dynamicServiceOptions
       ]
     },
     {
@@ -80,6 +148,22 @@ const OrderManagement: React.FC = () => {
         { value: 'pending', label: 'Pending' },
         { value: 'failed', label: 'Failed' },
         { value: 'refunded', label: 'Refunded' }
+      ]
+    },
+    {
+      key: 'dateRange',
+      label: 'Date Range',
+      type: 'select' as const,
+      options: [
+        { value: 'all', label: 'All Time' },
+        { value: '1day', label: 'Last 1 Day' },
+        { value: '7days', label: 'Last 7 Days' },
+        { value: '1month', label: 'Last 1 Month' },
+        { value: '3months', label: 'Last 3 Months' },
+        { value: '6months', label: 'Last 6 Months' },
+        { value: '1year', label: 'Last 1 Year' },
+        { value: '5years', label: 'Last 5 Years' },
+        { value: 'custom', label: 'Custom Range' }
       ]
     }
   ]
@@ -170,10 +254,89 @@ const OrderManagement: React.FC = () => {
         (order.userId?.email || '').toLowerCase().includes(filters.search.toLowerCase())
       
       const matchesStatus = !filters.status || order.status === filters.status
+      const matchesServiceName = !filters.serviceName || (() => {
+        const orderService = order.serviceName.toLowerCase().trim()
+        const filterService = filters.serviceName.toLowerCase().trim()
+        
+        // Exact match
+        if (orderService === filterService) return true
+        
+        // Normalize spaces and check if one contains the other
+        const normalizedOrder = orderService.replace(/\s+/g, ' ')
+        const normalizedFilter = filterService.replace(/\s+/g, ' ')
+        
+        if (normalizedOrder.includes(normalizedFilter) || normalizedFilter.includes(normalizedOrder)) {
+          return true
+        }
+        
+        // Handle common product name variations
+        const productMappings: Record<string, string[]> = {
+          'pan': ['pan', 'pan card'],
+          'aadhaar': ['aadhaar', 'aadhar'],
+          'passport': ['passport'],
+          'drivinglicense': ['driving license', 'driving licence', 'drivinglicense', 'dl'],
+          'voterid': ['voter id', 'voterid', 'voter', 'epic'],
+          'gstin': ['gstin', 'gst'],
+          'company': ['company', 'mca'],
+          'vehicle': ['vehicle', 'rc'],
+          'ccrv': ['ccrv', 'criminal'],
+          'bank-account': ['bank account', 'bank-account', 'bank'],
+          'epfo': ['epfo', 'uan']
+        }
+        
+        // Check if both order and filter match any product mapping
+        for (const [productKey, variations] of Object.entries(productMappings)) {
+          const orderMatches = variations.some(v => normalizedOrder.includes(v))
+          const filterMatches = variations.some(v => normalizedFilter.includes(v) || productKey === normalizedFilter)
+          if (orderMatches && filterMatches) return true
+        }
+        
+        return false
+      })()
       const matchesOrderType = !filters.orderType || order.orderType === filters.orderType
       const matchesPaymentStatus = !filters.paymentStatus || order.paymentStatus === filters.paymentStatus
       
-      return matchesSearch && matchesStatus && matchesOrderType && matchesPaymentStatus
+      // Date range filter
+      const matchesDateRange = (() => {
+        if (dateRangeFilter === 'all') return true
+        
+        const orderDate = new Date(order.createdAt)
+        const now = new Date()
+        
+        switch (dateRangeFilter) {
+          case '1day':
+            const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)
+            return orderDate >= oneDayAgo
+          case '7days':
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            return orderDate >= sevenDaysAgo
+          case '1month':
+            const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            return orderDate >= oneMonthAgo
+          case '3months':
+            const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+            return orderDate >= threeMonthsAgo
+          case '6months':
+            const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)
+            return orderDate >= sixMonthsAgo
+          case '1year':
+            const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+            return orderDate >= oneYearAgo
+          case '5years':
+            const fiveYearsAgo = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000)
+            return orderDate >= fiveYearsAgo
+          case 'custom':
+            if (!customDateRange.start || !customDateRange.end) return true
+            const startDate = new Date(customDateRange.start)
+            const endDate = new Date(customDateRange.end)
+            endDate.setHours(23, 59, 59, 999) // Include the entire end date
+            return orderDate >= startDate && orderDate <= endDate
+          default:
+            return true
+        }
+      })()
+      
+      return matchesSearch && matchesStatus && matchesServiceName && matchesOrderType && matchesPaymentStatus && matchesDateRange
     })
 
     // Sort orders
@@ -208,7 +371,24 @@ const OrderManagement: React.FC = () => {
     })
 
     return filtered
-  }, [orders, filters, sortConfig])
+  }, [orders, filters, sortConfig, dateRangeFilter, customDateRange])
+
+  // Calculate filtered stats based on filtered orders
+  const filteredStats = useMemo(() => {
+    const filteredRevenue = filteredAndSortedOrders
+      .filter(order => order.paymentStatus === 'completed')
+      .reduce((sum, order) => sum + (order.finalAmount || 0), 0)
+    
+    const filteredActiveOrders = filteredAndSortedOrders.filter(order => order.status === 'active').length
+    const filteredPendingOrders = filteredAndSortedOrders.filter(order => order.paymentStatus === 'pending').length
+    
+    return {
+      totalOrders: filteredAndSortedOrders.length,
+      activeOrders: filteredActiveOrders,
+      totalRevenue: filteredRevenue,
+      pendingOrders: filteredPendingOrders
+    }
+  }, [filteredAndSortedOrders])
 
   const handleSort = (field: string) => {
     setSortConfig(prev => ({
@@ -218,11 +398,25 @@ const OrderManagement: React.FC = () => {
   }
 
   const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+    if (key === 'dateRange') {
+      setDateRangeFilter(value)
+      // Clear custom date range if switching away from "custom"
+      if (value !== 'custom') {
+        setCustomDateRange({ start: '', end: '' })
+      }
+    } else if (key === 'dateRange_start') {
+      setCustomDateRange(prev => ({ ...prev, start: value }))
+    } else if (key === 'dateRange_end') {
+      setCustomDateRange(prev => ({ ...prev, end: value }))
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value }))
+    }
   }
 
   const clearFilters = () => {
-    setFilters({ status: '', orderType: '', paymentStatus: '', search: '' })
+    setFilters({ status: '', orderType: '', paymentStatus: '', serviceName: '', search: '' })
+    setDateRangeFilter('all')
+    setCustomDateRange({ start: '', end: '' })
   }
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
@@ -322,46 +516,51 @@ const OrderManagement: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Total Orders"
-            value={stats.totalOrders}
-            icon={Package}
-            color="blue"
-            loading={statsLoading}
-          />
-          <StatCard
-            title="Active Orders"
-            value={stats.activeOrders}
-            icon={CheckCircle}
-            color="green"
-            loading={statsLoading}
-          />
-          <StatCard
-            title="Total Revenue"
-            value={formatCurrency(stats.totalRevenue)}
-            icon={IndianRupee}
-            color="purple"
-            loading={statsLoading}
-          />
-          <StatCard
-            title="Pending Orders"
-            value={stats.pendingOrders}
-            icon={Clock}
-            color="orange"
-            loading={statsLoading}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title={dateRangeFilter !== 'all' ? "Filtered Orders" : "Total Orders"}
+          value={dateRangeFilter !== 'all' ? filteredStats.totalOrders : (stats?.totalOrders || 0)}
+          icon={Package}
+          color="blue"
+          loading={statsLoading}
+        />
+        <StatCard
+          title={dateRangeFilter !== 'all' ? "Filtered Active" : "Active Orders"}
+          value={dateRangeFilter !== 'all' ? filteredStats.activeOrders : (stats?.activeOrders || 0)}
+          icon={CheckCircle}
+          color="green"
+          loading={statsLoading}
+        />
+        <StatCard
+          title={dateRangeFilter !== 'all' ? "Filtered Revenue" : "Total Revenue"}
+          value={formatCurrency(dateRangeFilter !== 'all' ? filteredStats.totalRevenue : (stats?.totalRevenue || 0))}
+          icon={IndianRupee}
+          color="purple"
+          loading={statsLoading}
+        />
+        <StatCard
+          title={dateRangeFilter !== 'all' ? "Filtered Pending" : "Pending Orders"}
+          value={dateRangeFilter !== 'all' ? filteredStats.pendingOrders : (stats?.pendingOrders || 0)}
+          icon={Clock}
+          color="orange"
+          loading={statsLoading}
+        />
+      </div>
 
       {/* Filters */}
       <AdvancedFilters
         filters={filterConfig}
-        values={filters}
+        values={{
+          ...filters,
+          dateRange: dateRangeFilter,
+          dateRange_start: customDateRange.start,
+          dateRange_end: customDateRange.end
+        }}
         onChange={handleFilterChange}
         onClear={clearFilters}
         searchPlaceholder="Search orders by ID, service, customer name or email..."
+        showAdvanced={showAdvancedFilters}
+        onToggleAdvanced={setShowAdvancedFilters}
       />
 
       {/* Orders Table */}

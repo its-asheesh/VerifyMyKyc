@@ -27,6 +27,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
   const count = data?.stats?.count ?? 0
   const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0"
 
+  // Generate a consistent random number between 500-1000 for each product based on product ID
+  // If actual users exceed 1000, show actual count instead
+  const generateUserCount = (productId: string, actualUsers?: number): string => {
+    // If actual users exist and exceed 1000, use actual count
+    if (actualUsers !== undefined && actualUsers > 1000) {
+      return actualUsers.toLocaleString()
+    }
+    
+    // Otherwise, generate consistent random number between 500-1000
+    // Use product ID as seed for consistent random number
+    let hash = 0
+    for (let i = 0; i < productId.length; i++) {
+      const char = productId.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    // Generate number between 500 and 1000
+    const randomNum = Math.abs(hash) % 501 + 500
+    return randomNum.toLocaleString()
+  }
+
+  // Check if product has actual user count (from stats or analytics)
+  const actualUsers = (product as any).userCount || (product as any).stats?.userCount || undefined
+  const userCount = generateUserCount(product.id, actualUsers)
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -78,7 +103,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
           </p>
 
           {/* Features - Only show in grid view or first 3 in list view */}
-          <div className={`flex flex-wrap gap-2 ${isListView ? "mt-3" : "mb-4"}`}>
+          {/* <div className={`flex flex-wrap gap-2 ${isListView ? "mt-3" : "mb-4"}`}>
             {product.features.slice(0, isListView ? 3 : 4).map((feature, index) => (
               <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                 {feature}
@@ -87,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
             {product.features.length > (isListView ? 3 : 4) && (
               <span className="text-xs text-gray-500">+{product.features.length - (isListView ? 3 : 4)} more</span>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Bottom Section (always aligned at bottom) */}
@@ -112,7 +137,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode = "g
             </div> */}
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
-              <span>1.2k users</span>
+              <span>{userCount} users</span>
             </div>
             <div className="flex items-center gap-">
               <Zap className="w-4 h-4" />

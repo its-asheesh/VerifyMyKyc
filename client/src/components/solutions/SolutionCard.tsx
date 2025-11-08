@@ -14,6 +14,31 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
   // Align some display stats with ProductCard
   const avgDisplay = "0.0"
 
+  // Generate a consistent random number between 500-1000 for each solution based on solution ID
+  // If actual users exceed 1000, show actual count instead
+  const generateUserCount = (solutionId: string, actualUsers?: number): string => {
+    // If actual users exist and exceed 1000, use actual count
+    if (actualUsers !== undefined && actualUsers > 1000) {
+      return actualUsers.toLocaleString()
+    }
+    
+    // Otherwise, generate consistent random number between 500-1000
+    // Use solution ID as seed for consistent random number
+    let hash = 0
+    for (let i = 0; i < solutionId.length; i++) {
+      const char = solutionId.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    // Generate number between 500 and 1000
+    const randomNum = Math.abs(hash) % 501 + 500
+    return randomNum.toLocaleString()
+  }
+
+  // Check if solution has actual user count (from stats or analytics)
+  const actualUsers = (solution as any).userCount || (solution as any).stats?.userCount || undefined
+  const userCount = generateUserCount(solution.id, actualUsers)
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -82,7 +107,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             </div>
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
-              <span>1.2k users</span>
+              <span>{userCount} users</span>
             </div>
             <div className="flex items-center gap-">
               <Zap className="w-4 h-4" />

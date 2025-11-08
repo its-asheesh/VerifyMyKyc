@@ -470,6 +470,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
         isActive: user.isActive,
         lastLogin: user.lastLogin,
         emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
         location: user.location,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -525,6 +526,86 @@ export const toggleUserStatus = asyncHandler(async (req: Request, res: Response)
     success: true,
     message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
     data: { user }
+  });
+});
+
+// Admin: Verify user email (admin only)
+export const verifyUserEmail = asyncHandler(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (!user.email) {
+    return res.status(400).json({ message: 'User does not have an email address' });
+  }
+
+  user.emailVerified = true;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Email verified successfully',
+    data: { 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+        phone: user.phone,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
+        location: user.location,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    }
+  });
+});
+
+// Admin: Verify user phone (admin only)
+export const verifyUserPhone = asyncHandler(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (!user.phone) {
+    return res.status(400).json({ message: 'User does not have a phone number' });
+  }
+
+  user.phoneVerified = true;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Phone verified successfully',
+    data: { 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+        phone: user.phone,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
+        location: user.location,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    }
   });
 }); 
 

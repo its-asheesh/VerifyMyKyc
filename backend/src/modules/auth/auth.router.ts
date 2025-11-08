@@ -9,6 +9,8 @@ import {
   getAllUsers,
   updateUserRole,
   toggleUserStatus,
+  verifyUserEmail,
+  verifyUserPhone,
   getUserStats,
   getUserLocationAnalytics,
   updateUserLocation,
@@ -63,6 +65,8 @@ router.get('/users/location-analytics', authenticate, requireAdmin, getUserLocat
 router.get('/users/with-location', authenticate, requireAdmin, getUsersWithLocation);
 router.put('/users/:userId/role', authenticate, requireAdmin, updateUserRole);
 router.put('/users/:userId/toggle-status', authenticate, requireAdmin, toggleUserStatus);
+router.put('/users/:userId/verify-email', authenticate, requireAdmin, verifyUserEmail);
+router.put('/users/:userId/verify-phone', authenticate, requireAdmin, verifyUserPhone);
 router.put('/users/:userId/location', authenticate, requireAnyRole, updateUserLocation);
 router.post('/phone/register', registerLimiter, firebasePhoneRegister);
 router.post('/phone/login', authLimiter, firebasePhoneLogin);

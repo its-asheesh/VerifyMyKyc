@@ -12,6 +12,7 @@ export interface User {
   isActive: boolean
   lastLogin?: string
   emailVerified: boolean
+  phoneVerified?: boolean
   location?: {
     country?: string
     city?: string
@@ -132,6 +133,14 @@ class UserApi {
     ipAddress?: string
   }): Promise<User> {
     return api.put(`/auth/users/${userId}/location`, locationData).then(res => res.data.data.user)
+  }
+
+  async verifyUserEmail(userId: string): Promise<User> {
+    return api.put(`/auth/users/${userId}/verify-email`).then(res => res.data.data.user)
+  }
+
+  async verifyUserPhone(userId: string): Promise<User> {
+    return api.put(`/auth/users/${userId}/verify-phone`).then(res => res.data.data.user)
   }
 }
 

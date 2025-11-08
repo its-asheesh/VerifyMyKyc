@@ -59,13 +59,34 @@ export async function generateOtpV2Provider(
       request_id: response.data.request_id,
     });
 
+    // Validate response structure
+    if (!response.data || typeof response.data !== 'object') {
+      throw new HTTPError('Invalid response from QuickEKYC API', 502);
+    }
+
     return response.data;
   } catch (error: any) {
     console.error('Aadhaar V2 Generate OTP Error:', {
       message: error.message,
       status: error.response?.status,
+      statusText: error.response?.statusText,
       data: error.response?.data,
+      code: error.code,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+      }
     });
+
+    // Handle network errors
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      throw new HTTPError('Unable to connect to QuickEKYC API. Please check your network connection.', 503);
+    }
+
+    // Handle timeout
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      throw new HTTPError('Request to QuickEKYC API timed out. Please try again.', 408);
+    }
 
     // Handle rate limit (429) specifically
     if (error.response?.status === 429) {
@@ -76,6 +97,28 @@ export async function generateOtpV2Provider(
       );
     }
 
+    // Handle 401 Unauthorized (IP whitelisting)
+    if (error.response?.status === 401) {
+      const errorMessage = error.response?.data?.message || 'Unauthorized access to QuickEKYC API';
+      throw new HTTPError(
+        errorMessage.includes('whitelist') 
+          ? 'IP address not whitelisted. Please contact support.'
+          : errorMessage,
+        401,
+        error.response?.data
+      );
+    }
+
+    // Handle 500 from external API
+    if (error.response?.status === 500) {
+      throw new HTTPError(
+        'QuickEKYC API server error. Please try again later.',
+        502,
+        error.response?.data
+      );
+    }
+
+    // Use standard error mapper for other errors
     const { message, statusCode } = createStandardErrorMapper('Aadhaar V2 OTP generation failed')(error);
     throw new HTTPError(message, statusCode, error.response?.data);
   }

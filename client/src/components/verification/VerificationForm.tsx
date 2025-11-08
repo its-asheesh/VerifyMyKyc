@@ -23,6 +23,7 @@ import {
 import { VerificationResultShell } from "./VerificationResultShell.tsx";
 import ShareActions from "./ShareActions";
 import { ProductReviews } from "../reviews/ProductReviews";
+import { PostVerificationReview } from "./PostVerificationReview";
 
 interface FormField {
   name: string;
@@ -533,6 +534,130 @@ export const VerificationForm: React.FC<VerificationFormProps> = ({
     </VerificationResultShell>
   );
 }
+
+    // UPI Verification: show validation status (Valid/Invalid UPI)
+    if (serviceKey === "upi-verify" || (result && result.data && (result.data.upi_data || result.data.isValid !== undefined))) {
+      const payload: any = (result as any).data || result;
+      const data: any = payload;
+      const upiData = data.upi_data || {};
+      const upiId = data.upi_id || payload.vpa || payload.upi;
+      
+      const isValid = data.isValid === true || data.code === "1013" || data.code === 1013;
+      const statusMessage = data.status || (isValid ? "Valid UPI" : "Invalid UPI");
+      
+      const requestId = data.request_id || payload.request_id;
+      const transactionId = data.transaction_id || payload.transaction_id;
+      const referenceId = data.reference_id || payload.reference_id;
+      const accountHolderName = upiData.name || data.name;
+      
+      // Build PDF export lines
+      const pdfLines: string[] = [];
+      pdfLines.push(`${serviceName || "UPI Verification"}`);
+      pdfLines.push(statusMessage);
+      if (upiId) pdfLines.push(`UPI ID: ${upiId}`);
+      if (accountHolderName) pdfLines.push(`Account Holder: ${accountHolderName}`);
+      if (requestId) pdfLines.push(`Request ID: ${requestId}`);
+      if (transactionId) pdfLines.push(`Transaction ID: ${transactionId}`);
+      if (referenceId) pdfLines.push(`Reference ID: ${referenceId}`);
+      
+      return (
+        <VerificationResultShell
+          serviceName={serviceName}
+          serviceDescription={serviceDescription}
+          message={statusMessage}
+          isValid={isValid}
+          requestId={requestId}
+          transactionId={transactionId}
+          referenceId={referenceId}
+          result={result}
+          onReset={handleReset}
+          targetRef={shareTargetRef}
+          summary={pdfLines.join("\n")}
+        >
+          <div ref={shareTargetRef} className="space-y-6">
+            {/* Status Message */}
+            <div
+              className={`rounded-lg p-6 text-center border ${
+                isValid
+                  ? "bg-green-100 border-green-200"
+                  : "bg-red-100 border-red-200"
+              }`}
+            >
+              {isValid ? (
+                <>
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-green-800 mb-2">
+                    Valid UPI
+                  </h3>
+                  <p className="text-gray-600">
+                    The UPI ID is valid and active.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-red-800 mb-2">
+                    Invalid UPI
+                  </h3>
+                  <p className="text-gray-600">
+                    The UPI ID is invalid or does not exist.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Meta IDs */}
+            {(requestId || transactionId || referenceId) && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {requestId && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Request ID</p>
+                    <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">{requestId}</p>
+                  </div>
+                )}
+                {transactionId && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Transaction ID</p>
+                    <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">{transactionId}</p>
+                  </div>
+                )}
+                {referenceId && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Reference ID</p>
+                    <p className="mt-1 text-sm font-semibold text-gray-900 break-words font-mono">{referenceId}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* UPI Details */}
+            <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">UPI Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {upiId && (
+                  <div className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">UPI ID</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{upiId}</div>
+                  </div>
+                )}
+                {accountHolderName && (
+                  <div className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Account Holder Name</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{accountHolderName}</div>
+                  </div>
+                )}
+                {data.code && (
+                  <div className="p-4 rounded-xl border bg-white border-gray-200">
+                    <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Response Code</div>
+                    <div className="mt-1 font-medium text-gray-900 break-words">{data.code}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </VerificationResultShell>
+      );
+    }
 
     // Driving License services: prefer unmasked fields and handle both fetch-details and OCR
     // Detect via serviceName including "driving license" or presence of DL-specific fields
@@ -4914,17 +5039,13 @@ if (serviceKey === "fetch-detailed") {
           })()
         )}
 
-        {/* {productId && (
-          <div className="mt-6">
-            <div className="my-6 border-t border-gray-200"></div>
-            <ProductReviews
-              productId={productId}
-              showList={false}
-              showStats={false}
-              showForm={true}
-            />
-          </div>
-        )} */}
+        {/* Post-Verification Review Prompt */}
+        {verificationType && (
+          <PostVerificationReview
+            productId={verificationType}
+            serviceName={serviceName}
+          />
+        )}
       </div>
     );
   }

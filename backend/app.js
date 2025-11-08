@@ -45,8 +45,12 @@ app.use((err, req, res, next) => {
         stack: err.stack,
         responseData: (_a = err.response) === null || _a === void 0 ? void 0 : _a.data,
         status: err.status,
+        statusCode: err.statusCode,
+        details: err.details,
         fullError: err
     });
-    res.status(err.status || 500).json(Object.assign({ message: err.message || 'Internal Server Error' }, (((_b = err.response) === null || _b === void 0 ? void 0 : _b.data) ? { details: err.response.data } : {})));
+    // Use status from HTTPError or default to 500
+    const status = err.status || err.statusCode || 500;
+    res.status(status).json(Object.assign(Object.assign({ message: err.message || 'Internal Server Error' }, (err.details ? { details: err.details } : {})), (((_b = err.response) === null || _b === void 0 ? void 0 : _b.data) ? { apiError: err.response.data } : {})));
 });
 exports.default = app;

@@ -299,7 +299,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <Link
-                to="/analytics"
+                to="/orders?dateRange=7days"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 View all activity →

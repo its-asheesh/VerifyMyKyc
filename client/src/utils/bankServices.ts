@@ -68,7 +68,7 @@ export const bankServices: BankServiceMeta[] = [
     key: "ifsc-validate",
     name: "IFSC Validation",
     description: "Validate IFSC and fetch branch/bank details",
-    apiEndpoint: "/bank/validate-ifsc",
+    apiEndpoint: "/bank/verify-ifscc",
     formFields: [
       {
         name: "ifsc",

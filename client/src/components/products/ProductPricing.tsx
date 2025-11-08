@@ -74,7 +74,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
       'gstin',
       'company',
       'voterid',
-      'bankaccount',
+      'bank-account',
       'vehicle',
     ].includes(id)) return id
 

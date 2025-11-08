@@ -58,7 +58,7 @@ class BaseProvider {
      * Maintains exact same error mapping logic as existing providers
      */
     mapError(error, operationName, customMapper) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
         // Use custom mapper if provided
         if (customMapper) {
             return customMapper(error);
@@ -73,17 +73,28 @@ class BaseProvider {
             errorMessage = 'Invalid API key or authentication failed';
             statusCode = 401;
         }
-        else if (((_b = error.response) === null || _b === void 0 ? void 0 : _b.status) === 404) {
+        else if (((_b = error.response) === null || _b === void 0 ? void 0 : _b.status) === 403) {
+            // Handle 403 Forbidden Access (product access denied)
+            const errorData = (_d = (_c = error.response) === null || _c === void 0 ? void 0 : _c.data) === null || _d === void 0 ? void 0 : _d.error;
+            if ((errorData === null || errorData === void 0 ? void 0 : errorData.code) === 'FORBIDDEN_ACCESS' || (errorData === null || errorData === void 0 ? void 0 : errorData.message)) {
+                errorMessage = errorData.message || 'Access denied. This product is not available with your current credentials.';
+            }
+            else {
+                errorMessage = ((_f = (_e = error.response) === null || _e === void 0 ? void 0 : _e.data) === null || _f === void 0 ? void 0 : _f.message) || 'Access denied. This product is not available with your current credentials.';
+            }
+            statusCode = 403;
+        }
+        else if (((_g = error.response) === null || _g === void 0 ? void 0 : _g.status) === 404) {
             errorMessage = `${operationName} endpoint not found`;
             statusCode = 404;
         }
-        else if (((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) === 429) {
+        else if (((_h = error.response) === null || _h === void 0 ? void 0 : _h.status) === 429) {
             errorMessage = 'Rate limit exceeded. Please try again later.';
             statusCode = 429;
         }
-        else if (((_d = error.response) === null || _d === void 0 ? void 0 : _d.status) === 500) {
+        else if (((_j = error.response) === null || _j === void 0 ? void 0 : _j.status) === 500) {
             // External API 500 - distinguish upstream errors when available
-            if (((_g = (_f = (_e = error.response) === null || _e === void 0 ? void 0 : _e.data) === null || _f === void 0 ? void 0 : _f.error) === null || _g === void 0 ? void 0 : _g.code) === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
+            if (((_m = (_l = (_k = error.response) === null || _k === void 0 ? void 0 : _k.data) === null || _l === void 0 ? void 0 : _l.error) === null || _m === void 0 ? void 0 : _m.code) === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
                 errorMessage = 'Government source temporarily unavailable. Please try again in a few minutes.';
                 statusCode = 503;
             }
@@ -92,7 +103,7 @@ class BaseProvider {
                 statusCode = 502;
             }
         }
-        else if ((_j = (_h = error.response) === null || _h === void 0 ? void 0 : _h.data) === null || _j === void 0 ? void 0 : _j.message) {
+        else if ((_p = (_o = error.response) === null || _o === void 0 ? void 0 : _o.data) === null || _p === void 0 ? void 0 : _p.message) {
             errorMessage = error.response.data.message;
             statusCode = error.response.status || 500;
         }
@@ -216,7 +227,7 @@ function makeProviderApiCall(options) {
  */
 function createStandardErrorMapper(defaultMessage) {
     return (error) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
         let errorMessage = defaultMessage;
         let statusCode = 500;
         if (error.code === 'ECONNABORTED' || ((_a = error.message) === null || _a === void 0 ? void 0 : _a.includes('timeout'))) {
@@ -227,16 +238,27 @@ function createStandardErrorMapper(defaultMessage) {
             errorMessage = 'Invalid API key or authentication failed';
             statusCode = 401;
         }
-        else if (((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) === 404) {
+        else if (((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) === 403) {
+            // Handle 403 Forbidden Access (product access denied)
+            const errorData = (_e = (_d = error.response) === null || _d === void 0 ? void 0 : _d.data) === null || _e === void 0 ? void 0 : _e.error;
+            if ((errorData === null || errorData === void 0 ? void 0 : errorData.code) === 'FORBIDDEN_ACCESS' || (errorData === null || errorData === void 0 ? void 0 : errorData.message)) {
+                errorMessage = errorData.message || 'Access denied. This product is not available with your current credentials.';
+            }
+            else {
+                errorMessage = ((_g = (_f = error.response) === null || _f === void 0 ? void 0 : _f.data) === null || _g === void 0 ? void 0 : _g.message) || 'Access denied. This product is not available with your current credentials.';
+            }
+            statusCode = 403;
+        }
+        else if (((_h = error.response) === null || _h === void 0 ? void 0 : _h.status) === 404) {
             errorMessage = 'API endpoint not found';
             statusCode = 404;
         }
-        else if (((_d = error.response) === null || _d === void 0 ? void 0 : _d.status) === 429) {
+        else if (((_j = error.response) === null || _j === void 0 ? void 0 : _j.status) === 429) {
             errorMessage = 'Rate limit exceeded. Please try again later.';
             statusCode = 429;
         }
-        else if (((_e = error.response) === null || _e === void 0 ? void 0 : _e.status) === 500) {
-            if (((_h = (_g = (_f = error.response) === null || _f === void 0 ? void 0 : _f.data) === null || _g === void 0 ? void 0 : _g.error) === null || _h === void 0 ? void 0 : _h.code) === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
+        else if (((_k = error.response) === null || _k === void 0 ? void 0 : _k.status) === 500) {
+            if (((_o = (_m = (_l = error.response) === null || _l === void 0 ? void 0 : _l.data) === null || _m === void 0 ? void 0 : _m.error) === null || _o === void 0 ? void 0 : _o.code) === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
                 errorMessage = 'Government source temporarily unavailable. Please try again in a few minutes.';
                 statusCode = 503;
             }
@@ -245,7 +267,7 @@ function createStandardErrorMapper(defaultMessage) {
                 statusCode = 502;
             }
         }
-        else if ((_k = (_j = error.response) === null || _j === void 0 ? void 0 : _j.data) === null || _k === void 0 ? void 0 : _k.message) {
+        else if ((_q = (_p = error.response) === null || _p === void 0 ? void 0 : _p.data) === null || _q === void 0 ? void 0 : _q.message) {
             errorMessage = error.response.data.message;
             statusCode = error.response.status || 500;
         }

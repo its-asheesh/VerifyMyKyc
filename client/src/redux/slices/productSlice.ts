@@ -54,7 +54,7 @@ export const mockProducts: Product[] = [
     documentation: "Complete API documentation for PAN verification",
     isActive: true,
     icon: "/pan.png",
-    image: "/Pan_card.jpg",
+    image: "/pan.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -145,8 +145,8 @@ export const mockProducts: Product[] = [
     },
     documentation: "Complete API documentation for Driving License verification",
     isActive: true,
-    icon: "/drivinglicense.png",
-    image: "/drivinglicense.png",
+    icon: "/drivinglicence.png",
+    image: "/drivinglicence.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -252,7 +252,7 @@ export const mockProducts: Product[] = [
     documentation: "Complete API documentation for Company (MCA) verification",
     isActive: true,
     icon: "/placeholder.svg",
-    image: "/business.jpg",
+    image: "/company.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -307,7 +307,7 @@ export const mockProducts: Product[] = [
     documentation: "Complete API documentation for RC verification",
     isActive: true,
     icon: "/rc.png",
-    image: "/VehicleVerification.jpg",
+    image: "/vehicle.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -373,44 +373,44 @@ export const mockProducts: Product[] = [
       }
     },
     documentation: "Complete API documentation for CCRV verification",
-    isActive: true,
+    isActive: false, // Temporarily inactive
     icon: "/ccrv.png",
-    image: "/CCRV.jpg",
+    image: "/ccrv.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01"
   },
-  // {
-  //   id: "bank-account",
-  //   title: "Bank Account Verification",
-  //   description: "Verify bank account details and ownership for financial institutions",
-  //   demandLevel: "high",
-  //   demand: "High In Demand",
-  //   category: {
-  //     id: "banking",
-  //     name: "Banking Service",
-  //     slug: "banking",
-  //     description: "Banking and financial verification services",
-  //   },
-  //   features: ["Real-time verification", "Bank database integration", "99.9% accuracy", "Instant results"],
-  //   services: [
-  //     "Verify Account Holder Name",
-  //     "Check Account Status",
-  //     "Validate IFSC Code",
-  //     "Verify Account Number",
-  //     "Check Account Type"
-  //   ],
-  //   pricing: {
-  //     free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
-  //     basic: { price: 499, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
-  //     premium: { price: 1999, requests: 10000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-  //   },
-  //   documentation: "Complete API documentation for bank account verification",
-  //   isActive: true,
-  //   icon: "/banking.jpg",
-  //   image: "/banking.jpg",
-  //   createdAt: "2024-01-01",
-  //   updatedAt: "2024-01-01"
-  // },
+  {
+    id: "bank-account",
+    title: "Bank Account Verification",
+    description: "Verify bank account details and ownership for financial institutions",
+    demandLevel: "high",
+    demand: "High In Demand",
+    category: {
+      id: "banking",
+      name: "Banking Service",
+      slug: "banking",
+      description: "Banking and financial verification services",
+    },
+    features: ["Real-time verification", "Bank database integration", "99.9% accuracy", "Instant results"],
+    services: [
+      "Verify Account Holder Name",
+      "Check Account Status",
+      "Validate IFSC Code",
+      "Verify Account Number",
+      "Check Account Type"
+    ],
+    pricing: {
+      free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
+      basic: { price: 499, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
+      premium: { price: 1999, requests: 10000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
+    },
+    documentation: "Complete API documentation for bank account verification",
+    isActive: true,
+    icon: "/banking.jpg",
+    image: "/banking.jpg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01"
+  },
   {
     id: "epfo",
     title: "EPFO Verification",
@@ -443,7 +443,7 @@ export const mockProducts: Product[] = [
     documentation: "EPFO APIs: UAN, employment history, passbook (OTP), employer verify",
     isActive: true,
     icon: "/verifymykyclogo.svg",
-    image: "/business.jpg",
+    image: "/epfo.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01"
   },
@@ -473,7 +473,7 @@ export const fetchProducts = createAsyncThunk(
       // const response = await productApi.getProducts(params)
       // return response.data
 
-      let filteredProducts = [...mockProducts]
+      let filteredProducts = [...mockProducts] // Show all products including inactive ones
 
       if (params?.category) {
         filteredProducts = filteredProducts.filter((p) => p.category.id === params.category)
@@ -488,16 +488,17 @@ export const fetchProducts = createAsyncThunk(
 
       // Sort by required priority order
       const priorityOrder = [
-        'aadhaar',
-        'pan',
         'voterid',
         'passport',
-        'epfo',
         'drivinglicense',
+        'epfo',
         'vehicle',
+        'aadhaar',
+        'pan', 
+        'company', 
+        'gstin',       
         'bank-account',
-        'company',
-        'gstin',
+        'ccrv',
       ]
       const priorityIndex: Record<string, number> = Object.fromEntries(priorityOrder.map((k, i) => [k, i]))
       filteredProducts.sort((a, b) => {

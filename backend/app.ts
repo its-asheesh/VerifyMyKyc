@@ -45,11 +45,18 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     stack: err.stack,
     responseData: err.response?.data,
     status: err.status,
+    statusCode: err.statusCode,
+    details: err.details,
     fullError: err
   });
-  res.status(err.status || 500).json({
+  
+  // Use status from HTTPError or default to 500
+  const status = err.status || err.statusCode || 500;
+  
+  res.status(status).json({
     message: err.message || 'Internal Server Error',
-    ...(err.response?.data ? { details: err.response.data } : {})
+    ...(err.details ? { details: err.details } : {}),
+    ...(err.response?.data ? { apiError: err.response.data } : {})
   });
 });
 

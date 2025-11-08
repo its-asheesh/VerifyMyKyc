@@ -82,4 +82,30 @@ export const useUpdateUserLocation = () => {
       queryClient.invalidateQueries({ queryKey: ['locationAnalytics'] })
     },
   })
+}
+
+// Verify user email
+export const useVerifyUserEmail = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (userId: string) => userApi.verifyUserEmail(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['userStats'] })
+    },
+  })
+}
+
+// Verify user phone
+export const useVerifyUserPhone = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: (userId: string) => userApi.verifyUserPhone(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['userStats'] })
+    },
+  })
 } 

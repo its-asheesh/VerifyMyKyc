@@ -11,10 +11,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BankAccountService = void 0;
 const verify_provider_1 = require("./providers/verify.provider");
+const verify_ifsc_provider_1 = require("./providers/verify-ifsc.provider");
+const verify_upi_provider_1 = require("./providers/verify-upi.provider");
 class BankAccountService {
     verify(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             return (0, verify_provider_1.verifyBankAccountProvider)(payload);
+        });
+    }
+    validateIfsc(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, verify_ifsc_provider_1.verifyIfscProvider)(payload);
+        });
+    }
+    verifyUpi(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (0, verify_upi_provider_1.verifyUpiProvider)(payload);
         });
     }
 }

@@ -27,6 +27,8 @@ import { useVerificationPricing } from "../../hooks/usePricing";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { fetchActiveServices } from "../../redux/slices/orderSlice";
+import { getProductContent } from "../../data/productContent";
+import { ProductShortHighlights } from "./ProductShortHighlights";
 
 interface ProductOverviewProps {
   product: Product;
@@ -115,7 +117,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
       'gstin',
       'company',
       'voterid',
-      'bankaccount',
+      'bank-account',
       'vehicle',
       'passport',
       'ccrv',
@@ -151,11 +153,41 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   const count = reviewsData?.stats?.count ?? 0;
   const avgDisplay = count > 0 ? avg.toFixed(1) : "0.0";
 
+  // Generate a consistent random number between 500-1000 for each product based on product ID
+  // If actual users exceed 1000, show actual count instead
+  const generateUserCount = (productId: string, actualUsers?: number): string => {
+    // If actual users exist and exceed 1000, use actual count
+    if (actualUsers !== undefined && actualUsers > 1000) {
+      return actualUsers.toLocaleString()
+    }
+    
+    // Otherwise, generate consistent random number between 500-1000
+    // Use product ID as seed for consistent random number
+    let hash = 0
+    for (let i = 0; i < productId.length; i++) {
+      const char = productId.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    // Generate number between 500 and 1000
+    const randomNum = Math.abs(hash) % 501 + 500
+    return randomNum.toLocaleString()
+  }
+
+  // Check if product has actual user count (from stats or analytics)
+  const actualUsers = (product as any).userCount || (product as any).stats?.userCount || undefined
+  const userCount = generateUserCount(product.id, actualUsers)
+
   // Fetch pricing
   const { data: pricingData } = useVerificationPricing(verificationType);
 
   // Handle Buy Now
   const handleBuyNow = () => {
+    // Don't allow purchase if product is inactive
+    if (!product.isActive) {
+      return;
+    }
+
     if (!pricingData) {
       console.error("Pricing data not available");
       return;
@@ -240,6 +272,11 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
 
   // Handle Try Demo / Start Verification CTA
   const handleTryDemo = () => {
+    // Don't allow access if product is inactive
+    if (!product.isActive) {
+      return;
+    }
+
     // Ensure active services are loaded before deciding access
     if (isAuthenticated && !activeServices) {
       setAwaitingAccessCheck(true);
@@ -272,6 +309,12 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
   React.useEffect(() => {
     if (!awaitingAccessCheck || !activeServices) return;
 
+    // Don't allow access if product is inactive
+    if (!product.isActive) {
+      setAwaitingAccessCheck(false);
+      return;
+    }
+
     // Clear fallback timer if any
     if (buyPromptTimerRef.current) {
       window.clearTimeout(buyPromptTimerRef.current);
@@ -285,7 +328,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
 
     if (!hasAccess) setBuyPromptOpen(true);
     else openVerificationModal();
-  }, [awaitingAccessCheck, activeServices]);
+  }, [awaitingAccessCheck, activeServices, product.isActive]);
 
   // Cleanup timer on unmount
   React.useEffect(() => {
@@ -339,10 +382,36 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         transition={{ duration: 0.6, delay: 0.2 }}
         className="space-y-6"
       >
-        {/* Category Badge */}
-        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
-          <Shield className="w-4 h-4" />
-          {product.category.name}
+        {/* Category Badge and Ratings */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
+            <Shield className="w-4 h-4" />
+            {product.category.name}
+          </div>
+          
+          {/* Ratings - Compact Inline */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`w-4 h-4 ${
+                    star <= Math.round(avg)
+                      ? "text-yellow-400 fill-yellow-400"
+                      : "text-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-sm font-medium text-gray-700">
+              {count > 0 ? avgDisplay : "0.0"}
+            </span>
+            {count > 0 && (
+              <span className="text-xs text-gray-500">
+                ({count})
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Title */}
@@ -351,24 +420,36 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         {/* Description */}
         {/* <p className="text-lg text-gray-600 leading-relaxed">{product.description}</p> */}
 
-        {/* Key Features */}
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">Key Services</h3>
-          <div className="grid grid-cols-1 gap-3">
-            {product.services?.slice(0, 4).map((services, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span className="text-gray-700">{services}</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+        {/* Short Highlights - replaces Key Services */}
+        {(() => {
+          const productContent = getProductContent(product.id);
+          if (productContent?.shortHighlights) {
+            return <ProductShortHighlights highlights={productContent.shortHighlights} />;
+          }
+          // Fallback to services if no content data
+          if (product.services && product.services.length > 0) {
+            return (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900">Key Services</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {product.services?.slice(0, 4).map((services, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                      className="flex items-center gap-3"
+                    >
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700">{services}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {/* Stats */}
         {/* <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200">
@@ -385,7 +466,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
               <Users className="w-6 h-6 text-blue-600" />
             </div>
-            <div className="text-2xl font-bold text-gray-900">1.2k</div>
+            <div className="text-2xl font-bold text-gray-900">{userCount}</div>
             <div className="text-sm text-gray-600">Users</div>
           </div>
           <div className="text-center">
@@ -400,15 +481,29 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         {/* CTA Buttons */}
         <div className="flex gap-4 pt-6">
           <button
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+            className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              product.isActive
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
             onClick={handleBuyNow}
+            disabled={!product.isActive}
           >
-            {pricingData ? `Buy Now - ₹${Number(pricingData.oneTimePrice).toFixed(2)}` : "Buy Now"}
+            {product.isActive
+              ? pricingData
+                ? `Buy Now - ₹${Number(pricingData.oneTimePrice).toFixed(2)}`
+                : "Buy Now"
+              : "Coming Soon"}
           </button>
           <button
-            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 ${
+              product.isActive
+                ? "border-gray-300 text-gray-700 hover:border-blue-500 hover:text-blue-600"
+                : "border-gray-300 text-gray-400 cursor-not-allowed"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={handleTryDemo}
             disabled={
+              !product.isActive ||
               !(
                 isAadhaarProduct ||
                 isPanProduct ||
@@ -424,7 +519,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               )
             }
           >
-            Start Verification
+            {product.isActive ? "Start Verification" : "Coming Soon"}
           </button>
         </div>
       </motion.div>

@@ -13,7 +13,7 @@ class ReviewApi extends BaseApi {
   }
 
   // Auth: create review
-  async createReview(payload: { productId: string; rating: number; title?: string; comment: string }) {
+  async createReview(payload: { productId: string; rating: number; title?: string; comment: string; verified?: boolean }) {
     return this.post<Review>(`/reviews`, payload)
   }
 

@@ -262,6 +262,9 @@ export interface BankAccountData {
   [key: string]: any;
 }
 export interface BankAccountVerifyResponse {
+  request_id: string;
+  transaction_id: string;
+  reference_id?: string;
   status: number; // e.g., 200
   data: {
     code: string; // e.g., "1000"
@@ -269,8 +272,8 @@ export interface BankAccountVerifyResponse {
     bank_account_data?: BankAccountData;
     [key: string]: any;
   };
-  timestamp?: number;
-  path?: string;
+  timestamp: number;
+  path: string;
   [key: string]: any;
 }
 

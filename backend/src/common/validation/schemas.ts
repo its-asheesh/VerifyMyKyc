@@ -215,9 +215,39 @@ export const voterBosonFetchSchema = z.object({
 export const bankAccountVerifySchema = z.object({
   account_number: z.string().min(9, 'Account number must be at least 9 digits'),
   ifsc: z.string()
-    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code'),
+    .transform((val) => val.toUpperCase().trim())
+    .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)'
+    }),
   consent: z.enum(['Y', 'N']),
 });
+
+export const ifscValidateSchema = z.object({
+  ifsc: z.string()
+    .transform((val) => val.toUpperCase().trim())
+    .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)'
+    }),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const upiVerifySchema = z.preprocess((data: any) => {
+  // Normalize 'vpa' to 'upi' for compatibility with frontend
+  if (data && typeof data === 'object') {
+    if (data.vpa && !data.upi) {
+      data.upi = data.vpa;
+    }
+  }
+  return data;
+}, z.object({
+  upi: z.string()
+    .min(1, 'UPI ID is required')
+    .transform((val) => val.toLowerCase().trim())
+    .refine((val) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(val), {
+      message: 'Invalid UPI ID format. Expected format: username@bankname (e.g., user@paytm)'
+    }),
+  consent: z.enum(['Y', 'N']),
+}));
 
 // EPFO Schemas
 export const epfoFetchUanSchema = z.object({

@@ -56,35 +56,49 @@ class AadhaarController extends BaseController_1.BaseController {
         // POST /api/aadhaar/v2/generate-otp - QuickEKYC Aadhaar V2
         // NOTE: Does NOT consume quota - only checks quota exists
         this.generateOtpV2Handler = (0, asyncHandler_1.default)((req, res) => __awaiter(this, void 0, void 0, function* () {
-            const { id_number } = req.body;
-            const userId = req.user._id;
-            // Validate required fields
-            if (!id_number) {
-                res.status(400).json({ message: 'id_number is required' });
-                return;
-            }
-            // Validate consent
-            if (!req.body.consent) {
-                res.status(400).json({ message: 'consent is required' });
-                return;
-            }
-            // Check quota exists (but don't consume yet)
-            const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'aadhaar');
-            if (!order) {
-                res.status(403).json({ message: 'Verification quota exhausted or expired' });
-                return;
-            }
-            // Log request
-            this.logRequest('Aadhaar V2 Generate OTP', userId, {
-                aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X')
-            });
-            // Generate OTP without consuming quota
+            var _a, _b;
             try {
+                const { id_number } = req.body;
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+                // Validate user authentication
+                if (!userId) {
+                    res.status(401).json({ message: 'User not authenticated' });
+                    return;
+                }
+                // Validate required fields
+                if (!id_number) {
+                    res.status(400).json({ message: 'id_number is required' });
+                    return;
+                }
+                // Validate consent
+                if (!req.body.consent) {
+                    res.status(400).json({ message: 'consent is required' });
+                    return;
+                }
+                // Check quota exists (but don't consume yet)
+                const order = yield (0, quota_service_1.ensureVerificationQuota)(userId, 'aadhaar');
+                if (!order) {
+                    res.status(403).json({ message: 'Verification quota exhausted or expired' });
+                    return;
+                }
+                // Log request
+                this.logRequest('Aadhaar V2 Generate OTP', userId, {
+                    aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X')
+                });
+                // Generate OTP without consuming quota
                 const result = yield service.generateOtpV2({ id_number });
                 res.json(result);
             }
             catch (error) {
-                throw error; // Let asyncHandler handle it
+                // Log error for debugging
+                console.error('Aadhaar V2 Generate OTP Handler Error:', {
+                    message: error === null || error === void 0 ? void 0 : error.message,
+                    stack: error === null || error === void 0 ? void 0 : error.stack,
+                    status: error === null || error === void 0 ? void 0 : error.status,
+                    response: (_b = error === null || error === void 0 ? void 0 : error.response) === null || _b === void 0 ? void 0 : _b.data
+                });
+                // Re-throw to let asyncHandler handle it properly
+                throw error;
             }
         }));
         // POST /api/aadhaar/v2/submit-otp - QuickEKYC Aadhaar V2

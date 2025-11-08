@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.consentSchema = exports.cinByPanSchema = exports.epfoValidateOtpSchema = exports.epfoGenerateOtpSchema = exports.epfoFetchUanSchema = exports.bankAccountVerifySchema = exports.voterBosonFetchSchema = exports.voterOcrSchema = exports.drivingLicenseSchema = exports.gstinByPanSchema = exports.gstinFetchSchema = exports.gstinSchema = exports.aadhaarSubmitOtpV2Schema = exports.aadhaarGenerateOtpV2Schema = exports.aadhaarNumberSchema = exports.aadhaarOcrV1Schema = exports.panAadhaarLinkSchema = exports.panFatherNameSchema = exports.panNumberSchema = exports.verifyOtpSchema = exports.sendOtpSchema = exports.resetPasswordSchema = exports.changePasswordSchema = exports.loginSchema = exports.registerSchema = exports.envSchema = void 0;
+exports.consentSchema = exports.cinByPanSchema = exports.epfoValidateOtpSchema = exports.epfoGenerateOtpSchema = exports.epfoFetchUanSchema = exports.upiVerifySchema = exports.ifscValidateSchema = exports.bankAccountVerifySchema = exports.voterBosonFetchSchema = exports.voterOcrSchema = exports.drivingLicenseSchema = exports.gstinByPanSchema = exports.gstinFetchSchema = exports.gstinSchema = exports.aadhaarSubmitOtpV2Schema = exports.aadhaarGenerateOtpV2Schema = exports.aadhaarNumberSchema = exports.aadhaarOcrV1Schema = exports.panAadhaarLinkSchema = exports.panFatherNameSchema = exports.panNumberSchema = exports.verifyOtpSchema = exports.sendOtpSchema = exports.resetPasswordSchema = exports.changePasswordSchema = exports.loginSchema = exports.registerSchema = exports.envSchema = void 0;
 const zod_1 = require("zod");
 // Environment Variables Schema
 exports.envSchema = zod_1.z.object({
@@ -172,9 +172,37 @@ exports.voterBosonFetchSchema = zod_1.z.object({
 exports.bankAccountVerifySchema = zod_1.z.object({
     account_number: zod_1.z.string().min(9, 'Account number must be at least 9 digits'),
     ifsc: zod_1.z.string()
-        .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code'),
+        .transform((val) => val.toUpperCase().trim())
+        .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+        message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)'
+    }),
     consent: zod_1.z.enum(['Y', 'N']),
 });
+exports.ifscValidateSchema = zod_1.z.object({
+    ifsc: zod_1.z.string()
+        .transform((val) => val.toUpperCase().trim())
+        .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+        message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)'
+    }),
+    consent: zod_1.z.enum(['Y', 'N']),
+});
+exports.upiVerifySchema = zod_1.z.preprocess((data) => {
+    // Normalize 'vpa' to 'upi' for compatibility with frontend
+    if (data && typeof data === 'object') {
+        if (data.vpa && !data.upi) {
+            data.upi = data.vpa;
+        }
+    }
+    return data;
+}, zod_1.z.object({
+    upi: zod_1.z.string()
+        .min(1, 'UPI ID is required')
+        .transform((val) => val.toLowerCase().trim())
+        .refine((val) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(val), {
+        message: 'Invalid UPI ID format. Expected format: username@bankname (e.g., user@paytm)'
+    }),
+    consent: zod_1.z.enum(['Y', 'N']),
+}));
 // EPFO Schemas
 exports.epfoFetchUanSchema = zod_1.z.object({
     aadhaar_number: zod_1.z.string().regex(/^[0-9]{12}$/, 'Aadhaar must be 12 digits'),

@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { X, User, Mail, Phone, Building, MapPin, Clock, CheckCircle, XCircle, Crown, Shield } from 'lucide-react'
 import type { User as UserType } from '../../services/api/userApi'
+import { useVerifyUserEmail, useVerifyUserPhone } from '../../hooks/useUsers'
 
 interface UserDetailsModalProps {
   isOpen: boolean
@@ -10,7 +11,28 @@ interface UserDetailsModalProps {
 }
 
 const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, user }) => {
+  const verifyUserEmail = useVerifyUserEmail()
+  const verifyUserPhone = useVerifyUserPhone()
+
   if (!isOpen || !user) return null
+
+  const handleVerifyEmail = async () => {
+    try {
+      await verifyUserEmail.mutateAsync(user.id)
+      // The query will automatically refresh, but we can also close and reopen if needed
+    } catch (error) {
+      console.error('Failed to verify email:', error)
+    }
+  }
+
+  const handleVerifyPhone = async () => {
+    try {
+      await verifyUserPhone.mutateAsync(user.id)
+      // The query will automatically refresh, but we can also close and reopen if needed
+    } catch (error) {
+      console.error('Failed to verify phone:', error)
+    }
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -161,17 +183,62 @@ const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, us
                       <XCircle className="w-4 h-4 text-red-500" />
                     )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">Email Verified</p>
-                    <span className={`text-sm px-2 py-1 rounded-full ${
-                      user.emailVerified
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {user.emailVerified ? 'Verified' : 'Not Verified'}
-                    </span>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className={`text-sm px-2 py-1 rounded-full ${
+                        user.emailVerified
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.emailVerified ? 'Verified' : 'Not Verified'}
+                      </span>
+                      {!user.emailVerified && user.email && (
+                        <button
+                          onClick={handleVerifyEmail}
+                          disabled={verifyUserEmail.isPending}
+                          className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        >
+                          <Mail className="w-3 h-3 mr-1" />
+                          {verifyUserEmail.isPending ? 'Verifying...' : 'Verify'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+                {user.phone && (
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {user.phoneVerified === true ? (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-500" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Phone Verified</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className={`text-sm px-2 py-1 rounded-full ${
+                          user.phoneVerified === true
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user.phoneVerified === true ? 'Verified' : 'Not Verified'}
+                        </span>
+                        {user.phoneVerified !== true && (
+                          <button
+                            onClick={handleVerifyPhone}
+                            disabled={verifyUserPhone.isPending}
+                            className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                          >
+                            <Phone className="w-3 h-3 mr-1" />
+                            {verifyUserPhone.isPending ? 'Verifying...' : 'Verify'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

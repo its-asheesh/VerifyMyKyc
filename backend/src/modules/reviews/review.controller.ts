@@ -42,7 +42,7 @@ export const createReview = async (req: Request, res: Response) => {
     const user = req.user
     if (!user) return res.status(401).json({ message: 'Unauthorized' })
 
-    const { productId, rating, title, comment } = req.body
+    const { productId, rating, title, comment, verified } = req.body
     if (!productId || !rating || !comment) {
       return res.status(400).json({ message: 'productId, rating and comment are required' })
     }
@@ -60,6 +60,7 @@ export const createReview = async (req: Request, res: Response) => {
       title,
       comment,
       status: 'approved',
+      verified: verified === true, // Only set to true if explicitly provided
     })
 
     return res.status(201).json(review)

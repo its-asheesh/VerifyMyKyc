@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithPhoneToken = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
+exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.verifyUserPhone = exports.verifyUserEmail = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithPhoneToken = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
 const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
@@ -433,6 +433,7 @@ exports.getAllUsers = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
                 isActive: user.isActive,
                 lastLogin: user.lastLogin,
                 emailVerified: user.emailVerified,
+                phoneVerified: user.phoneVerified,
                 location: user.location,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
@@ -476,6 +477,74 @@ exports.toggleUserStatus = (0, asyncHandler_1.default)((req, res) => __awaiter(v
         success: true,
         message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
         data: { user }
+    });
+}));
+// Admin: Verify user email (admin only)
+exports.verifyUserEmail = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const user = yield auth_model_1.User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    if (!user.email) {
+        return res.status(400).json({ message: 'User does not have an email address' });
+    }
+    user.emailVerified = true;
+    yield user.save();
+    res.json({
+        success: true,
+        message: 'Email verified successfully',
+        data: {
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                isActive: user.isActive,
+                lastLogin: user.lastLogin,
+                emailVerified: user.emailVerified,
+                phoneVerified: user.phoneVerified,
+                location: user.location,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }
+        }
+    });
+}));
+// Admin: Verify user phone (admin only)
+exports.verifyUserPhone = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const user = yield auth_model_1.User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    if (!user.phone) {
+        return res.status(400).json({ message: 'User does not have a phone number' });
+    }
+    user.phoneVerified = true;
+    yield user.save();
+    res.json({
+        success: true,
+        message: 'Phone verified successfully',
+        data: {
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                company: user.company,
+                phone: user.phone,
+                isActive: user.isActive,
+                lastLogin: user.lastLogin,
+                emailVerified: user.emailVerified,
+                phoneVerified: user.phoneVerified,
+                location: user.location,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }
+        }
     });
 }));
 // Admin: Get user statistics

@@ -27,6 +27,8 @@ router.get('/users/location-analytics', auth_1.authenticate, auth_1.requireAdmin
 router.get('/users/with-location', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.getUsersWithLocation);
 router.put('/users/:userId/role', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.updateUserRole);
 router.put('/users/:userId/toggle-status', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.toggleUserStatus);
+router.put('/users/:userId/verify-email', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.verifyUserEmail);
+router.put('/users/:userId/verify-phone', auth_1.authenticate, auth_1.requireAdmin, auth_controller_1.verifyUserPhone);
 router.put('/users/:userId/location', auth_1.authenticate, auth_1.requireAnyRole, auth_controller_1.updateUserLocation);
 router.post('/phone/register', rateLimiter_1.registerLimiter, auth_controller_1.firebasePhoneRegister);
 router.post('/phone/login', rateLimiter_1.authLimiter, auth_controller_1.firebasePhoneLogin);

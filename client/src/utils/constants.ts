@@ -11,7 +11,7 @@ export const verificationFeatures = [
     detailedText:
       "We authenticate each document against its issuing authority to prevent identity fraud and ensure complete compliance with regulatory standards.",
     ctaText: "Explore Government IDs",
-    ctaLink: "/blog/government-id-verification-guide",
+    ctaLink: "/blog",
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ export const verificationFeatures = [
     detailedText:
       "We verify business credentials to help you trust your business associates and ensure legitimate partnerships with verified entities.",
     ctaText: "Verify Business Credentials",
-    ctaLink: "/blog/company-credential-verification-guide",
+    ctaLink: "/blog",
   },
   {
     id: 3,
@@ -32,7 +32,7 @@ export const verificationFeatures = [
     detailedText:
       "Ensure candidate or entity credibility with thorough legal record checks across multiple databases and jurisdictions.",
     ctaText: "Check Legal Records",
-    ctaLink: "/blog/legal-background-checks-guide",
+    ctaLink: "/blog",
   },
   // {
   //   id: 4,
@@ -214,34 +214,34 @@ export const reviewStats = [
 
 export const faqData = [
   {
-    question: "How does VerifyMyKyc work?",
+    question: "What is Verify My KYC?",
     answer:
-      "VerifyMyKyc verifies documents using secure APIs that communicate with government or trusted third-party databases. Our advanced algorithms ensure accurate and fast verification while maintaining the highest security standards.",
+      "Verify My KYC is an online platform where you can verify documents like Aadhaar, PAN, Passport, Driving Licence, GST, Company details, and more — in a fast, secure, and reliable way.",
   },
   {
-    question: "Is my data secure with VerifyMyKyc?",
+    question: "Who can use Verify My KYC?",
     answer:
-      "Yes, absolutely. All data is encrypted in transit and at rest using industry-standard encryption protocols. We adhere to strict security practices, comply with data protection regulations, and undergo regular security audits to ensure your information remains safe.",
+      "Verify My KYC is designed for individuals who want to verify their own or someone else's documents — such as tenants, maids, drivers, employees, or anyone for background verification purposes.",
   },
   {
-    question: "Does VerifyMyKyc work for large teams?",
+    question: "What types of verifications are available?",
     answer:
-      "Yes, VerifyMyKyc scales efficiently for large teams and enterprises. We provide centralized dashboards, role-based access control, bulk verification capabilities, and dedicated support to ensure smooth operations for organizations of any size.",
+      "You can perform Aadhaar, PAN, Voter ID, Passport, Driving Licence, EPFO, Vehicle RC, GSTIN, Company, Criminal Record, and Bank Account verifications — all in one platform.",
   },
   {
-    question: "How do I create a new account?",
+    question: "Is API or bulk verification available?",
     answer:
-      'Getting started is simple! Click on the "Start Verifying" button and follow our guided sign-up process. It takes less than 2 minutes to create your account and you can begin verifying documents immediately.',
+      "No, Verify My KYC currently provides only dashboard based verification. Each check is performed individually — API or bulk upload features are not yet available.",
   },
   {
-    question: "What types of documents can be verified?",
+    question: "Is my data secure?",
     answer:
-      "We support verification of various documents including PAN cards, Aadhaar cards, passports, driving licenses, voter IDs, GST certificates, and many more. Our platform covers both personal and business document verification needs.",
+      "Absolutely. All your data is fully encrypted and visible only on your secure dashboard. We never share your information with any third party.",
   },
   {
-    question: "What is the pricing structure?",
+    question: "Are verification results instant?",
     answer:
-      "We offer flexible pricing plans to suit different needs - from individual users to large enterprises. Our plans include pay-per-verification options and monthly subscriptions. Contact our sales team for custom enterprise pricing.",
+      "Yes, most verifications provide instant results within 2–3 seconds.",
   },
 ];
 
