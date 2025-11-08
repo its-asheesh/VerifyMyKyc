@@ -64,34 +64,34 @@ export const bankServices: BankServiceMeta[] = [
     ],
     icon: FileText,
   },
-  {
-    key: "ifsc-validate",
-    name: "IFSC Validation",
-    description: "Validate IFSC and fetch branch/bank details",
-    apiEndpoint: "/bank/verify-ifscc",
-    formFields: [
-      {
-        name: "ifsc",
-        label: "IFSC Code",
-        type: "text",
-        required: true,
-        placeholder: "Enter IFSC code (e.g., SBIN0000001)",
-        pattern: "^[A-Z]{4}0[A-Z0-9]{6}$",
-        title: "Please enter a valid 11-character IFSC code",
-      },
-      {
-        name: "consent",
-        label: "Consent",
-        type: "radio",
-        required: true,
-        options: [
-          { label: "Yes", value: "Y" },
-          { label: "No", value: "N" },
-        ],
-      },
-    ],
-    icon: FileText,
-  },
+  // {
+  //   key: "ifsc-validate",
+  //   name: "IFSC Validation",
+  //   description: "Validate IFSC and fetch branch/bank details",
+  //   apiEndpoint: "/bank/verify-ifscc",
+  //   formFields: [
+  //     {
+  //       name: "ifsc",
+  //       label: "IFSC Code",
+  //       type: "text",
+  //       required: true,
+  //       placeholder: "Enter IFSC code (e.g., SBIN0000001)",
+  //       pattern: "^[A-Z]{4}0[A-Z0-9]{6}$",
+  //       title: "Please enter a valid 11-character IFSC code",
+  //     },
+  //     {
+  //       name: "consent",
+  //       label: "Consent",
+  //       type: "radio",
+  //       required: true,
+  //       options: [
+  //         { label: "Yes", value: "Y" },
+  //         { label: "No", value: "N" },
+  //       ],
+  //     },
+  //   ],
+  //   icon: FileText,
+  // },
   {
     key: "upi-verify",
     name: "UPI ID Verification",
