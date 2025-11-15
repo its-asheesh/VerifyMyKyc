@@ -168,6 +168,28 @@
         height: 100%;
         border-radius: 50%;
       }
+
+      /* EnableX Bot Container - Positioned to avoid overlap with WhatsApp */
+      .enablex-bot-container {
+        position: fixed;
+        bottom: 80px; /* Increased from 20px to avoid overlap */
+        right: 20px;
+        z-index: 999; /* Slightly lower than WhatsApp to ensure WhatsApp is always clickable */
+        width: 320px;
+        max-height: 400px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: white;
+        overflow: hidden;
+        display: none; /* Initially hidden until opened */
+      }
+
+      .enablex-bot-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
     </style>
   </head>
   <body>
@@ -263,19 +285,50 @@
     <!-- EnableX VMKYC bot -->
     <script src="https://dialogs.enablex.io/assets/modules/channel-web/inject.js"></script>
     <script>
+      // Initialize the EnableX bot
       window.enablexWebBot.init({
         host: "https://dialogs.enablex.io",
         botId: "68ecad71fe2c325441025668__mgow3hr5rtle",
       });
+
+      // Create a container element for the bot iframe
+      const botContainer = document.createElement('div');
+      botContainer.className = 'enablex-bot-container';
+      document.body.appendChild(botContainer);
+
+      // Listen for messages from the bot to show/hide
       window.addEventListener("message", function (event) {
         let request = event.data;
         if (request.name === "showEnablexIframe") {
-          window.enablexWebBot.addEnablexDiv({
-            iFrameURL: request.iFrameURL,
-            chatId: request.chatId,
-          });
+          // Show the container and inject the iframe
+          botContainer.style.display = 'block';
+          botContainer.innerHTML = `<iframe src="${request.iFrameURL}" allowfullscreen></iframe>`;
+          // Store chatId for later removal
+          botContainer.dataset.chatId = request.chatId;
         } else if (request.name === "hideEnablexIframe") {
-          window.enablexWebBot.removeEnablexDiv({ chatId: request.chatId });
+          // Hide the container
+          botContainer.style.display = 'none';
+          botContainer.innerHTML = '';
+          delete botContainer.dataset.chatId;
+        }
+      });
+
+      // Add click handler to close bot when clicking outside
+      document.addEventListener('click', function(event) {
+        // Check if the click is outside the bot container and the WhatsApp button
+        const isOutsideBot = !botContainer.contains(event.target);
+        const isOutsideWhatsApp = !document.querySelector('.whatsapp-float').contains(event.target);
+
+        if (isOutsideBot && isOutsideWhatsApp && botContainer.style.display === 'block') {
+          // Close the bot using its API
+          const chatId = botContainer.dataset.chatId;
+          if (chatId) {
+            window.enablexWebBot.removeEnablexDiv({ chatId: chatId });
+          }
+          // Also hide our container
+          botContainer.style.display = 'none';
+          botContainer.innerHTML = '';
+          delete botContainer.dataset.chatId;
         }
       });
     </script>
