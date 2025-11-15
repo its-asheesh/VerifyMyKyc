@@ -23,8 +23,8 @@ const services = [
     name: "Fetch UAN",
     description: "Retrieve UANs linked to a mobile number and optional PAN",
     formFields: [
-      { name: "mobile_number", label: "Mobile Number", type: "text", required: true, placeholder: "10-digit mobile" },
-      { name: "pan", label: "PAN (optional)", type: "text", required: false },
+      { name: "mobile_number", label: "Mobile Number", type: "text", required: true, placeholder: "Enter 10-digit mobile number" },
+      { name: "pan", label: "PAN (optional)", type: "text", required: false, placeholder: "Enter 10-character PAN number" },
       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
     ],
   },
@@ -33,7 +33,7 @@ const services = [
     name: "Fetch UAN by PAN",
     description: "Fetch UAN using PAN number",
     formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      { name: "pan_number", label: "PAN Number", type: "text", required: true, placeholder: "Enter 10-character PAN number" },
       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
     ],
   },
@@ -42,7 +42,7 @@ const services = [
 //     name: "Generate OTP (Passbook)",
 //     description: "Start passbook flow with UAN",
 //     formFields: [
-//       { name: "uan", label: "UAN", type: "text", required: true },
+//       { name: "uan", label: "UAN", type: "text", required: true, placeholder: "Enter UAN number" },
 //       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
 //     ],
 //   },
@@ -51,10 +51,10 @@ const services = [
 //     name: "Fetch Passbook",
 //     description: "Fetch passbook for a selected member and office (optionally validate OTP internally)",
 //     formFields: [
-//       { name: "transaction_id", label: "Transaction ID", type: "text", required: true },
-//       { name: "otp", label: "OTP (if prompted)", type: "text", required: false },
-//       { name: "member_id", label: "Member ID", type: "text", required: true },
-//       { name: "office_id", label: "Office ID", type: "text", required: true },
+//       { name: "transaction_id", label: "Transaction ID", type: "text", required: true, placeholder: "Enter transaction ID" },
+//       { name: "otp", label: "OTP (if prompted)", type: "text", required: false, placeholder: "Enter OTP" },
+//       { name: "member_id", label: "Member ID", type: "text", required: true, placeholder: "Enter member ID" },
+//       { name: "office_id", label: "Office ID", type: "text", required: true, placeholder: "Enter office ID" },
 //     ],
 //   },
   {
@@ -62,7 +62,7 @@ const services = [
     name: "Employment by UAN",
     description: "Fetch employment history using UAN",
     formFields: [
-      { name: "uan_number", label: "UAN", type: "text", required: true },
+      { name: "uan_number", label: "UAN", type: "text", required: true, placeholder: "Enter UAN number" },
       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
     ],
   },
@@ -71,7 +71,7 @@ const services = [
     name: "Latest Employment by UAN",
     description: "Fetch latest employment record using UAN",
     formFields: [
-      { name: "uan", label: "UAN", type: "text", required: true },
+      { name: "uan", label: "UAN", type: "text", required: true, placeholder: "Enter UAN number" },
       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
     ],
   },

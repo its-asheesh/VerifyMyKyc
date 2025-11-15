@@ -350,9 +350,9 @@ ${filteredLines.join("\n")}`;
      // pdf.text("📋 Verification Details", marginX, y);
      // y += 8;
 
-    // Parse data into tabular format
+    // Parse data into tabular format with section headings
     const lines = buildDetailsLines();
-    const tableData: Array<{label: string, value: string}> = [];
+    const tableData: Array<{label: string, value: string, isSectionHeader?: boolean}> = [];
     
      // Filter out redundant status messages and garbled text
      const filteredLines = lines.filter(line => {
@@ -402,19 +402,97 @@ ${filteredLines.join("\n")}`;
              line.trim() !== '';
     });
     
-    // Parse lines into key-value pairs
+    // Helper function to detect section headings for all verification types
+    const isSectionHeading = (line: string): boolean => {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      
+      // Must not have a colon (key-value pairs have colons)
+      if (trimmed.includes(':')) return false;
+      
+      // Section headings are usually short (less than 60 characters)
+      if (trimmed.length > 60) return false;
+      
+      // Check if it's all uppercase or mostly uppercase
+      const letters = trimmed.match(/[A-Za-z]/g) || [];
+      if (letters.length === 0) return false;
+      
+      const upperCaseCount = (trimmed.match(/[A-Z]/g) || []).length;
+      const upperCaseRatio = upperCaseCount / letters.length;
+      
+      // Common section heading keywords
+      const upperTrimmed = trimmed.toUpperCase();
+      const hasSectionKeywords = 
+        upperTrimmed.includes('DETAILS') ||
+        upperTrimmed.includes('INFORMATION') ||
+        upperTrimmed.includes('DATA') ||
+        upperTrimmed.includes('SUMMARY') ||
+        upperTrimmed.includes('OVERVIEW') ||
+        upperTrimmed.includes('STATUS') ||
+        upperTrimmed.includes('VERIFICATION') ||
+        upperTrimmed.includes('PERSONAL') ||
+        upperTrimmed.includes('ADDRESS') ||
+        upperTrimmed.includes('CONTACT') ||
+        upperTrimmed.includes('EMPLOYMENT') ||
+        upperTrimmed.includes('COMPANY') ||
+        upperTrimmed.includes('OWNER') ||
+        upperTrimmed.includes('VEHICLE') ||
+        upperTrimmed.includes('BANK') ||
+        upperTrimmed.includes('ACCOUNT') ||
+        upperTrimmed.includes('DOCUMENT') ||
+        upperTrimmed.includes('IDENTIFICATION');
+      
+      // Pattern 1: Mostly uppercase with section keywords (e.g., "RC & OWNER DETAILS", "PUCC DETAILS")
+      if (upperCaseRatio > 0.6 && hasSectionKeywords) {
+        return true;
+      }
+      
+      // Pattern 2: All or mostly uppercase short lines (e.g., "PERSONAL INFORMATION", "VEHICLE DETAILS")
+      if (upperCaseRatio > 0.7 && trimmed.length < 40) {
+        return true;
+      }
+      
+      // Pattern 3: Lines with "&" and uppercase (e.g., "RC & OWNER DETAILS")
+      if (trimmed.includes('&') && upperCaseRatio > 0.6 && trimmed.length < 50) {
+        return true;
+      }
+      
+      // Pattern 4: Common verification section patterns
+      const sectionPatterns = [
+        /^[A-Z\s&]+DETAILS$/,
+        /^[A-Z\s&]+INFORMATION$/,
+        /^[A-Z\s&]+DATA$/,
+        /^[A-Z\s&]+SUMMARY$/,
+      ];
+      
+      for (const pattern of sectionPatterns) {
+        if (pattern.test(trimmed)) {
+          return true;
+        }
+      }
+      
+      return false;
+    };
+    
+    // Parse lines into key-value pairs or section headings
     filteredLines.forEach(line => {
+      // Check if this is a section heading
+      if (isSectionHeading(line)) {
+        tableData.push({ label: '', value: line.trim(), isSectionHeader: true });
+        return;
+      }
+      
       const colonIndex = line.indexOf(':');
       if (colonIndex > 0) {
         const label = line.substring(0, colonIndex).trim();
         const value = line.substring(colonIndex + 1).trim();
         if (label && value) {
-          tableData.push({ label, value });
+          tableData.push({ label, value, isSectionHeader: false });
         }
       } else {
-        // If no colon, treat as a standalone value
+        // If no colon and not a section heading, treat as a standalone value
         if (line.trim()) {
-          tableData.push({ label: '', value: line.trim() });
+          tableData.push({ label: '', value: line.trim(), isSectionHeader: false });
         }
       }
     });
@@ -422,7 +500,9 @@ ${filteredLines.join("\n")}`;
     // Create enhanced table
     if (tableData.length > 0) {
       const tableStartY = y;
-      const rowHeight = 7;
+      const minRowHeight = 7; // Minimum row height
+      const lineSpacing = 3.8; // Spacing between lines
+      const verticalPadding = 4; // Top and bottom padding
       const labelWidth = 65;
       const valueWidth = pageWidth - marginX * 2 - labelWidth;
       
@@ -430,7 +510,7 @@ ${filteredLines.join("\n")}`;
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
       pdf.setFillColor(59, 130, 246); // Blue header
-      pdf.rect(marginX, tableStartY, pageWidth - marginX * 2, rowHeight, 'F');
+      pdf.rect(marginX, tableStartY, pageWidth - marginX * 2, minRowHeight, 'F');
       
       // Header text in white
       pdf.setTextColor(255, 255, 255);
@@ -441,35 +521,51 @@ ${filteredLines.join("\n")}`;
       // Header border
       pdf.setDrawColor(37, 99, 235);
       pdf.setLineWidth(0.4);
-      pdf.rect(marginX, tableStartY, pageWidth - marginX * 2, rowHeight);
-      pdf.line(marginX + labelWidth, tableStartY, marginX + labelWidth, tableStartY + rowHeight);
+      pdf.rect(marginX, tableStartY, pageWidth - marginX * 2, minRowHeight);
+      pdf.line(marginX + labelWidth, tableStartY, marginX + labelWidth, tableStartY + minRowHeight);
       
-      y = tableStartY + rowHeight;
+      y = tableStartY + minRowHeight;
       
-      // Enhanced table rows
+      // Enhanced table rows with dynamic height
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
       
       tableData.forEach((row, index) => {
-        if (y > pageHeight - 25) {
+        // Check if we need a new page before drawing the row
+        if (y > pageHeight - 30) {
           pdf.addPage();
           y = 20;
         }
         
-        // Enhanced row styling
-        const isEvenRow = index % 2 === 0;
-        if (isEvenRow) {
-          pdf.setFillColor(248, 250, 252); // Very light blue
-          pdf.rect(marginX, y, pageWidth - marginX * 2, rowHeight, 'F');
+        // Handle section headers differently
+        if (row.isSectionHeader) {
+          // Add spacing before section header
+          y += 4;
+          
+          // Section header styling
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(12);
+          pdf.setTextColor(31, 41, 55); // Dark gray
+          
+          // Section header background
+          pdf.setFillColor(241, 245, 249); // Light gray background
+          const headerHeight = 8;
+          pdf.rect(marginX, y, pageWidth - marginX * 2, headerHeight, 'F');
+          
+          // Section header border
+          pdf.setDrawColor(203, 213, 225);
+          pdf.setLineWidth(0.5);
+          pdf.rect(marginX, y, pageWidth - marginX * 2, headerHeight);
+          
+          // Section header text (centered or left-aligned)
+          const sectionText = row.value || '';
+          pdf.text(sectionText, marginX + 5, y + 6);
+          
+          y += headerHeight + 2; // Add spacing after header
+          return;
         }
         
-        // Row borders with better styling
-        pdf.setDrawColor(226, 232, 240);
-        pdf.setLineWidth(0.3);
-        pdf.rect(marginX, y, pageWidth - marginX * 2, rowHeight);
-        pdf.line(marginX + labelWidth, y, marginX + labelWidth, y + rowHeight);
-        
-        // Add text with better formatting
+        // Regular table row
         const labelText = row.label || '';
         const valueText = row.value || '';
         
@@ -477,15 +573,34 @@ ${filteredLines.join("\n")}`;
         const wrappedLabel = pdf.splitTextToSize(labelText, labelWidth - 6);
         const wrappedValue = pdf.splitTextToSize(valueText, valueWidth - 6);
         
+        // Calculate dynamic row height based on content
         const maxLines = Math.max(wrappedLabel.length, wrappedValue.length);
+        const calculatedHeight = Math.max(
+          minRowHeight,
+          (maxLines * lineSpacing) + verticalPadding
+        );
+        
+        // Enhanced row styling - draw background first
+        const isEvenRow = index % 2 === 0;
+        if (isEvenRow) {
+          pdf.setFillColor(248, 250, 252); // Very light blue
+          pdf.rect(marginX, y, pageWidth - marginX * 2, calculatedHeight, 'F');
+        }
+        
+        // Row borders with better styling - adjust to calculated height
+        pdf.setDrawColor(226, 232, 240);
+        pdf.setLineWidth(0.3);
+        pdf.rect(marginX, y, pageWidth - marginX * 2, calculatedHeight);
+        pdf.line(marginX + labelWidth, y, marginX + labelWidth, y + calculatedHeight);
         
         // Label styling
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9);
         pdf.setTextColor(75, 85, 99); // Gray for labels
         
+        const labelStartY = y + verticalPadding / 2 + 3;
         for (let i = 0; i < wrappedLabel.length; i++) {
-          pdf.text(wrappedLabel[i], marginX + 3, y + 5 + (i * 3.5));
+          pdf.text(wrappedLabel[i], marginX + 3, labelStartY + (i * lineSpacing));
         }
         
         // Value styling
@@ -493,11 +608,13 @@ ${filteredLines.join("\n")}`;
         pdf.setFontSize(10);
         pdf.setTextColor(31, 41, 55); // Dark gray for values
         
+        const valueStartY = y + verticalPadding / 2 + 3;
         for (let i = 0; i < wrappedValue.length; i++) {
-          pdf.text(wrappedValue[i], marginX + labelWidth + 3, y + 5 + (i * 3.5));
+          pdf.text(wrappedValue[i], marginX + labelWidth + 3, valueStartY + (i * lineSpacing));
         }
         
-        y += Math.max(maxLines * 3.5, rowHeight);
+        // Move to next row position based on calculated height
+        y += calculatedHeight;
       });
     } else {
       // Fallback to simple text if no structured data

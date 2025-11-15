@@ -83,7 +83,7 @@ export const DrivingLicenseVerificationForm: React.FC<DrivingLicenseVerification
           ) : field.type === "file" ? (
             <input type="file" name={field.name} required={field.required} onChange={handleChange} />
           ) : (
-            <input type="text" name={field.name} required={field.required} onChange={handleChange} className="w-full border rounded p-2" />
+            <input type="text" name={field.name} required={field.required} onChange={handleChange} placeholder={field.placeholder} className="w-full border rounded p-2" />
           )}
         </div>
       ))}

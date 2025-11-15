@@ -9,7 +9,6 @@ import {
   getAllOrders,
   updateOrderStatus,
   getOrderStats,
-  addProductsToUser,
 } from './order.controller';
 import { authenticate, requireAdmin, requireUser } from '../../common/middleware/auth';
 // routes/order.routes.ts
@@ -19,7 +18,6 @@ import { verifyPayment } from './verifyPayment';
 const router = Router();
 
 // Admin routes (require admin role) - Must come before parameterized routes
-router.post('/admin/add-products/:userId', authenticate, requireAdmin, addProductsToUser);
 router.get('/stats/overview', authenticate, requireAdmin, getOrderStats);
 
 // User routes (require authentication)

@@ -13,6 +13,7 @@ export interface CompanyServiceMeta {
     label: string
     type: "text" | "json"
     required: boolean
+    placeholder?: string
   }[]
   icon?: ElementType
 }
@@ -24,8 +25,8 @@ export const companyServices: CompanyServiceMeta[] = [
     description: "Fetch company details by CIN, FCRN, or LLPIN (company_id).",
     apiEndpoint: "/mca/fetch-company",
     formFields: [
-      { name: "company_id", label: "Company ID (CIN/FCRN/LLPIN)", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
+      { name: "company_id", label: "Company ID (CIN/FCRN/LLPIN)", type: "text", required: true, placeholder: "Enter CIN / FCRN / LLPIN" },
+      { name: "consent", label: "Consent", type: "text", required: true, placeholder: "Y or N" },
     ],
     icon: Building,
   },

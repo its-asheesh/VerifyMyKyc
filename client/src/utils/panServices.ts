@@ -30,6 +30,7 @@ export interface PanServiceMeta {
     type: "text" | "json" | "radio"
     required: boolean
     options?: { label: string; value: string }[]
+    placeholder?: string
   }[]
   icon?: React.ElementType
 }
@@ -43,7 +44,7 @@ export const panServices: PanServiceMeta[] = [
     description: "Fetch detailed PAN information including holder's name, DOB, and status.",
     apiEndpoint: "/pan/fetch-pan-detailed",
     formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      { name: "pan_number", label: "PAN Number", type: "text", required: true, placeholder: "Enter 10-character PAN number" },
       {
         name: "consent",
         label: "Consent",
@@ -63,7 +64,7 @@ export const panServices: PanServiceMeta[] = [
     description: "Get the father's name associated with a PAN number.",
     apiEndpoint: "/pan/father-name",
     formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      { name: "pan_number", label: "PAN Number", type: "text", required: true, placeholder: "Enter 10-character PAN number" },
       {
         name: "consent",
         label: "Consent",
@@ -84,8 +85,8 @@ export const panServices: PanServiceMeta[] = [
     // Route via PAN module to consume PAN quota first (fallback to company if needed)
     apiEndpoint: "/pan/gstin-by-pan",
     formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
+      { name: "pan_number", label: "PAN Number", type: "text", required: true, placeholder: "Enter 10-character PAN number" },
+      { name: "consent", label: "Consent", type: "text", required: true, placeholder: "Y or N" },
     ],
     icon: FileText,
   },
@@ -96,8 +97,8 @@ export const panServices: PanServiceMeta[] = [
     // Route via PAN module to consume PAN quota first (fallback to company if needed)
     apiEndpoint: "/pan/din-by-pan",
     formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
+      { name: "pan_number", label: "PAN Number", type: "text", required: true, placeholder: "Enter 10-character PAN number" },
+      { name: "consent", label: "Consent", type: "text", required: true, placeholder: "Y or N" },
     ],
     icon: FileText,
   },
@@ -108,7 +109,7 @@ export const panServices: PanServiceMeta[] = [
     // Route via PAN module to consume PAN quota first (fallback to company if needed)
     apiEndpoint: "/pan/cin-by-pan",
     formFields: [
-      { name: "pan_number", label: "PAN Number", type: "text", required: true },
+      { name: "pan_number", label: "PAN Number", type: "text", required: true, placeholder: "Enter 10-character PAN number" },
       {
         name: "consent",
         label: "Consent",

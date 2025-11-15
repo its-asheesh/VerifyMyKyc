@@ -12,6 +12,7 @@ export interface VoterServiceMeta {
     label: string
     type: "text" | "file" | "json"
     required: boolean
+    placeholder?: string
   }[]
   icon?: React.ElementType
 }
@@ -23,8 +24,8 @@ export const voterServices: VoterServiceMeta[] = [
     description: "Fetch voter details directly using Voter ID",
     apiEndpoint: "/api/voter/boson/fetch",
     formFields: [
-      { name: "voter_id", label: "Voter ID", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
+      { name: "voter_id", label: "Enter voter ID number/EPIC No.", type: "text", required: true, placeholder: "Example: ABC9999999" },
+      { name: "consent", label: "Consent", type: "text", required: true, placeholder: "Y or N" },
     ],
     icon: Shield,
   },

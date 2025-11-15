@@ -37,7 +37,7 @@ export const CompanySection: React.FC<{ productId?: string }> = ({ productId }) 
       }
       return {
         ...field,
-        placeholder: field.name === "company_id" ? "Enter CIN / FCRN / LLPIN" : undefined,
+        placeholder: field.placeholder || (field.name === "company_id" ? "Enter CIN / FCRN / LLPIN" : undefined),
       }
     })
   }

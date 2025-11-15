@@ -13,6 +13,7 @@ export interface AadhaarServiceMeta {
     label: string
     type: "text" | "file" | "json"
     required: boolean
+    placeholder?: string
   }[]
   icon?: React.ElementType
 }
@@ -24,8 +25,8 @@ export const aadhaarServices: AadhaarServiceMeta[] = [
     description: "Verify Aadhaar using OTP sent to registered mobile number",
     apiEndpoint: "/api/aadhaar/v2/generate-otp",
     formFields: [
-      { name: "id_number", label: "Aadhaar Number", type: "text", required: true },
-      { name: "consent", label: "Consent", type: "text", required: true },
+      { name: "id_number", label: "Aadhaar Number", type: "text", required: true, placeholder: "Enter 12-digit Aadhaar number" },
+      { name: "consent", label: "Consent", type: "text", required: true, placeholder: "Y or N" },
     ],
     icon: FormInputIcon,
   },
