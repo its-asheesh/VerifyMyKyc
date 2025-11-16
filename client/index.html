@@ -269,29 +269,31 @@
         botId: "68ecad71fe2c325441025668__mgow3hr5rtle",
       });
 
-      // Track the current chatId to close later
+      // Track current chatId
       let currentChatId = null;
 
       // Listen for messages from the bot
       window.addEventListener("message", function (event) {
         let request = event.data;
         if (request.name === "showEnablexIframe") {
-          // Store the chatId
           currentChatId = request.chatId;
 
-          // Wait for the bot container to be injected (next tick)
+          // Wait for DOM to update (next tick)
           setTimeout(() => {
-            const botContainer = document.querySelector('.enablex-web-bot-container');
-            if (botContainer) {
-              // Apply custom styling to avoid overlapping with WhatsApp
-              botContainer.style.bottom = '80px'; // Move it up
-              botContainer.style.right = '20px';
-              botContainer.style.zIndex = '999'; // Lower than WhatsApp
+            // Target the launcher icon and move it up
+            const launcher = document.querySelector('.enablex-web-bot-launcher');
+            if (launcher) {
+              launcher.style.bottom = '80px'; // Move launcher up
+              launcher.style.right = '20px';
+              launcher.style.zIndex = '999'; // Lower than WhatsApp
+            }
 
-              // Add click handler to close on outside click
-              botContainer.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent closing when clicking inside bot
-              });
+            // Target the chat container and position it
+            const container = document.querySelector('.enablex-web-bot-container');
+            if (container) {
+              container.style.bottom = '80px'; // Move chat up
+              container.style.right = '20px';
+              container.style.zIndex = '998'; // Even lower than launcher
             }
           }, 0);
 
@@ -302,17 +304,18 @@
 
       // Global click handler to close bot when clicking outside
       document.addEventListener('click', function(event) {
-        const botContainer = document.querySelector('.enablex-web-bot-container');
+        const container = document.querySelector('.enablex-web-bot-container');
+        const launcher = document.querySelector('.enablex-web-bot-launcher');
         const whatsappButton = document.querySelector('.whatsapp-float');
 
-        // If bot is open and click is outside both bot and WhatsApp button
+        // If chat is open and click is outside both bot and WhatsApp
         if (
-          botContainer &&
-          botContainer.style.display !== 'none' &&
-          !botContainer.contains(event.target) &&
+          container &&
+          container.style.display !== 'none' &&
+          !container.contains(event.target) &&
+          !launcher?.contains(event.target) && // Also check launcher
           !whatsappButton.contains(event.target)
         ) {
-          // Close the bot using its API
           if (currentChatId) {
             window.enablexWebBot.removeEnablexDiv({ chatId: currentChatId });
             currentChatId = null;
