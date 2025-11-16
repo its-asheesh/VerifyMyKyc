@@ -148,16 +148,16 @@
     </script>
 
     <style>
-      /* WhatsApp Floating Button */
+      /* WhatsApp Floating Button — repositioned higher */
       .whatsapp-float {
         position: fixed;
-        bottom: 20px;
+        bottom: 90px; /* ← Moved up from 20px to 90px */
         right: 20px;
         width: 60px;
         height: 60px;
         border-radius: 50%;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
+        z-index: 1001; /* Highest: always on top */
         transition: transform 0.2s ease-in-out;
       }
       .whatsapp-float:hover {
@@ -269,52 +269,55 @@
         botId: "68ecad71fe2c325441025668__mgow3hr5rtle",
       });
 
-      // Track current chatId
       let currentChatId = null;
 
-      // Listen for messages from the bot
+      // Ensure EnableX launcher stays at default bottom (20px) — usually it is
+      // But we can enforce it if needed:
+      const adjustEnableXPosition = () => {
+        const launcher = document.querySelector('.enablex-web-bot-launcher');
+        const container = document.querySelector('.enablex-web-bot-container');
+        if (launcher) {
+          launcher.style.bottom = '20px';
+          launcher.style.right = '20px';
+          launcher.style.zIndex = '1000'; // Below WhatsApp
+        }
+        if (container) {
+          container.style.bottom = '20px';
+          container.style.right = '20px';
+          container.style.zIndex = '999';
+        }
+      };
+
+      // Run adjustment on DOM changes (robust)
+      const observer = new MutationObserver(adjustEnableXPosition);
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Also run once after bot init (fallback)
+      setTimeout(adjustEnableXPosition, 500);
+
+      // Message listener for chat open/close
       window.addEventListener("message", function (event) {
-        let request = event.data;
+        const request = event.data;
         if (request.name === "showEnablexIframe") {
           currentChatId = request.chatId;
-
-          // Wait for DOM to update (next tick)
-          setTimeout(() => {
-            // Target the launcher icon and move it up
-            const launcher = document.querySelector('.enablex-web-bot-launcher');
-            if (launcher) {
-              launcher.style.bottom = '80px'; // Move launcher up
-              launcher.style.right = '20px';
-              launcher.style.zIndex = '999'; // Lower than WhatsApp
-            }
-
-            // Target the chat container and position it
-            const container = document.querySelector('.enablex-web-bot-container');
-            if (container) {
-              container.style.bottom = '80px'; // Move chat up
-              container.style.right = '20px';
-              container.style.zIndex = '998'; // Even lower than launcher
-            }
-          }, 0);
-
+          setTimeout(adjustEnableXPosition, 10);
         } else if (request.name === "hideEnablexIframe") {
           currentChatId = null;
         }
       });
 
-      // Global click handler to close bot when clicking outside
+      // Click outside to close
       document.addEventListener('click', function(event) {
         const container = document.querySelector('.enablex-web-bot-container');
         const launcher = document.querySelector('.enablex-web-bot-launcher');
-        const whatsappButton = document.querySelector('.whatsapp-float');
+        const whatsapp = document.querySelector('.whatsapp-float');
 
-        // If chat is open and click is outside both bot and WhatsApp
         if (
           container &&
           container.style.display !== 'none' &&
           !container.contains(event.target) &&
-          !launcher?.contains(event.target) && // Also check launcher
-          !whatsappButton.contains(event.target)
+          !launcher?.contains(event.target) &&
+          !whatsapp?.contains(event.target)
         ) {
           if (currentChatId) {
             window.enablexWebBot.removeEnablexDiv({ chatId: currentChatId });
