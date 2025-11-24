@@ -52,13 +52,24 @@ exports.createCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
     // Generate code if not provided
     let couponCode = code;
     if (!couponCode) {
+        let attempts = 0;
+        const maxAttempts = 10;
         do {
             couponCode = generateCouponCode();
+            attempts++;
+            if (attempts >= maxAttempts) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to generate unique coupon code. Please try again.'
+                });
+            }
         } while (yield coupon_model_1.Coupon.findOne({ code: couponCode }));
     }
     else {
-        // Check if code already exists
-        const existingCoupon = yield coupon_model_1.Coupon.findOne({ code: couponCode.toUpperCase() });
+        // Check if code already exists - use case-insensitive search with proper error handling
+        const existingCoupon = yield coupon_model_1.Coupon.findOne({
+            code: { $regex: new RegExp(`^${couponCode.toUpperCase()}$`, 'i') }
+        });
         if (existingCoupon) {
             return res.status(400).json({
                 success: false,
@@ -66,30 +77,42 @@ exports.createCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
             });
         }
     }
-    const coupon = yield coupon_model_1.Coupon.create({
-        code: couponCode.toUpperCase(),
-        name,
-        description,
-        discountType,
-        discountValue,
-        minimumAmount: minimumAmount || 0,
-        maximumDiscount,
-        validFrom: validFrom || new Date(),
-        validUntil,
-        usageLimit,
-        applicableProducts: applicableProducts || ['all'],
-        applicableCategories: applicableCategories || ['all'],
-        userRestrictions: userRestrictions || {
-            newUsersOnly: false,
-            specificUsers: [],
-            minimumOrders: 0
-        },
-        createdBy: req.user._id
-    });
-    res.status(201).json({
-        success: true,
-        data: { coupon }
-    });
+    try {
+        const coupon = yield coupon_model_1.Coupon.create({
+            code: couponCode.toUpperCase(),
+            name,
+            description,
+            discountType,
+            discountValue,
+            minimumAmount: minimumAmount || 0,
+            maximumDiscount,
+            validFrom: validFrom || new Date(),
+            validUntil,
+            usageLimit,
+            applicableProducts: applicableProducts || ['all'],
+            applicableCategories: applicableCategories || ['all'],
+            userRestrictions: userRestrictions || {
+                newUsersOnly: false,
+                specificUsers: [],
+                minimumOrders: 0
+            },
+            createdBy: req.user._id
+        });
+        res.status(201).json({
+            success: true,
+            data: { coupon }
+        });
+    }
+    catch (error) {
+        // Handle duplicate key error (race condition)
+        if (error.code === 11000 || error.name === 'MongoServerError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Coupon code already exists. Please try again.'
+            });
+        }
+        throw error; // Re-throw other errors to be handled by asyncHandler
+    }
 }));
 // Get all coupons (Admin only)
 exports.getAllCoupons = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -163,7 +186,7 @@ exports.updateCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
     // Check if code is being changed and if it already exists
     if (req.body.code && req.body.code !== coupon.code) {
         const existingCoupon = yield coupon_model_1.Coupon.findOne({
-            code: req.body.code.toUpperCase(),
+            code: { $regex: new RegExp(`^${req.body.code.toUpperCase()}$`, 'i') },
             _id: { $ne: req.params.id }
         });
         if (existingCoupon) {

@@ -74,10 +74,33 @@ const CouponForm: React.FC<CouponFormProps> = ({ onClose, editingCouponId }) => 
         await createCouponMutation.mutateAsync(formData)
         showSuccess('Coupon created successfully!')
       }
+      // Reset form state before closing
+      setFormData({
+        name: '',
+        description: '',
+        discountType: 'percentage',
+        discountValue: 0,
+        minimumAmount: 0,
+        maximumDiscount: 0,
+        validFrom: new Date().toISOString().split('T')[0],
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        usageLimit: 100,
+        applicableProducts: ['all'],
+        applicableCategories: ['all'],
+        userRestrictions: {
+          newUsersOnly: false,
+          specificUsers: [],
+          minimumOrders: 0
+        },
+        isActive: true
+      })
+      setAutoGenerateCode(true)
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save coupon:', error)
-      showError('Failed to save coupon. Please try again.')
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to save coupon. Please try again.'
+      showError(errorMessage)
+      // Don't close on error - let user fix and retry
     }
   }
 

@@ -609,6 +609,94 @@ export const verifyUserPhone = asyncHandler(async (req: Request, res: Response) 
   });
 }); 
 
+// Admin: Add tokens (verification quota) for a user (admin only)
+export const addUserTokens = asyncHandler(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { verificationType, numberOfTokens, validityDays } = req.body;
+
+  // Validate required fields
+  if (!verificationType) {
+    return res.status(400).json({ message: 'Verification type is required' });
+  }
+
+  if (!numberOfTokens || numberOfTokens <= 0) {
+    return res.status(400).json({ message: 'Number of tokens must be greater than 0' });
+  }
+
+  if (!validityDays || validityDays <= 0) {
+    return res.status(400).json({ message: 'Validity days must be greater than 0' });
+  }
+
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  // Import Order model
+  const { Order } = await import('../orders/order.model');
+  const { VerificationPricing } = await import('../pricing/pricing.model');
+
+  // Get verification pricing to get service name
+  const pricing = await VerificationPricing.findOne({ verificationType });
+  const serviceName = pricing?.title || verificationType.charAt(0).toUpperCase() + verificationType.slice(1) + ' Verification';
+
+  // Generate order ID
+  const orderId = `ADMIN-TOKEN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  // Calculate expiry date
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + validityDays);
+
+  // Create order with verification quota
+  const order = new Order({
+    userId: user._id,
+    orderId,
+    orderType: 'verification',
+    serviceName,
+    serviceDetails: {
+      verificationType
+    },
+    totalAmount: 0, // Admin-added tokens are free
+    finalAmount: 0,
+    currency: 'INR',
+    billingPeriod: 'one-time',
+    paymentStatus: 'completed', // Mark as completed since admin is adding it
+    paymentMethod: 'admin', // Special payment method for admin-added tokens
+    status: 'active',
+    startDate,
+    endDate,
+    verificationQuota: {
+      totalAllowed: numberOfTokens,
+      used: 0,
+      remaining: numberOfTokens,
+      validityDays,
+      expiresAt: endDate
+    }
+  });
+
+  await order.save();
+
+  res.json({
+    success: true,
+    message: `Successfully added ${numberOfTokens} tokens for ${serviceName}`,
+    data: {
+      order: {
+        id: order._id,
+        orderId: order.orderId,
+        orderNumber: order.orderNumber,
+        verificationType,
+        serviceName,
+        numberOfTokens,
+        validityDays,
+        expiresAt: endDate,
+        remaining: numberOfTokens
+      }
+    }
+  });
+});
+
 // Admin: Get user statistics
 export const getUserStats = asyncHandler(async (req: Request, res: Response) => {
   const totalUsers = await User.countDocuments();

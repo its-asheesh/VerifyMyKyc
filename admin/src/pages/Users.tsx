@@ -10,7 +10,8 @@ import {
   MapPin,
   Mail,
   Phone,
-  Building
+  Building,
+  Plus
 } from "lucide-react";
 import {
   useUsers,
@@ -23,6 +24,7 @@ import {
 import { useAnalyticsOverview } from "../hooks/useAnalytics";
 import UserAnalyticsChart from "../components/dashboard/UserAnalyticsChart";
 import UserDetailsModal from "../components/users/UserDetailsModal";
+import AddTokensModal from "../components/users/AddTokensModal";
 import type { User as UserType } from "../services/api/userApi";
 
 // Import reusable components
@@ -50,6 +52,8 @@ const Users: React.FC = () => {
   const [isUserChartOpen, setIsUserChartOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
+  const [isAddTokensOpen, setIsAddTokensOpen] = useState(false);
+  const [userForTokens, setUserForTokens] = useState<UserType | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Fetch data using React Query
@@ -277,6 +281,17 @@ const Users: React.FC = () => {
           >
             {row.role === "admin" ? "Make User" : "Make Admin"}
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddTokens(row);
+            }}
+            className="px-3 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center"
+            title="Add Tokens"
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            Add Tokens
+          </button>
         </div>
       )
     }
@@ -439,6 +454,11 @@ const Users: React.FC = () => {
     } catch (error) {
       console.error("Failed to verify phone:", error);
     }
+  };
+
+  const handleAddTokens = (user: UserType) => {
+    setUserForTokens(user);
+    setIsAddTokensOpen(true);
   };
 
   const handleFilterChange = (key: string, value: any) => {
@@ -645,6 +665,16 @@ const Users: React.FC = () => {
           setSelectedUser(null);
         }}
         user={selectedUser}
+      />
+
+      {/* Add Tokens Modal */}
+      <AddTokensModal
+        isOpen={isAddTokensOpen}
+        onClose={() => {
+          setIsAddTokensOpen(false);
+          setUserForTokens(null);
+        }}
+        user={userForTokens}
       />
     </div>
   );

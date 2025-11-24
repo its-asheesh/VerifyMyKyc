@@ -17,7 +17,7 @@ export interface IOrder extends Document {
   currency: string;
   billingPeriod: 'one-time' | 'monthly' | 'yearly';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
-  paymentMethod: 'card' | 'upi' | 'netbanking';
+  paymentMethod: 'card' | 'upi' | 'netbanking' | 'admin';
   transactionId?: string;
   status: 'pending' | 'active' | 'expired' | 'cancelled';
   startDate: Date;
@@ -103,7 +103,7 @@ const orderSchema = new Schema<IOrder>({
   },
   paymentMethod: {
     type: String,
-    enum: ['card', 'upi', 'netbanking'],
+    enum: ['card', 'upi', 'netbanking', 'admin'],
     required: true
   },
   transactionId: String,

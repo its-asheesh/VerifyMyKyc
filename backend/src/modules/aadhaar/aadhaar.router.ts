@@ -9,7 +9,6 @@ import {
 } from './aadhaar.controller';
 import { authenticate, requireUser } from '../../common/middleware/auth';
 import { validate } from '../../common/validation/middleware';
-import { otpLimiter, apiLimiter } from '../../common/middleware/rateLimiter';
 import {
   aadhaarGenerateOtpV2Schema,
   aadhaarSubmitOtpV2Schema,
@@ -39,7 +38,6 @@ router.post(
   '/v2/generate-otp',
   authenticate,
   requireUser,
-  otpLimiter,
   validate(aadhaarGenerateOtpV2Schema),
   generateOtpV2Handler
 );
@@ -48,7 +46,6 @@ router.post(
   '/v2/submit-otp',
   authenticate,
   requireUser,
-  apiLimiter,
   validate(aadhaarSubmitOtpV2Schema),
   submitOtpV2Handler
 );

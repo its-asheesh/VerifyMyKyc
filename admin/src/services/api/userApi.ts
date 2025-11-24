@@ -142,6 +142,26 @@ class UserApi {
   async verifyUserPhone(userId: string): Promise<User> {
     return api.put(`/auth/users/${userId}/verify-phone`).then(res => res.data.data.user)
   }
+
+  async addUserTokens(userId: string, data: {
+    verificationType: string
+    numberOfTokens: number
+    validityDays: number
+  }): Promise<{
+    order: {
+      id: string
+      orderId: string
+      orderNumber: string
+      verificationType: string
+      serviceName: string
+      numberOfTokens: number
+      validityDays: number
+      expiresAt: string
+      remaining: number
+    }
+  }> {
+    return api.post(`/auth/users/${userId}/add-tokens`, data).then(res => res.data.data)
+  }
 }
 
 export default new UserApi() 

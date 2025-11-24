@@ -108,4 +108,24 @@ export const useVerifyUserPhone = () => {
       queryClient.invalidateQueries({ queryKey: ['userStats'] })
     },
   })
+}
+
+// Add tokens for user
+export const useAddUserTokens = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: ({ userId, data }: { 
+      userId: string
+      data: {
+        verificationType: string
+        numberOfTokens: number
+        validityDays: number
+      }
+    }) => userApi.addUserTokens(userId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['userStats'] })
+    },
+  })
 } 

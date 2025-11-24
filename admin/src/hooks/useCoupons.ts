@@ -12,6 +12,9 @@ export const useCoupons = (params?: {
   return useQuery({
     queryKey: ['coupons', params],
     queryFn: () => couponApi.getAllCoupons(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true,
+    retry: 2,
   })
 }
 
@@ -21,6 +24,9 @@ export const useCoupon = (id: string) => {
     queryKey: ['coupon', id],
     queryFn: () => couponApi.getCouponById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true,
+    retry: 2,
   })
 }
 
@@ -29,6 +35,9 @@ export const useCouponStats = () => {
   return useQuery({
     queryKey: ['couponStats'],
     queryFn: () => couponApi.getCouponStats(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true,
+    retry: 2,
   })
 }
 
@@ -38,10 +47,20 @@ export const useCreateCoupon = () => {
   
   return useMutation({
     mutationFn: (data: CouponData) => couponApi.createCoupon(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
-      queryClient.invalidateQueries({ queryKey: ['couponStats'] })
+    onSuccess: async () => {
+      // Invalidate and refetch to ensure fresh data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['coupons'] }),
+        queryClient.invalidateQueries({ queryKey: ['couponStats'] })
+      ])
+      // Force refetch to ensure UI updates immediately
+      await queryClient.refetchQueries({ queryKey: ['coupons'] })
+      await queryClient.refetchQueries({ queryKey: ['couponStats'] })
     },
+    onError: (error) => {
+      console.error('Failed to create coupon:', error)
+    },
+    retry: 1,
   })
 }
 
@@ -52,11 +71,22 @@ export const useUpdateCoupon = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CouponData> }) =>
       couponApi.updateCoupon(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
-      queryClient.invalidateQueries({ queryKey: ['coupon', id] })
-      queryClient.invalidateQueries({ queryKey: ['couponStats'] })
+    onSuccess: async (_, { id }) => {
+      // Invalidate and refetch to ensure fresh data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['coupons'] }),
+        queryClient.invalidateQueries({ queryKey: ['coupon', id] }),
+        queryClient.invalidateQueries({ queryKey: ['couponStats'] })
+      ])
+      // Force refetch to ensure UI updates immediately
+      await queryClient.refetchQueries({ queryKey: ['coupons'] })
+      await queryClient.refetchQueries({ queryKey: ['coupon', id] })
+      await queryClient.refetchQueries({ queryKey: ['couponStats'] })
     },
+    onError: (error) => {
+      console.error('Failed to update coupon:', error)
+    },
+    retry: 1,
   })
 }
 
@@ -66,10 +96,20 @@ export const useDeleteCoupon = () => {
   
   return useMutation({
     mutationFn: (id: string) => couponApi.deleteCoupon(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['coupons'] })
-      queryClient.invalidateQueries({ queryKey: ['couponStats'] })
+    onSuccess: async () => {
+      // Invalidate and refetch to ensure fresh data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['coupons'] }),
+        queryClient.invalidateQueries({ queryKey: ['couponStats'] })
+      ])
+      // Force refetch to ensure UI updates immediately
+      await queryClient.refetchQueries({ queryKey: ['coupons'] })
+      await queryClient.refetchQueries({ queryKey: ['couponStats'] })
     },
+    onError: (error) => {
+      console.error('Failed to delete coupon:', error)
+    },
+    retry: 1,
   })
 }
 

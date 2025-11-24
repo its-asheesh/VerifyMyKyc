@@ -18,7 +18,7 @@ import CouponForm from '../components/coupons/CouponForm'
 import CouponDetails from '../components/coupons/CouponDetails'
 
 // Import reusable components
-import { StatCard, DataTable, StatusBadge, AdvancedFilters, FormModal } from '../components/common'
+import { StatCard, DataTable, StatusBadge, AdvancedFilters } from '../components/common'
 import { exportToExcel, formatters } from '../utils/exportUtils'
 import { formatDate, formatCurrency } from '../utils/dateUtils'
 import type { Column } from '../components/common/DataTable'
@@ -278,9 +278,9 @@ const CouponManagement: React.FC = () => {
   }
 
   const handleFormSubmit = async (_data: any) => {
-    // Handle form submission logic here
-    setShowForm(false)
-    setEditingCoupon(null)
+    // Form submission is handled inside CouponForm component
+    // This is just a placeholder for FormModal compatibility
+    // The actual submission logic is in CouponForm.handleSubmit
   }
 
   // Export coupons to Excel
@@ -421,16 +421,7 @@ const CouponManagement: React.FC = () => {
       />
 
       {/* Coupon Form Modal */}
-      <FormModal
-        isOpen={showForm}
-        onClose={() => {
-          setShowForm(false)
-          setEditingCoupon(null)
-        }}
-        onSubmit={handleFormSubmit}
-        title={editingCoupon ? 'Edit Coupon' : 'Add New Coupon'}
-        isLoading={false}
-      >
+      {showForm && (
         <CouponForm
           editingCouponId={editingCoupon}
           onClose={() => {
@@ -438,7 +429,7 @@ const CouponManagement: React.FC = () => {
             setEditingCoupon(null)
           }}
         />
-      </FormModal>
+      )}
 
       {/* Coupon Details Modal */}
       {viewingCoupon && (

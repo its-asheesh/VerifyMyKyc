@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.verifyUserPhone = exports.verifyUserEmail = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithPhoneToken = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
+exports.loginWithPhoneAndPassword = exports.firebasePhoneLogin = exports.firebasePhoneRegister = exports.getUsersWithLocation = exports.updateUserLocation = exports.getUserLocationAnalytics = exports.getUserStats = exports.addUserTokens = exports.verifyUserPhone = exports.verifyUserEmail = exports.toggleUserStatus = exports.updateUserRole = exports.getAllUsers = exports.logout = exports.changePassword = exports.updateProfile = exports.getProfile = exports.resetPasswordWithPhoneToken = exports.resetPasswordWithOtp = exports.sendPasswordResetOtp = exports.verifyEmailOtp = exports.sendEmailOtp = exports.login = exports.register = void 0;
 const auth_model_1 = require("./auth.model");
 const jwt_1 = require("../../common/utils/jwt");
 const asyncHandler_1 = __importDefault(require("../../common/middleware/asyncHandler"));
@@ -543,6 +576,82 @@ exports.verifyUserPhone = (0, asyncHandler_1.default)((req, res) => __awaiter(vo
                 location: user.location,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
+            }
+        }
+    });
+}));
+// Admin: Add tokens (verification quota) for a user (admin only)
+exports.addUserTokens = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const { verificationType, numberOfTokens, validityDays } = req.body;
+    // Validate required fields
+    if (!verificationType) {
+        return res.status(400).json({ message: 'Verification type is required' });
+    }
+    if (!numberOfTokens || numberOfTokens <= 0) {
+        return res.status(400).json({ message: 'Number of tokens must be greater than 0' });
+    }
+    if (!validityDays || validityDays <= 0) {
+        return res.status(400).json({ message: 'Validity days must be greater than 0' });
+    }
+    // Check if user exists
+    const user = yield auth_model_1.User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    // Import Order model
+    const { Order } = yield Promise.resolve().then(() => __importStar(require('../orders/order.model')));
+    const { VerificationPricing } = yield Promise.resolve().then(() => __importStar(require('../pricing/pricing.model')));
+    // Get verification pricing to get service name
+    const pricing = yield VerificationPricing.findOne({ verificationType });
+    const serviceName = (pricing === null || pricing === void 0 ? void 0 : pricing.title) || verificationType.charAt(0).toUpperCase() + verificationType.slice(1) + ' Verification';
+    // Generate order ID
+    const orderId = `ADMIN-TOKEN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Calculate expiry date
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + validityDays);
+    // Create order with verification quota
+    const order = new Order({
+        userId: user._id,
+        orderId,
+        orderType: 'verification',
+        serviceName,
+        serviceDetails: {
+            verificationType
+        },
+        totalAmount: 0, // Admin-added tokens are free
+        finalAmount: 0,
+        currency: 'INR',
+        billingPeriod: 'one-time',
+        paymentStatus: 'completed', // Mark as completed since admin is adding it
+        paymentMethod: 'admin', // Special payment method for admin-added tokens
+        status: 'active',
+        startDate,
+        endDate,
+        verificationQuota: {
+            totalAllowed: numberOfTokens,
+            used: 0,
+            remaining: numberOfTokens,
+            validityDays,
+            expiresAt: endDate
+        }
+    });
+    yield order.save();
+    res.json({
+        success: true,
+        message: `Successfully added ${numberOfTokens} tokens for ${serviceName}`,
+        data: {
+            order: {
+                id: order._id,
+                orderId: order.orderId,
+                orderNumber: order.orderNumber,
+                verificationType,
+                serviceName,
+                numberOfTokens,
+                validityDays,
+                expiresAt: endDate,
+                remaining: numberOfTokens
             }
         }
     });
