@@ -414,6 +414,30 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
           </div>
         </div>
 
+        {/* Ratings */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                className={`w-5 h-5 ${
+                  count > 0 && star <= Math.round(avg)
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-medium text-gray-700">
+            {count > 0 ? avgDisplay : "0.0"}/5
+          </span>
+          {count > 0 && (
+            <span className="text-sm text-gray-500">
+              ({count} {count === 1 ? "review" : "reviews"})
+            </span>
+          )}
+        </div>
+
         {/* Title */}
         {/* <h2 className="text-3xl font-bold text-gray-900">{product.title}</h2> */}
 

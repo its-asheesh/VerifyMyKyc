@@ -8,6 +8,7 @@ dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const routes_1 = __importDefault(require("./src/routes"));
+const health_router_1 = __importDefault(require("./src/routes/health.router"));
 const db_1 = require("./src/config/db");
 const auth_1 = require("./src/common/middleware/auth");
 // Connect to MongoDB
@@ -35,6 +36,8 @@ const corsOptions = {
 app.use((0, cors_1.default)(corsOptions));
 app.options('*', (0, cors_1.default)(corsOptions));
 app.use(express_1.default.json({ limit: '10mb' }));
+// Health check endpoint - before API routes for independent monitoring
+app.use('/', health_router_1.default);
 // Mount all API routes under /api
 app.use('/api', routes_1.default);
 // Global error handler middleware for logging

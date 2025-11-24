@@ -12,11 +12,7 @@ import { ProductFeatures } from "../../components/products/ProductFeatures"
 import { ProductPricing } from "../../components/products/ProductPricing"
 import { ProductReviews } from "../../components/reviews/ProductReviews"
 import { ProductHowItWorks } from "../../components/products/ProductHowItWorks"
-import { ProductKeyFeatures } from "../../components/products/ProductKeyFeatures"
 import { ProductFAQ } from "../../components/products/ProductFAQ"
-import { ProductComplianceNote } from "../../components/products/ProductComplianceNote"
-import { getProductContent } from "../../data/productContent"
-import SEOHead from "../../components/seo/SEOHead"
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -51,18 +47,8 @@ const ProductDetailPage: React.FC = () => {
     )
   }
 
-  // Get product-specific content
-  const productContent = getProductContent(selectedProduct.id)
-
   return (
     <>
-      {/* SEO Meta Tags */}
-      <SEOHead
-        title={productContent?.metaTitle || selectedProduct.title}
-        description={productContent?.metaDescription || selectedProduct.description}
-        canonicalUrl={`/products/${selectedProduct.id}`}
-      />
-      
       <div className="min-h-screen bg-gray-50">
       <PageHeader
       title={selectedProduct.title}
@@ -74,38 +60,16 @@ const ProductDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
         <ProductOverview product={selectedProduct} />
         
-        {/* How It Works */}
-        {productContent?.howItWorks && (
-          <ProductHowItWorks
-            headline={productContent.howItWorks.headline}
-            steps={productContent.howItWorks.steps}
-            note={productContent.howItWorks.note}
-          />
-        )}
+        {/* Key Features Section */}
+        <ProductFeatures product={selectedProduct} />
         
-        {/* Key Features */}
-        {productContent?.keyFeatures && (
-          <ProductKeyFeatures
-            headline={productContent.keyFeatures.headline}
-            features={productContent.keyFeatures.features}
-          />
-        )}
+        {/* How It Works Section */}
+        <ProductHowItWorks product={selectedProduct} />
         
-        {/* Compliance Note */}
-        {productContent?.complianceNote && (
-          <ProductComplianceNote note={productContent.complianceNote} />
-        )}
+        {/* FAQ Section */}
+        <ProductFAQ product={selectedProduct} />
         
-        {/* FAQs */}
-        {productContent?.faqs && (
-          <ProductFAQ
-            headline={productContent.faqs.headline}
-            items={productContent.faqs.items}
-          />
-        )}
-        
-        {/* <ProductFeatures product={selectedProduct} /> */}
-        
+        {/* Pricing Section */}
         <div id="pricing">
           {/* <ProductPricing product={selectedProduct} /> */}
         </div>

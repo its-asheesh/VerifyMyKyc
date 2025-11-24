@@ -3,6 +3,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import router from './src/routes';
+import healthRouter from './src/routes/health.router';
 import { Request, Response, NextFunction } from 'express';
 import { connectDB } from './src/config/db';
 import { handleOptions } from './src/common/middleware/auth';
@@ -34,6 +35,9 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
+
+// Health check endpoint - before API routes for independent monitoring
+app.use('/', healthRouter);
 
 // Mount all API routes under /api
 app.use('/api', router);
