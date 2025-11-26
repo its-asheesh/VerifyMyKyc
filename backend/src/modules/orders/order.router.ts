@@ -13,12 +13,16 @@ import {
 import { authenticate, requireAdmin, requireUser } from '../../common/middleware/auth';
 // routes/order.routes.ts
 import { verifyPayment } from './verifyPayment';
+import { handleRazorpayWebhook } from './razorpay.webhook';
 
 
 const router = Router();
 
 // Admin routes (require admin role) - Must come before parameterized routes
 router.get('/stats/overview', authenticate, requireAdmin, getOrderStats);
+
+// Razorpay webhook (no auth required - uses signature verification)
+router.post('/razorpay-webhook', handleRazorpayWebhook);
 
 // User routes (require authentication)
 router.post('/', authenticate, requireUser, createOrder);
