@@ -13,11 +13,15 @@ import { ProductPricing } from "../../components/products/ProductPricing"
 import { ProductReviews } from "../../components/reviews/ProductReviews"
 import { ProductHowItWorks } from "../../components/products/ProductHowItWorks"
 import { ProductFAQ } from "../../components/products/ProductFAQ"
+import { getProductContent } from "../../data/productContent"
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
   const { selectedProduct, isLoading, error } = useAppSelector((state) => state.products)
+  
+  // Get product-specific content
+  const productContent = selectedProduct ? getProductContent(selectedProduct.id) : null
 
   useEffect(() => {
     if (id) {
@@ -64,10 +68,21 @@ const ProductDetailPage: React.FC = () => {
         <ProductFeatures product={selectedProduct} />
         
         {/* How It Works Section */}
-        <ProductHowItWorks product={selectedProduct} />
+        {productContent?.howItWorks && (
+          <ProductHowItWorks
+            headline={productContent.howItWorks.headline}
+            steps={productContent.howItWorks.steps}
+            note={productContent.howItWorks.note}
+          />
+        )}
         
         {/* FAQ Section */}
-        <ProductFAQ product={selectedProduct} />
+        {productContent?.faqs && (
+          <ProductFAQ
+            headline={productContent.faqs.headline}
+            items={productContent.faqs.items}
+          />
+        )}
         
         {/* Pricing Section */}
         <div id="pricing">

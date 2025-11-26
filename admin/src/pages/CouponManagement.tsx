@@ -277,12 +277,6 @@ const CouponManagement: React.FC = () => {
     showSuccess('Coupon code copied to clipboard!')
   }
 
-  const handleFormSubmit = async (_data: any) => {
-    // Form submission is handled inside CouponForm component
-    // This is just a placeholder for FormModal compatibility
-    // The actual submission logic is in CouponForm.handleSubmit
-  }
-
   // Export coupons to Excel
   const exportCouponsToExcel = () => {
     const exportColumns = [
