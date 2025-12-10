@@ -5,9 +5,12 @@ const order_controller_1 = require("./order.controller");
 const auth_1 = require("../../common/middleware/auth");
 // routes/order.routes.ts
 const verifyPayment_1 = require("./verifyPayment");
+const razorpay_webhook_1 = require("./razorpay.webhook");
 const router = (0, express_1.Router)();
 // Admin routes (require admin role) - Must come before parameterized routes
 router.get('/stats/overview', auth_1.authenticate, auth_1.requireAdmin, order_controller_1.getOrderStats);
+// Razorpay webhook (no auth required - uses signature verification)
+router.post('/razorpay-webhook', razorpay_webhook_1.handleRazorpayWebhook);
 // User routes (require authentication)
 router.post('/', auth_1.authenticate, auth_1.requireUser, order_controller_1.createOrder);
 router.post('/process-payment', auth_1.authenticate, auth_1.requireUser, order_controller_1.processPayment);

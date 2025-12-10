@@ -105,6 +105,7 @@ const orderSchema = new mongoose_1.Schema({
         required: true
     },
     transactionId: String,
+    razorpayOrderId: String,
     status: {
         type: String,
         enum: ['pending', 'active', 'expired', 'cancelled'],

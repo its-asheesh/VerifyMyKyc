@@ -60,6 +60,13 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
     try {
       // Fetch payment details from Razorpay to get the full order details
       const razorpayPayment = await razorpay.payments.fetch(razorpayPaymentId);
+      const paymentAmountPaise = Number(razorpayPayment.amount);
+      const paymentAmount = paymentAmountPaise / 100; // Razorpay amounts are returned in paise
+
+      if (Number.isNaN(paymentAmountPaise)) {
+        console.error(`Razorpay webhook: Invalid payment amount for ${razorpayPaymentId}`);
+        return res.status(200).json({ received: true, message: 'Invalid payment amount' });
+      }
       
       // Find order by Razorpay order ID (stored in order.razorpayOrderId or similar)
       // We need to check if we store razorpayOrderId in the order
@@ -77,13 +84,13 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const orders = await Order.find({
           paymentStatus: 'pending',
-          finalAmount: razorpayPayment.amount / 100, // Razorpay amounts are in paise
+          finalAmount: paymentAmount, // Razorpay amounts are in paise
           createdAt: { $gte: oneHourAgo }
         }).sort({ createdAt: -1 });
 
         // Match by amount (with small tolerance) and currency
         order = orders.find(o => 
-          Math.abs(o.finalAmount - (razorpayPayment.amount / 100)) < 1 &&
+          Math.abs(o.finalAmount - paymentAmount) < 1 &&
           o.currency === razorpayPayment.currency
         ) || null;
       }
@@ -226,4 +233,5 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
   // Always return 200 to acknowledge receipt
   res.status(200).json({ received: true });
 });
+
 
