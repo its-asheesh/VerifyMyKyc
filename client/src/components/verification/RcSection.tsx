@@ -1,37 +1,48 @@
+
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
-import  { VerificationLayout } from "./VerificationLayout";
+import { VerificationLayout } from "./VerificationLayout";
 import { VerificationForm } from "./VerificationForm";
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog";
 import { NoQuotaDialog } from "./NoQuotaDialog";
-import { rcServices } from "../../utils/rcServices";
-import { rcApi } from "../../services/api/rcApi";
-import { usePricingContext } from "../../context/PricingContext";
+import { rcServices } from "../../config/rcConfig";
+import { vehicleApi } from "../../services/api/vehicleApi";
+// import { usePricingContext } from "../../context/PricingContext";
+import { useVerificationLogic } from "../../hooks/useVerificationLogic";
+
+interface RcFormData {
+  rc_number?: string;
+  tag_id?: string;
+  chassis_number?: string;
+  engine_number?: string;
+  consent: string | boolean;
+}
 
 export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const [selectedService, setSelectedService] = useState(rcServices[0]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState<any>(null);
+  const {
+    selectedService,
+    isLoading,
+    result,
+    error,
+    showConfirmDialog,
+    showNoQuotaDialog,
+    pendingFormData,
+    handleServiceChange,
+    initiateSubmit,
+    closeConfirmDialog,
+    closeNoQuotaDialog,
+    confirmSubmit,
+  } = useVerificationLogic<typeof rcServices[number], RcFormData>({
+    services: rcServices,
+  })
 
   // Get RC pricing from backend
-  const { getVerificationPricingByType } = usePricingContext()
-  const rcPricing = getVerificationPricingByType("vehicle")
+  // const { getVerificationPricingByType } = usePricingContext()
+  // const rcPricing = getVerificationPricingByType("rc")
 
-  // Clear results when service changes
-  const handleServiceChange = (service: any) => {
-    setSelectedService(service);
-    setResult(null);
-    setError(null);
-  };
-
-  const getFormFields = (service: any) => {
-    return service.formFields.map((field: any) => {
+  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (field.name === "consent") {
         return {
           ...field,
@@ -40,165 +51,81 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
             { label: "Yes", value: "Y" },
             { label: "No", value: "N" },
           ],
-        };
+        }
       }
-      if (field.type === "json") {
-        return {
-          ...field,
-          placeholder: "Enter JSON payload...",
-        };
-      }
-      return {
-        ...field,
-        placeholder:
-          field.name === "rc_number"
-            ? "Enter RC number (e.g., KA01AB1234)"
-            : field.name === "chassis_number"
-              ? "Enter 17-digit chassis number"
-              : field.name === "engine_number"
-                ? "Enter engine number"
-                : field.name === "tag_id"
-                  ? "Enter FASTag Tag ID"
-                  : undefined,
-      };
-    });
-  };
-
-  const handleSubmit = async (formData: any) => {
-    setPendingFormData(formData);
-    setShowConfirmDialog(true);
-  };
+      return field
+    })
+  }
 
   const handleConfirmSubmit = async () => {
-    setShowConfirmDialog(false);
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    const formData = pendingFormData;
-
-    try {
-      let response;
-
+    await confirmSubmit(async (formData: RcFormData) => {
       // Normalize payload
-      const payload: any = { ...formData };
+      const payload: any = { ...formData } // eslint-disable-line @typescript-eslint/no-explicit-any
 
       // Convert boolean consent to string
       if (typeof payload.consent === "boolean") {
-        payload.consent = payload.consent ? "Y" : "N";
+        payload.consent = payload.consent ? "Y" : "N"
       }
 
       // Uppercase and trim RC number
       if (payload.rc_number) {
-        payload.rc_number = String(payload.rc_number).toUpperCase().trim();
+        payload.rc_number = String(payload.rc_number).toUpperCase().trim()
       }
       if (payload.chassis_number) {
-        payload.chassis_number = String(payload.chassis_number).toUpperCase().trim();
+        payload.chassis_number = String(payload.chassis_number).toUpperCase().trim()
       }
       if (payload.engine_number) {
-        payload.engine_number = String(payload.engine_number).trim();
+        payload.engine_number = String(payload.engine_number).trim()
       }
       if (payload.tag_id) {
-        payload.tag_id = String(payload.tag_id).toUpperCase().trim();
+        payload.tag_id = String(payload.tag_id).toUpperCase().trim()
       }
 
-      // Validate RC number format (5–10 alphanumeric)
-      if (payload.rc_number) {
-        const rcRegex = /^[A-Z0-9]{5,10}$/;
-        if (!rcRegex.test(payload.rc_number)) {
-          throw new Error("Please enter a valid RC number (5–10 alphanumeric characters)");
-        }
-      }
-
-      // Validate chassis number (17 chars)
-      if (payload.chassis_number && payload.chassis_number.length !== 17) {
-        throw new Error("Chassis number must be exactly 17 characters");
-      }
-
-      // Validate consent
-      if (!payload.consent || !["Y", "N"].includes(payload.consent)) {
-        throw new Error("Please provide consent (Yes/No)");
-      }
-
-      // Handle services
+      let response
       switch (selectedService.key) {
         case "fetch-lite":
-          response = await rcApi.fetchLite(payload);
-          break;
-        case "fetch-detailed":
-          response = await rcApi.fetchDetailed(payload);
-          break;
-        case "fetch-detailed-challan":
-          response = await rcApi.fetchDetailedWithChallan(payload);
-          break;
+          response = await vehicleApi.rcFetchLite({
+            rc_number: payload.rc_number,
+            consent: payload.consent,
+          })
+          break
         case "echallan-fetch":
-          response = await rcApi.fetchEChallan(payload);
-          break;
+          response = await vehicleApi.rcFetchEChallan({
+            rc_number: payload.rc_number,
+            chassis_number: payload.chassis_number || "", // Required by type
+            engine_number: payload.engine_number || "", // Required by type
+            consent: payload.consent,
+          })
+          break
         case "fetch-reg-num-by-chassis":
-          response = await rcApi.fetchRegNumByChassis(payload);
-          break;
+          response = await vehicleApi.rcFetchRegNumByChassis(payload)
+          break
         case "fastag-fetch-detailed":
           // Ensure at least one of rc_number or tag_id is provided
           if (!payload.rc_number && !payload.tag_id) {
-            throw new Error("Either RC Number or Tag ID is required");
+            throw new Error("Either RC Number or Tag ID is required")
           }
-          response = await rcApi.fetchFastagDetails(payload);
-          break;
+          response = await vehicleApi.rcFetchFastagDetails(payload as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+          break
         default:
-          // Fallback for any new services added via dynamic routing
-          response = await rcApi.post(selectedService.apiEndpoint, payload);
+          response = await vehicleApi.post(selectedService.apiEndpoint || "", payload)
       }
-
-      setResult(response);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || "";
-      // Check for quota error and show NoQuotaDialog
-      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
-        setShowNoQuotaDialog(true);
-      } else {
-        setError(errorMessage || "Verification failed");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return response
+    })
+  }
 
   return (
     <>
       <VerificationLayout
-        title="Vehicle Verification Services"
-        description="Comprehensive vehicle RC, challan, and FASTag verification services"
+        title="RC Verification Services"
+        description="Verify Vehicle RC details instantly"
         services={rcServices}
         selectedService={selectedService}
-        onServiceChange={handleServiceChange}
+        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
       >
-        {/* Display pricing if available */}
-        {/* {rcPricing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
-            <div className="flex flex-col gap-1 text-sm">
-              <span className="text-blue-700">
-                One-time: ₹{rcPricing.oneTimePrice}
-                {rcPricing.oneTimeQuota?.count ? ` • Includes ${rcPricing.oneTimeQuota.count} verification${rcPricing.oneTimeQuota.count > 1 ? 's' : ''}` : ''}
-                {rcPricing.oneTimeQuota?.validityDays && rcPricing.oneTimeQuota.validityDays > 0 ? ` • valid ${rcPricing.oneTimeQuota.validityDays} days` : ''}
-              </span>
-              <span className="text-blue-700">
-                Monthly: ₹{rcPricing.monthlyPrice}
-                {rcPricing.monthlyQuota?.count ? ` • Includes ${rcPricing.monthlyQuota.count} verification${rcPricing.monthlyQuota.count > 1 ? 's' : ''}` : ''}
-                {rcPricing.monthlyQuota?.validityDays && rcPricing.monthlyQuota.validityDays > 0 ? ` • valid ${rcPricing.monthlyQuota.validityDays} days` : ''}
-              </span>
-              <span className="text-blue-700">
-                Yearly: ₹{rcPricing.yearlyPrice}
-                {rcPricing.yearlyQuota?.count ? ` • Includes ${rcPricing.yearlyQuota.count} verification${rcPricing.yearlyQuota.count > 1 ? 's' : ''}` : ''}
-                {rcPricing.yearlyQuota?.validityDays && rcPricing.yearlyQuota.validityDays > 0 ? ` • valid ${rcPricing.yearlyQuota.validityDays} days` : ''}
-              </span>
-            </div>
-          </div>
-        )} */}
-
         <VerificationForm
           fields={getFormFields(selectedService)}
-          onSubmit={handleSubmit}
+          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
           isLoading={isLoading}
           result={result}
           error={error}
@@ -211,7 +138,7 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
 
       <VerificationConfirmDialog
         isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
+        onClose={closeConfirmDialog}
         onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
         serviceName={selectedService.name}
@@ -221,9 +148,8 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
 
       <NoQuotaDialog
         isOpen={showNoQuotaDialog}
-        onClose={() => setShowNoQuotaDialog(false)}
+        onClose={closeNoQuotaDialog}
         serviceName={selectedService.name}
-        verificationType="vehicle"
       />
     </>
   );

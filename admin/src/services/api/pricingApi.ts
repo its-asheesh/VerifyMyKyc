@@ -1,4 +1,4 @@
-import axios from 'axios'
+import BaseApi from './baseApi'
 
 // Types matching backend models
 export interface VerificationPricing {
@@ -45,63 +45,30 @@ export interface AllPricingData {
   homepagePlans: HomepagePlan[]
 }
 
-// Create axios instance
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('adminToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('adminToken')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
-)
-
-class PricingApi {
+class PricingApi extends BaseApi {
   // ==================== VERIFICATION PRICING ====================
-  
+
   // Get all verification pricing
   async getAllVerificationPricing(): Promise<VerificationPricing[]> {
     console.log('Fetching verification pricing...')
-    const response = await api.get('/pricing/verification')
-    console.log('Verification pricing response:', response.data)
-    return response.data
+    const response = await this.get<any>('/pricing/verification')
+    console.log('Verification pricing response:', response)
+    return response
   }
 
   // Get verification pricing by type
   async getVerificationPricingByType(verificationType: string): Promise<VerificationPricing> {
-    const response = await api.get(`/pricing/verification/${verificationType}`)
-    return response.data
+    const response = await this.get<any>(`/pricing/verification/${verificationType}`)
+    return response
   }
 
   // Add verification pricing
   async addVerificationPricing(data: Omit<VerificationPricing, '_id' | 'createdAt' | 'updatedAt'>): Promise<VerificationPricing> {
     console.log('Adding verification pricing with data:', data)
     try {
-      const response = await api.post('/pricing/verification', data)
-      console.log('Add verification pricing success:', response.data)
-      return response.data
+      const response = await this.post<any>('/pricing/verification', data)
+      console.log('Add verification pricing success:', response)
+      return response
     } catch (error: any) {
       console.error('Add verification pricing error:', error.response?.data || error.message)
       throw error
@@ -110,39 +77,39 @@ class PricingApi {
 
   // Edit verification pricing
   async editVerificationPricing(id: string, data: Partial<VerificationPricing>): Promise<VerificationPricing> {
-    const response = await api.put(`/pricing/verification/${id}`, data)
-    return response.data
+    const response = await this.put<any>(`/pricing/verification/${id}`, data)
+    return response
   }
 
   // Delete verification pricing
   async deleteVerificationPricing(id: string): Promise<{ message: string }> {
-    const response = await api.delete(`/pricing/verification/${id}`)
-    return response.data
+    const response = await this.delete<any>(`/pricing/verification/${id}`)
+    return response
   }
 
   // ==================== HOMEPAGE PLANS ====================
-  
+
   // Get all homepage plans
   async getAllHomepagePlans(): Promise<HomepagePlan[]> {
     console.log('Fetching homepage plans...')
-    const response = await api.get('/pricing/homepage')
-    console.log('Homepage plans response:', response.data)
-    return response.data
+    const response = await this.get<any>('/pricing/homepage')
+    console.log('Homepage plans response:', response)
+    return response
   }
 
   // Get homepage plan by type
   async getHomepagePlanByType(planType: string): Promise<HomepagePlan> {
-    const response = await api.get(`/pricing/homepage/${planType}`)
-    return response.data
+    const response = await this.get<any>(`/pricing/homepage/${planType}`)
+    return response
   }
 
   // Add homepage plan
   async addHomepagePlan(data: Omit<HomepagePlan, '_id' | 'createdAt' | 'updatedAt'>): Promise<HomepagePlan> {
     console.log('Adding homepage plan with data:', data)
     try {
-      const response = await api.post('/pricing/homepage', data)
-      console.log('Add homepage plan success:', response.data)
-      return response.data
+      const response = await this.post<any>('/pricing/homepage', data)
+      console.log('Add homepage plan success:', response)
+      return response
     } catch (error: any) {
       console.error('Add homepage plan error:', error.response?.data || error.message)
       throw error
@@ -152,41 +119,41 @@ class PricingApi {
   // Edit homepage plan
   async editHomepagePlan(id: string, data: Partial<HomepagePlan>): Promise<HomepagePlan> {
     console.log('Editing homepage plan with ID:', id, 'and data:', data)
-    const response = await api.put(`/pricing/homepage/${id}`, data)
-    console.log('Edit homepage plan response:', response.data)
-    return response.data
+    const response = await this.put<any>(`/pricing/homepage/${id}`, data)
+    console.log('Edit homepage plan response:', response)
+    return response
   }
 
   // Delete homepage plan
   async deleteHomepagePlan(id: string): Promise<{ message: string }> {
-    const response = await api.delete(`/pricing/homepage/${id}`)
-    return response.data
+    const response = await this.delete<any>(`/pricing/homepage/${id}`)
+    return response
   }
 
   // ==================== COMBINED ENDPOINTS ====================
-  
+
   // Get all pricing data
   async getAllPricing(): Promise<AllPricingData> {
-    const response = await api.get('/pricing')
-    return response.data
+    const response = await this.get<any>('/pricing')
+    return response
   }
 
   // Get homepage pricing
   async getHomepagePricing(): Promise<HomepagePlan[]> {
-    const response = await api.get('/pricing/homepage-pricing')
-    return response.data
+    const response = await this.get<any>('/pricing/homepage-pricing')
+    return response
   }
 
   // Get homepage plans by period
   async getHomepagePlansByPeriod(period: 'monthly' | 'yearly'): Promise<HomepagePlan[]> {
-    const response = await api.get(`/pricing/homepage-pricing/${period}`)
-    return response.data
+    const response = await this.get<any>(`/pricing/homepage-pricing/${period}`)
+    return response
   }
 
   // Get available verifications
   async getAvailableVerifications(): Promise<VerificationPricing[]> {
-    const response = await api.get('/pricing/available-verifications')
-    return response.data
+    const response = await this.get<any>('/pricing/available-verifications')
+    return response
   }
 }
 

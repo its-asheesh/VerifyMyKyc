@@ -1,20 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import orderApi, { type UpdateOrderStatusData } from '../services/api/orderApi'
+import type { Order, OrderStats } from '../services/api/orderApi'
 
 // Get all orders
 export const useOrders = () => {
-  return useQuery({
+  return useQuery<Order[]>({
     queryKey: ['orders'],
-    queryFn: orderApi.getAllOrders,
+    queryFn: () => orderApi.getAllOrders(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
 // Get order statistics
 export const useOrderStats = () => {
-  return useQuery({
+  return useQuery<OrderStats>({
     queryKey: ['orderStats'],
-    queryFn: orderApi.getOrderStats,
+    queryFn: () => orderApi.getOrderStats(),
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     refetchOnWindowFocus: true,
@@ -26,7 +27,7 @@ export const useOrderStats = () => {
 
 // Get order by ID
 export const useOrder = (orderId: string) => {
-  return useQuery({
+  return useQuery<Order>({
     queryKey: ['order', orderId],
     queryFn: () => orderApi.getOrderById(orderId),
     enabled: !!orderId,
@@ -37,7 +38,7 @@ export const useOrder = (orderId: string) => {
 // Update order status
 export const useUpdateOrderStatus = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ orderId, data }: { orderId: string; data: UpdateOrderStatusData }) =>
       orderApi.updateOrderStatus(orderId, data),
@@ -55,9 +56,9 @@ export const useOrdersWithFilters = (filters: {
   paymentStatus?: string
   userId?: string
 }) => {
-  return useQuery({
+  return useQuery<Order[]>({
     queryKey: ['orders', filters],
     queryFn: () => orderApi.getOrdersWithFilters(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
-} 
+}

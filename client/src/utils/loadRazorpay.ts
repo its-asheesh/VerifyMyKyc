@@ -1,10 +1,10 @@
 declare global {
   interface Window {
-    Razorpay: any
+    Razorpay: unknown
   }
 }
 
-export const loadRazorpay = (): Promise<any> => {
+export const loadRazorpay = (): Promise<unknown> => {
   return new Promise((resolve) => {
     const script = document.createElement('script')
     script.src = 'https://checkout.razorpay.com/v1/checkout.js'

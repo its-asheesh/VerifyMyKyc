@@ -30,11 +30,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }
 
 // Specific role-based route components
-export const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => (
-  <ProtectedRoute requiredRole="admin" fallbackPath="/login">
-    {children}
-  </ProtectedRoute>
-)
+
 
 export const UserRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => (
   <ProtectedRoute requiredRole="user" fallbackPath="/login">

@@ -46,15 +46,10 @@ export const mockProducts: Product[] = [
       "Retrieve Associated GSTIN/DIN/CIN",
       "Pull PAN Card PDF from DigiLocker"
     ],
-    pricing: {
-      free: { price: 0, requests: 100, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 299, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 999, requests: 10000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for PAN verification",
     isActive: true,
     icon: "/pan.png",
-    image: "/pan.jpg",
+    image: "/optimized/pan.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -76,15 +71,10 @@ export const mockProducts: Product[] = [
       "Extract Data via Aadhaar Card ",
       "Download Aadhaar Information PDF (Masked/Full)",
     ],
-    pricing: {
-      free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 399, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 1299, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for Aadhaar verification",
     isActive: true,
     icon: "/aadhaar.jpg",
-    image: "/aadhaar.jpg",
+    image: "/optimized/aadhaar.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -107,15 +97,10 @@ export const mockProducts: Product[] = [
       "Validate MRZ Checksum & Authenticity",
       "Retrieve Issue/Expiry Date & Authority"
     ],
-    pricing: {
-      free: { price: 0, requests: 25, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 599, requests: 250, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 1999, requests: 2500, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for Passport verification",
     isActive: true,
     icon: "/passport.jpg",
-    image: "/passport.jpg",
+    image: "/optimized/passport.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -138,22 +123,17 @@ export const mockProducts: Product[] = [
       "Retrieve Issuing RTO & Vehicle Class",
       "Get DL Status (Active/Suspended)"
     ],
-    pricing: {
-      free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 499, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 1499, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for Driving License verification",
     isActive: true,
     icon: "/drivinglicence.png",
-    image: "/drivinglicence.jpg",
+    image: "/optimized/drivinglicence.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
   {
     id: "voterid",
     title: "Voter ID Verification",
-    description: "Verify voter details via direct fetch, captcha flow, or OCR scan.",
+    description: "Verify voter details via direct fetch, captcha flow.",
     demandLevel: "high",
     demand: "High In Demand",
     category: {
@@ -172,15 +152,10 @@ export const mockProducts: Product[] = [
       "Retrieve Constituency, State & Booth Info",
       "Verify Voter ID Authenticity & Status"
     ],
-    pricing: {
-      free: { price: 0, requests: 20, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 999, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for Voter ID verification",
     isActive: true,
     icon: "/voter.jpg",
-    image: "/voter.jpg",
+    image: "/optimized/voter.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -208,15 +183,10 @@ export const mockProducts: Product[] = [
       "Get Business Address & Constitution Type",
       "Download GST Registration Certificate"
     ],
-    pricing: {
-      free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 999, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for GSTIN verification",
     isActive: true,
     icon: "/placeholder.svg",
-    image: "/gst.jpg",
+    image: "/optimized/gst.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -244,15 +214,10 @@ export const mockProducts: Product[] = [
       "Get Authorized Capital & Company Type",
       "Download MCA Master Data Report"
     ],
-    pricing: {
-      free: { price: 0, requests: 10, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 299, requests: 500, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 999, requests: 5000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
     documentation: "Complete API documentation for Company (MCA) verification",
     isActive: true,
     icon: "/placeholder.svg",
-    image: "/company.jpg",
+    image: "/optimized/company.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
   },
@@ -284,32 +249,70 @@ export const mockProducts: Product[] = [
       "Check FASTag Activation & Balance Status",
       "Verify PUC Certificate Validity"
     ],
-    pricing: {
-      free: { 
-        price: 0, 
-        requests: 10, 
-        features: ["Basic RC fetch", "Email support"], 
-        support: "Email" 
-      },
-      basic: { 
-        price: 399, 
-        requests: 500, 
-        features: ["Detailed RC + challan", "Priority support"], 
-        support: "Chat" 
-      },
-      premium: { 
-        price: 1299, 
-        requests: 5000, 
-        features: ["Enterprise access", "24/7 support", "FASTag & eChallan"], 
-        support: "Phone" 
-      },
-    },
     documentation: "Complete API documentation for RC verification",
     isActive: true,
     icon: "/rc.png",
-    image: "/vehicle.jpg",
+    image: "/optimized/vehicle.png",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01",
+  },
+  {
+    id: "bank-account",
+    title: "Bank Account Verification",
+    description: "Verify bank account details and ownership for financial institutions",
+    demandLevel: "high",
+    demand: "High In Demand",
+    category: {
+      id: "banking",
+      name: "Banking Service",
+      slug: "banking",
+      description: "Banking and financial verification services",
+    },
+    features: ["Real-time verification", "Bank database integration", "99.9% accuracy", "Instant results"],
+    services: [
+      "Verify Account Holder Name",
+      "Check Account Status",
+      "Validate IFSC Code",
+      "Verify Account Number",
+      "Check Account Type"
+    ],
+    documentation: "Complete API documentation for bank account verification",
+    isActive: true,
+    icon: "/banking.jpg",
+    image: "/banking.jpg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01"
+  },
+  {
+    id: "epfo",
+    title: "EPFO Verification",
+    description: "Fetch UAN, employment history and verify employer",
+    demandLevel: "high",
+    demand: "Trending",
+    category: {
+      id: "business",
+      name: "Business Verification",
+      slug: "business",
+      description: "Business registry verification",
+    },
+    features: [
+      "UAN discovery by mobile/PAN",
+      "Employment history by UAN",
+      "Passbook V1 (OTP-based) flow",
+      "Employer verification",
+    ],
+    services: [
+      "Fetch UAN by mobile and PAN",
+      "Fetch employment history by UAN",
+      "Generate & validate OTP; list employers; fetch passbook",
+      "Verify employer establishment details",
+    ],
+    documentation: "EPFO APIs: UAN, employment history, passbook (OTP), employer verify",
+    isActive: true,
+    icon: "/verifymykyclogo.svg",
+    image: "/epfo.jpg",
+    createdAt: "2024-01-01",
+    updatedAt: "2024-01-01"
   },
   {
     id: "ccrv",
@@ -337,113 +340,11 @@ export const mockProducts: Product[] = [
       "Download Verifiable PDF Report",
       "Bulk Screening for HR/Recruitment"
     ],
-    pricing: {
-      free: {
-        price: 0,
-        requests: 10,
-        features: [
-          "Basic criminal record search",
-          "Email support",
-          "Limited case details"
-        ],
-        support: "Email"
-      },
-      basic: {
-        price: 499,
-        requests: 500,
-        features: [
-          "Comprehensive background check",
-          "Detailed case info & court data",
-          "Priority support",
-          "PDF report with digital signature"
-        ],
-        support: "Chat"
-      },
-      premium: {
-        price: 1499,
-        requests: 5000,
-        features: [
-          "Enterprise background screening",
-          "Multi-state & High Court coverage",
-          "24/7 dedicated support",
-          "Bulk API processing",
-          "Custom analytics dashboard"
-        ],
-        support: "Phone"
-      }
-    },
-    documentation: "Complete API documentation for CCRV verification",
-    isActive: false, // Temporarily inactive
-    icon: "/ccrv.png",
-    image: "/ccrv.jpg",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-01"
-  },
-  {
-    id: "bank-account",
-    title: "Bank Account Verification",
-    description: "Verify bank account details and ownership for financial institutions",
-    demandLevel: "high",
-    demand: "High In Demand",
-    category: {
-      id: "banking",
-      name: "Banking Service",
-      slug: "banking",
-      description: "Banking and financial verification services",
-    },
-    features: ["Real-time verification", "Bank database integration", "99.9% accuracy", "Instant results"],
-    services: [
-      "Verify Account Holder Name",
-      "Check Account Status",
-      "Validate IFSC Code",
-      "Verify Account Number",
-      "Check Account Type"
-    ],
-    pricing: {
-      free: { price: 0, requests: 50, features: ["Basic verification", "Email support"], support: "Email" },
-      basic: { price: 499, requests: 1000, features: ["Advanced verification", "Priority support"], support: "Chat" },
-      premium: { price: 1999, requests: 10000, features: ["Enterprise features", "24/7 support"], support: "Phone" },
-    },
-    documentation: "Complete API documentation for bank account verification",
-    isActive: true,
-    icon: "/banking.jpg",
-    image: "/banking.jpg",
-    createdAt: "2024-01-01",
-    updatedAt: "2024-01-01"
-  },
-  {
-    id: "epfo",
-    title: "EPFO Verification",
-    description: "Fetch UAN, employment history, passbook (OTP flow) and verify employer",
-    demandLevel: "high",
-    demand: "Trending",
-    category: {
-      id: "business",
-      name: "Business Verification",
-      slug: "business",
-      description: "Business registry verification",
-    },
-    features: [
-      "UAN discovery by mobile/PAN",
-      "Employment history by UAN",
-      "Passbook V1 (OTP-based) flow",
-      "Employer verification",
-    ],
-    services: [
-      "Fetch UAN by mobile and PAN",
-      "Fetch employment history by UAN",
-      "Generate & validate OTP; list employers; fetch passbook",
-      "Verify employer establishment details",
-    ],
-    pricing: {
-      free: { price: 0, requests: 5, features: ["Basic discovery", "Email support"], support: "Email" },
-      basic: { price: 149, requests: 100, features: ["Employment & passbook (OTP)", "Priority support"], support: "Chat" },
-      premium: { price: 1499, requests: 1000, features: ["Employer verify", "24/7 support"], support: "Phone" },
-    },
+
     documentation: "EPFO APIs: UAN, employment history, passbook (OTP), employer verify",
     isActive: true,
     icon: "/verifymykyclogo.svg",
-    image: "/epfo.jpg",
+    image: "/ccrv.jpg",
     createdAt: "2024-01-01",
     updatedAt: "2024-01-01"
   },
@@ -494,9 +395,9 @@ export const fetchProducts = createAsyncThunk(
         'epfo',
         'vehicle',
         'aadhaar',
-        'pan', 
-        'company', 
-        'gstin',       
+        'pan',
+        'company',
+        'gstin',
         'bank-account',
         'ccrv',
       ]
@@ -510,7 +411,7 @@ export const fetchProducts = createAsyncThunk(
       })
 
       return filteredProducts
-    } catch (error) {
+    } catch {
       throw new Error("Failed to fetch products")
     }
   },
@@ -527,7 +428,7 @@ export const fetchProductById = createAsyncThunk("products/fetchProductById", as
       throw new Error("Product not found")
     }
     return product
-  } catch (error) {
+  } catch {
     throw new Error("Failed to fetch product")
   }
 })
@@ -539,7 +440,7 @@ export const fetchCategories = createAsyncThunk("products/fetchCategories", asyn
     // return response.data
 
     return mockCategories
-  } catch (error) {
+  } catch {
     throw new Error("Failed to fetch categories")
   }
 })

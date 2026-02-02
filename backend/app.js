@@ -10,12 +10,9 @@ const cors_1 = __importDefault(require("cors"));
 const routes_1 = __importDefault(require("./src/routes"));
 const health_router_1 = __importDefault(require("./src/routes/health.router"));
 const db_1 = require("./src/config/db");
-const auth_1 = require("./src/common/middleware/auth");
 // Connect to MongoDB
 (0, db_1.connectDB)();
 const app = (0, express_1.default)();
-// ✅ ADD THIS — Handle OPTIONS requests BEFORE cors()
-app.use(auth_1.handleOptions);
 // ✅ CORS — allow multiple origins incl. localhost; can override via CORS_ORIGINS env
 const defaultOrigins = ['https://verifymykyc.com', 'https://www.verifymykyc.com', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'https://admin.verifymykyc.com', 'https://fanglike-santa-boredly.ngrok-free.dev/'];
 const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);

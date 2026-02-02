@@ -4,7 +4,7 @@ export interface TokenPayload {
   email?: string;
   role?: string;
   exp?: number; // seconds since epoch (JWT)
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 function base64UrlDecode(input: string): string {
@@ -17,7 +17,7 @@ function base64UrlDecode(input: string): string {
   }
 }
 
-function tryParseJson(json: string): any | null {
+function tryParseJson(json: string): unknown | null {
   try { return JSON.parse(json); } catch { return null; }
 }
 

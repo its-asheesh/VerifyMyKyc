@@ -5,6 +5,7 @@ import ResizableModal from './ResizableModal'
 import { useOrderStats } from '../../hooks/useOrders'
 import { useQueryClient } from '@tanstack/react-query'
 import analyticsApi from '../../services/api/analyticsApi'
+import { formatCurrency, formatNumber } from '../../utils/dateUtils'
 
 interface OrderAnalyticsChartProps {
   isOpen: boolean
@@ -15,7 +16,7 @@ interface OrderAnalyticsChartProps {
 
 const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClose, data, orderStats: passedOrderStats }) => {
   const queryClient = useQueryClient()
-  
+
   // Date range state
   const [dateRange, setDateRange] = React.useState('6months') // 6months, 1year, custom
   const [customStartDate, setCustomStartDate] = React.useState('')
@@ -23,10 +24,10 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   const [customData, setCustomData] = React.useState<any>(null)
   const [isLoadingCustomData, setIsLoadingCustomData] = React.useState(false)
   const [timeGranularity, setTimeGranularity] = React.useState('month') // day, month, year
-  
+
   // Get real order statistics data (fallback to hook if not passed)
   const { data: hookOrderStats, isLoading: orderStatsLoading, refetch } = useOrderStats()
-  
+
   // Use passed orderStats if available, otherwise use hook data
   const orderStats = passedOrderStats || hookOrderStats
 
@@ -79,7 +80,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
         const itemDate = new Date(item.date)
         return itemDate >= startDate && itemDate < endDate
       }
-      
+
       // If no date field, include the item (for backward compatibility)
       return true
     })
@@ -95,10 +96,10 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
     data.forEach((item: any) => {
       let key: string
       let label: string
-      
+
       if (item.date) {
         const date = new Date(item.date)
-        
+
         switch (granularity) {
           case 'day':
             key = date.toISOString().split('T')[0] // YYYY-MM-DD
@@ -172,7 +173,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   const revenueTrendData = finalRevenueTrendData?.map((item: any) => {
     // Check if the item has order statistics
     const hasOrderStats = item.totalOrders !== undefined || item.completedOrders !== undefined
-    
+
     return {
       month: item.month,
       revenue: item.value,
@@ -184,13 +185,13 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
       date: new Date(item.month + ' 1, ' + new Date().getFullYear()) // Create a date for filtering
     }
   }) || [
-    { month: 'Jan', revenue: 45000, totalOrders: 45, completedOrders: 35, pendingOrders: 8, activeOrders: 2, expiredOrders: 0, date: new Date('2025-01-01') },
-    { month: 'Feb', revenue: 52000, totalOrders: 52, completedOrders: 42, pendingOrders: 7, activeOrders: 3, expiredOrders: 0, date: new Date('2025-02-01') },
-    { month: 'Mar', revenue: 48000, totalOrders: 48, completedOrders: 38, pendingOrders: 8, activeOrders: 2, expiredOrders: 0, date: new Date('2025-03-01') },
-    { month: 'Apr', revenue: 61000, totalOrders: 61, completedOrders: 50, pendingOrders: 9, activeOrders: 2, expiredOrders: 0, date: new Date('2025-04-01') },
-    { month: 'May', revenue: 55000, totalOrders: 55, completedOrders: 45, pendingOrders: 8, activeOrders: 2, expiredOrders: 0, date: new Date('2025-05-01') },
-    { month: 'Jun', revenue: 72000, totalOrders: 72, completedOrders: 60, pendingOrders: 10, activeOrders: 2, expiredOrders: 0, date: new Date('2025-06-01') }
-  ]
+      { month: 'Jan', revenue: 45000, totalOrders: 45, completedOrders: 35, pendingOrders: 8, activeOrders: 2, expiredOrders: 0, date: new Date('2025-01-01') },
+      { month: 'Feb', revenue: 52000, totalOrders: 52, completedOrders: 42, pendingOrders: 7, activeOrders: 3, expiredOrders: 0, date: new Date('2025-02-01') },
+      { month: 'Mar', revenue: 48000, totalOrders: 48, completedOrders: 38, pendingOrders: 8, activeOrders: 2, expiredOrders: 0, date: new Date('2025-03-01') },
+      { month: 'Apr', revenue: 61000, totalOrders: 61, completedOrders: 50, pendingOrders: 9, activeOrders: 2, expiredOrders: 0, date: new Date('2025-04-01') },
+      { month: 'May', revenue: 55000, totalOrders: 55, completedOrders: 45, pendingOrders: 8, activeOrders: 2, expiredOrders: 0, date: new Date('2025-05-01') },
+      { month: 'Jun', revenue: 72000, totalOrders: 72, completedOrders: 60, pendingOrders: 10, activeOrders: 2, expiredOrders: 0, date: new Date('2025-06-01') }
+    ]
 
   // Filter the data based on selected date range (only for non-custom ranges)
   const filteredRevenueTrendData = dateRange === 'custom' ? revenueTrendData : filterDataByDateRange(revenueTrendData)
@@ -258,18 +259,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   //   activeOrders: item.activeOrders || 0
   // }))
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value)
-  }
 
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-IN').format(value)
-  }
 
   // const CustomTooltip = ({ active, payload, label }: any) => {
   //   if (active && payload && payload.length) {
@@ -319,13 +309,13 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
         activeOrders: customData.metrics.activeOrders || 0
       }
     }
-    
+
     // Otherwise calculate from filtered data
     const totalRevenue = processedData.reduce((sum: number, item: any) => sum + (item.revenue || 0), 0)
     const totalOrders = processedData.reduce((sum: number, item: any) => sum + (item.totalOrders || 0), 0)
     const completedOrders = processedData.reduce((sum: number, item: any) => sum + (item.completedOrders || 0), 0)
     const activeOrders = processedData.reduce((sum: number, item: any) => sum + (item.activeOrders || 0), 0)
-    
+
     return {
       totalRevenue,
       totalOrders,
@@ -337,7 +327,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
   // Function to fetch custom date range data
   const fetchCustomData = React.useCallback(async (startDate: string, endDate: string) => {
     if (!startDate || !endDate) return
-    
+
     setIsLoadingCustomData(true)
     try {
       const response = await analyticsApi.getAnalyticsByDateRange(startDate, endDate)
@@ -373,21 +363,21 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth()
-    
+
     // Generate data for the entire year
     const fullYearData = []
     for (let i = 0; i < 12; i++) {
       const monthIndex = (currentMonth - 11 + i + 12) % 12 // Start from 12 months ago
       const monthName = new Date(currentYear, monthIndex, 1).toLocaleDateString('en-US', { month: 'short' })
-      
+
       // Generate realistic revenue data with ups and downs
       const baseRevenue = 40000 + Math.random() * 30000 // Random between 40k-70k
       const seasonalFactor = 1 + 0.4 * Math.sin((i / 12) * 2 * Math.PI) // Seasonal variation
       const trendFactor = 1 + (i * 0.03) // Slight upward trend
       const randomFactor = 0.7 + Math.random() * 0.6 // Random variation
-      
+
       const revenue = Math.floor(baseRevenue * seasonalFactor * trendFactor * randomFactor)
-      
+
       // Generate corresponding order data
       const baseOrders = 40 + Math.random() * 30 // Random between 40-70 orders
       const orderFactor = 0.8 + Math.random() * 0.4
@@ -395,7 +385,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
       const completedOrders = Math.floor(totalOrders * (0.7 + Math.random() * 0.2)) // 70-90% completion
       const pendingOrders = Math.floor(totalOrders * (0.1 + Math.random() * 0.1)) // 10-20% pending
       const activeOrders = totalOrders - completedOrders - pendingOrders
-      
+
       fullYearData.push({
         month: monthName,
         period: monthName,
@@ -408,7 +398,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
         date: new Date(currentYear, monthIndex, 1)
       })
     }
-    
+
     return fullYearData
   }
 
@@ -417,12 +407,12 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
     // Check if we have real data from the database
     if (data?.revenueTrend && Array.isArray(data.revenueTrend) && data.revenueTrend.length > 0) {
       console.log('Using REAL database data for revenue trend:', data.revenueTrend)
-      
+
       // Process real database data
       const processedData = data.revenueTrend.map((item: any) => {
         // Check if the item has order statistics
         const hasOrderStats = item.totalOrders !== undefined || item.completedOrders !== undefined
-        
+
         return {
           month: item.month,
           period: item.month,
@@ -435,7 +425,7 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
           date: new Date(item.month + ' 1, ' + new Date().getFullYear()) // Create a date for filtering
         }
       })
-      
+
       return processedData
     } else {
       console.log('No real database data available, using generated data')
@@ -461,12 +451,12 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
     if (!originalData || originalData.length === 0) return originalData
 
     let filteredData = [...originalData]
-    
+
     // Filter by date range
     if (dateRange) {
       let monthsToShow: number
       let startIndex: number
-      
+
       switch (dateRange) {
         case '1month':
           monthsToShow = 1
@@ -496,12 +486,12 @@ const OrderAnalyticsChart: React.FC<OrderAnalyticsChartProps> = ({ isOpen, onClo
           monthsToShow = Math.min(6, originalData.length)
           startIndex = Math.max(0, originalData.length - 6) // Last 6 months
       }
-      
+
       // Take the appropriate slice of data
       filteredData = originalData.slice(startIndex, startIndex + monthsToShow)
-      console.log(`Filtered data for ${dateRange}:`, { 
-        originalLength: originalData.length, 
-        filteredLength: filteredData.length, 
+      console.log(`Filtered data for ${dateRange}:`, {
+        originalLength: originalData.length,
+        filteredLength: filteredData.length,
         monthsToShow,
         startIndex,
         dateRange,

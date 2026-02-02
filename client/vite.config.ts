@@ -19,7 +19,11 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          ui: ['framer-motion', 'lucide-react'],
+          ui: ['framer-motion', 'lucide-react', '@mui/material', '@mui/icons-material', '@mui/system', '@emotion/react', '@emotion/styled'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/analytics'],
+          pdf: ['jspdf'],
+          excel: ['exceljs', 'csv-writer'],
+          lottie: ['lottie-react'],
         },
       },
     },
@@ -36,7 +40,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       // Point to your LOCAL backend during development to use new endpoints
-      
+
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,

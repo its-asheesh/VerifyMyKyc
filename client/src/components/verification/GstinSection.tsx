@@ -1,29 +1,43 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useVerificationLogic } from "../../hooks/useVerificationLogic"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
-import { gstinServices } from "../../utils/gstinServices"
-import { gstinApi } from "../../services/api/gstinApi"
+import { gstinServices } from "../../config/gstinConfig"
+import { businessApi } from "../../services/api/businessApi"
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
+import { NoQuotaDialog } from "./NoQuotaDialog"
+
+interface GstinFormData {
+  gstin: string;
+  consent: string | boolean;
+}
 
 export const GstinSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const [selectedService, setSelectedService] = useState(gstinServices[0])
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [pendingFormData, setPendingFormData] = useState<any>(null)
+  const {
+    selectedService,
+    isLoading,
+    result,
+    error,
+    showConfirmDialog,
+    showNoQuotaDialog,
+    pendingFormData,
+    handleServiceChange,
+    initiateSubmit,
+    closeConfirmDialog,
+    closeNoQuotaDialog,
+    confirmSubmit,
+  } = useVerificationLogic<typeof gstinServices[number], GstinFormData>({
+    services: gstinServices,
+  })
 
-  const handleServiceChange = (service: any) => {
-    setSelectedService(service)
-    setResult(null)
-    setError(null)
-  }
+  // Get GSTIN pricing from backend
+  // const { getVerificationPricingByType } = usePricingContext()
+  // const gstinPricing = getVerificationPricingByType("gstin")
 
-  const getFormFields = (service: any) => {
-    return service.formFields.map((field: any) => {
+  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (field.name === "consent") {
         return {
           ...field,
@@ -38,90 +52,79 @@ export const GstinSection: React.FC<{ productId?: string }> = ({ productId }) =>
     })
   }
 
-  const handleSubmit = async (formData: any) => {
-    setPendingFormData(formData)
-    setShowConfirmDialog(true)
-  }
-
   const handleConfirmSubmit = async () => {
-    setShowConfirmDialog(false)
-    setIsLoading(true)
-    setError(null)
-    setResult(null)
+    await confirmSubmit(async (formData: GstinFormData) => {
+      const consentValue = typeof formData.consent === 'boolean' ? (formData.consent ? 'Y' : 'N') : formData.consent;
 
-    try {
-      // Normalize payload
-      const payload: any = { ...pendingFormData }
-      if (typeof payload.consent === "boolean") {
-        payload.consent = payload.consent ? "Y" : "N"
-      }
-      if (payload.gstin) {
-        payload.gstin = String(payload.gstin).toUpperCase().trim()
-      }
-
-      let response: any
+      let response
       switch (selectedService.key) {
-        case "contact":
-          response = await gstinApi.contact(payload)
+        case "contact": // Changed from "gstin-contact" to "contact" to match existing key
+          response = await businessApi.gstinContact({
+            gstin: formData.gstin,
+            consent: consentValue,
+          })
           break
-        case "lite":
-          response = await gstinApi.fetchLite(payload)
+        case "lite": // Changed from "gstin-fetch-lite" to "lite" to match existing key
+          response = await businessApi.gstinFetchLite({
+            gstin: formData.gstin,
+            consent: consentValue,
+          })
           break
         default:
-          response = await gstinApi.post(selectedService.apiEndpoint, payload)
+          throw new Error("Unknown service")
       }
-
-      const raw = response?.data || response
-      const inner = raw?.data || raw
-
-      const derivedName =
-        inner?.legal_name || inner?.trade_name || inner?.business_name || inner?.legalName || inner?.tradeName || inner?.businessName || inner?.name
-      const derivedDocNum = inner?.gstin || payload?.gstin || inner?.document_number || inner?.documentNumber || inner?.number || inner?.id
-      const derivedStatus = response?.status || raw?.status || response?.message || raw?.message
-
-      const transformed: any = { data: { ...inner } }
-      if (derivedName && !transformed.data.name) transformed.data.name = derivedName
-      if (derivedDocNum && !transformed.data.document_number) transformed.data.document_number = derivedDocNum
-      if (derivedStatus && !transformed.data.status) transformed.data.status = derivedStatus
-
-      setResult(transformed)
-    } catch (err: any) {
-      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message
-      setError(backendMsg || err?.message || "An error occurred")
-    } finally {
-      setIsLoading(false)
-    }
+      return response
+    })
   }
 
   return (
-    <VerificationLayout
-      title="GSTIN Verification Services"
-      description="Verify business GSTIN details and contact information"
-      services={gstinServices}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
-        serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
-      />
+    <>
+      <VerificationLayout
+        title="GSTIN Verification Services"
+        description="Verify GSTIN details instantly"
+        services={gstinServices}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
+      >
+        {/* Display pricing if available */}
+        {/* {gstinPricing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
+            <div className="flex gap-4 text-sm">
+              <span className="text-blue-600">One-time: ₹{gstinPricing.oneTimePrice}</span>
+              <span className="text-blue-600">Monthly: ₹{gstinPricing.monthlyPrice}</span>
+              <span className="text-blue-600">Yearly: ₹{gstinPricing.yearlyPrice}</span>
+            </div>
+          </div>
+        )} */}
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
 
       <VerificationConfirmDialog
         isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
+        onClose={closeConfirmDialog}
         onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
         serviceName={selectedService.name}
         formData={pendingFormData || {}}
         tokenCost={1}
       />
-    </VerificationLayout>
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={closeNoQuotaDialog}
+        serviceName={selectedService.name}
+      />
+    </>
   )
 }

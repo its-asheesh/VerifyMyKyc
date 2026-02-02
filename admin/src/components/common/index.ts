@@ -1,5 +1,6 @@
 // Reusable Components
 export { default as StatusBadge } from './StatusBadge'
+export { default as Button } from './Button'
 export { default as StatCard } from './StatCard'
 export { default as DataTable } from './DataTable'
 export { default as BaseModal } from './BaseModal'

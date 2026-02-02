@@ -77,6 +77,19 @@ exports.createCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
             });
         }
     }
+    // ── FIX: Enhanced Date Handling ──
+    // If validFrom is provided, ensure it's a date object
+    const startDate = validFrom ? new Date(validFrom) : new Date();
+    // If validUntil is provided, we need to make sure end-of-day is respected if it's just a date string
+    // or if it's the same day as startDate.
+    let endDate = validUntil ? new Date(validUntil) : undefined;
+    if (endDate) {
+        // If the time part is 00:00:00 (which often happens with simple date pickers),
+        // we set it to 23:59:59.999 to include the entire end day.
+        if (endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0) {
+            endDate.setHours(23, 59, 59, 999);
+        }
+    }
     try {
         const coupon = yield coupon_model_1.Coupon.create({
             code: couponCode.toUpperCase(),
@@ -86,8 +99,8 @@ exports.createCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
             discountValue,
             minimumAmount: minimumAmount || 0,
             maximumDiscount,
-            validFrom: validFrom || new Date(),
-            validUntil,
+            validFrom: startDate,
+            validUntil: endDate,
             usageLimit,
             applicableProducts: applicableProducts || ['all'],
             applicableCategories: applicableCategories || ['all'],
@@ -104,11 +117,19 @@ exports.createCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
         });
     }
     catch (error) {
+        console.error('[Coupon Service] Create Coupon Failed:', error);
         // Handle duplicate key error (race condition)
         if (error.code === 11000 || error.name === 'MongoServerError') {
             return res.status(400).json({
                 success: false,
                 message: 'Coupon code already exists. Please try again.'
+            });
+        }
+        // Check for mongoose validation error (e.g. validUntil <= validFrom)
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Validation failed'
             });
         }
         throw error; // Re-throw other errors to be handled by asyncHandler
@@ -196,23 +217,46 @@ exports.updateCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 
             });
         }
     }
-    const updatedCoupon = yield coupon_model_1.Coupon.findByIdAndUpdate(req.params.id, Object.assign({ name,
-        description,
-        discountType,
-        discountValue,
-        minimumAmount,
-        maximumDiscount,
-        validFrom,
-        validUntil,
-        usageLimit,
-        applicableProducts,
-        applicableCategories,
-        userRestrictions,
-        isActive }, (req.body.code && { code: req.body.code.toUpperCase() })), { new: true, runValidators: true }).populate('createdBy', 'name email');
-    res.json({
-        success: true,
-        data: { coupon: updatedCoupon }
-    });
+    // ── FIX: Enhanced Date Handling (Same as Create) ──
+    const startDate = validFrom ? new Date(validFrom) : undefined;
+    let endDate = validUntil ? new Date(validUntil) : undefined;
+    if (endDate) {
+        if (endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0) {
+            endDate.setHours(23, 59, 59, 999);
+        }
+    }
+    try {
+        const updatedCoupon = yield coupon_model_1.Coupon.findByIdAndUpdate(req.params.id, Object.assign({ name,
+            description,
+            discountType,
+            discountValue,
+            minimumAmount,
+            maximumDiscount, validFrom: startDate, validUntil: endDate, usageLimit,
+            applicableProducts,
+            applicableCategories,
+            userRestrictions,
+            isActive }, (req.body.code && { code: req.body.code.toUpperCase() })), { new: true, runValidators: true }).populate('createdBy', 'name email');
+        res.json({
+            success: true,
+            data: { coupon: updatedCoupon }
+        });
+    }
+    catch (error) {
+        console.error('[Coupon Service] Update Coupon Failed:', error);
+        if (error.code === 11000 || error.name === 'MongoServerError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Coupon code already exists'
+            });
+        }
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: error.message || 'Validation failed'
+            });
+        }
+        throw error;
+    }
 }));
 // Delete coupon (Admin only)
 exports.deleteCoupon = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -477,18 +521,21 @@ exports.getCouponStats = (0, asyncHandler_1.default)((req, res) => __awaiter(voi
 }));
 // Generate multiple coupon codes (Admin only)
 exports.generateCoupons = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { count = 1, prefix = '', length = 8 } = req.body;
-    if (count > 100) {
+    const { count = '1', prefix = '', length = '8' } = req.query;
+    const numCount = parseInt(count, 10);
+    const numLength = parseInt(length, 10);
+    const prefixStr = String(prefix);
+    if (numCount > 100) {
         return res.status(400).json({
             success: false,
             message: 'Cannot generate more than 100 coupons at once'
         });
     }
     const generatedCodes = [];
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < numCount; i++) {
         let code;
         do {
-            code = prefix + generateCouponCode(length - prefix.length);
+            code = prefixStr + generateCouponCode(numLength - prefixStr.length);
         } while (yield coupon_model_1.Coupon.findOne({ code }));
         generatedCodes.push(code);
     }

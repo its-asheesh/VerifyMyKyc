@@ -26,7 +26,7 @@ export const PostVerificationReview: React.FC<PostVerificationReviewProps> = ({
   const [submitted, setSubmitted] = useState(false)
 
   const { user } = useAppSelector((state) => state.auth)
-  
+
   // Check if user has already reviewed this product (fetch before showing prompt)
   const { data: existingReviews } = useQuery({
     queryKey: ["product-reviews", productId, "check"],
@@ -132,11 +132,10 @@ export const PostVerificationReview: React.FC<PostVerificationReviewProps> = ({
                         key={n}
                         type="button"
                         onClick={() => setForm({ ...form, rating: n })}
-                        className={`transition-transform hover:scale-110 ${
-                          n <= form.rating
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-300"
-                        }`}
+                        className={`transition-transform hover:scale-110 ${n <= form.rating
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-gray-300"
+                          }`}
                       >
                         <Star className="w-6 h-6" />
                       </button>
@@ -153,7 +152,7 @@ export const PostVerificationReview: React.FC<PostVerificationReviewProps> = ({
                     type="text"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    onChange={(e: any) => setForm({ ...form, title: e.target.value })} // eslint-disable-line @typescript-eslint/no-explicit-any
                     placeholder="Brief summary of your experience"
                     maxLength={120}
                   />

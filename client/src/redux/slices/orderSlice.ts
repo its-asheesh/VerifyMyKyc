@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 
 // Types
 export interface Order {
@@ -94,7 +94,7 @@ const API_BASE_URL = '/api'
 // Helper function to make API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token')
-  
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 }
 
 // Small guard utility to avoid server 401 spam
-const ensureAuthed = (getState: any) => {
+const ensureAuthed = (getState: () => unknown) => {
   const state = getState() as { auth: { token: string | null; isAuthenticated: boolean } }
   const token = state?.auth?.token || localStorage.getItem('token')
   const isAuthenticated = state?.auth?.isAuthenticated
@@ -135,8 +135,8 @@ export const createOrder = createAsyncThunk(
         body: JSON.stringify(orderData),
       })
       return response.data.order
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to create order')
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to create order')
     }
   }
 )
@@ -151,8 +151,8 @@ export const processPayment = createAsyncThunk(
         body: JSON.stringify(paymentData),
       })
       return response.data.order
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to process payment')
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to process payment')
     }
   }
 )
@@ -164,8 +164,8 @@ export const fetchUserOrders = createAsyncThunk(
       ensureAuthed(getState)
       const response = await apiCall('/orders/my-orders')
       return response.data.orders
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch orders')
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to fetch orders')
     }
   }
 )
@@ -177,8 +177,8 @@ export const fetchActiveServices = createAsyncThunk(
       ensureAuthed(getState)
       const response = await apiCall('/orders/my-services')
       return response.data.services
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch active services')
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to fetch active services')
     }
   }
 )
@@ -192,8 +192,8 @@ export const cancelOrder = createAsyncThunk(
         method: 'PUT',
       })
       return response.data.order
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to cancel order')
+    } catch (error: unknown) {
+      return rejectWithValue((error as Error).message || 'Failed to cancel order')
     }
   }
 )

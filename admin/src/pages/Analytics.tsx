@@ -1,16 +1,16 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  IndianRupee, 
+import {
+  TrendingUp,
+  Users,
+  IndianRupee,
   Activity,
-  BarChart3,
   PieChart,
   Loader2
 } from 'lucide-react'
 import { useAnalyticsOverview } from '../hooks/useAnalytics'
+import StatCard, { type StatCardProps } from '../components/common/StatCard'
+import RevenueChart from '../components/dashboard/RevenueChart'
 
 const Analytics: React.FC = () => {
   const { data: analyticsData, isLoading, error } = useAnalyticsOverview()
@@ -127,88 +127,38 @@ const Analytics: React.FC = () => {
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {displayMetrics.map((metric, index) => {
-          const IconComponent = metric.icon
-          return (
-            <motion.div
-              key={metric.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{metric.name}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{metric.value}</p>
-                </div>
-                <div className={`w-12 h-12 ${metric.color} rounded-lg flex items-center justify-center`}>
-                  <IconComponent className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              {metric.change !== 'N/A' && (
-                <div className="flex items-center mt-4">
-                  {metric.changeType === 'increase' ? (
-                    <TrendingUp className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-red-500" />
-                  )}
-                  <span className={`text-sm font-medium ml-1 ${
-                    metric.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {metric.change}
-                  </span>
-                  <span className="text-sm text-gray-500 ml-1">from last month</span>
-                </div>
-              )}
-            </motion.div>
-          )
-        })}
+        {displayMetrics.map((metric, _index) => (
+          <StatCard
+            key={metric.name}
+            title={metric.name}
+            value={metric.value!}
+            change={metric.change}
+            changeType={metric.changeType as StatCardProps['changeType']}
+            icon={metric.icon}
+            color={
+              metric.name === 'Total Revenue' ? 'green' :
+                metric.name === 'Total Users' ? 'blue' :
+                  metric.name === 'Total Orders' ? 'purple' : 'orange'
+            }
+            loading={isLoading}
+          />
+        ))}
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Chart */}
+        {/* Revenue Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+          className="h-full"
         >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
-              <p className="text-sm text-gray-600">Monthly revenue over the last 6 months</p>
-            </div>
-            <BarChart3 className="w-6 h-6 text-gray-400" />
-          </div>
-          
-          {revenueTrend.length > 0 ? (
-            <div className="space-y-4">
-              {revenueTrend.map((item, _index) => (
-                <div key={item.month} className="flex items-center">
-                  <div className="w-16 text-sm font-medium text-gray-600">{item.month}</div>
-                  <div className="flex-1 ml-4">
-                    <div className="bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ 
-                          width: `${(item.value / Math.max(...revenueTrend.map(d => d.value))) * 100}%` 
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="w-20 text-right text-sm font-medium text-gray-900">
-                    {formatCurrency(item.value)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No revenue data available yet
-            </div>
-          )}
+          <RevenueChart
+            data={revenueTrend}
+            isLoading={isLoading}
+          />
         </motion.div>
 
         {/* Service Distribution */}
@@ -225,17 +175,16 @@ const Analytics: React.FC = () => {
             </div>
             <PieChart className="w-6 h-6 text-gray-400" />
           </div>
-          
+
           {serviceDistribution.length > 0 ? (
             <div className="space-y-4">
               {serviceDistribution.map((service, index) => (
                 <div key={service.service} className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full ${
-                      index === 0 ? 'bg-blue-500' :
+                    <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-500' :
                       index === 1 ? 'bg-green-500' :
-                      index === 2 ? 'bg-purple-500' : 'bg-orange-500'
-                    }`}></div>
+                        index === 2 ? 'bg-purple-500' : 'bg-orange-500'
+                      }`}></div>
                     <span className="ml-3 text-sm font-medium text-gray-900">{service.service}</span>
                   </div>
                   <div className="flex items-center space-x-4">

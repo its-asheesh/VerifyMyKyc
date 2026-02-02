@@ -1,5 +1,12 @@
 import axios from 'axios'
 
+interface CarouselResponse {
+  success: boolean
+  data: {
+    slides: CarouselSlide[]
+  }
+}
+
 export interface CarouselSlide {
   _id: string
   title: string
@@ -26,8 +33,8 @@ const api = axios.create({
 class CarouselApi {
   // Get all active carousel slides (public)
   async getCarouselSlides(): Promise<CarouselSlide[]> {
-    const response = await api.get('/carousel')
-    return (response.data as any).data.slides
+    const response = await api.get<CarouselResponse>('/carousel')
+    return response.data.data.slides
   }
 }
 

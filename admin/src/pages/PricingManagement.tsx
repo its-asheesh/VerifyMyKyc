@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Plus, 
-  Edit, 
+import {
+  Plus,
+  Edit,
   Trash2,
-  IndianRupee, 
-  Users, 
+  IndianRupee,
+  Users,
   Shield,
   Check,
   X,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
 import PricingForm from '../components/pricing/PricingForm'
+import { Button } from '../components/common'
 import {
   useVerificationPricing,
   useHomepagePlans,
@@ -31,16 +32,16 @@ const PricingManagement: React.FC = () => {
   const [editingPlan, setEditingPlan] = useState<VerificationPricing | HomepagePlan | null>(null)
 
   // API hooks
-  const { 
-    data: verificationPricing, 
-    isLoading: verificationLoading, 
-    error: verificationError 
+  const {
+    data: verificationPricing,
+    isLoading: verificationLoading,
+    error: verificationError
   } = useVerificationPricing()
-  
-  const { 
-    data: homepagePlans, 
-    isLoading: homepageLoading, 
-    error: homepageError 
+
+  const {
+    data: homepagePlans,
+    isLoading: homepageLoading,
+    error: homepageError
   } = useHomepagePlans()
 
   // Mutation hooks
@@ -166,13 +167,13 @@ const PricingManagement: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Pricing Management</h1>
           <p className="text-gray-600">Manage verification pricing and homepage plans</p>
         </div>
-        <button
+        <Button
           onClick={handleAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
         >
-          <Plus className="w-4 h-4" />
           Add {activeTab === 'verification' ? 'Verification' : 'Plan'}
-        </button>
+        </Button>
       </div>
 
       {/* Error Display */}
@@ -195,21 +196,19 @@ const PricingManagement: React.FC = () => {
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('homepage')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'homepage'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'homepage'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
           >
             Homepage Plans
           </button>
           <button
             onClick={() => setActiveTab('verification')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'verification'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'verification'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
           >
             Verification Pricing
           </button>
@@ -234,11 +233,10 @@ const PricingManagement: React.FC = () => {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      plan.color === 'blue' ? 'bg-blue-100' :
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${plan.color === 'blue' ? 'bg-blue-100' :
                       plan.color === 'purple' ? 'bg-purple-100' :
-                      plan.color === 'green' ? 'bg-green-100' : 'bg-gray-100'
-                    }`}>
+                        plan.color === 'green' ? 'bg-green-100' : 'bg-gray-100'
+                      }`}>
                       {getPlanIcon(plan.planName)}
                     </div>
                     <div>
@@ -434,28 +432,28 @@ const PricingManagement: React.FC = () => {
 
       {/* Empty State */}
       {!isLoading && !hasError && (
-        activeTab === 'homepage' ? 
+        activeTab === 'homepage' ?
           (safeHomepagePlans.length === 0) :
           (safeVerificationPricing.length === 0)
       ) && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <IndianRupee className="w-8 h-8 text-gray-400" />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <IndianRupee className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No {activeTab === 'homepage' ? 'plans' : 'verification pricing'} found
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Get started by adding your first {activeTab === 'homepage' ? 'plan' : 'verification pricing'}.
+            </p>
+            <button
+              onClick={handleAdd}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add {activeTab === 'homepage' ? 'Plan' : 'Verification'}
+            </button>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No {activeTab === 'homepage' ? 'plans' : 'verification pricing'} found
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Get started by adding your first {activeTab === 'homepage' ? 'plan' : 'verification pricing'}.
-          </p>
-          <button
-            onClick={handleAdd}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Add {activeTab === 'homepage' ? 'Plan' : 'Verification'}
-          </button>
-        </div>
-      )}
+        )}
 
       {/* Pricing Form Modal */}
       <PricingForm

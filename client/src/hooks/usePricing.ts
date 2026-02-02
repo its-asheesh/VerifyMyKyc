@@ -120,9 +120,9 @@ export const useVerificationPricing = (verificationType: string) => {
   return useQuery<VerificationPricing>({
     queryKey: ['verification-pricing', verificationType],
     queryFn: async (): Promise<VerificationPricing> => {
-      console.log('useVerificationPricing: Making API call for:', verificationType)
+
       const res = await axios.get(`/api/pricing/verification/${verificationType}`)
-      console.log('useVerificationPricing: API response:', res.data)
+
       return res.data as VerificationPricing
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

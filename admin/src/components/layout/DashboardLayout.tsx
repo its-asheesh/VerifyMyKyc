@@ -1,14 +1,13 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { 
-  IndianRupee, 
-  Users, 
-  BarChart3, 
-  Menu, 
-  X, 
-  Bell, 
-  Search,
+import {
+  IndianRupee,
+  Users,
+  BarChart3,
+  Menu,
+  X,
+  Bell,
   User,
   LogOut,
   Package,
@@ -20,6 +19,7 @@ import {
   MessageSquare,
   FileText,
 } from 'lucide-react'
+import SearchBar from '../common/SearchBar'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -27,6 +27,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [globalSearch, setGlobalSearch] = useState('')
   const location = useLocation()
 
   const navigation = [
@@ -53,54 +54,77 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-inter">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:z-auto ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 shadow-sm transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:z-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
         <div className="flex flex-col h-full">
-          {/* Logo and close button */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
+          {/* Logo */}
+          <div className="flex items-center h-20 px-8 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                <span className="text-white font-bold text-xl">V</span>
               </div>
-              <span className="ml-3 text-xl font-bold text-gray-900">VerifyMyKyc</span>
+              <span className="text-xl font-bold text-slate-900 tracking-tight">VerifyMyKyc</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              className="lg:hidden ml-auto p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 mt-6 px-3 overflow-y-auto">
+          <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
             <div className="space-y-1">
-              {navigation.map((item) => {
+              <div className="px-4 mb-3 text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Main Menu
+              </div>
+              {navigation.slice(0, 7).map((item) => {
                 const IconComponent = item.icon
+                const active = isActive(item.href)
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      isActive(item.href)
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                    className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${active
+                      ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
                   >
-                    <IconComponent className={`mr-3 h-5 w-5 ${
-                      isActive(item.href) ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-500'
-                    }`} />
+                    <IconComponent className={`mr-3 h-5 w-5 transition-colors ${active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'
+                      }`} />
+                    {item.name}
+                  </Link>
+                )
+              })}
+
+              <div className="px-4 mt-8 mb-3 text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Administration
+              </div>
+              {navigation.slice(7).map((item) => {
+                const IconComponent = item.icon
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${active
+                      ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                  >
+                    <IconComponent className={`mr-3 h-5 w-5 transition-colors ${active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'
+                      }`} />
                     {item.name}
                   </Link>
                 )
@@ -109,18 +133,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-gray-600" />
+          <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm transition-all duration-200 cursor-pointer group">
+              <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
+                <User className="w-5 h-5" />
               </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">admin@verifymykyc.com</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-700">Admin User</p>
+                <p className="text-xs text-slate-500 truncate">admin@verifymykyc.com</p>
               </div>
-              <button 
+              <button
                 onClick={handleLogout}
-                className="p-1 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                title="Logout"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -130,49 +155,42 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-50/50">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 z-10">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <header className="glass sticky top-0 z-30 border-b border-indigo-100/50">
+          <div className="flex items-center justify-between h-20 px-8">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-6 h-6" />
             </button>
 
-            <div className="flex-1 max-w-lg lg:max-w-xs">
-              <label htmlFor="search" className="sr-only">Search</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Search..."
-                  type="search"
-                />
-              </div>
+            <div className="flex-1 max-w-lg lg:max-w-xs ml-4 lg:ml-0">
+              <SearchBar
+                value={globalSearch}
+                onChange={setGlobalSearch}
+                placeholder="Search resources..."
+              />
             </div>
 
             <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
+              <button className="p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
             </div>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="py-6">
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.4 }}
               >
                 {children}
               </motion.div>

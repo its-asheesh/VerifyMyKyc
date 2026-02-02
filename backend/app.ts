@@ -6,17 +6,13 @@ import router from './src/routes';
 import healthRouter from './src/routes/health.router';
 import { Request, Response, NextFunction } from 'express';
 import { connectDB } from './src/config/db';
-import { handleOptions } from './src/common/middleware/auth';
-
 // Connect to MongoDB
 connectDB();
 
 const app = express();
-// ✅ ADD THIS — Handle OPTIONS requests BEFORE cors()
-app.use(handleOptions);
 
 // ✅ CORS — allow multiple origins incl. localhost; can override via CORS_ORIGINS env
-const defaultOrigins = ['https://verifymykyc.com','https://www.verifymykyc.com','http://localhost:3000','http://127.0.0.1:3000','http://localhost:5173','http://127.0.0.1:5173','https://admin.verifymykyc.com','https://fanglike-santa-boredly.ngrok-free.dev/'];
+const defaultOrigins = ['https://verifymykyc.com', 'https://www.verifymykyc.com', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'https://admin.verifymykyc.com', 'https://fanglike-santa-boredly.ngrok-free.dev/'];
 const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
 const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
@@ -27,8 +23,8 @@ const corsOptions: cors.CorsOptions = {
     return callback(new Error(`CORS: Origin ${origin} not allowed`));
   },
   credentials: true,
-  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   optionsSuccessStatus: 204,
 };
 
@@ -53,10 +49,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     details: err.details,
     fullError: err
   });
-  
+
   // Use status from HTTPError or default to 500
   const status = err.status || err.statusCode || 500;
-  
+
   res.status(status).json({
     message: err.message || 'Internal Server Error',
     ...(err.details ? { details: err.details } : {}),

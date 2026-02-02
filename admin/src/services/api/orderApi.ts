@@ -1,4 +1,4 @@
-import axios from 'axios'
+import BaseApi from './baseApi'
 
 // Types
 export interface Order {
@@ -51,61 +51,28 @@ export interface UpdateOrderStatusData {
   status: 'active' | 'expired' | 'cancelled'
 }
 
-// Create axios instance
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('adminToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('adminToken')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
-)
-
-class OrderApi {
+class OrderApi extends BaseApi {
   // Get all orders (admin only)
   async getAllOrders(): Promise<Order[]> {
     console.log('Fetching all orders...')
-    const response = await api.get('/orders')
-    console.log('Orders response:', response.data)
-    return response.data.data.orders
+    const response = await this.get<any>('/orders')
+    console.log('Orders response:', response)
+    return response.data.orders
   }
 
   // Get order by ID
   async getOrderById(orderId: string): Promise<Order> {
-    const response = await api.get(`/orders/${orderId}`)
-    return response.data.data.order
+    const response = await this.get<any>(`/orders/${orderId}`)
+    return response.data.order
   }
 
   // Update order status (admin only)
   async updateOrderStatus(orderId: string, data: UpdateOrderStatusData): Promise<Order> {
     console.log('Updating order status:', orderId, data)
     try {
-      const response = await api.put(`/orders/${orderId}/status`, data)
-      console.log('Update order status success:', response.data)
-      return response.data.data.order
+      const response = await this.put<any>(`/orders/${orderId}/status`, data)
+      console.log('Update order status success:', response)
+      return response.data.order
     } catch (error: any) {
       console.error('Update order status error:', error.response?.data || error.message)
       throw error
@@ -115,9 +82,9 @@ class OrderApi {
   // Get order statistics (admin only)
   async getOrderStats(): Promise<OrderStats> {
     console.log('Fetching order stats...')
-    const response = await api.get('/orders/stats/overview')
-    console.log('Order stats response:', response.data)
-    return response.data.data
+    const response = await this.get<any>('/orders/stats/overview')
+    console.log('Order stats response:', response)
+    return response.data
   }
 
   // Get orders with filters
@@ -132,8 +99,8 @@ class OrderApi {
       if (value) params.append(key, value)
     })
 
-    const response = await api.get(`/orders?${params.toString()}`)
-    return response.data.data.orders
+    const response = await this.get<any>(`/orders?${params.toString()}`)
+    return response.data.orders
   }
 }
 

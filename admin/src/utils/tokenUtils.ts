@@ -8,7 +8,7 @@ export interface TokenPayload {
 export const isTokenExpired = (token: string): boolean => {
   try {
     const [tokenData, timestamp] = token.split('.');
-    
+
     if (!tokenData || !timestamp) {
       return true;
     }
@@ -16,9 +16,9 @@ export const isTokenExpired = (token: string): boolean => {
     const tokenTime = parseInt(timestamp);
     const currentTime = Date.now();
     const fifteenDaysInMs = 15 * 24 * 60 * 60 * 1000;
-    
+
     return currentTime - tokenTime > fifteenDaysInMs;
-  } catch (error) {
+  } catch {
     return true;
   }
 };
@@ -26,14 +26,14 @@ export const isTokenExpired = (token: string): boolean => {
 export const parseTokenPayload = (token: string): TokenPayload | null => {
   try {
     const [tokenData] = token.split('.');
-    
+
     if (!tokenData) {
       return null;
     }
 
     const payload = JSON.parse(atob(tokenData));
     return payload;
-  } catch (error) {
+  } catch {
     return null;
   }
 };

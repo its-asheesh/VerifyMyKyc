@@ -252,9 +252,8 @@ const HeroCarousel: React.FC = () => {
               <motion.button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "bg-blue-600 w-8" : "bg-gray-300 w-2 hover:bg-gray-400"
-                }`}
+                className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-blue-600 w-8" : "bg-gray-300 w-2 hover:bg-gray-400"
+                  }`}
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.9 }}
               />

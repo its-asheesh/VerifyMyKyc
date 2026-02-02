@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import analyticsApi from '../services/api/analyticsApi'
-import type { AnalyticsOverview, RecentActivityItem } from '../services/api/analyticsApi'
+import type { AnalyticsOverview, RecentActivityItem, AnalyticsDateRangeResponse } from '../services/api/analyticsApi'
 
 // Hook to fetch analytics overview
 export const useAnalyticsOverview = () => {
@@ -26,7 +26,7 @@ export const useAnalyticsOverview = () => {
 
 // Hook to fetch analytics by date range
 export const useAnalyticsByDateRange = (startDate: string, endDate: string) => {
-  return useQuery({
+  return useQuery<AnalyticsDateRangeResponse>({
     queryKey: ['analytics', 'date-range', startDate, endDate],
     queryFn: () => analyticsApi.getAnalyticsByDateRange(startDate, endDate),
     enabled: !!startDate && !!endDate,

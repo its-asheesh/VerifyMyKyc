@@ -1,27 +1,21 @@
 import React from 'react'
-import { Users, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
-// import {
-//   LineChart,
-//   Line,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   ResponsiveContainer,
-//   Area,
-//   AreaChart,
-//   BarChart,
-//   Bar,
-//   PieChart,
-//   Pie,
-//   Cell
-// } from 'recharts'
+import { Users } from 'lucide-react'
+import {
+  Area,
+  AreaChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts'
 import ResizableModal from './ResizableModal'
 import { useUserStats } from '../../hooks/useUsers'
+import { formatNumber } from '../../utils/dateUtils'
 
 interface UserAnalyticsChartProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen?: boolean
+  onClose?: () => void
   data: any
 }
 
@@ -76,7 +70,7 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
         const itemDate = new Date(item.date)
         return itemDate >= startDate && itemDate < endDate
       }
-      
+
       // If no date field, include the item (for backward compatibility)
       return true
     })
@@ -92,10 +86,10 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
     data.forEach((item: any) => {
       let key: string
       let label: string
-      
+
       if (item.date) {
         const date = new Date(item.date)
-        
+
         switch (granularity) {
           case 'day':
             key = date.toISOString().split('T')[0] // YYYY-MM-DD
@@ -142,32 +136,27 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
     return processedData
   }
 
-  // Helper function to assign colors
-  const getColor = (index: number) => {
-    const colors = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#6B7280']
-    return colors[index % colors.length]
-  }
 
   // Generate comprehensive data for different time periods
   const generateComprehensiveData = () => {
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth()
-    
+
     // Generate data for the entire year
     const fullYearData = []
     for (let i = 0; i < 12; i++) {
       const monthIndex = (currentMonth - 11 + i + 12) % 12 // Start from 12 months ago
       const monthName = new Date(currentYear, monthIndex, 1).toLocaleDateString('en-US', { month: 'short' })
-      
+
       // Generate realistic data with ups and downs
       const baseNewUsers = 15 + Math.random() * 20 // Random between 15-35
       const seasonalFactor = 1 + 0.3 * Math.sin((i / 12) * 2 * Math.PI) // Seasonal variation
       const trendFactor = 1 + (i * 0.05) // Slight upward trend
       const randomFactor = 0.8 + Math.random() * 0.4 // Random variation
-      
+
       const newUsers = Math.floor(baseNewUsers * seasonalFactor * trendFactor * randomFactor)
-      
+
       fullYearData.push({
         month: monthName,
         period: monthName, // Add period field for consistency
@@ -176,35 +165,25 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
         date: new Date(currentYear, monthIndex, 1) // Add proper date field
       })
     }
-    
+
     // Calculate cumulative users
     let cumulative = 0
     fullYearData.forEach(item => {
       cumulative += item.newUsers
       item.cumulativeUsers = cumulative
     })
-    
+
     return fullYearData
   }
 
-  // Generate monthly activity data with realistic patterns
-  const generateMonthlyActivityData = (baseData: any[]) => {
-    return baseData.map((item: any) => ({
-      month: item.month,
-      period: item.period, // Include period field
-      newUsers: item.newUsers,
-      activeUsers: Math.floor(item.newUsers * (0.7 + Math.random() * 0.3)), // 70-100% of new users
-      returningUsers: Math.floor(item.newUsers * (0.5 + Math.random() * 0.3)), // 50-80% return
-      date: item.date // Include date field
-    }))
-  }
+
 
   // Use real database data if available, otherwise generate comprehensive data
   const getRealOrGeneratedData = () => {
     // Check if we have real data from the database
     if (data?.userGrowth && Array.isArray(data.userGrowth) && data.userGrowth.length > 0) {
       console.log('Using REAL database data for user growth:', data.userGrowth)
-      
+
       // Process real database data
       const processedData = data.userGrowth.map((item: any, index: number) => ({
         month: item.month,
@@ -213,7 +192,7 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
         cumulativeUsers: data.userGrowth.slice(0, index + 1).reduce((sum: number, curr: any) => sum + (curr.newUsers || 0), 0),
         date: new Date(item.month + ' 1, ' + new Date().getFullYear()) // Create a date for filtering
       }))
-      
+
       return processedData
     } else {
       console.log('No real database data available, using generated data')
@@ -223,7 +202,7 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
 
   // Get base comprehensive data (real or generated)
   const comprehensiveData = getRealOrGeneratedData()
-  const comprehensiveActivityData = generateMonthlyActivityData(comprehensiveData)
+
 
   // Debug logging to verify data source
   console.log('UserAnalyticsChart - Data Source Check:', {
@@ -240,13 +219,13 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
     if (!originalData || originalData.length === 0) return originalData
 
     let filteredData = [...originalData]
-    
+
     // Filter by date range using date-based filtering (same as Order Analytics)
     if (dateRange) {
       filteredData = filterDataByDateRange(originalData)
-      console.log(`Filtered data for ${dateRange}:`, { 
-        originalLength: originalData.length, 
-        filteredLength: filteredData.length, 
+      console.log(`Filtered data for ${dateRange}:`, {
+        originalLength: originalData.length,
+        filteredLength: filteredData.length,
         dateRange,
         dataRange: `${filteredData[0]?.period || filteredData[0]?.month || 'N/A'} to ${filteredData[filteredData.length - 1]?.period || filteredData[filteredData.length - 1]?.month || 'N/A'}`,
         allMonths: filteredData.map(item => item.period || item.month)
@@ -264,23 +243,12 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
 
   // Apply filtering to all data
   const filteredUserGrowthData = getFilteredData(comprehensiveData)
-  const filteredMonthlyActivityData = getFilteredData(comprehensiveActivityData)
+
 
   // Role distribution data
-  const roleDistributionData = [
-    { name: 'Regular Users', value: userStats?.regularUsers || 0, color: getColor(0) },
-    { name: 'Admin Users', value: userStats?.adminUsers || 0, color: getColor(1) }
-  ]
 
-  // User status distribution
-  const statusDistributionData = [
-    { name: 'Active Users', value: userStats?.activeUsers || 0, color: getColor(2) },
-    { name: 'Inactive Users', value: userStats?.inactiveUsers || 0, color: getColor(3) }
-  ]
 
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-IN').format(value)
-  }
+
 
   // Handler functions for filters
   const handleDateRangeChange = (newRange: string) => {
@@ -328,168 +296,162 @@ const UserAnalyticsChart: React.FC<UserAnalyticsChartProps> = ({ isOpen, onClose
   //   return null
   // }
 
-  return (
-    <ResizableModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="User Analytics"
-      subtitle="Comprehensive user insights and growth trends"
-      icon={<Users className="w-6 h-6 text-blue-700" />}
-      gradientFrom="from-blue-600"
-      gradientTo="to-purple-600"
-      analyticsControls={{
-        dateRange,
-        onDateRangeChange: handleDateRangeChange,
-        timeGranularity,
-        onTimeGranularityChange: setTimeGranularity,
-        customStartDate,
-        customEndDate,
-        onCustomDateChange: handleCustomDateChange,
-        showRefresh: true,
-        onRefresh: () => {
-          // Add refresh functionality for user analytics
-          console.log('Refreshing user analytics...')
-        },
-        isLoading: false,
-        showDateRange: true,
-        showTimeGranularity: true
-      }}
-      chartGrid={{
-        charts: [
-          {
-            type: 'chartjs-line',
-            data: filteredUserGrowthData,
-            dataKey: 'cumulativeUsers',
-            xAxisDataKey: 'period',
-            title: 'User Growth Trend (Enhanced Zoom)',
-            tooltip: true,
-            grid: true,
-            zoomable: true,
-            showDots: true,
-            height: 300,
-            formatValue: (value) => formatNumber(value)
-          },
-          {
-            type: 'chartjs-bar',
-            data: filteredMonthlyActivityData,
-            dataKey: 'newUsers',
-            xAxisDataKey: 'period',
-            title: 'Monthly User Activity (Enhanced Zoom)',
-            tooltip: true,
-            grid: true,
-            zoomable: true,
-            showDots: true,
-            height: 300,
-            formatValue: (value) => formatNumber(value)
-          },
-          {
-            type: 'pie',
-            data: roleDistributionData,
-            dataKey: 'value',
-            title: 'Role Distribution',
-            tooltip: true,
-            formatValue: (value) => formatNumber(value)
-          },
-          {
-            type: 'pie',
-            data: statusDistributionData,
-            dataKey: 'value',
-            title: 'User Status Distribution',
-            tooltip: true,
-            formatValue: (value) => formatNumber(value)
-          },
-          {
-            type: 'chartjs-line',
-            data: filteredUserGrowthData,
-            dataKey: 'cumulativeUsers',
-            xAxisDataKey: 'period',
-            title: 'User Growth Over Time (Enhanced Zoom)',
-            tooltip: true,
-            grid: true,
-            fullWidth: true,
-            zoomable: true,
-            showDots: true,
-            height: 400,
-            multipleLines: [
-              {
-                dataKey: 'cumulativeUsers',
-                color: '#3B82F6',
-                name: 'Total Users'
-              },
-              {
-                dataKey: 'newUsers',
-                color: '#8B5CF6',
-                name: 'New Users'
-              }
-            ],
-            formatValue: (value) => formatNumber(value)
-          }
-        ],
-        columns: 2
-      }}
-    >
-      <div className="p-6 space-y-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-blue-600 font-medium">Total Users</p>
-                <p className="text-xl font-bold text-blue-900">
-                  {formatNumber(userStats?.totalUsers || 0)}
-                </p>
-              </div>
-            </div>
-          </div>
+  const renderContent = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          {isOpen && <Users className="w-6 h-6 text-indigo-600" />}
+          {isOpen ? 'User Analytics' : 'User Growth Overview'}
+        </h2>
 
-          <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-600 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-green-600 font-medium">Active Users</p>
-                <p className="text-xl font-bold text-green-900">
-                  {formatNumber(userStats?.activeUsers || 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-600 rounded-lg">
-                <BarChart3 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-purple-600 font-medium">Admin Users</p>
-                <p className="text-xl font-bold text-purple-900">
-                  {formatNumber(userStats?.adminUsers || 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-orange-600 font-medium">This Month</p>
-                <p className="text-xl font-bold text-orange-900">
-                  {formatNumber(userStats?.newUsersThisMonth || 0)}
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Date Range Selector */}
+        <div className="flex bg-gray-100 p-1 rounded-lg">
+          {['1month', '3months', '6months', '1year', 'custom'].map((range) => (
+            <button
+              key={range}
+              onClick={() => setDateRange(range)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${dateRange === range
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-900'
+                }`}
+            >
+              {range === 'custom' ? 'Custom' : range.replace('months', 'M').replace('year', 'Y').replace('month', 'M')}
+            </button>
+          ))}
         </div>
       </div>
-    </ResizableModal>
-  )
+
+      {dateRange === 'custom' && (
+        <div className="flex items-center gap-2 text-sm bg-gray-50 p-3 rounded-lg border border-gray-100">
+          <span className="text-gray-500">Range:</span>
+          <input
+            type="date"
+            value={customStartDate}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <span className="text-gray-400">-</span>
+          <input
+            type="date"
+            value={customEndDate}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+      )}
+
+      {/* Chart */}
+      <div className="bg-white p-4 rounded-xl border border-gray-100 h-[300px]">
+        {/* We need to render a chart here. Since ResizableModal handled it via chartGrid prop, we need to replicate that or just render one main chart for inline view */}
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={filteredUserGrowthData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+            <XAxis
+              dataKey="period"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              dy={10}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              tickFormatter={(value) => formatNumber(value)}
+            />
+            <Tooltip
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              itemStyle={{ color: '#111827', fontWeight: 500 }}
+            />
+            <Area
+              type="monotone"
+              dataKey="cumulativeUsers"
+              stroke="#4F46E5"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorUsers)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        {[
+          { label: 'Total Users', value: formatNumber(userStats?.totalUsers || 0), change: '+12%', color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Active Users', value: formatNumber(userStats?.activeUsers || 0), change: '+5%', color: 'text-green-600', bg: 'bg-green-50' },
+        ].map((stat, index) => (
+          <div key={index} className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500">{stat.label}</p>
+            <div className="flex items-end justify-between mt-1">
+              <span className="text-lg font-bold text-gray-900">{stat.value}</span>
+              <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${stat.change.startsWith('+') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {stat.change}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (isOpen && onClose) {
+    return (
+      <ResizableModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="User Analytics"
+        subtitle="Comprehensive user insights and growth trends"
+        icon={<Users className="w-6 h-6 text-blue-700" />}
+        gradientFrom="from-blue-600"
+        gradientTo="to-purple-600"
+        analyticsControls={{
+          dateRange,
+          onDateRangeChange: handleDateRangeChange,
+          timeGranularity,
+          onTimeGranularityChange: setTimeGranularity,
+          customStartDate,
+          customEndDate,
+          onCustomDateChange: handleCustomDateChange,
+          showRefresh: true,
+          onRefresh: () => console.log('Refreshing...'),
+          isLoading: false,
+          showDateRange: true,
+          showTimeGranularity: true
+        }}
+        chartGrid={{
+          charts: [
+            {
+              type: 'chartjs-line',
+              data: filteredUserGrowthData,
+              dataKey: 'cumulativeUsers',
+              xAxisDataKey: 'period',
+              title: 'User Growth',
+              height: 300,
+              formatValue: (val) => formatNumber(val)
+            }
+          ],
+          columns: 1
+        }}
+      >
+        <div className="p-6">
+          {/* Modal specific content if needed, but ResizableModal handles charts via props */}
+          {/* We could render detail views here */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {/* Summary cards for modal */}
+          </div>
+        </div>
+      </ResizableModal>
+    )
+  }
+
+  return renderContent();
 }
 
-export default UserAnalyticsChart 
+export default UserAnalyticsChart

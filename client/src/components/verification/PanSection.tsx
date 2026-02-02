@@ -1,67 +1,46 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
-import { panServices, DIGILOCKER_REDIRECT_URI } from "../../utils/panServices"
-import { panApi } from "../../services/api/panApi"
-import { usePricingContext } from "../../context/PricingContext"
+import { panServices } from "../../config/panConfig"
+import { identityApi } from "../../services/api/identityApi"
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
+import { useVerificationLogic } from "../../hooks/useVerificationLogic"
+import { NoQuotaDialog } from "./NoQuotaDialog";
+
+interface PanFormData {
+  pan?: string;
+  father_name?: string;
+  date_of_birth?: string;
+  consent: string | boolean;
+  [key: string]: unknown;
+}
 
 export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const [selectedService, setSelectedService] = useState(panServices[0])
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [pendingFormData, setPendingFormData] = useState<any>(null)
+  const {
+    selectedService,
+    isLoading,
+    result,
+    error,
+    showConfirmDialog,
+    showNoQuotaDialog,
+    pendingFormData,
+    handleServiceChange,
+    initiateSubmit,
+    closeConfirmDialog,
+    closeNoQuotaDialog,
+    confirmSubmit,
+  } = useVerificationLogic<typeof panServices[number], PanFormData>({
+    services: panServices,
+  })
 
   // Get PAN pricing from backend
-  const { getVerificationPricingByType } = usePricingContext()
-  const panPricing = getVerificationPricingByType("pan")
+  // const { getVerificationPricingByType } = usePricingContext()
+  // const panPricing = getVerificationPricingByType("pan")
 
-  // Clear results when service changes
-  const handleServiceChange = (service: any) => {
-    setSelectedService(service)
-    setResult(null)
-    setError(null)
-  }
-
-  // Handle Digilocker callback
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const transactionId = params.get("transaction_id")
-
-    if (transactionId && selectedService.key === "digilocker-pull") {
-      const panno = sessionStorage.getItem("digilocker_pan_pull_panno")
-      const PANFullName = sessionStorage.getItem("digilocker_pan_pull_name")
-
-      if (panno && PANFullName) {
-        handleDigilockerPull(transactionId, panno, PANFullName)
-      }
-    }
-  }, [selectedService.key])
-
-  const handleDigilockerPull = async (transactionId: string, panno: string, PANFullName: string) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await panApi.digilockerPull({
-        parameters: { panno, PANFullName },
-        transactionId,
-      })
-      setResult(response)
-    } catch (err: any) {
-      setError(err?.message || "Verification failed")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getFormFields = (service: any) => {
-    return service.formFields.map((field: any) => {
+  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (field.name === "consent") {
         return {
           ...field,
@@ -72,155 +51,92 @@ export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
           ],
         }
       }
-      if (field.type === "json") {
-        return {
-          ...field,
-          placeholder: "Enter JSON payload...",
-        }
-      }
-      return {
-        ...field,
-        placeholder:
-          field.name === "pan_number"
-            ? "Enter PAN number (e.g., ABCDE1234F)"
-            : field.name === "aadhaar_number"
-              ? "Enter 12-digit Aadhaar number"
-              : field.name === "PANFullName"
-                ? "Enter full name as per PAN"
-                : undefined,
-      }
+      return field
     })
   }
 
-  const handleSubmit = async (formData: any) => {
-    setPendingFormData(formData)
-    setShowConfirmDialog(true)
-  }
-
   const handleConfirmSubmit = async () => {
-    setShowConfirmDialog(false)
-    setIsLoading(true)
-    setError(null)
-    setResult(null)
+    await confirmSubmit(async (formData: PanFormData) => {
+      // 1️⃣  Build clean payload
+      const payload: Record<string, unknown> = {}
 
-    try {
-      let response
-
-      if (selectedService.key === "digilocker-pull") {
-        // Store data for after redirect
-        sessionStorage.setItem("digilocker_pan_pull_panno", pendingFormData.panno)
-        sessionStorage.setItem("digilocker_pan_pull_name", pendingFormData.PANFullName)
-
-        const initResp = await panApi.digilockerInit({
-          redirect_uri: DIGILOCKER_REDIRECT_URI,
-          consent: "Y",
-        })
-
-        const url = initResp?.data?.authorization_url
-        if (url) {
-          window.location.href = url
-          return
+      // 2️⃣  Copy fields
+      for (const [k, v] of Object.entries(formData)) {
+        if (typeof v === "boolean") {
+          payload[k] = v ? "Y" : "N"
+        } else if (typeof v === "string") {
+          payload[k] = v.trim()
         } else {
-          throw new Error("Failed to get Digilocker authorization URL")
+          payload[k] = v
         }
       }
 
-      // Prepare payload: normalize PAN and consent where applicable
-      const payload: any = { ...pendingFormData }
-      // Convert boolean consent to string
-      if (typeof payload.consent === "boolean") {
-        payload.consent = payload.consent ? "Y" : "N"
-      }
-      // For PAN-based services, uppercase and trim PAN values
-      const panServicesNeedingNormalization = ["gstin-by-pan", "din-by-pan", "cin-by-pan", "fetch-advanced", "aadhaar-link", "digilocker-pull", "fetch-detailed"]
-      if (panServicesNeedingNormalization.includes(selectedService.key)) {
-        if (payload.pan) payload.pan = String(payload.pan).toUpperCase().trim()
-        if (payload.pan_number) payload.pan_number = String(payload.pan_number).toUpperCase().trim()
-        // Default consent to 'Y' if missing (some providers require consent)
-        if (!payload.consent) payload.consent = "Y"
-        // Basic PAN format validation (e.g., ABCDE1234F)
-        const panValue = payload.pan || payload.pan_number
-        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/
-        if (!panRegex.test(String(panValue || ''))) {
-          throw new Error("Please enter a valid PAN (format: ABCDE1234F)")
-        }
-        if (!payload.consent || !['Y', 'N'].includes(payload.consent)) {
-          throw new Error("Please provide consent (Yes/No)")
-        }
+      // 3️⃣  Basic validations
+      if (payload.consent !== "Y") {
+        throw new Error("Consent is required.")
       }
 
+      // 4️⃣  Route to correct API
+      let response
       switch (selectedService.key) {
         case "father-name":
-          response = await panApi.fetchFatherName(payload)
-          break
-        case "aadhaar-link":
-          response = await panApi.checkAadhaarLink(payload)
+          response = await identityApi.fetchPanFatherName(payload as any)
           break
         default:
-          response = await panApi.post(selectedService.apiEndpoint, payload)
+          response = await identityApi.post(selectedService.apiEndpoint || "", payload)
       }
-
-      setResult(response)
-    } catch (err: any) {
-      setError(err?.message || "Verification failed")
-    } finally {
-      setIsLoading(false)
-    }
+      return response
+    })
   }
 
   return (
-    <VerificationLayout
-      title="PAN Verification Services"
-      description="Comprehensive PAN card verification and related services"
-      services={panServices}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      {/* Display pricing if available */}
-      {/* {panPricing && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
-          <div className="flex flex-col gap-1 text-sm">
-            <span className="text-blue-700">
-              One-time: ₹{panPricing.oneTimePrice}
-              {panPricing.oneTimeQuota?.count ? ` • Includes ${panPricing.oneTimeQuota.count} verification${panPricing.oneTimeQuota.count > 1 ? 's' : ''}` : ''}
-              {panPricing.oneTimeQuota?.validityDays && panPricing.oneTimeQuota.validityDays > 0 ? ` • valid ${panPricing.oneTimeQuota.validityDays} days` : ''}
-            </span>
-            <span className="text-blue-700">
-              Monthly: ₹{panPricing.monthlyPrice}
-              {panPricing.monthlyQuota?.count ? ` • Includes ${panPricing.monthlyQuota.count} verification${panPricing.monthlyQuota.count > 1 ? 's' : ''}` : ''}
-              {panPricing.monthlyQuota?.validityDays && panPricing.monthlyQuota.validityDays > 0 ? ` • valid ${panPricing.monthlyQuota.validityDays} days` : ''}
-            </span>
-            <span className="text-blue-700">
-              Yearly: ₹{panPricing.yearlyPrice}
-              {panPricing.yearlyQuota?.count ? ` • Includes ${panPricing.yearlyQuota.count} verification${panPricing.yearlyQuota.count > 1 ? 's' : ''}` : ''}
-              {panPricing.yearlyQuota?.validityDays && panPricing.yearlyQuota.validityDays > 0 ? ` • valid ${panPricing.yearlyQuota.validityDays} days` : ''}
-            </span>
+    <>
+      <VerificationLayout
+        title="PAN Verification Services"
+        description="Verify PAN details"
+        services={panServices}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
+      >
+        {/* Display pricing if available */}
+        {/* {panPricing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
+            <div className="flex gap-4 text-sm">
+              <span className="text-blue-600">One-time: ₹{panPricing.oneTimePrice}</span>
+              <span className="text-blue-600">Monthly: ₹{panPricing.monthlyPrice}</span>
+              <span className="text-blue-600">Yearly: ₹{panPricing.yearlyPrice}</span>
+            </div>
           </div>
-        </div>
-      )} */}
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
-        serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
-      />
+        )} */}
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
 
-      {/* Confirmation Dialog */}
       <VerificationConfirmDialog
         isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
+        onClose={closeConfirmDialog}
         onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
         serviceName={selectedService.name}
         formData={pendingFormData || {}}
         tokenCost={1}
       />
-    </VerificationLayout>
+
+      <NoQuotaDialog
+        isOpen={showNoQuotaDialog}
+        onClose={closeNoQuotaDialog}
+        serviceName={selectedService.name}
+      />
+    </>
   )
 }

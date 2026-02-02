@@ -32,38 +32,50 @@ exports.mailer = nodemailer_1.default.createTransport({
 });
 function sendEmail(to, subject, html) {
     return __awaiter(this, void 0, void 0, function* () {
-        // If SMTP configured, prefer SMTP
-        if (!smtpHost) {
-            // Fallback to Gmail API using service account + delegation
-            if (!process.env.FIREBASE_SERVICE_ACCOUNT || !process.env.GMAIL_DELEGATED_USER) {
-                throw new Error('Email send requires SMTP or Gmail API (set FIREBASE_SERVICE_ACCOUNT and GMAIL_DELEGATED_USER)');
+        // 1. Prioritize Gmail API if configured (GMAIL_DELEGATED_USER present)
+        if (process.env.GMAIL_DELEGATED_USER) {
+            console.log(`[Email Service] Sending via Gmail API as ${process.env.GMAIL_DELEGATED_USER}`);
+            try {
+                const info = yield (0, gmailMailer_1.gmailSend)({ to, subject, html });
+                if (process.env.EMAIL_DEBUG)
+                    console.log('Gmail API sent:', (info === null || info === void 0 ? void 0 : info.id) || info);
+                return info;
             }
-            const info = yield (0, gmailMailer_1.gmailSend)({ to, subject, html });
-            if (process.env.EMAIL_DEBUG)
-                console.log('Gmail API sent:', (info === null || info === void 0 ? void 0 : info.id) || info);
-            return info;
-        }
-        try {
-            const info = yield exports.mailer.sendMail({
-                from: fromEmail,
-                to,
-                subject,
-                html,
-            });
-            if (process.env.EMAIL_DEBUG) {
-                console.log('Email sent:', { messageId: info.messageId, envelope: info.envelope });
+            catch (err) {
+                console.error('[Email Service] Gmail API failed:', (err === null || err === void 0 ? void 0 : err.message) || err);
+                // Optional: Fallback to SMTP if Gmail fails? For now, throw to be explicit.
+                throw err;
             }
-            return info;
         }
-        catch (err) {
-            console.error('Email send failed:', {
-                message: err === null || err === void 0 ? void 0 : err.message,
-                code: err === null || err === void 0 ? void 0 : err.code,
-                command: err === null || err === void 0 ? void 0 : err.command,
-                response: err === null || err === void 0 ? void 0 : err.response,
-            });
-            throw err;
+        // 2. Fallback to SMTP
+        if (smtpHost) {
+            try {
+                console.log(`[Email Service] Attempting to send email to: ${to}, subject: "${subject}"`);
+                console.log(`[Email Service] Using configuration: Host=${smtpHost}, Port=${smtpPort}, Secure=${smtpPort === 465}, User=${smtpUser ? '***' : 'None'}`);
+                const info = yield exports.mailer.sendMail({
+                    from: fromEmail,
+                    to,
+                    subject,
+                    html,
+                });
+                console.log(`[Email Service] Email sent successfully. MessageId: ${info.messageId}`);
+                if (process.env.EMAIL_DEBUG) {
+                    console.log('[Email Service] Full envelope:', info.envelope);
+                }
+                return info;
+            }
+            catch (err) {
+                console.error('[Email Service] Email send FAILED:', {
+                    message: err === null || err === void 0 ? void 0 : err.message,
+                    code: err === null || err === void 0 ? void 0 : err.code,
+                    command: err === null || err === void 0 ? void 0 : err.command,
+                    response: err === null || err === void 0 ? void 0 : err.response,
+                    stack: err === null || err === void 0 ? void 0 : err.stack
+                });
+                throw err;
+            }
         }
+        throw new Error('Email configuration missing. Set GMAIL_DELEGATED_USER (for Gmail API) or SMTP_HOST/SMTP_USER/etc (for SMTP).');
     });
 }
 function buildOtpEmailHtml(name, code) {

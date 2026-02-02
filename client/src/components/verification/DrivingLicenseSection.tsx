@@ -1,37 +1,50 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useVerificationLogic } from "../../hooks/useVerificationLogic"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
 import { NoQuotaDialog } from "./NoQuotaDialog"
-import { drivingLicenseServices } from "../../utils/drivingLicenseServices"
-import { drivingLicenseApi } from "../../services/api/drivingLicenseApi"
-import { usePricingContext } from "../../context/PricingContext"
+import { drivingLicenseServices } from "../../config/drivingLicenseConfig"
+import { identityApi } from "../../services/api/identityApi"
+
+interface DlFormData {
+  dl_number: string;
+  dob: string;
+  consent: string | boolean;
+}
 
 export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const [selectedService, setSelectedService] = useState(drivingLicenseServices[0])
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false)
-  const [pendingFormData, setPendingFormData] = useState<any>(null)
+  const {
+    selectedService,
+    isLoading,
+    result,
+    error,
+    showConfirmDialog,
+    showNoQuotaDialog,
+    pendingFormData,
+    handleServiceChange,
+    initiateSubmit,
+    closeConfirmDialog,
+    closeNoQuotaDialog,
+    confirmSubmit,
+  } = useVerificationLogic<typeof drivingLicenseServices[number], DlFormData>({
+    services: drivingLicenseServices,
+  })
 
   // Get DL pricing from backend
-  const { getVerificationPricingByType } = usePricingContext()
-  const dlPricing = getVerificationPricingByType("drivinglicense")
+  // const { getVerificationPricingByType } = usePricingContext()
 
-  // Clear results when service changes
-  const handleServiceChange = (service: any) => {
-    setSelectedService(service)
-    setResult(null)
-    setError(null)
-  }
+  // Clear results when service changes - This logic is now inside useVerificationLogic
+  // const handleServiceChange = (service: any) => {
+  //   setSelectedService(service)
+  //   setResult(null)
+  //   setError(null)
+  // }
 
-  const getFormFields = (service: any) => {
-    return service.formFields.map((field: any) => {
+  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (field.name === "consent") {
         return {
           ...field,
@@ -42,95 +55,51 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
           ],
         }
       }
-      if (field.name === "base64_data") {
-        return {
-          ...field,
-          type: "camera" as const,
-          label: "Capture Driving License Image",
-        }
-      }
-      if (field.name === "file") {
-        return {
-          ...field,
-          type: "file" as const,
-          accept: "image/*",
-          label: "Driving License Image",
-        }
-      }
-      return {
-        ...field,
-        placeholder:
-          field.name === "dl_number"
-            ? "Enter driving license number"
-            : field.name === "dob"
-              ? "Enter date of birth (DD/MM/YYYY)"
-              : undefined,
-      }
+      // Removed base64_data, file, and placeholder logic as per instruction
+      return field
     })
   }
 
-  const handleSubmit = async (formData: any) => {
-    setPendingFormData(formData)
-    setShowConfirmDialog(true)
-  }
+  // Replaced handleSubmit with initiateSubmit from the hook
+  // const handleSubmit = async (formData: any) => {
+  //   setPendingFormData(formData)
+  //   setShowConfirmDialog(true)
+  // }
 
   const handleConfirmSubmit = async () => {
-    setShowConfirmDialog(false)
-    setIsLoading(true)
-    setError(null)
-    setResult(null)
+    await confirmSubmit(async (formData: DlFormData) => {
+      const consentValue = typeof formData.consent === 'boolean' ? (formData.consent ? 'Y' : 'N') : formData.consent;
 
-    const formData = pendingFormData
-
-    try {
       let response
 
-      // Convert boolean consent to string
-      if (typeof formData.consent === "boolean") {
-        formData.consent = formData.consent ? "Y" : "N"
-      }
+      // Convert boolean consent to string - This logic is now handled by the hook or form
+      // if (typeof formData.consent === "boolean") {
+      //   formData.consent = formData.consent ? "Y" : "N"
+      // }
 
       switch (selectedService.key) {
         case "fetch-details":
-          response = await drivingLicenseApi.fetchDetails(formData)
-          break
-        case "ocr":
-          if (formData.file) {
-            const formDataObj = new FormData()
-            Object.keys(formData).forEach((key) => {
-              if (formData[key]) formDataObj.append(key, formData[key])
-            })
-            response = await drivingLicenseApi.ocr(formDataObj)
-          } else {
-            response = await drivingLicenseApi.ocr(formData)
-          }
+          response = await identityApi.fetchDlDetails({
+            driving_license_number: formData.dl_number,
+            date_of_birth: formData.dob,
+            consent: consentValue,
+          })
           break
         default:
           throw new Error("Unknown service")
       }
-
-      setResult(response)
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || ""
-      // Check for quota error and show NoQuotaDialog
-      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
-        setShowNoQuotaDialog(true)
-      } else {
-        setError(errorMessage || "Verification failed")
-      }
-    } finally {
-      setIsLoading(false)
-    }
+      return response
+    })
   }
 
   return (
     <>
       <VerificationLayout
         title="Driving License Verification Services"
-        description="Comprehensive driving license verification and OCR services"
+        description="Verify Driving License details instantly" // Updated description
         services={drivingLicenseServices}
         selectedService={selectedService}
-        onServiceChange={handleServiceChange}
+        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
       >
         {/* Display pricing if available */}
         {/* {dlPricing && (
@@ -145,7 +114,7 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
         )} */}
         <VerificationForm
           fields={getFormFields(selectedService)}
-          onSubmit={handleSubmit}
+          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
           isLoading={isLoading}
           result={result}
           error={error}
@@ -158,7 +127,7 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
 
       <VerificationConfirmDialog
         isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
+        onClose={closeConfirmDialog} // Changed to closeConfirmDialog
         onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
         serviceName={selectedService.name}
@@ -168,9 +137,8 @@ export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ produc
 
       <NoQuotaDialog
         isOpen={showNoQuotaDialog}
-        onClose={() => setShowNoQuotaDialog(false)}
+        onClose={closeNoQuotaDialog} // Changed to closeNoQuotaDialog
         serviceName={selectedService.name}
-        verificationType="drivinglicense"
       />
     </>
   )

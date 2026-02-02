@@ -1,4 +1,5 @@
 import BaseApi from "./baseApi"
+import type { AxiosRequestConfig } from "axios"
 import type {
   BankAccountVerifyRequest,
   BankAccountVerifyResponse,
@@ -21,8 +22,9 @@ class BankApi extends BaseApi {
     // Backend mounts at /api/bankaccount/verify-upi
     return this.post<UpiVerifyResponse>("/bankaccount/verify-upi", data)
   }
+
   // Expose a public post method for generic use
-  public async post<T>(url: string, data?: any, config?: any): Promise<T> {
+  public async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return super.post<T>(url, data, config)
   }
 }

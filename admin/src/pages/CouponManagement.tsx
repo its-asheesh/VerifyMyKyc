@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react'
 import { useCoupons, useCouponStats, useDeleteCoupon } from '../hooks/useCoupons'
 import { useToast } from '../context/ToastContext'
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Copy, 
-  Eye, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Copy,
+  Eye,
   TrendingUp,
   Calendar,
   Users,
@@ -18,7 +18,7 @@ import CouponForm from '../components/coupons/CouponForm'
 import CouponDetails from '../components/coupons/CouponDetails'
 
 // Import reusable components
-import { StatCard, DataTable, StatusBadge, AdvancedFilters } from '../components/common'
+import { StatCard, DataTable, StatusBadge, AdvancedFilters, Button } from '../components/common'
 import { exportToExcel, formatters } from '../utils/exportUtils'
 import { formatDate, formatCurrency } from '../utils/dateUtils'
 import type { Column } from '../components/common/DataTable'
@@ -95,8 +95,8 @@ const CouponManagement: React.FC = () => {
       render: (value, row) => (
         <div className="text-sm">
           <span className="font-medium text-gray-900">
-            {value === 'percentage' 
-              ? `${row.discountValue}%` 
+            {value === 'percentage'
+              ? `${row.discountValue}%`
               : formatCurrency(row.discountValue)
             }
           </span>
@@ -181,19 +181,19 @@ const CouponManagement: React.FC = () => {
 
   const filteredAndSortedCoupons = useMemo(() => {
     let filtered = coupons.filter(coupon => {
-      const matchesSearch = 
+      const matchesSearch =
         coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (coupon.description && coupon.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      
+
       const matchesStatus = statusFilter === 'all' || getCouponStatus(coupon) === statusFilter
-      
+
       return matchesSearch && matchesStatus
     })
 
     // Sort coupons
     filtered.sort((a, b) => {
       let aValue: any, bValue: any
-      
+
       switch (sortConfig.field) {
         case 'code':
           aValue = a.code.toLowerCase()
@@ -227,7 +227,7 @@ const CouponManagement: React.FC = () => {
     const now = new Date()
     const validFrom = new Date(coupon.validFrom)
     const validUntil = new Date(coupon.validUntil)
-    
+
     if (!coupon.isActive) return 'inactive'
     if (now < validFrom) return 'upcoming'
     if (now > validUntil) return 'expired'
@@ -327,33 +327,38 @@ const CouponManagement: React.FC = () => {
           <p className="text-gray-600">Manage discount coupons and promotional codes</p>
         </div>
         <div className="flex space-x-3">
-          <button
+          <Button
             onClick={exportCouponsToExcel}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            variant="primary"
+            size="md"
+            leftIcon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            }
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
             Export Excel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setShowForm(true)}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            variant="primary"
+            className="bg-green-600 hover:bg-green-700 focus:ring-green-500" // Override for green color
+            size="md"
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4 mr-2" />
             Add Coupon
-          </button>
+          </Button>
         </div>
       </div>
 

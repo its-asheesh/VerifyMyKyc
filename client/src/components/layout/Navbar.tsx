@@ -22,53 +22,9 @@ import {
   User,
   Briefcase,
 } from "lucide-react"
+import { Button } from "../common/Button"
 
-// Enhanced Button Component
-const Button = ({
-  children,
-  className = "",
-  variant = "default",
-  size = "default",
-  onClick,
-  ...props
-}: {
-  children: React.ReactNode
-  className?: string
-  variant?: "default" | "contained" | "outlined" | "ghost" | "gradient"
-  size?: "default" | "sm" | "lg"
-  onClick?: () => void
-  [key: string]: any
-}) => {
-  const baseClasses =
-    "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
 
-  const variantClasses = {
-    default: "text-gray-700 hover:text-blue-600 hover:bg-blue-50",
-    contained: "bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl",
-    outlined: "border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50",
-    ghost: "text-gray-700 hover:text-blue-600 hover:bg-blue-50",
-    gradient:
-      "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl",
-  }
-
-  const sizeClasses = {
-    default: "px-4 py-2.5 text-sm",
-    sm: "px-3 py-2 text-xs",
-    lg: "px-8 py-4 text-base",
-  }
-
-  return (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-      onClick={onClick}
-      {...props}
-    >
-      {children}
-    </motion.button>
-  )
-}
 
 const IconButton = ({
   children,
@@ -193,7 +149,7 @@ const navItems = [
 export default function Navbar() {
   const navigate = useNavigate()
   const { isAuthenticated, user, token } = useAppSelector((state) => state.auth)
-  
+
   const [openMenus, setOpenMenus] = useState<{ [key: number]: boolean }>({})
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -298,7 +254,7 @@ export default function Navbar() {
         const el = document.getElementById("pricing");
         if (el) el.scrollIntoView({ behavior: "smooth" });
         handleMenuClose(index);
-        
+
       } else {
         navigate("/", { replace: false });
         setTimeout(() => {
@@ -317,16 +273,15 @@ export default function Navbar() {
 
   return (
     <motion.header
-    initial={{ y: -100 }}
-    animate={{ y: 0 }}
-    transition={{ duration: 0.6, ease: "easeOut" }}
-    className={`sticky top-0 z-50 transition-all duration-300 ${
-      scrolled
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
         ? "bg-gradient-to-r from-[#dbeafe] via-white to-[#e0f2fe] backdrop-blur-lg shadow-lg border-b border-blue-100"
         : "bg-gradient-to-r from-[#e0f2ff] via-white to-[#dbeafe] shadow-sm border-b-2 border-blue-200"
-    }`}
-  >
-    
+        }`}
+    >
+
       <div className="max-w-7xl mx-auto px-4 lg:px-8 ">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Brand */}
@@ -337,20 +292,20 @@ export default function Navbar() {
             transition={{ duration: 0.2 }}
             onClick={() => navigate("/")}
           >
-          {logoAvailable ? (
-            <img
-              src="/verifymykyclogo.svg"
-              alt="VerifyMyKyc"
-              className="h-16 md:h-16 w-auto"
-              onError={() => setLogoAvailable(false)}
-            />
-          ) : (
-            <div className="font-extrabold tracking-tight leading-none flex items-baseline">
-              <span className="text-2xl md:text-3xl bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Verify</span>
-              <span className="ml-1 text-2xl md:text-3xl bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">MyKyc</span>
-            </div>
-          )}
-        </motion.div>
+            {logoAvailable ? (
+              <img
+                src="/verifymykyclogo.svg"
+                alt="VerifyMyKyc"
+                className="h-16 md:h-16 w-auto"
+                onError={() => setLogoAvailable(false)}
+              />
+            ) : (
+              <div className="font-extrabold tracking-tight leading-none flex items-baseline">
+                <span className="text-2xl md:text-3xl bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Verify</span>
+                <span className="ml-1 text-2xl md:text-3xl bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">MyKyc</span>
+              </div>
+            )}
+          </motion.div>
 
 
           {/* Desktop Navigation */}
@@ -395,8 +350,8 @@ export default function Navbar() {
                     </div>
                   </div>
                 ) : (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="px-5 py-3 rounded-xl"
                     onClick={() => item.href && navigate(item.href)}>
                     {item.label}
@@ -413,18 +368,9 @@ export default function Navbar() {
             <div className="hidden sm:flex items-center gap-3">
               {isAuthenticated && token ? (
                 <>
-                  {user?.role === 'admin' && (
-                    <Button 
-                      variant="outlined" 
-                      size="default"
-                      onClick={() => navigate('/admin/dashboard')}
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outlined" 
+
+                  <Button
+                    variant="outlined"
                     size="default"
                     onClick={() => navigate('/profile')}
                   >
@@ -434,15 +380,15 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     size="default"
                     onClick={() => navigate('/login')}
                   >
                     Sign In
                   </Button>
-                  <Button 
-                    variant="gradient" 
+                  <Button
+                    variant="gradient"
                     size="default"
                     onClick={() => navigate('/register')}
                   >
@@ -560,21 +506,9 @@ export default function Navbar() {
               <div className="pt-6 border-t border-gray-100 space-y-3">
                 {isAuthenticated ? (
                   <>
-                    {user?.role === 'admin' && (
-                      <Button 
-                        variant="outlined" 
-                        className="w-full justify-center"
-                        onClick={() => {
-                          navigate('/admin/dashboard')
-                          setMobileMenuOpen(false)
-                        }}
-                      >
-                        <Shield className="w-4 h-4 mr-2" />
-                        Admin Dashboard
-                      </Button>
-                    )}
-                    <Button 
-                      variant="outlined" 
+
+                    <Button
+                      variant="outlined"
                       className="w-full justify-center"
                       onClick={() => {
                         navigate('/profile')
@@ -587,8 +521,8 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Button 
-                      variant="outlined" 
+                    <Button
+                      variant="outlined"
                       className="w-full justify-center"
                       onClick={() => {
                         navigate('/login')
@@ -597,8 +531,8 @@ export default function Navbar() {
                     >
                       Sign In
                     </Button>
-                    <Button 
-                      variant="gradient" 
+                    <Button
+                      variant="gradient"
                       className="w-full justify-center"
                       onClick={() => {
                         navigate('/register')

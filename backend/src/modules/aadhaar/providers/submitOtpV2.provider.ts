@@ -86,13 +86,36 @@ export async function submitOtpV2Provider(
       request_id: response.data.request_id,
     });
 
+    // Handle API errors (200 OK with error status)
+    if (response.data.status === 'error') {
+      throw new HTTPError(
+        response.data.message || 'QuickEKYC API Error',
+        response.data.status_code || 502,
+        response.data
+      );
+    }
+
     return response.data;
   } catch (error: any) {
+    // If it's already an HTTPError, re-throw it
+    if (error instanceof HTTPError) {
+      throw error;
+    }
+
     console.error('Aadhaar V2 Submit OTP Error:', {
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
     });
+
+    // Handle 401 Unauthorized from external API (Fixes frontend logout issue)
+    if (error.response?.status === 401) {
+      throw new HTTPError(
+        'Upstream service authentication failed. Please contact support.',
+        502,
+        error.response?.data
+      );
+    }
 
     // Handle invalid OTP/request_id
     if (error.response?.status === 200 && error.response?.data?.status === 'error') {

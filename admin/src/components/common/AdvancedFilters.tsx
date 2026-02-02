@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { Filter, ChevronDown, ChevronUp, X } from 'lucide-react'
+import SearchBar from './SearchBar'
 
 export interface FilterOption {
   value: string
@@ -68,18 +69,13 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
         {/* Main Search and Basic Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <SearchBar
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
           </div>
-          
+
           <div className="flex items-center space-x-3">
             {/* Basic filters */}
             {filters.slice(0, 2).map((filter) => (
@@ -100,16 +96,15 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 )}
               </div>
             ))}
-            
+
             {/* More Filters toggle */}
             {filters.length > 2 && onToggleAdvanced && (
               <button
                 onClick={() => onToggleAdvanced(!showAdvanced)}
-                className={`flex items-center px-4 py-2 border rounded-md text-sm font-medium transition-all duration-200 ${
-                  showAdvanced
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm hover:bg-blue-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                }`}
+                className={`flex items-center px-4 py-2 border rounded-md text-sm font-medium transition-all duration-200 ${showAdvanced
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-sm hover:bg-blue-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
                 aria-expanded={showAdvanced}
                 aria-label="Toggle more filters"
               >
@@ -122,7 +117,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 )}
               </button>
             )}
-            
+
             {/* Clear filters */}
             {hasActiveFilters && (
               <button
@@ -158,7 +153,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                     <label className="block text-sm font-medium text-gray-700">
                       {filter.label}
                     </label>
-                    
+
                     {filter.type === 'select' && (
                       <>
                         <select
@@ -198,7 +193,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                         )}
                       </>
                     )}
-                    
+
                     {filter.type === 'text' && (
                       <input
                         type="text"
@@ -208,7 +203,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       />
                     )}
-                    
+
                     {filter.type === 'date' && (
                       <input
                         type="date"
@@ -217,7 +212,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       />
                     )}
-                    
+
                     {filter.type === 'daterange' && (
                       <div className="space-y-2">
                         <div>

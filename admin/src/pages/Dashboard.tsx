@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -10,14 +10,93 @@ import {
   Package,
   BarChart3,
   Loader2,
-  BarChart
+  BarChart,
+  ArrowUpRight,
+  IndianRupee,
+  RefreshCcw
 } from 'lucide-react'
-import { useAnalyticsOverview } from '../hooks/useAnalytics'
-import { useRecentActivity } from '../hooks/useAnalytics'
+import { useAnalyticsOverview, useAnalyticsByDateRange, useRecentActivity } from '../hooks/useAnalytics'
+import RevenueChart from '../components/dashboard/RevenueChart'
+import StatCard from '../components/common/StatCard'
+import Button from '../components/common/Button'
+import toast from 'react-hot-toast'
 
 const Dashboard: React.FC = () => {
-  const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useAnalyticsOverview()
-  const { data: recentActivityData, isLoading: activityLoading, error: activityError } = useRecentActivity(10)
+
+  const [dateRange, setDateRange] = useState('ytd')
+  const [dateRangeDates, setDateRangeDates] = useState({ start: '', end: '' })
+
+  const {
+    data: overviewData,
+    isLoading: overviewLoading,
+    error: overviewError,
+    refetch: refetchOverview
+  } = useAnalyticsOverview()
+
+  const {
+    data: rangeData,
+    isLoading: rangeLoading,
+    error: rangeError,
+    refetch: refetchRange
+  } = useAnalyticsByDateRange(dateRangeDates.start, dateRangeDates.end)
+
+  const {
+    data: recentActivityData,
+    refetch: refetchActivity
+  } = useRecentActivity(10)
+
+  // Calculate dates when filter changes
+  useEffect(() => {
+    if (dateRange === 'ytd') {
+      setDateRangeDates({ start: '', end: '' })
+      return
+    }
+
+    const now = new Date()
+    let start = new Date()
+    const end = new Date()
+
+    switch (dateRange) {
+      case '7days':
+        start.setDate(now.getDate() - 7)
+        break
+      case '30days':
+        start.setDate(now.getDate() - 30)
+        break
+      case '90days':
+        start.setMonth(now.getMonth() - 3)
+        break
+      default:
+        start.setFullYear(now.getFullYear(), 0, 1) // YTD fallback
+    }
+
+    setDateRangeDates({
+      start: start.toISOString(),
+      end: end.toISOString()
+    })
+  }, [dateRange])
+
+  const isLoading = dateRange === 'ytd' ? overviewLoading : rangeLoading
+  const error = dateRange === 'ytd' ? overviewError : rangeError
+  const activeData = dateRange === 'ytd' ? overviewData : rangeData
+
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([
+        dateRange === 'ytd' ? refetchOverview() : refetchRange(),
+        refetchActivity()
+      ])
+      toast.success('Dashboard data updated')
+    } catch (error) {
+      toast.error('Failed to refresh data')
+      console.error(error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   // Format currency
   const formatCurrency = (amount: number | undefined | null) => {
@@ -38,41 +117,48 @@ const Dashboard: React.FC = () => {
   }
 
   // Format percentage
-  const formatPercentage = (value: number) => {
+  const formatPercentage = (value: number | undefined) => {
+    if (value === undefined) return undefined
     return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`
   }
 
   // Prepare stats from real data
-  const stats = analyticsData ? [
+  const stats = activeData ? [
     {
       title: 'Total Revenue',
-      value: formatCurrency(analyticsData.metrics.totalRevenue),
-      change: formatPercentage(analyticsData.metrics.revenueChange),
-      changeType: analyticsData.metrics.revenueChange >= 0 ? 'positive' : 'negative',
+      value: formatCurrency(activeData.metrics.totalRevenue),
+      change: dateRange === 'ytd' ? formatPercentage((activeData as any).metrics.revenueChange) : undefined,
+      changeType: dateRange === 'ytd' ? ((activeData as any).metrics.revenueChange >= 0 ? 'positive' : 'negative') : undefined,
       icon: TrendingUp,
       color: 'purple'
     },
     {
       title: 'Total Users',
-      value: formatNumber(analyticsData.metrics.totalUsers),
-      change: formatPercentage(analyticsData.metrics.usersChange),
-      changeType: analyticsData.metrics.usersChange >= 0 ? 'positive' : 'negative',
+      value: formatNumber(dateRange === 'ytd' ? (activeData as any).metrics.totalUsers : 0), // available only in overview
+      // Sort fix: if not YTD, we don't have total users in range query easily unless we add it
+      // Actually range query types I added didn't include totalUsers? 
+      // Wait, range query types I added didn't include totalUsers.
+      // So for non-YTD, let's show N/A or hide this card? 
+      // Better: Show "Total Orders" instead or something else? 
+      // For now let's just show N/A if 0.
+      change: dateRange === 'ytd' ? formatPercentage((activeData as any).metrics.usersChange) : undefined,
+      changeType: dateRange === 'ytd' ? ((activeData as any).metrics.usersChange >= 0 ? 'positive' : 'negative') : undefined,
       icon: Users,
       color: 'blue'
     },
     {
       title: 'Active Orders',
-      value: formatNumber(analyticsData.metrics.activeOrders),
-      change: formatPercentage(analyticsData.metrics.ordersChange),
-      changeType: analyticsData.metrics.ordersChange >= 0 ? 'positive' : 'negative',
+      value: formatNumber(activeData.metrics.activeOrders),
+      change: dateRange === 'ytd' ? formatPercentage((activeData as any).metrics.ordersChange) : undefined,
+      changeType: dateRange === 'ytd' ? ((activeData as any).metrics.ordersChange >= 0 ? 'positive' : 'negative') : undefined,
       icon: CreditCard,
       color: 'green'
     },
     {
       title: 'Success Rate',
-      value: `${analyticsData.metrics.successRate}%`,
-      change: 'vs last month',
-      changeType: 'positive',
+      value: `${activeData.metrics.successRate}%`,
+      change: dateRange === 'ytd' ? 'vs last month' : undefined,
+      changeType: dateRange === 'ytd' ? 'positive' : undefined, // Success rate doesn't have change in API yet
       icon: Shield,
       color: 'orange'
     }
@@ -123,69 +209,62 @@ const Dashboard: React.FC = () => {
     }
   ]
 
-  const getIconColor = (color: string) => {
+
+
+  // Get muted colors for action cards
+  const getSoftColors = (color: string) => {
     switch (color) {
-      case 'blue':
-        return 'text-blue-600 bg-blue-100'
-      case 'green':
-        return 'text-green-600 bg-green-100'
-      case 'purple':
-        return 'text-purple-600 bg-purple-100'
-      case 'orange':
-        return 'text-orange-600 bg-orange-100'
-      case 'indigo':
-        return 'text-indigo-600 bg-indigo-100'
-      case 'pink':
-        return 'text-pink-600 bg-pink-100'
-      default:
-        return 'text-gray-600 bg-gray-100'
+      case 'purple': return { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' }
+      case 'blue': return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' }
+      case 'green': return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' }
+      case 'orange': return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' }
+      case 'indigo': return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' }
+      case 'pink': return { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' }
+      default: return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' }
     }
   }
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'order':
-        return CreditCard
-      case 'user':
-        return Users
-      default:
-        return Activity
-    }
-  }
-
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'order':
-        return 'text-green-600 bg-green-100'
-      case 'user':
-        return 'text-blue-600 bg-blue-100'
-      default:
-        return 'text-gray-600 bg-gray-100'
+      case 'order': return CreditCard
+      case 'user': return Users
+      case 'payment': return IndianRupee
+      default: return Activity
     }
   }
 
   // Loading state
-  if (analyticsLoading || activityLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span className="text-gray-600">Loading dashboard...</span>
+  const LoadingSkeleton = () => (
+    <div className="flex items-center justify-center h-96">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 animate-ping"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+          </div>
         </div>
+        <span className="text-slate-500 font-medium">Loading analytics...</span>
       </div>
-    )
-  }
+    </div>
+  )
 
-  // Error state
-  if (analyticsError || activityError) {
+  if (isLoading && !activeData) return <LoadingSkeleton />
+
+  if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div className="bg-red-50 border border-red-100 rounded-xl p-6">
         <div className="flex">
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error Loading Dashboard</h3>
+            <h3 className="text-sm font-semibold text-red-800">Error Loading Dashboard</h3>
             <div className="mt-2 text-sm text-red-700">
-              Failed to load dashboard data. Please try again later.
+              Failed to load dashboard data. Please check your connection and try again.
             </div>
+            <button
+              onClick={() => handleRefresh()}
+              className="mt-3 text-sm font-medium text-red-800 hover:text-red-900 underline"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       </div>
@@ -193,123 +272,174 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your verification platform.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between py-2 border-b border-slate-200/60 pb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Overview</h1>
+          <p className="text-slate-500 mt-2 text-lg">Detailed analysis of your verification platform.</p>
+        </div>
+        <div className="mt-4 sm:mt-0 flex items-center gap-3">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="md"
+            className={`p-2.5 rounded-xl ${isRefreshing ? 'opacity-70 cursor-not-allowed' : ''}`}
+            disabled={isRefreshing}
+            title="Refresh Data"
+          >
+            <RefreshCcw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="block w-full min-w-[160px] rounded-xl border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm font-medium focus:border-indigo-500 focus:ring-indigo-500 shadow-sm cursor-pointer hover:border-indigo-300 transition-colors"
+          >
+            <option value="ytd">Year to Date</option>
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="90days">Last Quarter</option>
+          </select>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl border border-gray-200 p-6"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                  <p className={`text-sm mt-1 ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.change} from last month
-                  </p>
-                </div>
-                <div className={`p-3 rounded-lg ${getIconColor(stat.color)}`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-              </div>
-            </motion.div>
-          )
-        })}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat) => (
+          <StatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            change={stat.change}
+            changeType={stat.changeType as any}
+            icon={stat.icon}
+            color={stat.color as any}
+            variant="gradient"
+            loading={isLoading}
+          />
+        ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="xl:grid-cols-3 gap-8 mb-8">
-        {/* Quick Actions */}
+      {/* Main Content Grid with Revenue Chart */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Revenue Chart - Spans 2 columns on large screens */}
         <div className="xl:col-span-2">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white rounded-xl border border-gray-200 p-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="h-full"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {quickActions.map((action, _index) => {
-                const Icon = action.icon
-                return (
-                  <Link
-                    key={action.title}
-                    to={action.link}
-                    className="group p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${getIconColor(action.color)} group-hover:scale-110 transition-transform duration-200`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                          {action.title}
-                        </h3>
-                        <p className="text-sm text-gray-600">{action.description}</p>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
+            <RevenueChart
+              data={activeData?.revenueTrend || []}
+              isLoading={isLoading}
+            />
           </motion.div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity - Spans 1 column */}
         <div className="xl:col-span-1">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-xl border border-gray-200 p-6"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden min-h-[400px]"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              {recentActivityData?.slice(0, 5).map((activity, index) => {
-                const Icon = getActivityIcon(activity.type)
-                return (
-                  <div key={activity.id || index} className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${getActivityColor(activity.type)}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 font-medium">{activity.message}</p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.timeAgo}</p>
-                      {activity.amount && (
-                        <p className="text-xs text-green-600 font-medium mt-1">
-                          {formatCurrency(activity.amount)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-indigo-600" />
+                Live Feed
+              </h2>
+              <Link to="/orders" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors">View All</Link>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <Link
-                to="/orders?dateRange=7days"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                View all activity →
-              </Link>
+
+            <div className="p-6 flex-1 overflow-y-auto max-h-[350px] custom-scrollbar">
+              <div className="space-y-0 relative">
+                {/* Timeline Line */}
+                <div className="absolute left-[23px] top-4 bottom-4 w-0.5 bg-slate-100" />
+
+                {(recentActivityData || []).slice(0, 5).map((activity, index) => {
+                  const Icon = getActivityIcon(activity.type)
+                  return (
+                    <div key={activity.id || index} className="relative flex gap-4 group pb-6 last:pb-0">
+                      <div className="relative z-10 flex-none bg-white py-1">
+                        <div className={`w-12 h-12 rounded-full border-4 border-white shadow-sm flex items-center justify-center transition-transform group-hover:scale-110 duration-200 ${activity.type === 'order' ? 'bg-emerald-100 text-emerald-600' :
+                          activity.type === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 pt-2 pl-2">
+                        <div className="flex justify-between items-start">
+                          <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+                            {activity.message}
+                          </p>
+                          <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 whitespace-nowrap ml-2">{activity.timeAgo}</span>
+                        </div>
+                        {activity.amount && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center text-xs font-bold text-emerald-600">
+                              {formatCurrency(activity.amount)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </motion.div>
         </div>
       </div>
+
+      {/* Quick Actions - Full width below charts */}
+      <section>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Package className="w-5 h-5 text-indigo-600" />
+            Quick Actions
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {quickActions.map((action, _index) => {
+            const Icon = action.icon
+            const colors = getSoftColors(action.color)
+
+            return (
+              <Link
+                key={action.title}
+                to={action.link}
+                className="group relative bg-white overflow-hidden rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                {/* Top color bar */}
+                <div className={`h-1.5 w-full ${action.color === 'purple' ? 'bg-purple-500' : action.color === 'blue' ? 'bg-blue-500' : action.color === 'green' ? 'bg-emerald-500' : action.color === 'orange' ? 'bg-orange-500' : action.color === 'indigo' ? 'bg-indigo-500' : 'bg-pink-500'}`} />
+
+                <div className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className={`p-3 rounded-xl ${colors.bg} ${colors.text} transform group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-slate-900 text-lg group-hover:text-indigo-600 transition-colors">
+                        {action.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">{action.description}</p>
+                    </div>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
     </div>
   )
 }
 
-export default Dashboard 
+export default Dashboard

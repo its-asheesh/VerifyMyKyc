@@ -83,7 +83,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
   const items = data?.items ?? [];
 
   const formCard = (
-    <div className="border rounded-lg p-4 bg-gray-50 w-[320%] ">
+    <div className="border rounded-lg p-4 bg-gray-50 w-full">
       {submitted ? (
         <div className="flex flex-col items-center text-center py-6">
           <CheckCircle className="w-12 h-12 text-green-600 mb-2" />
@@ -109,9 +109,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
                   onClick={() => setForm({ ...form, rating: n })}
                   aria-checked={form.rating === n}
                   role="radio"
-                  className={`text-xl sm:text-2xl leading-none ${
-                    n <= form.rating ? "text-yellow-500" : "text-gray-300"
-                  }`}
+                  className={`text-xl sm:text-2xl leading-none ${n <= form.rating ? "text-yellow-500" : "text-gray-300"
+                    }`}
                   title={`${n} star${n > 1 ? "s" : ""}`}
                 >
                   {n <= form.rating ? "★" : "☆"}
@@ -381,11 +380,10 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
       {/* Full Review Modal */}
       {modalContent && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${
-            modalOpen
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${modalOpen
               ? "opacity-100 pointer-events-auto"
               : "opacity-0 pointer-events-none"
-          }`}
+            }`}
           onClick={() => setModalOpen(false)}
         >
           <div
@@ -425,11 +423,10 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-4 h-4 ${
-                      i < modalContent.stars
+                    className={`w-4 h-4 ${i < modalContent.stars
                         ? "text-yellow-500"
                         : "text-gray-300"
-                    }`}
+                      }`}
                   />
                 ))}
                 <span className="ml-1 text-sm text-gray-600 font-medium">

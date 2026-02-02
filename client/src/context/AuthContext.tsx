@@ -5,16 +5,10 @@ import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { getTokenCookie, getUserCookie, setTokenCookie, setUserCookie, removeTokenCookie, removeUserCookie, areCookiesSupported } from "../utils/cookieUtils";
-
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: "user" | "admin";
-}
+import type { AuthUser } from "../types/shared";
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   loading: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
@@ -22,13 +16,14 @@ interface AuthContextType {
   loginWithOtp: (email: string, otp: string) => Promise<void>;
   loginWithMobile: (idToken: string) => Promise<void>;
   logout: () => void;
-  setUser: (user: User | null) => void;
+  setUser: (user: AuthUser | null) => void;
   setToken: (token: string | null) => void;
-  applyAuth: (payload: { user: User; token: string }) => void;
+  applyAuth: (payload: { user: AuthUser; token: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
@@ -38,7 +33,7 @@ export const useAuth = () => {
 interface AuthProviderProps { children: ReactNode }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
     if (!res.ok) throw new Error("Login failed");
     const data = await res.json();
-    const userData: User = {
+    const userData: AuthUser = {
       _id: data.data.user.id,
       name: data.data.user.name,
       email: data.data.user.email,
@@ -99,7 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
-      
+
       // Also store in cookies for better persistence
       if (areCookiesSupported()) {
         setTokenCookie(data.data.token, true);
@@ -110,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       sessionStorage.setItem("user", JSON.stringify(userData));
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      
+
       // Store in cookies for session persistence
       if (areCookiesSupported()) {
         setTokenCookie(data.data.token, false);
@@ -130,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(text || "Authentication failed");
     }
     const data = await res.json();
-    const userData: User = {
+    const userData: AuthUser = {
       _id: data.data.user.id,
       name: data.data.user.name,
       email: data.data.user.email,
@@ -155,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
     if (!res.ok) throw new Error("OTP verification failed");
     const data = await res.json();
-    const userData: User = {
+    const userData: AuthUser = {
       _id: data.data.user.id,
       name: data.data.user.name,
       email: data.data.user.email,
@@ -176,7 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("user");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
-    
+
     // Also clean cookies
     if (areCookiesSupported()) {
       removeTokenCookie();
@@ -184,7 +179,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const applyAuth = ({ user, token }: { user: User; token: string }) => {
+  const applyAuth = ({ user, token }: { user: AuthUser; token: string }) => {
     setUser(user);
     setToken(token);
     localStorage.setItem("token", token);

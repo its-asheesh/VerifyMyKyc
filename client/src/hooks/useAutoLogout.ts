@@ -15,11 +15,11 @@ export const useAutoLogout = () => {
     const checkTokenExpiration = () => {
       // Get token from cookie or localStorage
       let token: string | null = null;
-      
+
       if (areCookiesSupported()) {
         token = getTokenCookie();
       }
-      
+
       if (!token) {
         token = localStorage.getItem('token');
       }
@@ -27,20 +27,20 @@ export const useAutoLogout = () => {
       if (token) {
         // Validate token expiration (15 days check is in validateToken)
         const { isValid } = validateToken(token);
-        
+
         if (!isValid) {
           // Token expired or invalid - logout user
-          console.log('[AutoLogout] Token expired or invalid, logging out user');
-          
+
+
           // Clear token from storage
           localStorage.removeItem('token');
           if (areCookiesSupported()) {
             removeTokenCookie();
           }
-          
+
           // Dispatch logout action
           dispatch(logout());
-          
+
           // Redirect to login page
           if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
             window.location.href = '/login?expired=true';

@@ -1,47 +1,45 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useVerificationLogic } from "../../hooks/useVerificationLogic";
 import { VerificationLayout } from "./VerificationLayout";
 import { VerificationForm } from "./VerificationForm";
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog";
 import { NoQuotaDialog } from "./NoQuotaDialog";
-import { passportServices } from "../../utils/passportServices";
-import { passportApi } from "../../services/api/passportApi";
-import { usePricingContext } from "../../context/PricingContext";
+import { passportServices } from "../../config/passportConfig";
+import { identityApi } from "../../services/api/identityApi";
+// import { usePricingContext } from "../../context/PricingContext";
+
+interface PassportFormData {
+  file_number: string;
+  dob: string;
+  consent: string | boolean;
+}
 
 export const PassportSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  /* -------------------------------------------------
-   * State
-   * -------------------------------------------------*/
-  const [selectedService, setSelectedService] = useState(passportServices[0]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState<any>(null);
+  const {
+    selectedService,
+    isLoading,
+    result,
+    error,
+    showConfirmDialog,
+    showNoQuotaDialog,
+    pendingFormData,
+    handleServiceChange,
+    initiateSubmit,
+    closeConfirmDialog,
+    closeNoQuotaDialog,
+    confirmSubmit,
+  } = useVerificationLogic<typeof passportServices[number], PassportFormData>({
+    services: passportServices,
+  })
 
-  /* -------------------------------------------------
-   * Pricing (context)
-   * -------------------------------------------------*/
-  const { getVerificationPricingByType } = usePricingContext();
-  const passportPricing = getVerificationPricingByType("passport");
+  // Get Passport pricing from backend
+  // const { getVerificationPricingByType } = usePricingContext()
+  // const passportPricing = getVerificationPricingByType("passport")
 
-  /* -------------------------------------------------
-   * Service switch handler
-   * -------------------------------------------------*/
-  const handleServiceChange = (service: any) => {
-    setSelectedService(service);
-    setResult(null);
-    setError(null);
-  };
-
-  /* -------------------------------------------------
-   * Helpers
-   * -------------------------------------------------*/
-  const getFormFields = (service: any) =>
-    service.formFields.map((field: any) => {
+  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (field.name === "consent") {
         return {
           ...field,
@@ -50,136 +48,60 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
             { label: "Yes", value: "Y" },
             { label: "No", value: "N" },
           ],
-        };
-      }
-      if (field.type === "file") {
-        return { ...field, accept: "image/*" };
-      }
-      const placeholders: Record<string, string> = {
-        passport_number: "Enter passport number (e.g., Z4062176)",
-        file_number: "Enter file number (e.g., VS3068896594915)",
-        country_code: "Enter country code (e.g., IND)",
-        date_of_birth: "Enter DOB (YYYY-MM-DD)",
-        date_of_expiry: "Enter expiry date (YYYY-MM-DD)",
-        surname: "Enter surname",
-        given_name: "Enter given name(s)",
-        gender: "Enter gender (MALE/FEMALE)",
-        mrz_first_line: "Enter MRZ first line (44 characters)",
-        mrz_second_line: "Enter MRZ second line (44 characters)",
-      };
-      return {
-        ...field,
-        placeholder: placeholders[field.name] || field.placeholder,
-      };
-    });
-
-  /* -------------------------------------------------
-   * File → Base64 helper
-   * -------------------------------------------------*/
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (err) => reject(err);
-    });
-
-  /* -------------------------------------------------
-   * Submit
-   * -------------------------------------------------*/
-  const handleSubmit = async (rawFormData: any) => {
-    setPendingFormData(rawFormData);
-    setShowConfirmDialog(true);
-  };
-
-  const handleConfirmSubmit = async () => {
-    setShowConfirmDialog(false);
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    const rawFormData = pendingFormData;
-
-    try {
-      // 1️⃣  Build clean payload
-      const payload: any = {};
-
-      // 2️⃣  Handle files → base64
-      if (rawFormData.file_front) {
-        payload.file_front = await fileToBase64(rawFormData.file_front);
-      }
-      if (rawFormData.file_back) {
-        payload.file_back = await fileToBase64(rawFormData.file_back);
-      }
-
-      // 3️⃣  Copy other fields
-      for (const [k, v] of Object.entries(rawFormData)) {
-        if (k === "file_front" || k === "file_back") continue; // already handled
-        if (typeof v === "boolean") {
-          payload[k] = v ? "Y" : "N";
-        } else if (typeof v === "string") {
-          payload[k] = v.trim();
-        } else {
-          payload[k] = v;
         }
       }
-
-      // 4️⃣  Basic validations
-      if (payload.consent !== "Y") {
-        throw new Error("Consent is required.");
+      if (field.name === "file_front" || field.name === "file_back") {
+        return {
+          ...field,
+          type: "file" as const,
+          accept: "image/*",
+        }
       }
+      return field
+    })
+  }
 
-      // 5️⃣  Route to correct API
-      let response;
+  const handleConfirmSubmit = async () => {
+    await confirmSubmit(async (formData: PassportFormData) => {
+      const consentValue = typeof formData.consent === 'boolean' ? (formData.consent ? 'Y' : 'N') : formData.consent;
+
+      let response
       switch (selectedService.key) {
-        case "mrz-generate":
-          response = await passportApi.generateMrz(payload);
-          break;
-        case "mrz-verify":
-          response = await passportApi.verifyMrz(payload);
-          break;
-        case "verify":
-          response = await passportApi.verifyPassport(payload);
-          break;
         case "fetch":
-          response = await passportApi.fetchPassportDetails(payload);
+          response = await identityApi.fetchPassportDetails({
+            file_number: formData.file_number,
+            date_of_birth: formData.dob,
+            consent: consentValue as "Y" | "N",
+          })
           break;
-        case "ocr":
-          response = await passportApi.extractPassportOcrData(payload);
-          break;
-        default:
-          response = await passportApi.post(selectedService.apiEndpoint, payload);
       }
+      return response
+    })
+  }
 
-      setResult(response);
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || "";
-      // Check for quota error and show NoQuotaDialog
-      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
-        setShowNoQuotaDialog(true);
-      } else {
-        setError(errorMessage || "Verification failed");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /* -------------------------------------------------
-   * Render
-   * -------------------------------------------------*/
   return (
     <>
       <VerificationLayout
         title="Passport Verification Services"
-        description="International passport verification, MRZ generation, and OCR capabilities"
+        description="Verify Passport details instantly"
         services={passportServices}
         selectedService={selectedService}
-        onServiceChange={handleServiceChange}
+        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
       >
+        {/* Display pricing if available */}
+        {/* {passportPricing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
+            <div className="flex gap-4 text-sm">
+              <span className="text-blue-600">One-time: ₹{passportPricing.oneTimePrice}</span>
+              <span className="text-blue-600">Monthly: ₹{passportPricing.monthlyPrice}</span>
+              <span className="text-blue-600">Yearly: ₹{passportPricing.yearlyPrice}</span>
+            </div>
+          </div>
+        )} */}
         <VerificationForm
           fields={getFormFields(selectedService)}
-          onSubmit={handleSubmit}
+          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
           isLoading={isLoading}
           result={result}
           error={error}
@@ -192,7 +114,7 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
 
       <VerificationConfirmDialog
         isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
+        onClose={closeConfirmDialog}
         onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
         serviceName={selectedService.name}
@@ -202,10 +124,9 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
 
       <NoQuotaDialog
         isOpen={showNoQuotaDialog}
-        onClose={() => setShowNoQuotaDialog(false)}
+        onClose={closeNoQuotaDialog}
         serviceName={selectedService.name}
-        verificationType="passport"
       />
     </>
-  );
+  )
 };

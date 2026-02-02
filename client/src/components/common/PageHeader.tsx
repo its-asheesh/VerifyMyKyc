@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft } from "lucide-react"
+import { BackButton } from "./BackButton"
 import { useNavigate } from "react-router-dom"
 
 interface PageHeaderProps {
@@ -34,14 +34,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           {/* Header content only half width */}
           <div className="w-full">
             {showBackButton && (
-              <motion.button
-                onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-3 transition-colors"
-                whileHover={{ x: -4 }}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </motion.button>
+              <BackButton />
             )}
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
               {title}

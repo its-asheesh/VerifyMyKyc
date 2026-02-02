@@ -12,7 +12,7 @@ export interface LocationData {
 export const getUserTimezone = (): string => {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone
-  } catch (error) {
+  } catch {
     return 'UTC'
   }
 }
@@ -34,7 +34,7 @@ export const getLocationFromIP = async (ip: string): Promise<Partial<LocationDat
   try {
     const response = await fetch(`https://ipapi.co/${ip}/json/`)
     const data = await response.json()
-    
+
     return {
       country: data.country_name,
       city: data.city,
@@ -55,7 +55,7 @@ export const getUserLocationData = async (): Promise<LocationData> => {
   const timezone = getUserTimezone()
   const ip = await getUserIPAddress()
   const locationFromIP = await getLocationFromIP(ip)
-  
+
   return {
     ...locationFromIP,
     timezone: timezone
@@ -71,10 +71,10 @@ export const getFallbackLocationData = (): LocationData => {
     { name: 'Canada', cities: ['Toronto', 'Montreal', 'Vancouver', 'Calgary', 'Edmonton'] },
     { name: 'Australia', cities: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide'] }
   ]
-  
+
   const randomCountry = countries[Math.floor(Math.random() * countries.length)]
   const randomCity = randomCountry.cities[Math.floor(Math.random() * randomCountry.cities.length)]
-  
+
   return {
     country: randomCountry.name,
     city: randomCity,

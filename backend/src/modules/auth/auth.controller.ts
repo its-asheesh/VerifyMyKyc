@@ -72,7 +72,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       email_verified: !!user.emailVerified,
       phone_verified: !!user.phoneVerified,
     });
-  } catch {}
+  } catch { }
 
   // Notify admins (successful registration)
   void notifyAdminsOfNewUser(user, 'email', 'successful');
@@ -84,6 +84,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   } catch (e: any) {
     otpSent = false;
     console.error('Email send failed during registration:', e?.message || e);
+    if (process.env.NODE_ENV === 'development') {
+      throw new Error(`Email send failed: ${e?.message || 'Unknown error'}`);
+    }
   }
 
   res.status(201).json({
@@ -120,7 +123,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       { phone: email } // allow phone number in "email" field
     ]
   }).select('+password');
-  
+
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
@@ -142,8 +145,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   // 🔐 Require verified email OR verified phone
   if (!user.emailVerified && !user.phoneVerified) {
-    return res.status(401).json({ 
-      message: 'Please verify your email or phone number to continue' 
+    return res.status(401).json({
+      message: 'Please verify your email or phone number to continue'
     });
   }
 
@@ -186,8 +189,18 @@ export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => 
   user.emailOtpCode = code;
   user.emailOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
   await user.save();
-  await sendEmail(email, 'Verify your email', buildOtpEmailHtml(user.name, code));
-  res.json({ success: true, message: 'OTP sent to email' });
+  await user.save();
+  try {
+    await sendEmail(email, 'Verify your email', buildOtpEmailHtml(user.name, code));
+    res.json({ success: true, message: 'OTP sent to email' });
+  } catch (e: any) {
+    console.error('Email send failed:', e?.message || e);
+    if (process.env.NODE_ENV === 'development') {
+      return res.status(500).json({ message: `Email send failed: ${e?.message || 'Unknown error'}` });
+    }
+    // In production, generic message but log error
+    res.json({ success: true, message: 'OTP sent to email (if valid)' });
+  }
 });
 
 // Verify email OTP
@@ -207,19 +220,23 @@ export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) =
   user.lastLogin = new Date();
   console.log('Before save - emailVerified:', user.emailVerified);
   await user.save();
-console.log('After save - emailVerified:', user.emailVerified);
+  console.log('After save - emailVerified:', user.emailVerified);
   const token = generateToken(user);
-  res.json({ success: true, message: 'Email verified', data: { token, user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    company: user.company,
-    phone: user.phone,
-    emailVerified: user.emailVerified,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt
-  } } });
+  res.json({
+    success: true, message: 'Email verified', data: {
+      token, user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        company: user.company,
+        phone: user.phone,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    }
+  });
 });
 
 // Send password reset OTP (non-enumerating)
@@ -235,6 +252,9 @@ export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Respo
       await sendEmail(email, 'Password reset code', buildOtpEmailHtml(user.name, code));
     } catch (e: any) {
       console.error('Password reset email failed:', e?.message || e);
+      if (process.env.NODE_ENV === 'development') {
+        return res.status(500).json({ message: `Email send failed: ${e?.message || 'Unknown error'}` });
+      }
     }
   }
   // Always 200 to prevent account enumeration
@@ -245,12 +265,12 @@ export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Respo
 export const resetPasswordWithOtp = asyncHandler(async (req: Request, res: Response) => {
   const { email, otp, newPassword } = req.body as { email: string; otp: string; newPassword: string };
   const user = await User.findOne({ email }).select('+password');
-  
-  if (!user || 
-      !user.passwordResetToken || 
-      !user.passwordResetExpires || 
-      user.passwordResetExpires < new Date() || 
-      user.passwordResetToken !== otp) {
+
+  if (!user ||
+    !user.passwordResetToken ||
+    !user.passwordResetExpires ||
+    user.passwordResetExpires < new Date() ||
+    user.passwordResetToken !== otp) {
     return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
 
@@ -342,7 +362,7 @@ export const resetPasswordWithPhoneToken = asyncHandler(async (req: Request, res
 // Get current user profile
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(req.user._id);
-  
+
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -422,7 +442,7 @@ export const changePassword = asyncHandler(async (req: Request, res: Response) =
 
   // Get user with password
   const user = await User.findById(req.user._id).select('+password');
-  
+
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -456,7 +476,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 // Admin: Get all users (admin only)
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   const users = await User.find({}).select('-password');
-  
+
   res.json({
     success: true,
     data: {
@@ -509,7 +529,7 @@ export const toggleUserStatus = asyncHandler(async (req: Request, res: Response)
   const { userId } = req.params;
 
   const user = await User.findById(userId);
-  
+
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -534,7 +554,7 @@ export const verifyUserEmail = asyncHandler(async (req: Request, res: Response) 
   const { userId } = req.params;
 
   const user = await User.findById(userId);
-  
+
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -549,7 +569,7 @@ export const verifyUserEmail = asyncHandler(async (req: Request, res: Response) 
   res.json({
     success: true,
     message: 'Email verified successfully',
-    data: { 
+    data: {
       user: {
         id: user._id,
         name: user.name,
@@ -574,7 +594,7 @@ export const verifyUserPhone = asyncHandler(async (req: Request, res: Response) 
   const { userId } = req.params;
 
   const user = await User.findById(userId);
-  
+
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
@@ -589,7 +609,7 @@ export const verifyUserPhone = asyncHandler(async (req: Request, res: Response) 
   res.json({
     success: true,
     message: 'Phone verified successfully',
-    data: { 
+    data: {
       user: {
         id: user._id,
         name: user.name,
@@ -607,7 +627,7 @@ export const verifyUserPhone = asyncHandler(async (req: Request, res: Response) 
       }
     }
   });
-}); 
+});
 
 // Admin: Add tokens (verification quota) for a user (admin only)
 export const addUserTokens = asyncHandler(async (req: Request, res: Response) => {
@@ -702,9 +722,12 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
   const totalUsers = await User.countDocuments();
   const activeUsers = await User.countDocuments({ isActive: true });
   const inactiveUsers = await User.countDocuments({ isActive: false });
-  const adminUsers = await User.countDocuments({ role: 'admin' });
+  const totalAdmins = await User.countDocuments({ role: 'admin' });
   const regularUsers = await User.countDocuments({ role: 'user' });
-  
+  const pendingVerifications = await User.countDocuments({
+    $or: [{ emailVerified: false }, { phoneVerified: false }]
+  });
+
   // Get new users this month
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -713,18 +736,28 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
     createdAt: { $gte: startOfMonth }
   });
 
+  // Calculate trends (mocked for now as we need historical data snapshots)
+  // In a real app, you'd compare with last month's data
+  const trends = {
+    users: { percentage: 12, direction: 'up' },
+    active: { percentage: 5, direction: 'up' },
+    pending: { percentage: 2, direction: 'down' }
+  };
+
   res.json({
     success: true,
     data: {
       totalUsers,
       activeUsers,
       inactiveUsers,
-      adminUsers,
+      totalAdmins,
       regularUsers,
-      newUsersThisMonth
+      newUsersThisMonth,
+      pendingVerifications,
+      trends
     }
   });
-}); 
+});
 
 // Get user location analytics for admin
 export const getUserLocationAnalytics = asyncHandler(async (req: Request, res: Response) => {
@@ -849,12 +882,12 @@ export const updateUserLocation = asyncHandler(async (req: Request, res: Respons
     message: 'User location updated successfully',
     data: { user }
   });
-}); 
+});
 
 // Get users with location details for analytics
 export const getUsersWithLocation = asyncHandler(async (req: Request, res: Response) => {
   const users = await User.find({}).select('-password').sort({ createdAt: -1 });
-  
+
   const usersWithLocation = users.map(user => ({
     id: user._id,
     name: user.name,
@@ -876,7 +909,7 @@ export const getUsersWithLocation = asyncHandler(async (req: Request, res: Respo
       users: usersWithLocation
     }
   });
-}); 
+});
 
 // =============== FIREBASE PHONE REGISTER (New Users Only) ===============
 /**
@@ -910,8 +943,8 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
     if (existingUser) {
       // Attempted registration with existing phone
       void notifyAdminsOfNewUser({ name, email: undefined, phone, company }, 'phone', 'attempted');
-      return res.status(409).json({ 
-        message: 'User with this phone number already exists. Please log in instead.' 
+      return res.status(409).json({
+        message: 'User with this phone number already exists. Please log in instead.'
       });
     }
 
@@ -937,7 +970,7 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
         email_verified: !!newUser.emailVerified,
         phone_verified: !!newUser.phoneVerified,
       });
-    } catch {}
+    } catch { }
 
     // Notify admins (successful registration)
     void notifyAdminsOfNewUser(newUser, 'phone', 'successful');
@@ -966,7 +999,7 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
 
   } catch (error: any) {
     console.error('Firebase phone register error:', error.message || error);
-    
+
     if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
       // Failed phone registration (invalid token)
       void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
@@ -978,14 +1011,14 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
       void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'attempted');
       return res.status(409).json({ message: 'Email already in use' });
     }
-    
+
     // Handle Mongoose validation errors (like password too short)
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map((err: any) => err.message);
       void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
       return res.status(400).json({ message: messages.join(', ') });
     }
-    
+
     void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
     res.status(500).json({ message: 'Registration failed' });
   }
@@ -1002,7 +1035,7 @@ export const firebasePhoneLogin = asyncHandler(async (req: Request, res: Respons
   try {
     // 🔐 Verify Firebase ID token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    
+
     // Extract phone number (Firebase guarantees format: +1234567890)
     const phone = decodedToken.phone_number;
     if (!phone) {
@@ -1053,12 +1086,12 @@ export const firebasePhoneLogin = asyncHandler(async (req: Request, res: Respons
 
   } catch (error: any) {
     console.error('Firebase phone login error:', error.message || error);
-    
+
     // Handle common Firebase errors
     if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
       return res.status(401).json({ message: 'Invalid or expired ID token' });
     }
-    
+
     res.status(500).json({ message: 'Authentication failed' });
   }
 });
@@ -1066,33 +1099,33 @@ export const firebasePhoneLogin = asyncHandler(async (req: Request, res: Respons
 // Make sure this is properly formatted in your auth.controller.ts
 export const loginWithPhoneAndPassword = asyncHandler(async (req: Request, res: Response) => {
   const { phone, password } = req.body;
-  
+
   if (!phone || !password) {
     return res.status(400).json({ message: 'Phone and password are required' });
   }
-  
+
   // Find user by phone and select password field
   const user = await User.findOne({ phone }).select('+password');
   if (!user) {
     return res.status(401).json({ message: 'Invalid phone number or password' });
   }
-  
+
   // Verify password
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
     return res.status(401).json({ message: 'Invalid phone number or password' });
   }
-  
+
   if (!user.isActive) {
     return res.status(403).json({ message: 'Account is deactivated' });
   }
-  
+
   // Update last login
   user.lastLogin = new Date();
   await user.save();
-  
+
   const token = generateToken(user);
-  
+
   res.json({
     success: true,
     data: { // ✅ Make sure you have the 'data' property

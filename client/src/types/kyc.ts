@@ -9,7 +9,7 @@ export interface AadhaarOcrV1Response {
   gender: string;
   aadhaar_number: string;
   address: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Aadhaar OCR v2
@@ -24,18 +24,18 @@ export interface AadhaarOcrV2Response {
   gender: string;
   aadhaar_number: string;
   address: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Fetch eAadhaar
 export interface FetchEAadhaarRequest {
   transaction_id: string;
-  json: any;
+  json: unknown;
 }
 export interface FetchEAadhaarResponse {
   eaadhaar_link?: string;
-  eaadhaar?: any;
-  [key: string]: any;
+  eaadhaar?: unknown;
+  [key: string]: unknown;
 }
 
 // Aadhaar V2 - QuickEKYC
@@ -105,7 +105,7 @@ export interface PanFatherNameResponse {
   status: string;
   message: string;
   father_name?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // PAN: Advance
@@ -122,12 +122,12 @@ export interface FetchPanAdvanceResponse {
   data: {
     code: string;
     message: string;
-    pan_data?: any;
-    [key: string]: any;
+    pan_data?: unknown;
+    [key: string]: unknown;
   };
   timestamp?: number; // Often included in API responses
   path?: string;     // Often included in API responses
-  [key: string]: any; // Top-level flexibility
+  [key: string]: unknown; // Top-level flexibility
 }
 
 // PAN: Detailed
@@ -178,7 +178,7 @@ export interface PanAadhaarLinkRequest {
 export interface PanAadhaarLinkResponse {
   status: string;
   message: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // PAN: Digilocker Init
@@ -190,7 +190,7 @@ export interface DigilockerInitResponse {
   status: string;
   message: string;
   redirect_url?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // PAN: Digilocker Pull
@@ -203,8 +203,8 @@ export interface PanDigilockerPullRequest {
 export interface PanDigilockerPullResponse {
   status: string;
   message: string;
-  document_data?: any;
-  [key: string]: any;
+  document_data?: unknown;
+  [key: string]: unknown;
 }
 
 // PAN: Digilocker Fetch Document
@@ -215,8 +215,8 @@ export interface DigilockerFetchDocumentRequest {
 export interface DigilockerFetchDocumentResponse {
   status: string;
   message: string;
-  document_data?: any;
-  [key: string]: any;
+  document_data?: unknown;
+  [key: string]: unknown;
 }
 
 // GSTIN: Contact Details
@@ -227,8 +227,8 @@ export interface GstinContactRequest {
 export interface GstinContactResponse {
   status: string;
   message: string;
-  data?: any;
-  [key: string]: any;
+  data?: unknown;
+  [key: string]: unknown;
 }
 
 // GSTIN: Lite Details
@@ -239,8 +239,8 @@ export interface GstinLiteRequest {
 export interface GstinLiteResponse {
   status: string;
   message: string;
-  data?: any;
-  [key: string]: any;
+  data?: unknown;
+  [key: string]: unknown;
 }
 
 // Bank: Account Verification
@@ -259,7 +259,7 @@ export interface BankAccountData {
   city?: string;
   utr?: string;
   reference_id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 export interface BankAccountVerifyResponse {
   request_id: string;
@@ -270,11 +270,11 @@ export interface BankAccountVerifyResponse {
     code: string; // e.g., "1000"
     message: string;
     bank_account_data?: BankAccountData;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   timestamp: number;
   path: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Bank: IFSC Validate
@@ -285,8 +285,8 @@ export interface IfscValidateRequest {
 export interface IfscValidateResponse {
   status?: string;
   message?: string;
-  data?: any;
-  [key: string]: any;
+  data?: unknown;
+  [key: string]: unknown;
 }
 
 // Bank: UPI Verify
@@ -297,8 +297,8 @@ export interface UpiVerifyRequest {
 export interface UpiVerifyResponse {
   status?: string;
   message?: string;
-  data?: any;
-  [key: string]: any;
+  data?: unknown;
+  [key: string]: unknown;
 }
 
 // RC: Lite
@@ -339,11 +339,11 @@ export interface RcFetchLiteResponse {
         unladen_weight: string;
       };
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   timestamp: number;
   path: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // RC: Detailed
@@ -390,7 +390,7 @@ export interface RcFetchDetailedResponse {
         policy_number?: string;
         company?: string;
         expiry_date?: string;
-        custom_data?: Record<string, any>;
+        custom_data?: Record<string, unknown>;
       };
       permit_data?: {
         permit_number?: string;
@@ -424,14 +424,14 @@ export interface RcFetchDetailedResponse {
         standing_capacity?: string;
         wheelbase?: string;
         unladen_weight?: string;
-        custom_data?: Record<string, any>;
+        custom_data?: Record<string, unknown>;
       };
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   timestamp?: number;
   path?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // RC: Detailed with Challan
@@ -499,10 +499,10 @@ export interface RcFetchDetailedChallanResponse {
         standing_capacity: string;
         wheelbase: string;
         unladen_weight: string;
-        custom_data?: Record<string, any>;
+        custom_data?: Record<string, unknown>;
       };
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   challan_data?: Array<{
     document_type: string;
@@ -524,7 +524,7 @@ export interface RcFetchDetailedChallanResponse {
   }>;
   timestamp?: number;
   path?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // RC: E-Challan
@@ -555,7 +555,7 @@ export interface RcEchallanFetchResponse {
       rto_name?: string;
       state: string;
     }>;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   error?: {
     code: string;
@@ -567,11 +567,11 @@ export interface RcEchallanFetchResponse {
         message: string;
       }>;
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   timestamp?: number;
   path?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // RC: Registration Number by Chassis
@@ -589,7 +589,7 @@ export interface RcFetchRegNumByChassisResponse {
       rc_registration_number: string;
       chassis_number: string;
     }>;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   error?: {
     code: string;
@@ -601,11 +601,11 @@ export interface RcFetchRegNumByChassisResponse {
         message: string;
       }>;
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   timestamp?: number;
   path?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // RC: Fastag Details
@@ -638,7 +638,7 @@ export interface RcFastagFetchResponse {
         issuer_bank: string;
       }>;
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   error?: {
     code: string;
@@ -650,11 +650,11 @@ export interface RcFastagFetchResponse {
         message: string;
       }>;
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   timestamp?: number;
   path?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // --------------------------
@@ -686,6 +686,7 @@ export interface PassportGenerateMrzResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }
 
 // --------------------------
@@ -715,6 +716,7 @@ export interface PassportVerifyMrzResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }
 
 // --------------------------
@@ -793,6 +795,7 @@ export interface PassportFetchResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }
 
 // --------------------------
@@ -845,6 +848,7 @@ export interface PassportOcrResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }
 
 // --------------------------
@@ -880,6 +884,7 @@ export interface CCRVGenerateReportResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }
 
 export interface CCRVFetchResultRequest {
@@ -1001,6 +1006,7 @@ export interface CCRVFetchResultResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }
 
 export interface CCRVSearchRequest {
@@ -1028,4 +1034,5 @@ export interface CCRVSearchResponse {
   };
   timestamp: number;
   path: string;
+  [key: string]: unknown;
 }

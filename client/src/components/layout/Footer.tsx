@@ -23,36 +23,36 @@ const Footer: React.FC = () => {
           >
             {/* Logo */}
             <motion.div
-  whileHover={{ scale: 1.05 }}
-  transition={{ duration: 0.3 }}
-  className="mb-6"
->
-  <div className="flex justify-center md:justify-start items-center">
-    {/* Logo Container */}
-    <div className="relative w-50 h-16 mr-4">  
-      <img
-        src="/verifymykyclogo.svg"
-        alt="VerifyMyKyc Logo"
-        className="w-full h-full object-contain opacity-100 transition-opacity duration-300"
-        onError={(e) => {
-          e.currentTarget.classList.add("opacity-0", "pointer-events-none");
-          const fallback = e.currentTarget.parentElement?.querySelector(".logo-fallback");
-          if (fallback) {
-            fallback.classList.remove("hidden");
-          }
-        }}
-      />
-      {/* Fallback Text */}
-      <span
-        className="logo-fallback hidden absolute inset-0 flex items-center justify-center text-2xl font-bold text-blue-600 bg-white dark:bg-slate-800 rounded-md"
-        aria-label="VerifyMyKyc"
-      >
-        VMK
-      </span>
-    </div>
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+              className="mb-6"
+            >
+              <div className="flex justify-center md:justify-start items-center">
+                {/* Logo Container */}
+                <div className="relative w-50 h-16 mr-4">
+                  <img
+                    src="/verifymykyclogo.svg"
+                    alt="VerifyMyKyc Logo"
+                    className="w-full h-full object-contain opacity-100 transition-opacity duration-300"
+                    onError={(e) => {
+                      e.currentTarget.classList.add("opacity-0", "pointer-events-none");
+                      const fallback = e.currentTarget.parentElement?.querySelector(".logo-fallback");
+                      if (fallback) {
+                        fallback.classList.remove("hidden");
+                      }
+                    }}
+                  />
+                  {/* Fallback Text */}
+                  <span
+                    className="logo-fallback hidden absolute inset-0 flex items-center justify-center text-2xl font-bold text-blue-600 bg-white dark:bg-slate-800 rounded-md"
+                    aria-label="VerifyMyKyc"
+                  >
+                    VMK
+                  </span>
+                </div>
 
-    {/* Optional: You can keep or remove the text "VerifyMyKyc" beside the logo */}
-    {/* 
+                {/* Optional: You can keep or remove the text "VerifyMyKyc" beside the logo */}
+                {/* 
     <div>
       <div className="font-bold text-2xl tracking-tight">
         <span className="text-blue-600">Verify</span>
@@ -60,14 +60,14 @@ const Footer: React.FC = () => {
       </div>
     </div>
     */}
-  </div>
-</motion.div>
+              </div>
+            </motion.div>
             {/* Contact Info */}
             <div className="space-y-2 text-blue-600 text-sm max-w-xs mx-auto lg:mx-0">
               {/* Email 1 */}
               <div className="flex items-center gap-x-2">
-              <Building2 className="w-5 h-5 text-blue-600" />
-  <p> Navigant Digital Private Limited</p>
+                <Building2 className="w-5 h-5 text-blue-600" />
+                <p> Navigant Digital Private Limited</p>
               </div>
 
               {/* Phone */}
@@ -77,7 +77,7 @@ const Footer: React.FC = () => {
                   href="tel:+919560652708"
                   className="hover:underline hover:text-blue-800 transition-colors"
                 >
-                  +91 95606 52708
+                  +91 9990010601
                 </a>
               </div>
 
@@ -92,7 +92,7 @@ const Footer: React.FC = () => {
                 </a>
               </div>
 
-              
+
 
               {/* Address */}
               <div className="flex items-start pt-1">

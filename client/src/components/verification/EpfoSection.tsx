@@ -1,25 +1,24 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useVerificationLogic } from "../../hooks/useVerificationLogic"
 import { VerificationLayout } from "./VerificationLayout"
 import { VerificationForm } from "./VerificationForm"
-import { epfoApi } from "../../services/api/epfoApi"
+import { businessApi } from "../../services/api/businessApi"
 import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
 import { NoQuotaDialog } from "./NoQuotaDialog"
 
 type ServiceKey =
-  | "fetchUan"
-  | "generateOtp"
-  | "fetchPassbook"
-  | "employmentByUan"
-  | "employmentLatest"
-  | "uanByPan"
-  | "employerVerify"
+  | "fetch-uan"
+  | "employment-by-uan"
+  | "employment-latest"
+  | "uan-by-pan"
+  | "claim-status"
+  | "kyc-status"
 
 const services = [
   {
-    key: "fetchUan" as ServiceKey,
+    key: "fetch-uan" as ServiceKey,
     name: "Fetch UAN",
     description: "Retrieve UANs linked to a mobile number and optional PAN",
     formFields: [
@@ -29,7 +28,7 @@ const services = [
     ],
   },
   {
-    key: "uanByPan" as ServiceKey,
+    key: "uan-by-pan" as ServiceKey,
     name: "Fetch UAN by PAN",
     description: "Fetch UAN using PAN number",
     formFields: [
@@ -37,28 +36,8 @@ const services = [
       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
     ],
   },
-//   {
-//     key: "generateOtp" as ServiceKey,
-//     name: "Generate OTP (Passbook)",
-//     description: "Start passbook flow with UAN",
-//     formFields: [
-//       { name: "uan", label: "UAN", type: "text", required: true, placeholder: "Enter UAN number" },
-//       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
-//     ],
-//   },
-//   {
-//     key: "fetchPassbook" as ServiceKey,
-//     name: "Fetch Passbook",
-//     description: "Fetch passbook for a selected member and office (optionally validate OTP internally)",
-//     formFields: [
-//       { name: "transaction_id", label: "Transaction ID", type: "text", required: true, placeholder: "Enter transaction ID" },
-//       { name: "otp", label: "OTP (if prompted)", type: "text", required: false, placeholder: "Enter OTP" },
-//       { name: "member_id", label: "Member ID", type: "text", required: true, placeholder: "Enter member ID" },
-//       { name: "office_id", label: "Office ID", type: "text", required: true, placeholder: "Enter office ID" },
-//     ],
-//   },
   {
-    key: "employmentByUan" as ServiceKey,
+    key: "employment-by-uan" as ServiceKey,
     name: "Employment by UAN",
     description: "Fetch employment history using UAN",
     formFields: [
@@ -67,7 +46,7 @@ const services = [
     ],
   },
   {
-    key: "employmentLatest" as ServiceKey,
+    key: "employment-latest" as ServiceKey,
     name: "Latest Employment by UAN",
     description: "Fetch latest employment record using UAN",
     formFields: [
@@ -75,34 +54,58 @@ const services = [
       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
     ],
   },
-//   {
-//     key: "employerVerify" as ServiceKey,
-//     name: "Verify Employer",
-//     description: "Verify establishment details and PF payments",
-//     formFields: [
-//       { name: "employer_name", label: "Employer Name", type: "text", required: true },
-//       { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
-//     ],
-//   },
+  {
+    key: "claim-status" as ServiceKey,
+    name: "Fetch Claim Status",
+    description: "Fetch the status of an EPFO claim using UAN",
+    formFields: [
+      { name: "uan", label: "UAN", type: "text", required: true, placeholder: "Enter UAN number" },
+      { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
+    ],
+  },
+  {
+    key: "kyc-status" as ServiceKey,
+    name: "Fetch KYC Status",
+    description: "Fetch the KYC status for a given UAN",
+    formFields: [
+      { name: "uan", label: "UAN", type: "text", required: true, placeholder: "Enter UAN number" },
+      { name: "consent", label: "Consent", type: "radio", required: true, options: [{ label: "Yes", value: "Y" }, { label: "No", value: "N" }] },
+    ],
+  },
 ]
 
+interface EpfoFormData {
+  mobile_number?: string;
+  pan_number?: string;
+  uan_number?: string;
+  uan?: string;
+  consent: string | boolean;
+}
+
 export const EpfoSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const [selectedService, setSelectedService] = useState(services[0])
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [showNoQuotaDialog, setShowNoQuotaDialog] = useState(false)
-  const [pendingFormData, setPendingFormData] = useState<any>(null)
+  const {
+    selectedService,
+    isLoading,
+    result,
+    error,
+    showConfirmDialog,
+    showNoQuotaDialog,
+    pendingFormData,
+    handleServiceChange,
+    initiateSubmit,
+    closeConfirmDialog,
+    closeNoQuotaDialog,
+    confirmSubmit,
+  } = useVerificationLogic<typeof services[number], EpfoFormData>({
+    services: services, // Use local services
+  })
 
-  const handleServiceChange = (service: any) => {
-    setSelectedService(service)
-    setResult(null)
-    setError(null)
-  }
+  // Get EPFO pricing from backend
+  // const { getVerificationPricingByType } = usePricingContext()
+  // const epfoPricing = getVerificationPricingByType("epfo")
 
-  const getFormFields = (service: any) => {
-    return service.formFields.map((field: any) => {
+  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (field.name === "consent") {
         return {
           ...field,
@@ -117,94 +120,91 @@ export const EpfoSection: React.FC<{ productId?: string }> = ({ productId }) => 
     })
   }
 
-  const handleSubmit = async (formData: any) => {
-    setPendingFormData(formData)
-    setShowConfirmDialog(true)
-  }
-
   const handleConfirmSubmit = async () => {
-    setShowConfirmDialog(false)
-    setIsLoading(true)
-    setError(null)
-    setResult(null)
+    await confirmSubmit(async (formData: EpfoFormData) => {
+      const consentValue = typeof formData.consent === 'boolean' ? (formData.consent ? 'Y' : 'N') : formData.consent;
 
-    try {
-      const payload: any = { ...pendingFormData }
-      if (typeof payload.consent === "boolean") payload.consent = payload.consent ? "Y" : "N"
-
-      console.log("[EPFO] Submitting", { serviceKey: selectedService.key, payload })
-      let response: any
-      switch (selectedService.key as ServiceKey) {
-        case "fetchUan":
-          response = await epfoApi.fetchUan(payload)
+      let response
+      switch (selectedService.key) {
+        case "fetch-uan":
+          response = await businessApi.epfoFetchUan({
+            mobile_number: formData.mobile_number || "",
+            consent: consentValue,
+          })
           break
-        case "uanByPan":
-          response = await epfoApi.uanByPan(payload)
+        case "uan-by-pan":
+          response = await businessApi.epfoUanByPan({
+            pan_number: formData.pan_number || "",
+            consent: consentValue,
+          })
           break
-        case "generateOtp":
-          response = await epfoApi.generateOtp(payload)
+        case "employment-by-uan":
+          response = await businessApi.epfoEmploymentByUan({
+            uan_number: formData.uan_number || "",
+            consent: consentValue,
+          })
           break
-        case "fetchPassbook":
-          if (payload.otp) {
-            try { await epfoApi.validateOtp(payload.transaction_id, { otp: payload.otp }) } catch (e) { throw e }
-          }
-          try { await epfoApi.listEmployers(payload.transaction_id) } catch {}
-          response = await epfoApi.fetchPassbook(payload.transaction_id, { member_id: payload.member_id, office_id: payload.office_id })
+        case "employment-latest":
+          response = await businessApi.epfoEmploymentLatest({
+            uan: formData.uan || "",
+            consent: consentValue,
+          })
           break
-        case "employmentByUan":
-          response = await epfoApi.employmentByUan(payload)
+        case "claim-status":
+          response = await businessApi.epfoClaimStatus({
+            uan: formData.uan || "",
+            consent: consentValue,
+          })
           break
-        case "employmentLatest":
-          response = await epfoApi.employmentLatest(payload)
-          break
-        case "employerVerify":
-          response = await epfoApi.employerVerify(payload)
+        case "kyc-status":
+          response = await businessApi.epfoKycStatus({
+            uan: formData.uan || "",
+            consent: consentValue,
+          })
           break
         default:
-          response = null
+          throw new Error("Unknown service")
       }
-
-      const raw = (response as any)?.data || response
-      const inner = raw?.data || raw
-      setResult({ data: inner })
-    } catch (err: any) {
-      const backendMsg = err?.response?.data?.message || err?.response?.data?.error || err?.data?.message || err?.message || ""
-      console.error("[EPFO] Error", err?.response?.status, backendMsg, err?.response?.data)
-      // Check for quota error and show NoQuotaDialog
-      if (err?.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(backendMsg)) {
-        setShowNoQuotaDialog(true)
-      } else {
-        setError(backendMsg || "An error occurred")
-      }
-    } finally {
-      setIsLoading(false)
-    }
+      return response
+    })
   }
 
   return (
-    <VerificationLayout
-      title="EPFO Verification Services"
-      description="Fetch UAN, passbook, employment history, and verify employer details"
-      showWhyChooseUs={false}
-      services={services}
-      selectedService={selectedService}
-      onServiceChange={handleServiceChange}
-    >
-      <VerificationForm
-        fields={getFormFields(selectedService)}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        result={result}
-        error={error}
-        serviceKey={selectedService.key}
-        serviceName={selectedService.name}
-        serviceDescription={selectedService.description}
-        productId={productId}
-      />
+    <>
+      <VerificationLayout
+        title="EPFO Verification Services"
+        description="Verify EPFO details"
+        services={services}
+        selectedService={selectedService}
+        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
+      >
+        {/* Display pricing if available */}
+        {/* {epfoPricing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
+            <div className="flex gap-4 text-sm">
+              <span className="text-blue-600">One-time: ₹{epfoPricing.oneTimePrice}</span>
+              <span className="text-blue-600">Monthly: ₹{epfoPricing.monthlyPrice}</span>
+              <span className="text-blue-600">Yearly: ₹{epfoPricing.yearlyPrice}</span>
+            </div>
+          </div>
+        )} */}
+        <VerificationForm
+          fields={getFormFields(selectedService)}
+          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
+          isLoading={isLoading}
+          result={result}
+          error={error}
+          serviceKey={selectedService.key}
+          serviceName={selectedService.name}
+          serviceDescription={selectedService.description}
+          productId={productId}
+        />
+      </VerificationLayout>
 
       <VerificationConfirmDialog
         isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
+        onClose={closeConfirmDialog}
         onConfirm={handleConfirmSubmit}
         isLoading={isLoading}
         serviceName={selectedService.name}
@@ -214,12 +214,9 @@ export const EpfoSection: React.FC<{ productId?: string }> = ({ productId }) => 
 
       <NoQuotaDialog
         isOpen={showNoQuotaDialog}
-        onClose={() => setShowNoQuotaDialog(false)}
+        onClose={closeNoQuotaDialog}
         serviceName={selectedService.name}
-        verificationType="epfo"
       />
-    </VerificationLayout>
+    </>
   )
 }
-
-

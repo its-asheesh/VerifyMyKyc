@@ -24,6 +24,8 @@ import {
   Cell
 } from 'recharts';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
+import { Button, DataTable, StatCard } from '../components/common';
+
 
 // Country coordinates for markers
 const countryCoordinates: { [key: string]: [number, number] } = {
@@ -109,12 +111,14 @@ const WorldMap: React.FC<{
           Global User Distribution
         </h3>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             onClick={resetZoom}
-            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            variant="ghost"
+            size="sm"
+            className="text-blue-700 bg-blue-100 hover:bg-blue-200 border-transparent" // Maintaining existing custom style overrides essentially or use variant logic if it matches. Existing was blue-100.
           >
             Reset View
-          </button>
+          </Button>
           <span className="text-xs text-gray-500">
             Zoom: {position.zoom.toFixed(1)}x
           </span>
@@ -362,58 +366,43 @@ const LocationAnalytics: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Countries</p>
-              <p className="text-2xl font-bold text-gray-900">{locationStats.length}</p>
-            </div>
-            <Globe className="w-8 h-8 text-blue-600" />
-          </div>
-        </div>
+        <StatCard
+          title="Total Countries"
+          value={locationStats.length}
+          icon={Globe}
+          color="blue"
+          loading={isLoading}
+        />
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Top Country</p>
-              <p className="text-lg font-bold text-gray-900">
-                {locationStats[0]?.country || 'N/A'}
-              </p>
-              <p className="text-sm text-gray-500">
-                {locationStats[0]?.userCount || 0} users
-              </p>
-            </div>
-            <MapPin className="w-8 h-8 text-green-600" />
-          </div>
-        </div>
+        <StatCard
+          title="Top Country"
+          value={locationStats[0]?.country || 'N/A'}
+          change={locationStats[0] ? `${locationStats[0].userCount} users` : undefined}
+          changeType="neutral"
+          icon={MapPin}
+          color="green"
+          loading={isLoading}
+        />
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Top City</p>
-              <p className="text-lg font-bold text-gray-900">
-                {topCities[0]?._id || 'N/A'}
-              </p>
-              <p className="text-sm text-gray-500">
-                {topCities[0]?.count || 0} users
-              </p>
-            </div>
-            <MapPin className="w-8 h-8 text-purple-600" />
-          </div>
-        </div>
+        <StatCard
+          title="Top City"
+          value={topCities[0]?._id || 'N/A'}
+          change={topCities[0] ? `${topCities[0].count} users` : undefined}
+          changeType="neutral"
+          icon={MapPin}
+          color="purple"
+          loading={isLoading}
+        />
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Recent Activity</p>
-              <p className="text-lg font-bold text-gray-900">
-                {recentLocationActivity.length}
-              </p>
-              <p className="text-sm text-gray-500">Last 30 days</p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-orange-600" />
-          </div>
-        </div>
+        <StatCard
+          title="Recent Activity"
+          value={recentLocationActivity.length}
+          change="Last 30 days"
+          changeType="neutral"
+          icon={TrendingUp}
+          color="orange"
+          loading={isLoading}
+        />
       </div>
 
       {/* Charts Section */}
@@ -466,7 +455,7 @@ const LocationAnalytics: React.FC = () => {
               {selectedCountryData.country} Details
             </h3>
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 onClick={() => {
                   const coords = countryCoordinates[selectedCountryData.country];
                   if (coords) {
@@ -474,10 +463,12 @@ const LocationAnalytics: React.FC = () => {
                     setZoom(4);
                   }
                 }}
-                className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                variant="ghost"
+                size="sm"
+                className="text-blue-700 bg-blue-100 hover:bg-blue-200 border-transparent"
               >
                 Focus on Map
-              </button>
+              </Button>
               <button
                 onClick={() => setSelectedCountry(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -527,11 +518,10 @@ const LocationAnalytics: React.FC = () => {
           {locationStats.map((stat) => (
             <div
               key={stat.country}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
-                selectedCountry === stat.country
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-blue-300'
-              }`}
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${selectedCountry === stat.country
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-blue-300'
+                }`}
               onClick={() => {
                 setSelectedCountry(stat.country);
                 const coords = countryCoordinates[stat.country];
@@ -621,48 +611,17 @@ const LocationAnalytics: React.FC = () => {
           User Location Details
         </h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Country
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  City
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Region
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Timezone
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users?.map((user, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.location?.country || 'None'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.location?.city || 'None'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.location?.region || 'None'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.location?.timezone || 'None'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            columns={[
+              { key: 'name', label: 'User Name', render: (_, user) => user.name },
+              { key: 'country', label: 'Country', render: (_, user) => user.location?.country || 'None' },
+              { key: 'city', label: 'City', render: (_, user) => user.location?.city || 'None' },
+              { key: 'region', label: 'Region', render: (_, user) => user.location?.region || 'None' },
+              { key: 'timezone', label: 'Timezone', render: (_, user) => user.location?.timezone || 'None' }
+            ]}
+            data={users || []}
+            className="shadow-none border-0" // Removing conflicting styles if needed, or DataTable handles it
+          />
         </div>
       </div>
 
@@ -673,38 +632,23 @@ const LocationAnalytics: React.FC = () => {
           Recent Location Activity (Last 30 Days)
         </h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Country
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  New Users
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {recentLocationActivity.slice(0, 10).map((activity, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {activity._id.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {activity._id.country}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      +{activity.count}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            columns={[
+              { key: 'date', label: 'Date', render: (_, item) => item._id.date },
+              { key: 'country', label: 'Country', render: (_, item) => item._id.country },
+              {
+                key: 'count',
+                label: 'New Users',
+                render: (count) => (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    +{count}
+                  </span>
+                )
+              }
+            ]}
+            data={recentLocationActivity.slice(0, 10)}
+            className="shadow-none border-0"
+          />
         </div>
       </div>
     </div>

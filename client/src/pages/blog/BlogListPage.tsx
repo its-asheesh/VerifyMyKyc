@@ -6,24 +6,13 @@ import { Link, useSearchParams } from "react-router-dom"
 import { useBlogPosts } from "../../hooks/useBlog"
 
 const BlogListPage: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const page = Number(searchParams.get("page") || 1)
   const tag = searchParams.get("tag") || ""
   const q = searchParams.get("q") || ""
 
   const { data, isLoading, isError } = useBlogPosts({ page, limit: 9, tag, q })
 
-  const onSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const form = e.target as HTMLFormElement
-    const fd = new FormData(form)
-    const qv = (fd.get("q") as string) || ""
-    const tv = (fd.get("tag") as string) || ""
-    const params: any = {}
-    if (qv) params.q = qv
-    if (tv) params.tag = tv
-    setSearchParams(params)
-  }
 
   return (
     <section className="py-12 px-4 md:px-8 bg-gray-50 min-h-screen">

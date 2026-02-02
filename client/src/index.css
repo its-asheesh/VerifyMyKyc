@@ -66,3 +66,11 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 } */
+
+:root {
+  font-family: 'Outfit', sans-serif;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+}

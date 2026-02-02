@@ -1,18 +1,18 @@
 import React, { createContext, useContext } from "react"
-import { useHomepagePricing, useHomepagePlansByPeriod, useAvailableVerifications, useVerificationPricing } from "../hooks/usePricing"
+import { useHomepagePricing, useAvailableVerifications } from "../hooks/usePricing"
 import type { HomepagePlan, VerificationPricing } from "../hooks/usePricing"
 
 interface PricingContextType {
   // Homepage pricing
   homepagePlans: HomepagePlan[] | undefined
   homepageLoading: boolean
-  homepageError: any
-  
+  homepageError: unknown
+
   // Available verifications for custom selection
   availableVerifications: VerificationPricing[] | undefined
   verificationsLoading: boolean
-  verificationsError: any
-  
+  verificationsError: unknown
+
   // Helper functions
   getHomepagePlanByType: (planType: 'monthly' | 'yearly') => HomepagePlan | undefined
   getHomepagePlansByPeriod: (period: 'monthly' | 'yearly') => HomepagePlan[] | undefined
@@ -23,17 +23,17 @@ const PricingContext = createContext<PricingContextType | undefined>(undefined)
 
 export const PricingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Homepage pricing (monthly/yearly plans)
-  const { 
-    data: homepagePlans, 
-    isLoading: homepageLoading, 
-    error: homepageError 
+  const {
+    data: homepagePlans,
+    isLoading: homepageLoading,
+    error: homepageError
   } = useHomepagePricing()
 
   // Available verifications for custom selection
-  const { 
-    data: availableVerifications, 
-    isLoading: verificationsLoading, 
-    error: verificationsError 
+  const {
+    data: availableVerifications,
+    isLoading: verificationsLoading,
+    error: verificationsError
   } = useAvailableVerifications()
 
   // Helper function to get homepage plan by type
@@ -48,19 +48,18 @@ export const PricingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // FIXED: Proper implementation to find verification pricing by type
   const getVerificationPricingByType = (verificationType: string): VerificationPricing | undefined => {
-    console.log("Searching for verification type:", verificationType);
-    console.log("Available verifications:", availableVerifications);
-    
+
+
     if (!availableVerifications) {
-      console.log("No available verifications found");
+
       return undefined;
     }
-    
-    const found = availableVerifications.find(ver => 
+
+    const found = availableVerifications.find(ver =>
       ver.verificationType?.toLowerCase() === verificationType.toLowerCase()
     );
-    
-    console.log("Found pricing:", found);
+
+
     return found;
   }
 
@@ -70,12 +69,12 @@ export const PricingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       homepagePlans,
       homepageLoading,
       homepageError,
-      
+
       // Available verifications
       availableVerifications,
       verificationsLoading,
       verificationsError,
-      
+
       // Helper functions
       getHomepagePlanByType,
       getHomepagePlansByPeriod,
@@ -86,6 +85,7 @@ export const PricingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePricingContext = () => {
   const context = useContext(PricingContext)
   if (context === undefined) {

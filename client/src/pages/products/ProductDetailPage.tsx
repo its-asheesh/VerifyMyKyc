@@ -9,7 +9,6 @@ import { PageHeader } from "../../components/common/PageHeader"
 import { LoadingSpinner } from "../../components/common/LoadingSpinner"
 import { ProductOverview } from "../../components/products/ProductOverview"
 import { ProductFeatures } from "../../components/products/ProductFeatures"
-import { ProductPricing } from "../../components/products/ProductPricing"
 import { ProductReviews } from "../../components/reviews/ProductReviews"
 import { ProductHowItWorks } from "../../components/products/ProductHowItWorks"
 import { ProductFAQ } from "../../components/products/ProductFAQ"
@@ -19,7 +18,7 @@ const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
   const { selectedProduct, isLoading, error } = useAppSelector((state) => state.products)
-  
+
   // Get product-specific content
   const productContent = selectedProduct ? getProductContent(selectedProduct.id) : null
 
@@ -53,46 +52,46 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
-      <PageHeader
-      title={selectedProduct.title}
-      subtitle={selectedProduct.description}
-      showBackButton
-      className="py-6 md:py-8"
-      />
+      <div className="min-h-screen bg-gray-100">
+        <PageHeader
+          title={selectedProduct.title}
+          subtitle={selectedProduct.description}
+          showBackButton
+          className="py-6 md:py-8"
+        />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
-        <ProductOverview product={selectedProduct} />
-        
-        {/* Key Features Section */}
-        <ProductFeatures product={selectedProduct} />
-        
-        {/* How It Works Section */}
-        {productContent?.howItWorks && (
-          <ProductHowItWorks
-            headline={productContent.howItWorks.headline}
-            steps={productContent.howItWorks.steps}
-            note={productContent.howItWorks.note}
-          />
-        )}
-        
-        {/* FAQ Section */}
-        {productContent?.faqs && (
-          <ProductFAQ
-            headline={productContent.faqs.headline}
-            items={productContent.faqs.items}
-          />
-        )}
-        
-        {/* Pricing Section */}
-        <div id="pricing">
-          {/* <ProductPricing product={selectedProduct} /> */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
+          <ProductOverview product={selectedProduct} />
+
+          {/* Key Features Section */}
+          <ProductFeatures product={selectedProduct} />
+
+          {/* How It Works Section */}
+          {productContent?.howItWorks && (
+            <ProductHowItWorks
+              headline={productContent.howItWorks.headline}
+              steps={productContent.howItWorks.steps}
+              note={productContent.howItWorks.note}
+            />
+          )}
+
+          {/* FAQ Section */}
+          {productContent?.faqs && (
+            <ProductFAQ
+              headline={productContent.faqs.headline}
+              items={productContent.faqs.items}
+            />
+          )}
+
+          {/* Pricing Section */}
+          <div id="pricing">
+            {/* <ProductPricing product={selectedProduct} /> */}
+          </div>
+
+          {/* Reviews Section */}
+          <ProductReviews productId={selectedProduct.id} showList={true} showStats={true} showForm={false} limit={1000} />
         </div>
-        
-        {/* Reviews Section */}
-        <ProductReviews productId={selectedProduct.id} showList={true} showStats={true} showForm={false} limit={1000} />
       </div>
-    </div>
     </>
   )
 }

@@ -21,7 +21,7 @@ const BaseProvider_1 = require("../../../common/providers/BaseProvider");
  */
 function submitOtpV2Provider(payload) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         const apiKey = process.env.QUICKEKYC_API_KEY;
         const baseURL = process.env.QUICKEKYC_BASE_URL || 'https://api.quickekyc.com';
         if (!apiKey) {
@@ -45,20 +45,32 @@ function submitOtpV2Provider(payload) {
                 has_data: !!response.data.data,
                 request_id: response.data.request_id,
             });
+            // Handle API errors (200 OK with error status)
+            if (response.data.status === 'error') {
+                throw new error_1.HTTPError(response.data.message || 'QuickEKYC API Error', response.data.status_code || 502, response.data);
+            }
             return response.data;
         }
         catch (error) {
+            // If it's already an HTTPError, re-throw it
+            if (error instanceof error_1.HTTPError) {
+                throw error;
+            }
             console.error('Aadhaar V2 Submit OTP Error:', {
                 message: error.message,
                 status: (_a = error.response) === null || _a === void 0 ? void 0 : _a.status,
                 data: (_b = error.response) === null || _b === void 0 ? void 0 : _b.data,
             });
+            // Handle 401 Unauthorized from external API (Fixes frontend logout issue)
+            if (((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) === 401) {
+                throw new error_1.HTTPError('Upstream service authentication failed. Please contact support.', 502, (_d = error.response) === null || _d === void 0 ? void 0 : _d.data);
+            }
             // Handle invalid OTP/request_id
-            if (((_c = error.response) === null || _c === void 0 ? void 0 : _c.status) === 200 && ((_e = (_d = error.response) === null || _d === void 0 ? void 0 : _d.data) === null || _e === void 0 ? void 0 : _e.status) === 'error') {
+            if (((_e = error.response) === null || _e === void 0 ? void 0 : _e.status) === 200 && ((_g = (_f = error.response) === null || _f === void 0 ? void 0 : _f.data) === null || _g === void 0 ? void 0 : _g.status) === 'error') {
                 throw new error_1.HTTPError(error.response.data.message || 'Invalid OTP or request ID', 400, error.response.data);
             }
             const { message, statusCode } = (0, BaseProvider_1.createStandardErrorMapper)('Aadhaar V2 OTP submission failed')(error);
-            throw new error_1.HTTPError(message, statusCode, (_f = error.response) === null || _f === void 0 ? void 0 : _f.data);
+            throw new error_1.HTTPError(message, statusCode, (_h = error.response) === null || _h === void 0 ? void 0 : _h.data);
         }
     });
 }

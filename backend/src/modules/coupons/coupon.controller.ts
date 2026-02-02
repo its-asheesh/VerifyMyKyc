@@ -73,7 +73,7 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
     } while (await Coupon.findOne({ code: couponCode }))
   } else {
     // Check if code already exists - use case-insensitive search with proper error handling
-    const existingCoupon = await Coupon.findOne({ 
+    const existingCoupon = await Coupon.findOne({
       code: { $regex: new RegExp(`^${couponCode.toUpperCase()}$`, 'i') }
     })
     if (existingCoupon) {
@@ -81,6 +81,22 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
         success: false,
         message: 'Coupon code already exists'
       })
+    }
+  }
+
+  // ── FIX: Enhanced Date Handling ──
+  // If validFrom is provided, ensure it's a date object
+  const startDate = validFrom ? new Date(validFrom) : new Date();
+
+  // If validUntil is provided, we need to make sure end-of-day is respected if it's just a date string
+  // or if it's the same day as startDate.
+  let endDate = validUntil ? new Date(validUntil) : undefined;
+
+  if (endDate) {
+    // If the time part is 00:00:00 (which often happens with simple date pickers),
+    // we set it to 23:59:59.999 to include the entire end day.
+    if (endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0) {
+      endDate.setHours(23, 59, 59, 999);
     }
   }
 
@@ -93,8 +109,8 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
       discountValue,
       minimumAmount: minimumAmount || 0,
       maximumDiscount,
-      validFrom: validFrom || new Date(),
-      validUntil,
+      validFrom: startDate,
+      validUntil: endDate,
       usageLimit,
       applicableProducts: applicableProducts || ['all'],
       applicableCategories: applicableCategories || ['all'],
@@ -111,6 +127,8 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
       data: { coupon }
     })
   } catch (error: any) {
+    console.error('[Coupon Service] Create Coupon Failed:', error);
+
     // Handle duplicate key error (race condition)
     if (error.code === 11000 || error.name === 'MongoServerError') {
       return res.status(400).json({
@@ -118,6 +136,15 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
         message: 'Coupon code already exists. Please try again.'
       })
     }
+
+    // Check for mongoose validation error (e.g. validUntil <= validFrom)
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Validation failed'
+      })
+    }
+
     throw error // Re-throw other errors to be handled by asyncHandler
   }
 })
@@ -125,9 +152,9 @@ export const createCoupon = asyncHandler(async (req: Request, res: Response) => 
 // Get all coupons (Admin only)
 export const getAllCoupons = asyncHandler(async (req: Request, res: Response) => {
   const { page = 1, limit = 10, search, status } = req.query
-  
+
   const query: any = {}
-  
+
   if (search) {
     query.$or = [
       { code: { $regex: search, $options: 'i' } },
@@ -135,7 +162,7 @@ export const getAllCoupons = asyncHandler(async (req: Request, res: Response) =>
       { description: { $regex: search, $options: 'i' } }
     ]
   }
-  
+
   if (status === 'active') {
     query.isActive = true
     query.validFrom = { $lte: new Date() }
@@ -148,7 +175,7 @@ export const getAllCoupons = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const skip = (Number(page) - 1) * Number(limit)
-  
+
   const coupons = await Coupon.find(query)
     .populate('createdBy', 'name email')
     .sort({ createdAt: -1 })
@@ -220,7 +247,7 @@ export const updateCoupon = asyncHandler(async (req: Request, res: Response) => 
 
   // Check if code is being changed and if it already exists
   if (req.body.code && req.body.code !== coupon.code) {
-    const existingCoupon = await Coupon.findOne({ 
+    const existingCoupon = await Coupon.findOne({
       code: { $regex: new RegExp(`^${req.body.code.toUpperCase()}$`, 'i') },
       _id: { $ne: req.params.id }
     })
@@ -232,31 +259,58 @@ export const updateCoupon = asyncHandler(async (req: Request, res: Response) => 
     }
   }
 
-  const updatedCoupon = await Coupon.findByIdAndUpdate(
-    req.params.id,
-    {
-      name,
-      description,
-      discountType,
-      discountValue,
-      minimumAmount,
-      maximumDiscount,
-      validFrom,
-      validUntil,
-      usageLimit,
-      applicableProducts,
-      applicableCategories,
-      userRestrictions,
-      isActive,
-      ...(req.body.code && { code: req.body.code.toUpperCase() })
-    },
-    { new: true, runValidators: true }
-  ).populate('createdBy', 'name email')
+  // ── FIX: Enhanced Date Handling (Same as Create) ──
+  const startDate = validFrom ? new Date(validFrom) : undefined;
+  let endDate = validUntil ? new Date(validUntil) : undefined;
 
-  res.json({
-    success: true,
-    data: { coupon: updatedCoupon }
-  })
+  if (endDate) {
+    if (endDate.getHours() === 0 && endDate.getMinutes() === 0 && endDate.getSeconds() === 0) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+  }
+
+  try {
+    const updatedCoupon = await Coupon.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        description,
+        discountType,
+        discountValue,
+        minimumAmount,
+        maximumDiscount,
+        validFrom: startDate,
+        validUntil: endDate,
+        usageLimit,
+        applicableProducts,
+        applicableCategories,
+        userRestrictions,
+        isActive,
+        ...(req.body.code && { code: req.body.code.toUpperCase() })
+      },
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name email')
+
+    res.json({
+      success: true,
+      data: { coupon: updatedCoupon }
+    })
+  } catch (error: any) {
+    console.error('[Coupon Service] Update Coupon Failed:', error);
+    if (error.code === 11000 || error.name === 'MongoServerError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Coupon code already exists'
+      })
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Validation failed'
+      })
+    }
+    throw error;
+  }
 })
 
 // Delete coupon (Admin only)
@@ -297,7 +351,7 @@ export const validateCoupon = asyncHandler(async (req: Request, res: Response) =
     })
   }
 
-  const coupon = await Coupon.findOne({ 
+  const coupon = await Coupon.findOne({
     code: code.toUpperCase(),
     isActive: true
   })
@@ -392,7 +446,7 @@ export const applyCoupon = asyncHandler(async (req: Request, res: Response) => {
     })
   }
 
-  const coupon = await Coupon.findOne({ 
+  const coupon = await Coupon.findOne({
     code: code.toUpperCase(),
     isActive: true
   })
@@ -490,7 +544,7 @@ export const applyCoupon = asyncHandler(async (req: Request, res: Response) => {
 // Get coupon statistics (Admin only)
 export const getCouponStats = asyncHandler(async (req: Request, res: Response) => {
   const totalCoupons = await Coupon.countDocuments()
-  const activeCoupons = await Coupon.countDocuments({ 
+  const activeCoupons = await Coupon.countDocuments({
     isActive: true,
     validFrom: { $lte: new Date() },
     validUntil: { $gte: new Date() }
@@ -557,9 +611,13 @@ export const getCouponStats = asyncHandler(async (req: Request, res: Response) =
 
 // Generate multiple coupon codes (Admin only)
 export const generateCoupons = asyncHandler(async (req: Request, res: Response) => {
-  const { count = 1, prefix = '', length = 8 } = req.body
+  const { count = '1', prefix = '', length = '8' } = req.query
 
-  if (count > 100) {
+  const numCount = parseInt(count as string, 10)
+  const numLength = parseInt(length as string, 10)
+  const prefixStr = String(prefix)
+
+  if (numCount > 100) {
     return res.status(400).json({
       success: false,
       message: 'Cannot generate more than 100 coupons at once'
@@ -567,13 +625,13 @@ export const generateCoupons = asyncHandler(async (req: Request, res: Response) 
   }
 
   const generatedCodes = []
-  
-  for (let i = 0; i < count; i++) {
+
+  for (let i = 0; i < numCount; i++) {
     let code
     do {
-      code = prefix + generateCouponCode(length - prefix.length)
+      code = prefixStr + generateCouponCode(numLength - prefixStr.length)
     } while (await Coupon.findOne({ code }))
-    
+
     generatedCodes.push(code)
   }
 

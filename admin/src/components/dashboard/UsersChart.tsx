@@ -39,19 +39,19 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
     activeUsers: userStats?.activeUsers || Math.floor(item.newUsers * 0.8), // Use real active users from stats
     countries: locationData?.locationStats?.length || 0 // Use real country count
   })) || [
-    { month: 'Jan', newUsers: 12, totalUsers: 12, activeUsers: 10, countries: 3 },
-    { month: 'Feb', newUsers: 18, totalUsers: 30, activeUsers: 25, countries: 5 },
-    { month: 'Mar', newUsers: 15, totalUsers: 45, activeUsers: 38, countries: 7 },
-    { month: 'Apr', newUsers: 22, totalUsers: 67, activeUsers: 55, countries: 9 },
-    { month: 'May', newUsers: 20, totalUsers: 87, activeUsers: 72, countries: 11 },
-    { month: 'Jun', newUsers: 28, totalUsers: 115, activeUsers: 95, countries: 13 },
-    { month: 'Jul', newUsers: 25, totalUsers: 140, activeUsers: 118, countries: 15 },
-    { month: 'Aug', newUsers: 30, totalUsers: 170, activeUsers: 145, countries: 17 },
-    { month: 'Sep', newUsers: 35, totalUsers: 205, activeUsers: 175, countries: 19 },
-    { month: 'Oct', newUsers: 32, totalUsers: 237, activeUsers: 200, countries: 21 },
-    { month: 'Nov', newUsers: 38, totalUsers: 275, activeUsers: 235, countries: 23 },
-    { month: 'Dec', newUsers: 42, totalUsers: 317, activeUsers: 270, countries: 25 }
-  ]
+      { month: 'Jan', newUsers: 12, totalUsers: 12, activeUsers: 10, countries: 3 },
+      { month: 'Feb', newUsers: 18, totalUsers: 30, activeUsers: 25, countries: 5 },
+      { month: 'Mar', newUsers: 15, totalUsers: 45, activeUsers: 38, countries: 7 },
+      { month: 'Apr', newUsers: 22, totalUsers: 67, activeUsers: 55, countries: 9 },
+      { month: 'May', newUsers: 20, totalUsers: 87, activeUsers: 72, countries: 11 },
+      { month: 'Jun', newUsers: 28, totalUsers: 115, activeUsers: 95, countries: 13 },
+      { month: 'Jul', newUsers: 25, totalUsers: 140, activeUsers: 118, countries: 15 },
+      { month: 'Aug', newUsers: 30, totalUsers: 170, activeUsers: 145, countries: 17 },
+      { month: 'Sep', newUsers: 35, totalUsers: 205, activeUsers: 175, countries: 19 },
+      { month: 'Oct', newUsers: 32, totalUsers: 237, activeUsers: 200, countries: 21 },
+      { month: 'Nov', newUsers: 38, totalUsers: 275, activeUsers: 235, countries: 23 },
+      { month: 'Dec', newUsers: 42, totalUsers: 317, activeUsers: 270, countries: 25 }
+    ]
 
   // Generate user growth data based on real data
   const userGrowthData = data?.userGrowth?.map((item: any, index: number) => ({
@@ -59,31 +59,31 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
     growth: index === 0 ? 0 : Math.round(((item.newUsers - (data?.userGrowth?.[index - 1]?.newUsers || 0)) / (data?.userGrowth?.[index - 1]?.newUsers || 1)) * 100),
     retention: Math.floor(Math.random() * 15) + 85 // Simulate retention between 85-100%
   })) || [
-    { month: 'Jan', growth: 0, retention: 85 },
-    { month: 'Feb', growth: 150, retention: 87 },
-    { month: 'Mar', growth: 50, retention: 89 },
-    { month: 'Apr', growth: 147, retention: 91 },
-    { month: 'May', growth: 30, retention: 88 },
-    { month: 'Jun', growth: 140, retention: 92 },
-    { month: 'Jul', growth: 22, retention: 90 },
-    { month: 'Aug', growth: 120, retention: 93 },
-    { month: 'Sep', growth: 167, retention: 94 },
-    { month: 'Oct', growth: 86, retention: 91 },
-    { month: 'Nov', growth: 119, retention: 95 },
-    { month: 'Dec', growth: 111, retention: 96 }
-  ]
+      { month: 'Jan', growth: 0, retention: 85 },
+      { month: 'Feb', growth: 150, retention: 87 },
+      { month: 'Mar', growth: 50, retention: 89 },
+      { month: 'Apr', growth: 147, retention: 91 },
+      { month: 'May', growth: 30, retention: 88 },
+      { month: 'Jun', growth: 140, retention: 92 },
+      { month: 'Jul', growth: 22, retention: 90 },
+      { month: 'Aug', growth: 120, retention: 93 },
+      { month: 'Sep', growth: 167, retention: 94 },
+      { month: 'Oct', growth: 86, retention: 91 },
+      { month: 'Nov', growth: 119, retention: 95 },
+      { month: 'Dec', growth: 111, retention: 96 }
+    ]
 
   // Use real user types data based on actual user roles from database
   const userTypes = [
-    { 
-      name: 'Regular Users', 
-      value: userStats?.regularUsers ? Math.round((userStats.regularUsers / userStats.totalUsers) * 100) : 90, 
-      color: '#3B82F6' 
+    {
+      name: 'Regular Users',
+      value: userStats?.totalUsers && userStats?.totalAdmins ? Math.round(((userStats.totalUsers - userStats.totalAdmins) / userStats.totalUsers) * 100) : 90,
+      color: '#3B82F6'
     },
-    { 
-      name: 'Admin Users', 
-      value: userStats?.adminUsers ? Math.round((userStats.adminUsers / userStats.totalUsers) * 100) : 10, 
-      color: '#8B5CF6' 
+    {
+      name: 'Admin Users',
+      value: userStats?.totalAdmins ? Math.round((userStats.totalAdmins / userStats.totalUsers) * 100) : 10,
+      color: '#8B5CF6'
     }
   ]
 
@@ -93,15 +93,15 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
     users: country.userCount,
     growth: Math.floor(Math.random() * 20) + 5 // Simulate growth for now
   })) || [
-    { country: 'India', users: 45, growth: 12 },
-    { country: 'United States', users: 28, growth: 8 },
-    { country: 'United Kingdom', users: 22, growth: 15 },
-    { country: 'Canada', users: 18, growth: 6 },
-    { country: 'Australia', users: 15, growth: 10 },
-    { country: 'Germany', users: 12, growth: 4 },
-    { country: 'France', users: 10, growth: 7 },
-    { country: 'Singapore', users: 8, growth: 18 }
-  ]
+      { country: 'India', users: 45, growth: 12 },
+      { country: 'United States', users: 28, growth: 8 },
+      { country: 'United Kingdom', users: 22, growth: 15 },
+      { country: 'Canada', users: 18, growth: 6 },
+      { country: 'Australia', users: 15, growth: 10 },
+      { country: 'Germany', users: 12, growth: 4 },
+      { country: 'France', users: 10, growth: 7 },
+      { country: 'Singapore', users: 8, growth: 18 }
+    ]
 
   // Use the exact same data from metrics and real user stats
   const totalUsers = data?.metrics?.totalUsers || userStats?.totalUsers || 0
@@ -212,21 +212,21 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
               <AreaChart data={userData}>
                 <defs>
                   <linearGradient id="userGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="totalUserGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6B7280"
                   fontSize={12}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#6B7280"
                   fontSize={12}
                 />
@@ -269,7 +269,7 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
+                <Tooltip
                   formatter={(value: any) => [`${value}%`, 'Share']}
                   contentStyle={{
                     backgroundColor: 'white',
@@ -284,8 +284,8 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
               {userTypes.map((type: any, index: number) => (
                 <div key={index} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
+                    <div
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: type.color }}
                     />
                     <span className="text-gray-700">{type.name}</span>
@@ -302,19 +302,19 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
             <ResponsiveContainer width="100%" height={350}>
               <ScatterChart data={userGrowthData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis 
-                  dataKey="growth" 
+                <XAxis
+                  dataKey="growth"
                   stroke="#6B7280"
                   fontSize={12}
                   name="Growth Rate (%)"
                 />
-                <YAxis 
-                  dataKey="retention" 
+                <YAxis
+                  dataKey="retention"
                   stroke="#6B7280"
                   fontSize={12}
                   name="Retention Rate (%)"
                 />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #E5E7EB',
@@ -322,9 +322,9 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
                     padding: '8px'
                   }}
                 />
-                <Scatter 
-                  dataKey="retention" 
-                  fill="#3B82F6" 
+                <Scatter
+                  dataKey="retention"
+                  fill="#3B82F6"
                   shape="circle"
                 />
               </ScatterChart>
@@ -337,19 +337,19 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={topCountries} layout="horizontal">
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis 
+                <XAxis
                   type="number"
                   stroke="#6B7280"
                   fontSize={12}
                 />
-                <YAxis 
+                <YAxis
                   type="category"
-                  dataKey="country" 
+                  dataKey="country"
                   stroke="#6B7280"
                   fontSize={12}
                   width={80}
                 />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #E5E7EB',
@@ -357,9 +357,9 @@ const UsersChart: React.FC<UsersChartProps> = ({ isOpen, onClose, data }) => {
                     padding: '8px'
                   }}
                 />
-                <Bar 
-                  dataKey="users" 
-                  fill="#3B82F6" 
+                <Bar
+                  dataKey="users"
+                  fill="#3B82F6"
                   radius={[0, 4, 4, 0]}
                 />
               </BarChart>

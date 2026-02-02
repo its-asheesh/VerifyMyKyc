@@ -2,36 +2,21 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, type ReactNode } from "react"
+import type { AppNotification, AppUser } from "../types/shared"
 
 interface AppState {
   theme: "light" | "dark"
   sidebarOpen: boolean
-  notifications: Notification[]
-  user: User | null
-}
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role: string
-  avatar?: string
-}
-
-interface Notification {
-  id: string
-  type: "success" | "error" | "warning" | "info"
-  title: string
-  message: string
-  timestamp: string
+  notifications: AppNotification[]
+  user: AppUser | null
 }
 
 type AppAction =
   | { type: "SET_THEME"; payload: "light" | "dark" }
   | { type: "TOGGLE_SIDEBAR" }
-  | { type: "ADD_NOTIFICATION"; payload: Notification }
+  | { type: "ADD_NOTIFICATION"; payload: AppNotification }
   | { type: "REMOVE_NOTIFICATION"; payload: string }
-  | { type: "SET_USER"; payload: User | null }
+  | { type: "SET_USER"; payload: AppUser | null }
 
 const initialState: AppState = {
   theme: "light",
@@ -71,6 +56,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => {
   const context = useContext(AppContext)
   if (!context) {

@@ -45,9 +45,9 @@ export const analyticsSetUserId = async (userId: string) => {
   if (a && userId) gaSetUserId(a, userId)
 }
 
-export const analyticsLogEvent = async (name: string, params?: Record<string, any>) => {
+export const analyticsLogEvent = async (name: string, params?: Record<string, unknown>) => {
   const a = await getAnalyticsInstance()
-  if (a) gaLogEvent(a, name as any, params as any)
+  if (a) gaLogEvent(a, name, params)
 }
 
 

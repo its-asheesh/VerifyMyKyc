@@ -1,27 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import userApi from '../services/api/userApi'
+import type { User, UserStats, LocationAnalytics } from '../services/api/userApi'
 
 // Get all users
 export const useUsers = () => {
-  return useQuery({
+  return useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: userApi.getAllUsers,
+    queryFn: () => userApi.getAllUsers(),
   })
 }
 
 // Get user statistics
 export const useUserStats = () => {
-  return useQuery({
+  return useQuery<UserStats>({
     queryKey: ['userStats'],
-    queryFn: userApi.getUserStats,
+    queryFn: () => userApi.getUserStats(),
   })
 }
 
 // Get location analytics
 export const useLocationAnalytics = () => {
-  return useQuery({
+  return useQuery<LocationAnalytics>({
     queryKey: ['locationAnalytics'],
-    queryFn: userApi.getLocationAnalytics,
+    queryFn: () => userApi.getLocationAnalytics(),
     retry: 1,
     retryDelay: 1000,
   })
@@ -29,16 +30,16 @@ export const useLocationAnalytics = () => {
 
 // Get users with location data
 export const useUsersWithLocation = () => {
-  return useQuery({
+  return useQuery<User[]>({
     queryKey: ['usersWithLocation'],
-    queryFn: userApi.getUsersWithLocation,
+    queryFn: () => userApi.getUsersWithLocation(),
   })
 }
 
 // Update user role
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ userId, role }: { userId: string; role: 'user' | 'admin' }) =>
       userApi.updateUserRole(userId, role),
@@ -52,7 +53,7 @@ export const useUpdateUserRole = () => {
 // Toggle user status
 export const useToggleUserStatus = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (userId: string) => userApi.toggleUserStatus(userId),
     onSuccess: () => {
@@ -65,10 +66,10 @@ export const useToggleUserStatus = () => {
 // Update user location
 export const useUpdateUserLocation = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ userId, locationData }: { 
-      userId: string; 
+    mutationFn: ({ userId, locationData }: {
+      userId: string;
       locationData: {
         country?: string
         city?: string
@@ -87,7 +88,7 @@ export const useUpdateUserLocation = () => {
 // Verify user email
 export const useVerifyUserEmail = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (userId: string) => userApi.verifyUserEmail(userId),
     onSuccess: () => {
@@ -100,7 +101,7 @@ export const useVerifyUserEmail = () => {
 // Verify user phone
 export const useVerifyUserPhone = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (userId: string) => userApi.verifyUserPhone(userId),
     onSuccess: () => {
@@ -113,9 +114,9 @@ export const useVerifyUserPhone = () => {
 // Add tokens for user
 export const useAddUserTokens = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ userId, data }: { 
+    mutationFn: ({ userId, data }: {
       userId: string
       data: {
         verificationType: string

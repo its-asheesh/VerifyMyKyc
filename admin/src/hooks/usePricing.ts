@@ -1,19 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import pricingApi from '../services/api/pricingApi'
-import type { VerificationPricing, HomepagePlan } from '../services/api/pricingApi'
+import type { VerificationPricing, HomepagePlan, AllPricingData } from '../services/api/pricingApi'
 
 // ==================== VERIFICATION PRICING HOOKS ====================
 
 export const useVerificationPricing = () => {
-  return useQuery({
+  return useQuery<VerificationPricing[]>({
     queryKey: ['verification-pricing'],
-    queryFn: pricingApi.getAllVerificationPricing,
+    queryFn: () => pricingApi.getAllVerificationPricing(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
 export const useVerificationPricingByType = (verificationType: string) => {
-  return useQuery({
+  return useQuery<VerificationPricing>({
     queryKey: ['verification-pricing', verificationType],
     queryFn: () => pricingApi.getVerificationPricingByType(verificationType),
     enabled: !!verificationType,
@@ -23,7 +23,7 @@ export const useVerificationPricingByType = (verificationType: string) => {
 
 export const useAddVerificationPricing = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (data: Omit<VerificationPricing, '_id' | 'createdAt' | 'updatedAt'>) =>
       pricingApi.addVerificationPricing(data),
@@ -36,7 +36,7 @@ export const useAddVerificationPricing = () => {
 
 export const useEditVerificationPricing = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<VerificationPricing> }) =>
       pricingApi.editVerificationPricing(id, data),
@@ -49,7 +49,7 @@ export const useEditVerificationPricing = () => {
 
 export const useDeleteVerificationPricing = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => pricingApi.deleteVerificationPricing(id),
     onSuccess: () => {
@@ -62,15 +62,15 @@ export const useDeleteVerificationPricing = () => {
 // ==================== HOMEPAGE PLANS HOOKS ====================
 
 export const useHomepagePlans = () => {
-  return useQuery({
+  return useQuery<HomepagePlan[]>({
     queryKey: ['homepage-plans'],
-    queryFn: pricingApi.getAllHomepagePlans,
+    queryFn: () => pricingApi.getAllHomepagePlans(),
     staleTime: 5 * 60 * 1000,
   })
 }
 
 export const useHomepagePlanByType = (planType: string) => {
-  return useQuery({
+  return useQuery<HomepagePlan>({
     queryKey: ['homepage-plans', planType],
     queryFn: () => pricingApi.getHomepagePlanByType(planType),
     enabled: !!planType,
@@ -80,7 +80,7 @@ export const useHomepagePlanByType = (planType: string) => {
 
 export const useAddHomepagePlan = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (data: Omit<HomepagePlan, '_id' | 'createdAt' | 'updatedAt'>) =>
       pricingApi.addHomepagePlan(data),
@@ -93,7 +93,7 @@ export const useAddHomepagePlan = () => {
 
 export const useEditHomepagePlan = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<HomepagePlan> }) =>
       pricingApi.editHomepagePlan(id, data),
@@ -106,7 +106,7 @@ export const useEditHomepagePlan = () => {
 
 export const useDeleteHomepagePlan = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: string) => pricingApi.deleteHomepagePlan(id),
     onSuccess: () => {
@@ -119,23 +119,17 @@ export const useDeleteHomepagePlan = () => {
 // ==================== COMBINED HOOKS ====================
 
 export const useAllPricing = () => {
-  return useQuery({
+  return useQuery<AllPricingData>({
     queryKey: ['all-pricing'],
-    queryFn: pricingApi.getAllPricing,
+    queryFn: () => pricingApi.getAllPricing(),
     staleTime: 5 * 60 * 1000,
   })
 }
 
-export const useHomepagePricing = () => {
-  return useQuery({
-    queryKey: ['homepage-pricing'],
-    queryFn: pricingApi.getHomepagePricing,
-    staleTime: 5 * 60 * 1000,
-  })
-}
+
 
 export const useHomepagePlansByPeriod = (period: 'monthly' | 'yearly') => {
-  return useQuery({
+  return useQuery<HomepagePlan[]>({
     queryKey: ['homepage-pricing', period],
     queryFn: () => pricingApi.getHomepagePlansByPeriod(period),
     enabled: !!period,
@@ -144,9 +138,9 @@ export const useHomepagePlansByPeriod = (period: 'monthly' | 'yearly') => {
 }
 
 export const useAvailableVerifications = () => {
-  return useQuery({
+  return useQuery<VerificationPricing[]>({
     queryKey: ['available-verifications'],
-    queryFn: pricingApi.getAvailableVerifications,
+    queryFn: () => pricingApi.getAvailableVerifications(),
     staleTime: 5 * 60 * 1000,
   })
 } 

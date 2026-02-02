@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import type { Product } from "../../types/product"
 import { useVerificationPricing } from "../../hooks/usePricing"
-//import { PricingCard } from "../pricing/PricingCard"
 import { useAppSelector } from "../../redux/hooks"
 
 interface ProductPricingProps {
@@ -18,14 +17,11 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
   const navigate = useNavigate()
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const { isAuthenticated } = useAppSelector((state) => state.auth)
-  
+
   const handleChoosePlan = (tier: any) => {
     const verificationType = getVerificationType(product)
-    console.log('=== PRODUCT PAGE DEBUG ===')
-    console.log('Product title:', product.title)
-    console.log('Detected verification type:', verificationType)
-    console.log('Selected services array:', [verificationType])
-    
+
+
     // If not logged in, redirect to login with state
     if (!isAuthenticated) {
       navigate('/login', {
@@ -43,7 +39,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
       })
       return
     }
-    
+
     // Navigate to checkout
     navigate('/checkout', {
       state: {
@@ -63,7 +59,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
   const handlePlanLeave = () => {
     setSelectedPlan(null)
   }
-  
+
   // Resolve verification type from product
   const getVerificationType = (prod: Product): string => {
     const id = (prod.id || '').toLowerCase()
@@ -94,9 +90,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
   const verificationType = getVerificationType(product)
   const { data: verificationPricing, isLoading: verificationsLoading, error: verificationsError } = useVerificationPricing(verificationType)
 
-  console.log('Product title:', product.title)
-  console.log('Verification type:', verificationType)
-  console.log('Verification pricing data:', verificationPricing)
+
 
   // Get icon based on verification type
   const getVerificationIcon = (verificationType: string) => {
@@ -114,7 +108,19 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
     }
   }
 
-  // Use backend pricing if available, fallback to product.pricing
+
+  if (verificationsLoading) {
+    return (
+      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px] flex items-center justify-center">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading pricing information...</p>
+        </div>
+      </section>
+    )
+  }
+
+  // Use backend pricing if available
   const pricingTiers = verificationPricing ? [
     {
       name: "One-time",
@@ -164,54 +170,13 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
       billingPeriod: 'yearly' as const,
       popular: false
     },
-  ] : [
-    {
-      name: "Free",
-      ...product.pricing.free,
-      requests: String(product.pricing.free.requests),
-      color: "blue" as const,
-      period: "month",
-      billingPeriod: 'monthly' as const,
-      popular: false
-    },
-    {
-      name: "Basic",
-      ...product.pricing.basic,
-      requests: String(product.pricing.basic.requests),
-      color: "blue" as const,
-      period: "month",
-      billingPeriod: 'monthly' as const,
-      popular: false
-    },
-    {
-      name: "Premium",
-      ...product.pricing.premium,
-      requests: String(product.pricing.premium.requests),
-      color: "purple" as const,
-      period: "month",
-      billingPeriod: 'monthly' as const,
-      popular: true
-    },
-  ]
+  ] : []
 
-  console.log('Pricing tiers:', pricingTiers)
-
-  if (verificationsLoading) {
-    return (
-      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px] flex items-center justify-center">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading pricing information...</p>
-        </div>
-      </section>
-    )
-  }
-
-  if (verificationsError) {
+  if (verificationsError || !verificationPricing) {
     return (
       <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px]">
         <div className="text-center py-12">
-          <p className="text-red-600">Failed to load pricing information. Using default pricing.</p>
+          <p className="text-red-600">Failed to load pricing information. Please contact support.</p>
         </div>
       </section>
     )
@@ -235,7 +200,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
         </p>
       </motion.div>
 
-            <div className="hidden md:block">
+      <div className="hidden md:block">
         {/* Desktop: Grid layout - 3 in a row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
           {pricingTiers.map((tier, index) => (
@@ -246,30 +211,31 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              {/* <PricingCard
-                title={tier.name}
-                price={`₹${tier.price}`}
-                description={tier.requests}
-                features={tier.features}
-                icon={getVerificationIcon(verificationType)}
-                color={tier.color}
-                popular={tier.popular}
-                isHovered={selectedPlan === tier.name}
-                billingPeriod={tier.billingPeriod}
-                onHover={() => handlePlanHover(tier.name)}
-                onHoverEnd={handlePlanLeave}
-                planData={{
-                  name: tier.name,
-                  price: String(tier.price),
-                  description: tier.requests,
-                  features: tier.features,
-                  planType: tier.billingPeriod,
-                  planName: tier.name,
-                  support: tier.support,
-                  period: tier.period,
-                }}
-                onChoosePlan={() => handleChoosePlan(tier)}
-              /> */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-3xl font-bold text-gray-900">₹{tier.price}</span>
+                  <span className="text-gray-500 text-sm">/{tier.name === 'One-time' ? 'check' : 'month'}</span>
+                </div>
+                <p className="text-gray-600 text-sm mb-6">{tier.requests}</p>
+                <ul className="space-y-3 mb-8">
+                  {tier.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleChoosePlan(tier)}
+                  className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors ${tier.popular
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    }`}
+                >
+                  Choose Plan
+                </button>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -287,30 +253,30 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="flex-shrink-0 w-72"
             >
-              {/* <PricingCard
-                title={tier.name}
-                price={`₹${tier.price}`}
-                description={tier.requests}
-                features={tier.features}
-                icon={getVerificationIcon(verificationType)}
-                color={tier.color}
-                popular={tier.popular}
-                isHovered={selectedPlan === tier.name}
-                billingPeriod={tier.billingPeriod}
-                onHover={() => handlePlanHover(tier.name)}
-                onHoverEnd={handlePlanLeave}
-                planData={{
-                  name: tier.name,
-                  price: String(tier.price),
-                  description: tier.requests,
-                  features: tier.features,
-                  planType: tier.billingPeriod,
-                  planName: tier.name,
-                  support: tier.support,
-                  period: tier.period,
-                }}
-                onChoosePlan={() => handleChoosePlan(tier)}
-              /> */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-3xl font-bold text-gray-900">₹{tier.price}</span>
+                  <span className="text-gray-500 text-sm">/{tier.name === 'One-time' ? 'check' : 'month'}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {tier.features.slice(0, 4).map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleChoosePlan(tier)}
+                  className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors ${tier.popular
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    }`}
+                >
+                  Choose Plan
+                </button>
+              </div>
             </motion.div>
           ))}
         </div>

@@ -17,36 +17,51 @@ export const mailer = nodemailer.createTransport({
 });
 
 export async function sendEmail(to: string, subject: string, html: string) {
-  // If SMTP configured, prefer SMTP
-  if (!smtpHost) {
-    // Fallback to Gmail API using service account + delegation
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT || !process.env.GMAIL_DELEGATED_USER) {
-      throw new Error('Email send requires SMTP or Gmail API (set FIREBASE_SERVICE_ACCOUNT and GMAIL_DELEGATED_USER)');
+  // 1. Prioritize Gmail API if configured (GMAIL_DELEGATED_USER present)
+  if (process.env.GMAIL_DELEGATED_USER) {
+    console.log(`[Email Service] Sending via Gmail API as ${process.env.GMAIL_DELEGATED_USER}`);
+    try {
+      const info = await gmailSend({ to, subject, html });
+      if (process.env.EMAIL_DEBUG) console.log('Gmail API sent:', info?.id || info);
+      return info;
+    } catch (err: any) {
+      console.error('[Email Service] Gmail API failed:', err?.message || err);
+      // Optional: Fallback to SMTP if Gmail fails? For now, throw to be explicit.
+      throw err;
     }
-    const info = await gmailSend({ to, subject, html });
-    if (process.env.EMAIL_DEBUG) console.log('Gmail API sent:', info?.id || info);
-    return info;
   }
-  try {
-    const info = await mailer.sendMail({
-      from: fromEmail,
-      to,
-      subject,
-      html,
-    });
-    if (process.env.EMAIL_DEBUG) {
-      console.log('Email sent:', { messageId: info.messageId, envelope: info.envelope });
+
+  // 2. Fallback to SMTP
+  if (smtpHost) {
+    try {
+      console.log(`[Email Service] Attempting to send email to: ${to}, subject: "${subject}"`);
+      console.log(`[Email Service] Using configuration: Host=${smtpHost}, Port=${smtpPort}, Secure=${smtpPort === 465}, User=${smtpUser ? '***' : 'None'}`);
+
+      const info = await mailer.sendMail({
+        from: fromEmail,
+        to,
+        subject,
+        html,
+      });
+
+      console.log(`[Email Service] Email sent successfully. MessageId: ${info.messageId}`);
+      if (process.env.EMAIL_DEBUG) {
+        console.log('[Email Service] Full envelope:', info.envelope);
+      }
+      return info;
+    } catch (err: any) {
+      console.error('[Email Service] Email send FAILED:', {
+        message: err?.message,
+        code: err?.code,
+        command: err?.command,
+        response: err?.response,
+        stack: err?.stack
+      });
+      throw err;
     }
-    return info;
-  } catch (err: any) {
-    console.error('Email send failed:', {
-      message: err?.message,
-      code: err?.code,
-      command: err?.command,
-      response: err?.response,
-    });
-    throw err;
   }
+
+  throw new Error('Email configuration missing. Set GMAIL_DELEGATED_USER (for Gmail API) or SMTP_HOST/SMTP_USER/etc (for SMTP).');
 }
 
 export function buildOtpEmailHtml(name: string, code: string) {

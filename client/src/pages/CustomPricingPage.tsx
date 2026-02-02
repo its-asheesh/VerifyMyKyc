@@ -4,7 +4,8 @@ import type React from "react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { ArrowLeft, Check, Star } from "lucide-react"
+import { Check } from "lucide-react"
+import { BackButton } from "../components/common/BackButton"
 import { usePricingContext } from "../context/PricingContext"
 
 const CustomPricingPage: React.FC = () => {
@@ -13,7 +14,7 @@ const CustomPricingPage: React.FC = () => {
   const [selectedVerifications, setSelectedVerifications] = useState<string[]>([])
 
   const handleVerificationToggle = (verificationType: string) => {
-    setSelectedVerifications(prev => 
+    setSelectedVerifications(prev =>
       prev.includes(verificationType)
         ? prev.filter(v => v !== verificationType)
         : [...prev, verificationType]
@@ -29,7 +30,7 @@ const CustomPricingPage: React.FC = () => {
         'drivinglicense': '4',
         'gstin': '5' // Assuming GSTIN would be ID 5
       }
-      
+
       const productId = productIdMap[selectedVerifications[0]]
       if (productId) {
         navigate(`/products/${productId}`)
@@ -39,8 +40,8 @@ const CustomPricingPage: React.FC = () => {
       }
     } else if (selectedVerifications.length > 1) {
       // Navigate to checkout page for multiple services
-      navigate('/checkout', { 
-        state: { selectedVerifications } 
+      navigate('/checkout', {
+        state: { selectedVerifications }
       })
     }
   }
@@ -81,12 +82,7 @@ const CustomPricingPage: React.FC = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+            <BackButton />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Choose Your Verifications</h1>
               <p className="text-gray-600 mt-1">Select the verification services you need</p>
@@ -139,11 +135,10 @@ const CustomPricingPage: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`relative bg-white rounded-xl border-2 p-6 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                    selectedVerifications.includes(verification.verificationType)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`relative bg-white rounded-xl border-2 p-6 cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedVerifications.includes(verification.verificationType)
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   onClick={() => handleVerificationToggle(verification.verificationType)}
                 >
                   {/* Selection indicator */}
@@ -212,17 +207,16 @@ const CustomPricingPage: React.FC = () => {
               <button
                 onClick={handleContinue}
                 disabled={selectedVerifications.length === 0}
-                className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  selectedVerifications.length === 0
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
-                }`}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200 ${selectedVerifications.length === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                  }`}
               >
                 {selectedVerifications.length === 0
                   ? 'Select a verification service'
                   : selectedVerifications.length === 1
-                  ? `View ${selectedVerifications[0]} product details`
-                  : `Proceed to Checkout (${selectedVerifications.length} services)`}
+                    ? `View ${selectedVerifications[0]} product details`
+                    : `Proceed to Checkout (${selectedVerifications.length} services)`}
               </button>
             </motion.div>
 

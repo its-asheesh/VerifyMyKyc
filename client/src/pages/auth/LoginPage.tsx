@@ -1,4 +1,7 @@
 // src/pages/auth/LoginPage.tsx
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import type { ConfirmationResult } from 'firebase/auth';
+import { auth } from '../../lib/firebaseClient';
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -62,7 +65,7 @@ const LoginPage: React.FC = () => {
   const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
   const [isPhoneFlow, setIsPhoneFlow] = useState(false);
   const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
-  const [phoneConfirmation, setPhoneConfirmation] = useState<any>(null);
+  const [phoneConfirmation, setPhoneConfirmation] = useState<ConfirmationResult | null>(null);
   const [phoneOtp, setPhoneOtp] = useState("");
   const [selectedResetDialCode, setSelectedResetDialCode] = useState<string>("91");
   const [isResetPhoneLike, setIsResetPhoneLike] = useState<boolean>(false);
@@ -71,15 +74,16 @@ const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const redirectTo = (location.state as any)?.redirectTo || "/";
-      navigate(redirectTo, { state: (location.state as any)?.nextState });
+      const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
+      const redirectTo = state?.redirectTo || "/";
+      navigate(redirectTo, { state: state?.nextState });
     }
-    console.log('Auth state:', { isAuthenticated, user });
+
   }, [isAuthenticated, user, navigate, location.state]);
 
 
   useEffect(() => {
-    const message = (location.state as any)?.message;
+    const message = (location.state as { message?: string } | null)?.message;
     if (message) showToast(message, { type: "info" });
   }, [location.state, showToast]);
 
@@ -159,31 +163,35 @@ const LoginPage: React.FC = () => {
     if (!validateAndLogin()) return;
 
     try {
-      let result: any;
+      let result;
       const value = identifier.trim();
       const isEmail = isValidEmail(value);
       if (isEmail) {
         result = await dispatch(loginUser({ email: value, password }));
-        if ((loginUser as any).fulfilled.match(result)) {
-          const redirectTo = (location.state as any)?.redirectTo || "/";
-          navigate(redirectTo, { state: (location.state as any)?.nextState, replace: true });
+        if (loginUser.fulfilled.match(result)) {
+          const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
+          const redirectTo = state?.redirectTo || "/";
+          navigate(redirectTo, { state: state?.nextState, replace: true });
           return;
         }
       } else {
         const e164 = formatToE164(value, selectedDialCode);
         result = await dispatch(loginWithPhoneAndPassword({ phone: e164, password }));
-        if ((loginWithPhoneAndPassword as any).fulfilled.match(result)) {
-          const redirectTo = (location.state as any)?.redirectTo || "/";
-          navigate(redirectTo, { state: (location.state as any)?.nextState, replace: true });
+        if (loginWithPhoneAndPassword.fulfilled.match(result)) {
+          const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
+          const redirectTo = state?.redirectTo || "/";
+          navigate(redirectTo, { state: state?.nextState, replace: true });
           return;
         }
       }
 
       // If we reach here, it wasn't fulfilled
-      const msg = (result && result.payload) || "Login failed";
+      // result is Action, so 'payload' exists if rejected (defined in rejectWithValue)
+      const msg = (result as { payload?: unknown })?.payload || "Login failed";
       showToast(typeof msg === 'string' ? msg : 'Login failed', { type: 'error' });
-    } catch (e: any) {
-      showToast(e?.message || "Login failed", { type: "error" });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Login failed";
+      showToast(msg, { type: "error" });
     }
   };
 
@@ -231,16 +239,17 @@ const LoginPage: React.FC = () => {
       const idToken = await userCred.user.getIdToken();
 
       const result = await dispatch(resetPasswordWithPhoneToken({ idToken, newPassword }));
-      if ((resetPasswordWithPhoneToken as any).fulfilled.match(result)) {
+      if (resetPasswordWithPhoneToken.fulfilled.match(result)) {
         showToast('Password updated successfully', { type: 'success' });
         setShowReset(false);
       } else {
-        const msg = (result as any)?.payload || 'Failed to update password';
+        const msg = result.payload || 'Failed to update password';
         showToast(typeof msg === 'string' ? msg : 'Failed to update password', { type: 'error' });
       }
       setIsPhoneFlow(false);
-    } catch (e: any) {
-      showToast(e?.message || 'Phone verification failed', { type: 'error' });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Phone verification failed';
+      showToast(msg, { type: 'error' });
       setIsPhoneFlow(false);
     }
   };
@@ -253,18 +262,18 @@ const LoginPage: React.FC = () => {
         return;
       }
       setIsSendingPhoneOtp(true);
-      const { RecaptchaVerifier, signInWithPhoneNumber } = await import('firebase/auth');
-      const { auth } = await import('../../lib/firebaseClient');
-      if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
+      setIsSendingPhoneOtp(true);
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
       }
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
       const phoneE164 = formatToE164(resetIdentifier, selectedResetDialCode);
-      const confirmation = await signInWithPhoneNumber(auth, phoneE164, (window as any).recaptchaVerifier);
+      const confirmation = await signInWithPhoneNumber(auth, phoneE164, window.recaptchaVerifier);
       setPhoneConfirmation(confirmation);
       showToast('OTP sent to your phone', { type: 'success' });
-    } catch (e: any) {
-      showToast(e?.message || 'Failed to send OTP', { type: 'error' });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to send OTP';
+      showToast(msg, { type: 'error' });
     } finally {
       setIsSendingPhoneOtp(false);
     }
@@ -274,7 +283,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <AuthCardLayout
-      animationData={registerHero as any}
+      animationData={registerHero as object}
       leftHeader={
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">
@@ -290,122 +299,24 @@ const LoginPage: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className=""
       >
-          {showReset ? (
-            <form
-              className="space-y-6"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleReset();
-              }}
-            >
-              {/* Unified reset: Email or Mobile */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-5 gap-2">
-                  {isResetPhoneLike && (
-                    <div className="col-span-1">
-                      <label htmlFor="resetDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                      <select
-                        id="resetDialCode"
-                        value={selectedResetDialCode}
-                        onChange={(e) => setSelectedResetDialCode(e.target.value)}
-                        className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
-                      >
-                        {DIAL_CODES.map((o) => (
-                          <option key={o.code} value={o.code}>{o.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <div className={isResetPhoneLike ? "col-span-4" : "col-span-5"}>
-                    <TextField
-                      label="Email or Mobile"
-                      id="resetIdentifier"
-                      value={resetIdentifier}
-                      onChange={setResetIdentifier}
-                      autoComplete="username"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={async () => { const value = resetIdentifier.trim(); const isEmail = isValidEmail(value); const e164 = isEmail ? '' : formatToE164(value, selectedResetDialCode); if (!value || (!isEmail && !isValidE164Phone(e164))) { showToast('Enter a valid email or phone', { type: 'error' }); return; } if (isEmail) { setIsSendingEmailOtp(true); await dispatch(sendPasswordOtp(value)); setIsSendingEmailOtp(false); } else { await handleSendPhoneOtp(); } }}
-                    className="text-blue-600 hover:text-blue-700 text-sm"
-                    disabled={isSendingPhoneOtp || isSendingEmailOtp}
-                  >
-                    {isSendingEmailOtp || isSendingPhoneOtp ? 'Sending...' : 'Send OTP'}
-                  </button>
-                  {phoneConfirmation && <span className="text-xs text-green-600">OTP sent</span>}
-                </div>
-                {/* OTP input shows for both flows */}
-                <TextField
-                  label="OTP"
-                  id="resetOtp"
-                  type="text"
-                  inputMode="numeric"
-                  value={isValidEmail(resetIdentifier) ? otp : phoneOtp}
-                  onChange={(v) => (isValidEmail(resetIdentifier) ? setOtp(v.replace(/\D/g, '').slice(0, 6)) : setPhoneOtp(v.replace(/\D/g, '').slice(0, 6)))}
-                  maxLength={6}
-                  showVisibilityToggle={false}
-                />
-                {!isValidEmail(resetIdentifier) && <p className="text-xs text-gray-500">We will verify your phone with OTP, then update your password.</p>}
-              </div>
-
-              <TextField
-                label="New Password"
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={setNewPassword}
-                icon={Lock}
-                autoComplete="new-password"
-              />
-
-              {!isValidEmail(resetIdentifier) && isPhoneFlow && (
-                <div className="text-sm text-gray-600">Verifying your phone and updating password...</div>
-              )}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  className="text-sm text-gray-600 hover:text-gray-800"
-                  onClick={() => setShowReset(false)}
-                >
-                  Back to Login
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Reset Password
-                </button>
-              </div>
-
-              <div className="mt-3 text-center" />
-            </form>
-          ) : (
-            <form
-              className="space-y-8"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleLogin();
-              }}
-            >
+        {showReset ? (
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleReset();
+            }}
+          >
+            {/* Unified reset: Email or Mobile */}
+            <div className="space-y-3">
               <div className="grid grid-cols-5 gap-2">
-                {isPhoneLike && (
+                {isResetPhoneLike && (
                   <div className="col-span-1">
-                    <label htmlFor="loginDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <label htmlFor="resetDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
                     <select
-                      id="loginDialCode"
-                      value={selectedDialCode}
-                      onChange={(e) => setSelectedDialCode(e.target.value)}
+                      id="resetDialCode"
+                      value={selectedResetDialCode}
+                      onChange={(e) => setSelectedResetDialCode(e.target.value)}
                       className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
                     >
                       {DIAL_CODES.map((o) => (
@@ -414,73 +325,171 @@ const LoginPage: React.FC = () => {
                     </select>
                   </div>
                 )}
-                <div className={isPhoneLike ? "col-span-4" : "col-span-5"}>
+                <div className={isResetPhoneLike ? "col-span-4" : "col-span-5"}>
                   <TextField
                     label="Email or Mobile"
-                    id="identifier"
-                    value={identifier}
-                    onChange={setIdentifier}
+                    id="resetIdentifier"
+                    value={resetIdentifier}
+                    onValueChange={setResetIdentifier}
                     autoComplete="username"
-                    error={loginError.field === 'identifier' ? loginError.message : undefined}
                   />
                 </div>
               </div>
-
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={async () => { const value = resetIdentifier.trim(); const isEmail = isValidEmail(value); const e164 = isEmail ? '' : formatToE164(value, selectedResetDialCode); if (!value || (!isEmail && !isValidE164Phone(e164))) { showToast('Enter a valid email or phone', { type: 'error' }); return; } if (isEmail) { setIsSendingEmailOtp(true); await dispatch(sendPasswordOtp(value)); setIsSendingEmailOtp(false); } else { await handleSendPhoneOtp(); } }}
+                  className="text-blue-600 hover:text-blue-700 text-sm"
+                  disabled={isSendingPhoneOtp || isSendingEmailOtp}
+                >
+                  {isSendingEmailOtp || isSendingPhoneOtp ? 'Sending...' : 'Send OTP'}
+                </button>
+                {phoneConfirmation && <span className="text-xs text-green-600">OTP sent</span>}
+              </div>
+              {/* OTP input shows for both flows */}
               <TextField
-                label="Password"
-                id="loginPassword"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                icon={Lock}
-                autoComplete="current-password"
-                error={loginError.field === "password" ? loginError.message : undefined}
+                label="OTP"
+                id="resetOtp"
+                type="text"
+                inputMode="numeric"
+                value={isValidEmail(resetIdentifier) ? otp : phoneOtp}
+                onValueChange={(v) => (isValidEmail(resetIdentifier) ? setOtp(v.replace(/\D/g, '').slice(0, 6)) : setPhoneOtp(v.replace(/\D/g, '').slice(0, 6)))}
+                maxLength={6}
+                showVisibilityToggle={false}
               />
+              {!isValidEmail(resetIdentifier) && <p className="text-xs text-gray-500">We will verify your phone with OTP, then update your password.</p>}
+            </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
+            <TextField
+              label="New Password"
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onValueChange={setNewPassword}
+              icon={Lock}
+              autoComplete="new-password"
+            />
 
+            {!isValidEmail(resetIdentifier) && isPhoneFlow && (
+              <div className="text-sm text-gray-600">Verifying your phone and updating password...</div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="text-sm text-gray-600 hover:text-gray-800"
+                onClick={() => setShowReset(false)}
+              >
+                Back to Login
+              </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign in"
-                )}
+                Reset Password
               </button>
+            </div>
 
-              <div className="text-center space-y-3">
-                <p className="text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <Link
-                    to="/register"
-                    state={location.state}
-                    className="font-medium text-blue-600 hover:text-blue-500"
+            <div className="mt-3 text-center" />
+          </form>
+        ) : (
+          <form
+            className="space-y-8"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+          >
+            <div className="grid grid-cols-5 gap-2">
+              {isPhoneLike && (
+                <div className="col-span-1">
+                  <label htmlFor="loginDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                  <select
+                    id="loginDialCode"
+                    value={selectedDialCode}
+                    onChange={(e) => setSelectedDialCode(e.target.value)}
+                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
                   >
-                    Sign up
-                  </Link>
-                </p>
-                <button
-                  type="button"
-                  className="block mx-auto text-sm text-blue-600 hover:text-blue-700"
-                  onClick={() => setShowReset(true)}
-                >
-                  Forgot password?
-                </button>
+                    {DIAL_CODES.map((o) => (
+                      <option key={o.code} value={o.code}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className={isPhoneLike ? "col-span-4" : "col-span-5"}>
+                <TextField
+                  label="Email or Mobile"
+                  id="identifier"
+                  value={identifier}
+                  onValueChange={setIdentifier}
+                  autoComplete="username"
+                  error={loginError.field === 'identifier' ? loginError.message : undefined}
+                />
               </div>
-            </form>
-          )}
-        </motion.div>
-        <div id="recaptcha-container" className="hidden" />
+            </div>
+
+            <TextField
+              label="Password"
+              id="loginPassword"
+              type="password"
+              value={password}
+              onValueChange={setPassword}
+              icon={Lock}
+              autoComplete="current-password"
+              error={loginError.field === "password" ? loginError.message : undefined}
+            />
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </button>
+
+            <div className="text-center space-y-3">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  state={location.state}
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Sign up
+                </Link>
+              </p>
+              <button
+                type="button"
+                className="block mx-auto text-sm text-blue-600 hover:text-blue-700"
+                onClick={() => setShowReset(true)}
+              >
+                Forgot password?
+              </button>
+            </div>
+          </form>
+        )}
+      </motion.div>
+      <div id="recaptcha-container" className="hidden" />
     </AuthCardLayout>
   );
 };

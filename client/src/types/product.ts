@@ -8,7 +8,7 @@ export interface Product extends BaseEntity {
   category: ProductCategory
   features: string[]
   services?: string[]
-  pricing: ProductPricing
+
   documentation: string
   apiEndpoint?: string
   isActive: boolean
@@ -23,18 +23,7 @@ export interface ProductCategory {
   description: string
 }
 
-export interface ProductPricing {
-  free: PricingTier
-  basic: PricingTier
-  premium: PricingTier
-}
 
-export interface PricingTier {
-  price: number
-  requests: number
-  features: string[]
-  support: string
-}
 
 export type DemandLevel = "high" | "medium" | "low";
 export type DemandLabel =
@@ -42,7 +31,7 @@ export type DemandLabel =
   | "High In Demand"
   | "Trending"
   | "Essential";
-  
+
 export enum ProductType {
   IDENTITY_VERIFICATION = "identity-verification",
   DOCUMENT_VERIFICATION = "document-verification",

@@ -10,6 +10,7 @@ import {
 import { validateToken } from "../../utils/tokenUtils";
 import { analyticsSetUserId, analyticsLogEvent } from "../../lib/firebaseClient";
 import { getTokenCookie, getUserCookie, areCookiesSupported } from "../../utils/cookieUtils";
+import type { RootState } from "../../redux/store";
 
 // Types
 export interface User {
@@ -57,6 +58,18 @@ export interface AuthState {
   pendingPhone?: string;
 }
 
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+// Helper to safely extract error message
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return "An unexpected error occurred";
+};
+
 // Helper function to initialize auth state with token validation
 const initializeAuthState = (): AuthState => {
   // Try to get token from cookies first, then localStorage
@@ -93,7 +106,7 @@ const initializeAuthState = (): AuthState => {
     };
   }
 
-  const { isValid, payload } = validateToken(token);
+  const { isValid } = validateToken(token);
 
   if (!isValid) {
     // Clean up invalid tokens from both storage methods
@@ -128,7 +141,7 @@ const initializeAuthState = (): AuthState => {
 const initialState: AuthState = initializeAuthState();
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
-const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+const apiCall = async <T = unknown>(endpoint: string, options: RequestInit = {}): Promise<{ data: T; message?: string }> => {
   const token = localStorage.getItem("token");
 
   const config: RequestInit = {
@@ -163,25 +176,25 @@ export const sendPhoneOtp = createAsyncThunk(
         : `+${phone.replace(/\D/g, "")}`;
       localStorage.setItem("pendingPhone", formattedPhone);
       return { phone: formattedPhone };
-    } catch (error: any) {
+    } catch {
       return rejectWithValue("Failed to prepare phone verification");
     }
   }
 );
 
-export const verifyPhoneOtp = createAsyncThunk(
+export const verifyPhoneOtp = createAsyncThunk<AuthResponse, {
+  idToken: string;
+  name?: string;
+  company?: string;
+  password?: string;
+}, { rejectValue: string }>(
   "auth/verifyPhoneOtp",
   async (
-    payload: {
-      idToken: string;
-      name?: string;
-      company?: string;
-      password?: string;
-    },
+    payload,
     { rejectWithValue }
   ) => {
     try {
-      const response = await apiCall("/auth/phone/register", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/phone/register", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -194,39 +207,39 @@ export const verifyPhoneOtp = createAsyncThunk(
         user: response.data.user,
         token: response.data.token,
       };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Registration failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Registration failed");
     }
   }
 );
 
-export const loginWithPhone = createAsyncThunk(
+export const loginWithPhone = createAsyncThunk<AuthResponse, string, { rejectValue: string }>(
   "auth/loginWithPhone",
   async (idToken: string, { rejectWithValue }) => {
     try {
-      const response = await apiCall("/auth/phone/login", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/phone/login", {
         method: "POST",
         body: JSON.stringify({ idToken }),
       });
 
       localStorage.setItem("token", response.data.token);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Phone login failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Phone login failed");
     }
   }
 );
 
-export const loginWithPhoneAndPassword = createAsyncThunk(
+export const loginWithPhoneAndPassword = createAsyncThunk<AuthResponse, { phone: string; password: string }, { rejectValue: string }>(
   "auth/loginWithPhoneAndPassword",
   async (
-    credentials: { phone: string; password: string },
+    credentials,
     { rejectWithValue }
   ) => {
     try {
       // ... existing code ...
 
-      const response = await apiCall("/auth/login/phone-password", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/login/phone-password", {
         method: "POST",
         body: JSON.stringify({
           ...credentials,
@@ -234,21 +247,19 @@ export const loginWithPhoneAndPassword = createAsyncThunk(
         }),
       });
 
-      console.log('API Response:', response); // 🔍 Should show { success: true, data: { ... } }
-      
       localStorage.setItem("token", response.data.token);
-      return response; // returns full response
-    } catch (error: any) {
+      return response.data; // returns full response
+    } catch (error: unknown) {
       console.error('Login error:', error);
-      return rejectWithValue(error.message || "Login failed");
+      return rejectWithValue(getErrorMessage(error) || "Login failed");
     }
   }
 );
 
 // Existing async thunks (email/password auth)
-export const loginUser = createAsyncThunk(
+export const loginUser = createAsyncThunk<AuthResponse, LoginCredentials, { rejectValue: string }>(
   "auth/login",
-  async (credentials: LoginCredentials, { rejectWithValue }) => {
+  async (credentials, { rejectWithValue }) => {
     try {
       let locationData;
       try {
@@ -258,7 +269,7 @@ export const loginUser = createAsyncThunk(
         locationData = getFallbackLocationData();
       }
 
-      const response = await apiCall("/auth/login", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/login", {
         method: "POST",
         body: JSON.stringify({
           ...credentials,
@@ -268,15 +279,15 @@ export const loginUser = createAsyncThunk(
 
       localStorage.setItem("token", response.data.token);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Login failed");
     }
   }
 );
 
-export const registerUser = createAsyncThunk(
+export const registerUser = createAsyncThunk<{ user: User | null; message: string }, RegisterData, { rejectValue: string }>(
   "auth/register",
-  async (userData: RegisterData, { rejectWithValue }) => {
+  async (userData, { rejectWithValue }) => {
     try {
       let locationData;
       try {
@@ -286,7 +297,7 @@ export const registerUser = createAsyncThunk(
         locationData = getFallbackLocationData();
       }
 
-      const response = await apiCall("/auth/register", {
+      const response = await apiCall<{ user: User; message: string }>("/auth/register", {
         method: "POST",
         body: JSON.stringify({
           ...userData,
@@ -295,106 +306,106 @@ export const registerUser = createAsyncThunk(
       });
 
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Registration failed");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Registration failed");
     }
   }
 );
 
-export const sendEmailOtp = createAsyncThunk(
+export const sendEmailOtp = createAsyncThunk<boolean, string, { rejectValue: string }>(
   "auth/sendEmailOtp",
-  async (email: string, { rejectWithValue }) => {
+  async (email, { rejectWithValue }) => {
     try {
       await apiCall("/auth/send-email-otp", {
         method: "POST",
         body: JSON.stringify({ email }),
       });
       return true;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to send OTP");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to send OTP");
     }
   }
 );
 
-export const verifyEmailOtp = createAsyncThunk(
+export const verifyEmailOtp = createAsyncThunk<AuthResponse, { email: string; otp: string }, { rejectValue: string }>(
   "auth/verifyEmailOtp",
-  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await apiCall("/auth/verify-email-otp", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/verify-email-otp", {
         method: "POST",
         body: JSON.stringify(payload),
       });
       localStorage.setItem("token", response.data.token);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Invalid OTP");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Invalid OTP");
     }
   }
 );
 
-export const sendPasswordOtp = createAsyncThunk(
+export const sendPasswordOtp = createAsyncThunk<boolean, string, { rejectValue: string }>(
   "auth/sendPasswordOtp",
-  async (email: string, { rejectWithValue }) => {
+  async (email, { rejectWithValue }) => {
     try {
       await apiCall("/auth/password/send-otp", {
         method: "POST",
         body: JSON.stringify({ email }),
       });
       return true;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to send password OTP");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to send password OTP");
     }
   }
 );
 
-export const resetPasswordWithOtp = createAsyncThunk(
+export const resetPasswordWithOtp = createAsyncThunk<AuthResponse, { email: string; otp: string; newPassword: string }, { rejectValue: string }>(
   "auth/resetPasswordWithOtp",
   async (
-    payload: { email: string; otp: string; newPassword: string },
+    payload,
     { rejectWithValue }
   ) => {
     try {
-      const response = await apiCall("/auth/password/reset", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/password/reset", {
         method: "POST",
         body: JSON.stringify(payload),
       });
       localStorage.setItem("token", response.data.token);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to reset password");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to reset password");
     }
   }
 );
 
 // Reset password using Firebase Phone ID token (phone-registered users)
-export const resetPasswordWithPhoneToken = createAsyncThunk(
+export const resetPasswordWithPhoneToken = createAsyncThunk<AuthResponse, { idToken: string; newPassword: string }, { rejectValue: string }>(
   "auth/resetPasswordWithPhoneToken",
-  async (payload: { idToken: string; newPassword: string }, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await apiCall("/auth/password/reset-phone", {
+      const response = await apiCall<{ user: User; token: string }>("/auth/password/reset-phone", {
         method: "POST",
         body: JSON.stringify(payload),
       });
       localStorage.setItem("token", response.data.token);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to update password");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to update password");
     }
   }
 );
 
-export const refreshToken = createAsyncThunk(
+export const refreshToken = createAsyncThunk<{ token: string }, void, { rejectValue: string }>(
   "auth/refreshToken",
   async (_, { rejectWithValue, getState }) => {
     try {
-      const state = getState() as { auth: AuthState };
+      const state = getState() as RootState;
       const currentToken = state.auth.token;
-      
+
       if (!currentToken) {
         return rejectWithValue("No token to refresh");
       }
 
-      const response = await apiCall("/auth/refresh", {
+      const response = await apiCall<{ token: string }>("/auth/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -403,7 +414,7 @@ export const refreshToken = createAsyncThunk(
       });
 
       const newToken = response.data.token;
-      
+
       // Update both localStorage and cookies
       localStorage.setItem("token", newToken);
       if (areCookiesSupported()) {
@@ -413,43 +424,43 @@ export const refreshToken = createAsyncThunk(
       }
 
       return { token: newToken };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to refresh token");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to refresh token");
     }
   }
 );
 
-export const fetchUserProfile = createAsyncThunk(
+export const fetchUserProfile = createAsyncThunk<User, void, { rejectValue: string }>(
   "auth/fetchProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiCall("/auth/profile");
+      const response = await apiCall<{ user: User }>("/auth/profile");
       return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch profile");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to fetch profile");
     }
   }
 );
 
-export const updateUserProfile = createAsyncThunk(
+export const updateUserProfile = createAsyncThunk<User, Partial<User>, { rejectValue: string }>(
   "auth/updateProfile",
-  async (userData: Partial<User>, { rejectWithValue }) => {
+  async (userData, { rejectWithValue }) => {
     try {
-      const response = await apiCall("/auth/profile", {
+      const response = await apiCall<{ user: User }>("/auth/profile", {
         method: "PUT",
         body: JSON.stringify(userData),
       });
       return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to update profile");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to update profile");
     }
   }
 );
 
-export const changePassword = createAsyncThunk(
+export const changePassword = createAsyncThunk<{ message: string }, { currentPassword: string; newPassword: string }, { rejectValue: string }>(
   "auth/changePassword",
   async (
-    passwordData: { currentPassword: string; newPassword: string },
+    passwordData,
     { rejectWithValue }
   ) => {
     try {
@@ -458,16 +469,16 @@ export const changePassword = createAsyncThunk(
         body: JSON.stringify(passwordData),
       });
       return { message: "Password changed successfully" };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to change password");
+    } catch (error: unknown) {
+      return rejectWithValue(getErrorMessage(error) || "Failed to change password");
     }
   }
 );
 
-export const validateTokenAndLogout = createAsyncThunk(
+export const validateTokenAndLogout = createAsyncThunk<{ isValid: boolean }, void, { state: RootState }>(
   "auth/validateToken",
   async (_, { dispatch, getState }) => {
-    const state = getState() as { auth: AuthState };
+    const state = getState();
     const { token } = state.auth;
 
     if (!token) {
@@ -497,13 +508,13 @@ const authSlice = createSlice({
       state.error = null;
       state.pendingEmail = undefined;
       state.pendingPhone = undefined;
-      
+
       // Clean localStorage
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       localStorage.removeItem("phoneVerificationId");
       localStorage.removeItem("pendingPhone");
-      
+
       // Clean cookies if supported
       if (areCookiesSupported()) {
         import("../../utils/cookieUtils").then(({ removeTokenCookie, removeUserCookie }) => {
@@ -530,36 +541,39 @@ const authSlice = createSlice({
       })
 
       .addCase(loginUser.fulfilled, (state, action) => {
-        // loginUser thunk returns response.data (backend's data object)
+        // loginUser thunk returns AuthResponse now
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = (action.payload as any).user;
-        state.token = (action.payload as any).token;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
         state.error = null;
         state.pendingEmail = undefined;
-        
+
         // Store in localStorage
-        localStorage.setItem("token", (action.payload as any).token);
-        localStorage.setItem("user", JSON.stringify((action.payload as any).user));
-        
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+
         // Store in cookies if supported (more reliable)
         if (areCookiesSupported()) {
+          const payload = action.payload;
           import("../../utils/cookieUtils").then(({ setTokenCookie, setUserCookie }) => {
-            setTokenCookie((action.payload as any).token, true); // rememberMe = true for regular login
-            setUserCookie((action.payload as any).user, true);
+            setTokenCookie(payload.token, true); // rememberMe = true for regular login
+            setUserCookie(payload.user, true);
           });
         }
-        
+
         // Fire-and-forget analytics
         try {
-          const uid = (action.payload as any)?.user?.id;
+          const uid = action.payload.user.id;
           if (uid) void analyticsSetUserId(uid);
           void analyticsLogEvent("login", { method: "email" });
-        } catch {}
+        } catch {
+          // ignore
+        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Login failed";
       })
       // Register
       .addCase(registerUser.pending, (state) => {
@@ -568,12 +582,12 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.pendingEmail = action.payload.user?.email;
+        state.pendingEmail = action.payload.user?.email || undefined;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Registration failed";
       })
       // Send Email OTP
       .addCase(sendEmailOtp.pending, (state) => {
@@ -585,7 +599,7 @@ const authSlice = createSlice({
       })
       .addCase(sendEmailOtp.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to send OTP";
       })
       // Verify Email OTP
       .addCase(verifyEmailOtp.pending, (state) => {
@@ -600,14 +614,16 @@ const authSlice = createSlice({
         state.pendingEmail = undefined;
         // Fire-and-forget analytics
         try {
-          const uid = action.payload?.user?.id;
+          const uid = action.payload.user.id;
           if (uid) void analyticsSetUserId(uid);
           void analyticsLogEvent("sign_up", { method: "email" });
-        } catch {}
+        } catch {
+          // ignore
+        }
       })
       .addCase(verifyEmailOtp.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Invalid OTP";
       })
       // Password reset send OTP
       .addCase(sendPasswordOtp.pending, (state) => {
@@ -619,7 +635,7 @@ const authSlice = createSlice({
       })
       .addCase(sendPasswordOtp.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to send password OTP";
       })
       // Reset password with OTP
       .addCase(resetPasswordWithOtp.pending, (state) => {
@@ -634,7 +650,7 @@ const authSlice = createSlice({
       })
       .addCase(resetPasswordWithOtp.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to reset password";
       })
       // Fetch Profile
       .addCase(fetchUserProfile.pending, (state) => {
@@ -648,7 +664,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to fetch profile";
       })
       // Refresh Token
       .addCase(refreshToken.pending, (state) => {
@@ -662,7 +678,7 @@ const authSlice = createSlice({
       })
       .addCase(refreshToken.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to refresh token";
         // If refresh fails, logout the user
         state.user = null;
         state.token = null;
@@ -688,7 +704,7 @@ const authSlice = createSlice({
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to update profile";
       })
       // Change Password
       .addCase(changePassword.pending, (state) => {
@@ -701,7 +717,7 @@ const authSlice = createSlice({
       })
       .addCase(changePassword.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to change password";
       })
       // Validate Token
       .addCase(validateTokenAndLogout.fulfilled, (state, action) => {
@@ -742,14 +758,16 @@ const authSlice = createSlice({
         state.error = null;
         // Fire-and-forget analytics
         try {
-          const uid = action.payload?.user?.id;
+          const uid = action.payload.user.id;
           if (uid) void analyticsSetUserId(uid);
           void analyticsLogEvent("sign_up", { method: "phone" });
-        } catch {}
+        } catch {
+          // ignore
+        }
       })
       .addCase(verifyPhoneOtp.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Verification failed";
         state.pendingPhone = undefined;
       })
       // Phone Login
@@ -765,14 +783,16 @@ const authSlice = createSlice({
         state.error = null;
         // Fire-and-forget analytics
         try {
-          const uid = action.payload?.user?.id;
+          const uid = action.payload.user.id;
           if (uid) void analyticsSetUserId(uid);
           void analyticsLogEvent("login", { method: "phone" });
-        } catch {}
+        } catch {
+          // ignore
+        }
       })
       .addCase(loginWithPhone.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Login failed";
       })
 
       // Phone + Password Login
@@ -781,38 +801,33 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginWithPhoneAndPassword.fulfilled, (state, action) => {
-        console.log("Phone login fulfilled payload:", action.payload); // 🔍 Debug
-
-        // ✅ Safety check
-        if (
-          !action.payload ||
-          !action.payload.data ||
-          !action.payload.data.user
-        ) {
-          state.isLoading = false;
-          state.error = "Login failed: Invalid response from server";
-          state.isAuthenticated = false;
-          return;
-        }
-
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload.data.user;
-        state.token = action.payload.data.token;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
         state.error = null;
-        // Fire-and-forget analytics
-        try {
-          const uid = action.payload?.data?.user?.id;
-          if (uid) void analyticsSetUserId(uid);
-          void analyticsLogEvent("login", { method: "phone_password" });
-        } catch {}
+        state.pendingPhone = undefined;
+
+        // Store in localStorage
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
+
+        // Store in cookies if supported (more reliable)
+        if (areCookiesSupported()) {
+          const payload = action.payload;
+          import("../../utils/cookieUtils").then(({ setTokenCookie, setUserCookie }) => {
+            setTokenCookie(payload.token, true);
+            setUserCookie(payload.user, true);
+          });
+        }
       })
       .addCase(loginWithPhoneAndPassword.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Login failed";
       });
   },
 });
 
 export const { logout, clearError, setToken } = authSlice.actions;
+
 export default authSlice.reducer;

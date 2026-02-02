@@ -1,7 +1,8 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Home, User } from 'lucide-react'
+import { Shield, Home, User } from 'lucide-react'
+import { BackButton } from '../components/common/BackButton'
 import { useAppSelector } from '../redux/hooks'
 
 const UnauthorizedPage: React.FC = () => {
@@ -61,13 +62,7 @@ const UnauthorizedPage: React.FC = () => {
                 View Profile
               </button>
 
-              <button
-                onClick={() => navigate(-1)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Go Back
-              </button>
+              <BackButton label="Go Back" className="w-full justify-center" />
             </div>
 
             <div className="pt-4 border-t border-gray-200">

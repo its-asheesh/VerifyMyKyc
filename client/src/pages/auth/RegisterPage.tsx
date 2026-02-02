@@ -7,9 +7,7 @@ import {
   registerUser,
   sendEmailOtp,
   verifyEmailOtp,
-  clearError,
   verifyPhoneOtp,
-  fetchUserProfile,
 } from "../../redux/slices/authSlice";
 import {
   Lock,
@@ -26,13 +24,14 @@ import {
   PhoneAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
+import type { ConfirmationResult } from "firebase/auth";
 import TextField from "../../components/forms/TextField";
 import { isValidEmail, isValidE164Phone } from "../../utils/validators";
 import OtpInputWithTimer from "../../components/forms/OtpInputWithTimer";
 import PasswordStrengthMeter from "../../components/forms/PasswordStrengthMeter";
 import AuthCardLayout from "../../components/auth/AuthCardLayout";
 import registerHero from "../../assets/animations/register-hero.json";
-import BackButton from "../../components/buttons/BackButton";
+import { BackButton } from "../../components/common/BackButton";
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +61,7 @@ const RegisterPage: React.FC = () => {
   const [pendingPhone, setPendingPhone] = useState<string | undefined>(
     undefined
   );
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   const recaptchaRef = useRef<HTMLDivElement>(null);
@@ -70,8 +69,9 @@ const RegisterPage: React.FC = () => {
   // Auto-login
   useEffect(() => {
     if (isAuthenticated) {
-      const redirectTo = (location.state as any)?.redirectTo || "/";
-      navigate(redirectTo, { state: (location.state as any)?.nextState });
+      const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
+      const redirectTo = state?.redirectTo || "/";
+      navigate(redirectTo, { state: state?.nextState });
     }
   }, [isAuthenticated, navigate, location.state]);
 
@@ -121,7 +121,7 @@ const RegisterPage: React.FC = () => {
 
   const safeSet = (
     setter: React.Dispatch<React.SetStateAction<string>>,
-    value: any
+    value: unknown
   ) => {
     if (typeof value === "string") {
       setter(value);
@@ -186,7 +186,9 @@ const RegisterPage: React.FC = () => {
       let appVerifier = window.recaptchaVerifier;
       if (!appVerifier) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-        try { (window.recaptchaVerifier as any).render?.(); } catch {}
+        try { window.recaptchaVerifier.render?.(); } catch {
+          // ignore
+        }
         appVerifier = window.recaptchaVerifier;
       }
       const confirmation = await signInWithPhoneNumber(
@@ -197,9 +199,9 @@ const RegisterPage: React.FC = () => {
       setConfirmationResult(confirmation);
       setPendingPhone(e164Phone);
       setStep(2);
-    } catch (err: any) {
+    } catch (err: unknown) {
       let msg = "Failed to send OTP";
-      if (err.code === "auth/invalid-phone-number") msg = "Invalid phone number";
+      if ((err as { code?: string }).code === "auth/invalid-phone-number") msg = "Invalid phone number";
       showToast(msg, { type: "error" });
     } finally {
       setIsSendingOtp(false);
@@ -233,7 +235,7 @@ const RegisterPage: React.FC = () => {
             password, // This will be the password collected in step 2
           })
         );
-      } catch (err) {
+      } catch {
         showToast("Invalid OTP", { type: "error" });
       }
     }
@@ -251,7 +253,7 @@ const RegisterPage: React.FC = () => {
           appVerifier
         );
         setConfirmationResult(confirmation);
-      } catch (err) {
+      } catch {
         showToast("Failed to resend OTP", { type: "error" });
       }
     }
@@ -266,7 +268,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <AuthCardLayout
-      animationData={registerHero as any}
+      animationData={registerHero as object}
       leftHeader={
         <div>
           {step > 1 && <BackButton onClick={goBack} label="Back" className="mb-2" />}
@@ -298,142 +300,142 @@ const RegisterPage: React.FC = () => {
         className=""
       >
         {/* Title moved to rightHeader to align with progress bar; back button moved to header */}
-          {step === 1 && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextField
-                  label="Full Name"
-                  id="name"
-                  value={name}
-                  onChange={(val) => safeSet(setName, val)}
-                  icon={User}
-                  required
-                  autoComplete="name"
-                />
-                <div className="grid grid-cols-5 gap-2">
-                  {isPhoneLike && (
-                    <div className="col-span-2">
-                      <label htmlFor="dialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                      <select
-                        id="dialCode"
-                        value={selectedDialCode}
-                        onChange={(e) => setSelectedDialCode(e.target.value)}
-                        className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
-                      >
-                        {DIAL_CODES.map((o) => (
-                          <option key={o.code} value={o.code}>{o.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <div className={isPhoneLike ? "col-span-3" : "col-span-5"}>
-                    <TextField
-                      label="Email or Mobile"
-                      id="identifier"
-                      value={identifier}
-                      onChange={(val) => safeSet(setIdentifier, val)}
-                      autoComplete="username"
-                    />
+        {step === 1 && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TextField
+                label="Full Name"
+                id="name"
+                value={name}
+                onValueChange={(val) => safeSet(setName, val)}
+                icon={User}
+                required
+                autoComplete="name"
+              />
+              <div className="grid grid-cols-5 gap-2">
+                {isPhoneLike && (
+                  <div className="col-span-2">
+                    <label htmlFor="dialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <select
+                      id="dialCode"
+                      value={selectedDialCode}
+                      onChange={(e) => setSelectedDialCode(e.target.value)}
+                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
+                    >
+                      {DIAL_CODES.map((o) => (
+                        <option key={o.code} value={o.code}>{o.label}</option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-              </div>
-
-              <TextField
-                label="Password"
-                id="password"
-                type="password"
-                value={password}
-                onChange={(val) => safeSet(setPassword, val)}
-                icon={Lock}
-                required
-                autoComplete="new-password"
-              />
-              <PasswordStrengthMeter password={password} />
-
-              <TextField
-                label="Confirm Password"
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(val) => safeSet(setConfirmPassword, val)}
-                icon={Lock}
-                required
-                autoComplete="new-password"
-              />
-
-              <TextField
-                label="Company (Optional)"
-                id="company"
-                value={company}
-                onChange={(val) => safeSet(setCompany, val)}
-                icon={Building}
-                autoComplete="organization"
-              />
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.98 }}
-                onClick={handleSendOtp}
-                disabled={isLoading || isSendingOtp}
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isSendingOtp ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating account...</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-5 h-5" />
-                    <span>Create account</span>
-                  </>
                 )}
-              </motion.button>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{" "}
-                  <Link to="/login" className="text-blue-600 hover:underline">
-                    Sign in
-                  </Link>
-                </p>
+                <div className={isPhoneLike ? "col-span-3" : "col-span-5"}>
+                  <TextField
+                    label="Email or Mobile"
+                    id="identifier"
+                    value={identifier}
+                    onValueChange={(val) => safeSet(setIdentifier, val)}
+                    autoComplete="username"
+                  />
+                </div>
               </div>
             </div>
-          )}
 
-          {step === 2 && (
-            <div className="space-y-6">
-              <div className="mt-12 md:mt-12">
-                <OtpInputWithTimer
-                  value={otp}
-                  onChange={(val) => safeSet(setOtp, val)}
-                  onResend={handleResendOtp}
-                  error={error}
-                />
+            <TextField
+              label="Password"
+              id="password"
+              type="password"
+              value={password}
+              onValueChange={(val) => safeSet(setPassword, val)}
+              icon={Lock}
+              required
+              autoComplete="new-password"
+            />
+            <PasswordStrengthMeter password={password} />
+
+            <TextField
+              label="Confirm Password"
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onValueChange={(val) => safeSet(setConfirmPassword, val)}
+              icon={Lock}
+              required
+              autoComplete="new-password"
+            />
+
+            <TextField
+              label="Company (Optional)"
+              id="company"
+              value={company}
+              onValueChange={(val) => safeSet(setCompany, val)}
+              icon={Building}
+              autoComplete="organization"
+            />
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{error}</p>
               </div>
-              <button
-                type="button"
-                onClick={handleVerifyOtp}
-                disabled={isLoading}
-                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isLoading ? "Verifying..." : "Verify & Sign Up"}
-              </button>
-              <button
-                type="button"
-                onClick={goBack}
-                className="w-full text-sm text-blue-600 hover:text-blue-700"
-              >
-                ← Change email/phone
-              </button>
+            )}
+
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.98 }}
+              onClick={handleSendOtp}
+              disabled={isLoading || isSendingOtp}
+              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isSendingOtp ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating account...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-5 h-5" />
+                  <span>Create account</span>
+                </>
+              )}
+            </motion.button>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link to="/login" className="text-blue-600 hover:underline">
+                  Sign in
+                </Link>
+              </p>
             </div>
-          )}
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-6">
+            <div className="mt-12 md:mt-12">
+              <OtpInputWithTimer
+                value={otp}
+                onChange={(val) => safeSet(setOtp, val)}
+                onResend={handleResendOtp}
+                error={error}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleVerifyOtp}
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isLoading ? "Verifying..." : "Verify & Sign Up"}
+            </button>
+            <button
+              type="button"
+              onClick={goBack}
+              className="w-full text-sm text-blue-600 hover:text-blue-700"
+            >
+              ← Change email/phone
+            </button>
+          </div>
+        )}
 
         <div id="recaptcha-container" ref={recaptchaRef} className="hidden" />
       </motion.div>

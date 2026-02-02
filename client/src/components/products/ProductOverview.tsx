@@ -10,17 +10,7 @@ import {
   Shield,
 } from "lucide-react";
 import type { Product } from "../../types/product";
-import { AadhaarSection } from "../verification/AadhaarSection";
-import { PanSection } from "../verification/PanSection";
-import { DrivingLicenseSection } from "../verification/DrivingLicenseSection";
-import { VoterSection } from "../verification/VoterSection";
-import { GstinSection } from "../verification/GstinSection";
-import { EpfoSection } from "../verification/EpfoSection";
-import { CompanySection } from "../verification/CompanySection";
-import { BankAccountSection } from "../verification/BankAccountSection";
-import { RcSection } from "../verification/RcSection";
-import { PassportSection } from "../verification/PassportSection";
-import { CCRVSection } from "../verification/CcrvSection";
+
 import { useQuery } from "@tanstack/react-query";
 import { reviewApi } from "../../services/api/reviewApi";
 import { useVerificationPricing } from "../../hooks/usePricing";
@@ -35,17 +25,6 @@ interface ProductOverviewProps {
 }
 
 export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => {
-  const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false);
-  const [panModalOpen, setPanModalOpen] = useState(false);
-  const [drivingLicenseModalOpen, setDrivingLicenseModalOpen] = useState(false);
-  const [voterModalOpen, setVoterModalOpen] = useState(false);
-  const [gstinModalOpen, setGstinModalOpen] = useState(false);
-  const [companyModalOpen, setCompanyModalOpen] = useState(false);
-  const [bankModalOpen, setBankModalOpen] = useState(false);
-  const [rcModalOpen, setRcModalOpen] = useState(false);
-  const [passportModalOpen, setPassportModalOpen] = useState(false);
-  const [ccrvModalOpen, setCcrvModalOpen] = useState(false);
-  const [epfoModalOpen, setEpfoModalOpen] = useState(false);
   const [buyPromptOpen, setBuyPromptOpen] = useState(false);
   const [awaitingAccessCheck, setAwaitingAccessCheck] = useState(false);
   const buyPromptTimerRef = React.useRef<number | null>(null);
@@ -160,7 +139,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     if (actualUsers !== undefined && actualUsers > 1000) {
       return actualUsers.toLocaleString()
     }
-    
+
     // Otherwise, generate consistent random number between 500-1000
     // Use product ID as seed for consistent random number
     let hash = 0
@@ -227,19 +206,9 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     });
   };
 
-  // Helper to open the correct verification modal
-  const openVerificationModal = () => {
-    if (isAadhaarProduct) setAadhaarModalOpen(true);
-    else if (isPanProduct) setPanModalOpen(true);
-    else if (isDrivingLicenseProduct) setDrivingLicenseModalOpen(true);
-    else if (isVoterProduct) setVoterModalOpen(true);
-    else if (isGstinProduct) setGstinModalOpen(true);
-    else if (isCompanyProduct) setCompanyModalOpen(true);
-    else if (isBankProduct) setBankModalOpen(true);
-    else if (isRcProduct) setRcModalOpen(true);
-    else if (isPassportProduct) setPassportModalOpen(true);
-    else if (isCcrvProduct) setCcrvModalOpen(true);
-    else if (isEpfoProduct) setEpfoModalOpen(true);
+  // Navigate to verification page
+  const navigateToVerification = () => {
+    navigate(`/verification/${verificationType}?productId=${product.id}`);
   };
 
   // Determine if user has active access for THIS product's verification type
@@ -302,7 +271,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
       return;
     }
 
-    openVerificationModal();
+    navigateToVerification();
   };
 
   // When we were waiting for services to load, decide what to do once loaded
@@ -327,7 +296,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
     const hasAccess = bypassAccess ? true : hasActiveAccessForProduct(activeServices);
 
     if (!hasAccess) setBuyPromptOpen(true);
-    else openVerificationModal();
+    else navigateToVerification();
   }, [awaitingAccessCheck, activeServices, product.isActive]);
 
   // Cleanup timer on unmount
@@ -388,18 +357,17 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
             <Shield className="w-4 h-4" />
             {product.category.name}
           </div>
-          
+
           {/* Ratings - Compact Inline */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`w-4 h-4 ${
-                    star <= Math.round(avg)
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-300"
-                  }`}
+                  className={`w-4 h-4 ${star <= Math.round(avg)
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-300"
+                    }`}
                 />
               ))}
             </div>
@@ -414,53 +382,7 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
           </div>
         </div>
 
-        {/* Ratings */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                className={`w-5 h-5 ${
-                  count > 0 && star <= Math.round(avg)
-                    ? "text-yellow-400 fill-yellow-400"
-                    : "text-gray-300"
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-gray-700">
-            {count > 0 ? avgDisplay : "0.0"}/5
-          </span>
-          {count > 0 && (
-            <span className="text-sm text-gray-500">
-              ({count} {count === 1 ? "review" : "reviews"})
-            </span>
-          )}
-        </div>
 
-        {/* Ratings */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                className={`w-5 h-5 ${
-                  count > 0 && star <= Math.round(avg)
-                    ? "text-yellow-400 fill-yellow-400"
-                    : "text-gray-300"
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-gray-700">
-            {count > 0 ? avgDisplay : "0.0"}/5
-          </span>
-          {count > 0 && (
-            <span className="text-sm text-gray-500">
-              ({count} {count === 1 ? "review" : "reviews"})
-            </span>
-          )}
-        </div>
 
         {/* Title */}
         {/* <h2 className="text-3xl font-bold text-gray-900">{product.title}</h2> */}
@@ -529,29 +451,28 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         {/* CTA Buttons */}
         <div className="flex gap-4 pt-6">
           <button
-            className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              product.isActive
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
+            className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${product.isActive && !isCcrvProduct
+              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             onClick={handleBuyNow}
-            disabled={!product.isActive}
+            disabled={!product.isActive || isCcrvProduct}
           >
-            {product.isActive
+            {isCcrvProduct ? "Coming Soon" : (product.isActive
               ? pricingData
                 ? `Buy Now - ₹${Number(pricingData.oneTimePrice).toFixed(2)}`
                 : "Buy Now"
-              : "Coming Soon"}
+              : "Coming Soon")}
           </button>
           <button
-            className={`px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 ${
-              product.isActive
-                ? "border-gray-300 text-gray-700 hover:border-blue-500 hover:text-blue-600"
-                : "border-gray-300 text-gray-400 cursor-not-allowed"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`px-6 py-3 border rounded-xl font-bold transition-all duration-300 ${product.isActive && !isCcrvProduct
+              ? "border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white shadow-sm hover:shadow-md"
+              : "border-gray-200 text-gray-400 cursor-not-allowed"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={handleTryDemo}
             disabled={
               !product.isActive ||
+              isCcrvProduct ||
               !(
                 isAadhaarProduct ||
                 isPanProduct ||
@@ -567,165 +488,13 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
               )
             }
           >
-            {product.isActive ? "Start Verification" : "Coming Soon"}
+            {isCcrvProduct ? "Coming Soon" : (product.isActive ? "Start Verification" : "Coming Soon")}
           </button>
         </div>
       </motion.div>
 
       {/* Modals */}
-      {aadhaarModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setAadhaarModalOpen(false)}
-            >
-              &times;
-            </button>
-            <AadhaarSection productId={product.id} />
-          </div>
-        </div>
-      )}
 
-      {panModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setPanModalOpen(false)}
-            >
-              &times;
-            </button>
-            <PanSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {drivingLicenseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setDrivingLicenseModalOpen(false)}
-            >
-              &times;
-            </button>
-            <DrivingLicenseSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {voterModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setVoterModalOpen(false)}
-            >
-              &times;
-            </button>
-            <VoterSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {gstinModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setGstinModalOpen(false)}
-            >
-              &times;
-            </button>
-            <GstinSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {epfoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setEpfoModalOpen(false)}
-            >
-              &times;
-            </button>
-            <EpfoSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {companyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setCompanyModalOpen(false)}
-            >
-              &times;
-            </button>
-            <CompanySection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {bankModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setBankModalOpen(false)}
-            >
-              &times;
-            </button>
-            <BankAccountSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {rcModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setRcModalOpen(false)}
-            >
-              &times;
-            </button>
-            <RcSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {passportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setPassportModalOpen(false)}
-            >
-              &times;
-            </button>
-            <PassportSection productId={product.id} />
-          </div>
-        </div>
-      )}
-
-      {ccrvModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full relative p-6">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-              onClick={() => setCcrvModalOpen(false)}
-            >
-              &times;
-            </button>
-            <CCRVSection productId={product.id} />
-          </div>
-        </div>
-      )}
 
       {/* Elegant Buy Prompt (inline on product page) */}
       {buyPromptOpen && (

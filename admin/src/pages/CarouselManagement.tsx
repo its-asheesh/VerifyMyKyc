@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Plus, Edit, Trash2, Eye, EyeOff, Image, 
-  Loader2, AlertCircle, CheckCircle, X
+import {
+  Plus, Edit, Trash2, Eye, EyeOff, Image,
+  Loader2, AlertCircle
 } from 'lucide-react'  // Removed unused 'GripVertical'
 import { useToast } from '../context/ToastContext'
-import { 
-  useCarouselSlides, 
-  useCreateCarouselSlide, 
-  useUpdateCarouselSlide, 
-  useDeleteCarouselSlide, 
-  useToggleCarouselSlideStatus 
+import { Button, FormModal } from '../components/common'
+import {
+  useCarouselSlides,
+  useCreateCarouselSlide,
+  useUpdateCarouselSlide,
+  useDeleteCarouselSlide,
+  useToggleCarouselSlideStatus
   // Removed: useReorderCarouselSlides (not used)
 } from '../hooks/useCarousel'
 import type { CarouselSlide, CreateCarouselSlideData } from '../services/api/carouselApi'
@@ -67,183 +68,135 @@ const CarouselForm: React.FC<CarouselFormProps> = ({
     }
   }, [editData])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = () => {
+    // Prevent default already handled by FormModal if logic matches, but FormModal calls onSubmit(e).
+    // The current onSubmit expects (data: CreateCarouselSlideData).
+    // So we need to wrap it.
     onSubmit(formData)
   }
 
-  if (!isOpen) return null
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    <FormModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${editData ? 'Edit' : 'Add'} Carousel Slide`}
+      onSubmit={() => handleSubmit()} // Passing dummy event or fixing types
+      isLoading={isLoading}
+      size="md"
     >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {editData ? 'Edit' : 'Add'} Carousel Slide
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Title *
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter slide title"
+            required
+          />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Subtitle *
+          </label>
+          <input
+            type="text"
+            value={formData.subtitle}
+            onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter slide subtitle"
+            required
+          />
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title *
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter slide title"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subtitle *
-              </label>
-              <input
-                type="text"
-                value={formData.subtitle}
-                onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter slide subtitle"
-                required
-              />
-            </div>
-          </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Description *
+        </label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Enter slide description"
+          required
+        />
+      </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter slide description"
-              required
-            />
-          </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Image URL *
+        </label>
+        <input
+          type="url"
+          value={formData.imageUrl}
+          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="https://example.com/image.jpg"
+          required
+        />
+      </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Image URL *
-            </label>
-            <input
-              type="url"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="https://example.com/image.jpg"
-              required
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Button Text *
+          </label>
+          <input
+            type="text"
+            value={formData.buttonText}
+            onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Get Started"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Button Link *
+          </label>
+          <input
+            type="text"
+            value={formData.buttonLink}
+            onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="/custom-pricing"
+            required
+          />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Button Text *
-              </label>
-              <input
-                type="text"
-                value={formData.buttonText}
-                onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Get Started"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Button Link *
-              </label>
-              <input
-                type="text"
-                value={formData.buttonLink}
-                onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="/custom-pricing"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order
-              </label>
-              <input
-                type="number"
-                value={formData.order}
-                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0"
-              />
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
-                Active
-              </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  {editData ? 'Update' : 'Save'}
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Order
+          </label>
+          <input
+            type="number"
+            value={formData.order}
+            onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="0"
+          />
+        </div>
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="isActive"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
+            Active
+          </label>
+        </div>
+      </div>
+    </FormModal>
   )
 }
 
@@ -329,13 +282,13 @@ const CarouselManagement: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Carousel Management</h1>
           <p className="text-gray-600 mt-1">Manage hero carousel slides for the homepage</p>
         </div>
-        <button
+        <Button
           onClick={() => setIsFormOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          variant="primary"
+          leftIcon={<Plus className="w-4 h-4" />}
         >
-          <Plus className="w-4 h-4" />
           Add Slide
-        </button>
+        </Button>
       </div>
 
       {/* Slides Grid */}
@@ -358,9 +311,8 @@ const CarouselManagement: React.FC = () => {
                 }}
               />
               <div className="absolute top-2 right-2">
-                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                  slide.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
+                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${slide.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  }`}>
                   {slide.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                   {slide.isActive ? 'Active' : 'Inactive'}
                 </span>

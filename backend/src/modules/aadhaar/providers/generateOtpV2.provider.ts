@@ -59,6 +59,15 @@ export async function generateOtpV2Provider(
       request_id: response.data.request_id,
     });
 
+    // Handle API errors (200 OK with error status)
+    if (response.data.status === 'error') {
+      throw new HTTPError(
+        response.data.message || 'QuickEKYC API Error',
+        response.data.status_code || 502,
+        response.data
+      );
+    }
+
     // Validate response structure
     if (!response.data || typeof response.data !== 'object') {
       throw new HTTPError('Invalid response from QuickEKYC API', 502);
@@ -66,6 +75,11 @@ export async function generateOtpV2Provider(
 
     return response.data;
   } catch (error: any) {
+    // If it's already an HTTPError (e.g. from above), re-throw it
+    if (error instanceof HTTPError) {
+      throw error;
+    }
+
     console.error('Aadhaar V2 Generate OTP Error:', {
       message: error.message,
       status: error.response?.status,
@@ -101,10 +115,10 @@ export async function generateOtpV2Provider(
     if (error.response?.status === 401) {
       const errorMessage = error.response?.data?.message || 'Unauthorized access to QuickEKYC API';
       throw new HTTPError(
-        errorMessage.includes('whitelist') 
+        errorMessage.includes('whitelist')
           ? 'IP address not whitelisted. Please contact support.'
           : errorMessage,
-        401,
+        502,
         error.response?.data
       );
     }

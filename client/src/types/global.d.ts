@@ -1,5 +1,4 @@
-// src/types/global.d.ts
-import { RecaptchaVerifier } from 'firebase/auth';
+import { RecaptchaVerifier } from "firebase/auth";
 
 declare global {
   interface Window {
@@ -7,4 +6,4 @@ declare global {
   }
 }
 
-export {};
+export { };

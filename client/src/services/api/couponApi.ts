@@ -18,7 +18,7 @@ export interface CouponValidationResponse {
 }
 
 export interface CouponApplicationResponse {
-  order: any
+  order: unknown
   coupon: {
     id: string
     code: string
@@ -31,13 +31,13 @@ export interface CouponApplicationResponse {
 class CouponApi extends BaseApi {
   // Validate coupon code (public endpoint - no auth required)
   async validateCoupon(
-    code: string, 
-    orderAmount: number, 
-    userId?: string, 
-    serviceType?: string, 
+    code: string,
+    orderAmount: number,
+    userId?: string,
+    serviceType?: string,
     category?: string
   ): Promise<CouponValidationResponse> {
-    const response = await axios.post<{success: boolean, data: CouponValidationResponse}>('/api/coupons/validate', {
+    const response = await axios.post<{ success: boolean, data: CouponValidationResponse }>('/api/coupons/validate', {
       code,
       orderAmount,
       userId,

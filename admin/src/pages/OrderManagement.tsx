@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { 
-  Package, 
+import {
+  Package,
   CheckCircle, Clock, AlertCircle,
-  IndianRupee,  Loader2, BarChart
+  IndianRupee, Loader2, BarChart
 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
@@ -12,10 +12,8 @@ import OrderAnalyticsChart from '../components/dashboard/OrderAnalyticsChart'
 import { useQueryClient } from '@tanstack/react-query'
 
 // Import reusable components
-import StatCard from '../components/common/StatCard'
-import DataTable from '../components/common/DataTable'
 import StatusBadge from '../components/common/StatusBadge'
-import AdvancedFilters from '../components/common/AdvancedFilters'
+import { StatCard, DataTable, AdvancedFilters, Button } from '../components/common'
 import { exportToExcel, formatters } from '../utils/exportUtils'
 import { formatDate, formatCurrency } from '../utils/dateUtils'
 import type { Column } from '../components/common/DataTable'
@@ -23,7 +21,7 @@ import type { Column } from '../components/common/DataTable'
 const OrderManagement: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const dateRangeFromUrl = searchParams.get('dateRange')
-  
+
   const [filters, setFilters] = useState({
     status: '',
     orderType: '',
@@ -92,12 +90,12 @@ const OrderManagement: React.FC = () => {
   const dynamicServiceOptions = useMemo(() => {
     const uniqueServices = Array.from(new Set(orders.map(order => order.serviceName).filter(Boolean)))
     const staticServiceValues = allProducts.map(p => p.value.toLowerCase())
-    
+
     // Find services that aren't in our static list
     const additionalServices = uniqueServices
       .filter(service => {
         const serviceLower = service.toLowerCase()
-        return !staticServiceValues.some(staticValue => 
+        return !staticServiceValues.some(staticValue =>
           serviceLower.includes(staticValue) || staticValue.includes(serviceLower)
         )
       })
@@ -105,7 +103,7 @@ const OrderManagement: React.FC = () => {
         value: service.toLowerCase(),
         label: service
       }))
-    
+
     return additionalServices
   }, [orders])
 
@@ -247,28 +245,28 @@ const OrderManagement: React.FC = () => {
   // Filtered and sorted orders
   const filteredAndSortedOrders = useMemo(() => {
     let filtered = orders.filter(order => {
-      const matchesSearch = 
+      const matchesSearch =
         order.orderId.toLowerCase().includes(filters.search.toLowerCase()) ||
         order.serviceName.toLowerCase().includes(filters.search.toLowerCase()) ||
         (order.userId?.name || '').toLowerCase().includes(filters.search.toLowerCase()) ||
         (order.userId?.email || '').toLowerCase().includes(filters.search.toLowerCase())
-      
+
       const matchesStatus = !filters.status || order.status === filters.status
       const matchesServiceName = !filters.serviceName || (() => {
         const orderService = order.serviceName.toLowerCase().trim()
         const filterService = filters.serviceName.toLowerCase().trim()
-        
+
         // Exact match
         if (orderService === filterService) return true
-        
+
         // Normalize spaces and check if one contains the other
         const normalizedOrder = orderService.replace(/\s+/g, ' ')
         const normalizedFilter = filterService.replace(/\s+/g, ' ')
-        
+
         if (normalizedOrder.includes(normalizedFilter) || normalizedFilter.includes(normalizedOrder)) {
           return true
         }
-        
+
         // Handle common product name variations
         const productMappings: Record<string, string[]> = {
           'pan': ['pan', 'pan card'],
@@ -283,26 +281,26 @@ const OrderManagement: React.FC = () => {
           'bank-account': ['bank account', 'bank-account', 'bank'],
           'epfo': ['epfo', 'uan']
         }
-        
+
         // Check if both order and filter match any product mapping
         for (const [productKey, variations] of Object.entries(productMappings)) {
           const orderMatches = variations.some(v => normalizedOrder.includes(v))
           const filterMatches = variations.some(v => normalizedFilter.includes(v) || productKey === normalizedFilter)
           if (orderMatches && filterMatches) return true
         }
-        
+
         return false
       })()
       const matchesOrderType = !filters.orderType || order.orderType === filters.orderType
       const matchesPaymentStatus = !filters.paymentStatus || order.paymentStatus === filters.paymentStatus
-      
+
       // Date range filter
       const matchesDateRange = (() => {
         if (dateRangeFilter === 'all') return true
-        
+
         const orderDate = new Date(order.createdAt)
         const now = new Date()
-        
+
         switch (dateRangeFilter) {
           case '1day':
             const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)
@@ -335,14 +333,14 @@ const OrderManagement: React.FC = () => {
             return true
         }
       })()
-      
+
       return matchesSearch && matchesStatus && matchesServiceName && matchesOrderType && matchesPaymentStatus && matchesDateRange
     })
 
     // Sort orders
     filtered.sort((a, b) => {
       let aValue: any, bValue: any
-      
+
       switch (sortConfig.field) {
         case 'serviceName':
           aValue = a.serviceName.toLowerCase()
@@ -378,10 +376,10 @@ const OrderManagement: React.FC = () => {
     const filteredRevenue = filteredAndSortedOrders
       .filter(order => order.paymentStatus === 'completed')
       .reduce((sum, order) => sum + (order.finalAmount || 0), 0)
-    
+
     const filteredActiveOrders = filteredAndSortedOrders.filter(order => order.status === 'active').length
     const filteredPendingOrders = filteredAndSortedOrders.filter(order => order.paymentStatus === 'pending').length
-    
+
     return {
       totalOrders: filteredAndSortedOrders.length,
       activeOrders: filteredActiveOrders,
@@ -485,33 +483,38 @@ const OrderManagement: React.FC = () => {
           <p className="text-gray-600">Manage all user orders and payments</p>
         </div>
         <div className="flex space-x-3">
-          <button
+          <Button
             onClick={exportOrdersToExcel}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            variant="primary"
+            size="md"
+            leftIcon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            }
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
             Export Excel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setIsOrderChartOpen(true)}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            variant="primary"
+            className="bg-green-600 hover:bg-green-700 focus:ring-green-500" // Override for green color
+            size="md"
+            leftIcon={<BarChart className="w-4 h-4" />}
           >
-            <BarChart className="w-4 h-4 mr-2" />
             View Analytics
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -575,7 +578,7 @@ const OrderManagement: React.FC = () => {
       />
 
       {/* Order Analytics Chart Modal */}
-      <OrderAnalyticsChart 
+      <OrderAnalyticsChart
         isOpen={isOrderChartOpen}
         onClose={() => setIsOrderChartOpen(false)}
         data={analyticsData}

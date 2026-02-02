@@ -1,12 +1,10 @@
 import type React from "react"
 import HeroCarousel from "../components/carousel/HeroCarousel"
-import VerificationFeatures from "../containers/Home/VerificationFeatures"
-import FeaturesSection from "../containers/Home/FeaturesSection"
-// import PricingSection from "../containers/Home/PricingSection"
-import TrustSection from "../containers/Home/TrustSection"
-import ReviewsSection from "../containers/Home/ReviewsSection"
-import FaqSection from "../containers/Home/FaqSection"
-import SubscribeSection from "../containers/Home/SubscribeSection"
+import VerificationFeatures from "../components/home/VerificationFeatures"
+import FeaturesSection from "../components/home/FeaturesSection"
+import TrustSection from "../components/home/TrustSection"
+import FaqSection from "../components/home/FaqSection"
+import SubscribeSection from "../components/home/SubscribeSection"
 import SEOHead from "../components/seo/SEOHead"
 
 const Home: React.FC = () => {
@@ -31,7 +29,7 @@ const Home: React.FC = () => {
         },
         {
           "@type": "Service",
-          "name": "PAN Verification", 
+          "name": "PAN Verification",
           "description": "PAN card verification and validation services"
         },
         {
@@ -60,7 +58,7 @@ const Home: React.FC = () => {
 
   return (
     <>
-      <SEOHead 
+      <SEOHead
         title="VerifyMyKYC - India's Leading KYC & Identity Verification Platform"
         description="VerifyMyKYC provides instant identity verification services including Aadhaar, PAN, Driving License, Passport, GSTIN verification and background checks. Trusted by 10,000+ users across India."
         keywords="KYC verification, identity verification, Aadhaar verification, PAN verification, driving license verification, passport verification, GSTIN verification, background check, India, digital verification, compliance"
@@ -70,9 +68,7 @@ const Home: React.FC = () => {
         <HeroCarousel />
         <VerificationFeatures />
         <FeaturesSection />
-        {/* <PricingSection /> */}
         <TrustSection />
-        {/* <ReviewsSection /> */}
         <FaqSection />
         <SubscribeSection />
       </div>

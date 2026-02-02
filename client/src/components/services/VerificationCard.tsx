@@ -57,8 +57,8 @@ export const VerificationCard: FC<VerificationCardProps> = ({
       ? (apiAvg ?? 0).toFixed(1)
       : "0.0"
     : typeof rating === "number"
-    ? rating.toFixed(1)
-    : String(rating);
+      ? rating.toFixed(1)
+      : String(rating);
   const countDisplay = useApi
     ? typeof apiCount === "number" && apiCount > 0
       ? apiCount
@@ -69,7 +69,7 @@ export const VerificationCard: FC<VerificationCardProps> = ({
     if (link) {
       window.location.href = link;
     } else if (productId) {
-      console.log("Navigate to product:", productId);
+
       // Add navigation logic here
     }
   };
@@ -98,11 +98,10 @@ export const VerificationCard: FC<VerificationCardProps> = ({
           <div className="flex flex-wrap gap-1 sm:gap-2 flex-shrink-0">
             {typeof remaining === "number" && (
               <span
-                className={`inline-block px-2 py-1 rounded text-xs sm:text-sm ${
-                  remaining === 0
+                className={`inline-block px-2 py-1 rounded text-xs sm:text-sm ${remaining === 0
                     ? "bg-red-100 text-red-600"
                     : "bg-green-100 text-green-600"
-                }`}
+                  }`}
               >
                 Remaining: {remaining}
               </span>

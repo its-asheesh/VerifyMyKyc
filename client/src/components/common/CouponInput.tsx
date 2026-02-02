@@ -40,15 +40,7 @@ const CouponInput: React.FC<CouponInputProps> = ({
     setSuccess('')
 
     try {
-      console.log('=== COUPON VALIDATION DEBUG ===')
-      console.log('Input values:', {
-        couponCode: couponCode.trim().toUpperCase(),
-        orderAmount,
-        userId: user?.id,
-        serviceType,
-        category
-      })
-      
+
       const result = await couponApi.validateCoupon(
         couponCode.trim().toUpperCase(),
         orderAmount,
@@ -56,15 +48,7 @@ const CouponInput: React.FC<CouponInputProps> = ({
         serviceType,
         category
       )
-      
-      console.log('Coupon validation result:', result)
-      console.log('Coupon validation request:', {
-        code: couponCode.trim().toUpperCase(),
-        orderAmount,
-        userId: user?.id,
-        serviceType,
-        category
-      })
+
       setSuccess('Coupon applied successfully!')
       onCouponApplied(result)
       setCouponCode('')
@@ -76,19 +60,19 @@ const CouponInput: React.FC<CouponInputProps> = ({
         status: error.response?.status,
         statusText: error.response?.statusText
       })
-      
+
       // Log the exact error response
       if (error.response?.data) {
         console.error('Backend error response:', error.response.data)
       }
-      
+
       let errorMessage = 'Invalid coupon code'
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message
       } else if (error.message) {
         errorMessage = error.message
       }
-      
+
       setError(errorMessage)
       // Reset any previously applied coupon on error
       onCouponRemoved()

@@ -1,4 +1,4 @@
-import axios from 'axios'
+import BaseApi from './baseApi'
 
 // Types
 export interface User {
@@ -32,9 +32,14 @@ export interface UserStats {
   totalUsers: number
   activeUsers: number
   inactiveUsers: number
-  adminUsers: number
-  regularUsers: number
   newUsersThisMonth: number
+  pendingVerifications: number
+  totalAdmins: number
+  trends: {
+    users: { percentage: number; direction: 'up' | 'down' | 'neutral' }
+    active: { percentage: number; direction: 'up' | 'down' | 'neutral' }
+    pending: { percentage: number; direction: 'up' | 'down' | 'neutral' }
+  }
 }
 
 export interface LocationStats {
@@ -65,64 +70,29 @@ export interface LocationAnalytics {
   }>
 }
 
-// Create axios instance
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Add request interceptor to include auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('adminToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
-// Add response interceptor to handle 401 errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('adminToken')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
-)
-
-class UserApi {
+class UserApi extends BaseApi {
   async getAllUsers(): Promise<User[]> {
-    return api.get('/auth/users').then(res => res.data.data.users)
+    return this.get<any>('/auth/users').then(res => res.data.users)
   }
 
   async getUserStats(): Promise<UserStats> {
-    return api.get('/auth/users/stats').then(res => res.data.data)
+    return this.get<any>('/auth/users/stats').then(res => res.data)
   }
 
   async getLocationAnalytics(): Promise<LocationAnalytics> {
-    return api.get('/auth/users/location-analytics').then(res => res.data.data)
+    return this.get<any>('/auth/users/location-analytics').then(res => res.data)
   }
 
   async getUsersWithLocation(): Promise<User[]> {
-    return api.get('/auth/users/with-location').then(res => res.data.data.users)
+    return this.get<any>('/auth/users/with-location').then(res => res.data.users)
   }
 
   async updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User> {
-    return api.put(`/auth/users/${userId}/role`, { role }).then(res => res.data.data.user)
+    return this.put<any>(`/auth/users/${userId}/role`, { role }).then(res => res.data.user)
   }
 
   async toggleUserStatus(userId: string): Promise<User> {
-    return api.put(`/auth/users/${userId}/toggle-status`).then(res => res.data.data.user)
+    return this.put<any>(`/auth/users/${userId}/toggle-status`).then(res => res.data.user)
   }
 
   async updateUserLocation(userId: string, locationData: {
@@ -132,15 +102,15 @@ class UserApi {
     timezone?: string
     ipAddress?: string
   }): Promise<User> {
-    return api.put(`/auth/users/${userId}/location`, locationData).then(res => res.data.data.user)
+    return this.put<any>(`/auth/users/${userId}/location`, locationData).then(res => res.data.user)
   }
 
   async verifyUserEmail(userId: string): Promise<User> {
-    return api.put(`/auth/users/${userId}/verify-email`).then(res => res.data.data.user)
+    return this.put<any>(`/auth/users/${userId}/verify-email`).then(res => res.data.user)
   }
 
   async verifyUserPhone(userId: string): Promise<User> {
-    return api.put(`/auth/users/${userId}/verify-phone`).then(res => res.data.data.user)
+    return this.put<any>(`/auth/users/${userId}/verify-phone`).then(res => res.data.user)
   }
 
   async addUserTokens(userId: string, data: {
@@ -160,7 +130,7 @@ class UserApi {
       remaining: number
     }
   }> {
-    return api.post(`/auth/users/${userId}/add-tokens`, data).then(res => res.data.data)
+    return this.post<any>(`/auth/users/${userId}/add-tokens`, data).then(res => res.data)
   }
 }
 

@@ -1,10 +1,10 @@
-import type React from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import React, { Suspense, lazy } from "react"
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom"
 import { Provider } from "react-redux"
 import { store } from "../redux/store"
 import { AppProvider } from "../context/AppContext"
 import { ErrorBoundary } from "../components/common/ErrorBoundary"
-import { AdminRoute, UserRoute, AnyRoleRoute } from "../components/auth/ProtectedRoute"
+import { UserRoute, AnyRoleRoute } from "../components/auth/ProtectedRoute"
 import { useTokenValidation } from "../hooks/useTokenValidation"
 import { useAutoLogout } from "../hooks/useAutoLogout"
 
@@ -12,54 +12,46 @@ import { useAutoLogout } from "../hooks/useAutoLogout"
 import Navbar from "../components/layout/Navbar"
 import Footer from "../components/layout/Footer"
 import ScrollToTop from "../components/common/ScrollToTop"
+import { LoadingSpinner } from "../components/common/LoadingSpinner"
 
-// Pages
-import Home from "../pages/Home"
-import ReviewsPage from "../pages/ReviewsPage"
-import ProductsPage from "../pages/products/ProductsPage"
-import ProductDetailPage from "../pages/products/ProductDetailPage"
-import SolutionsPage from "../pages/solutions/SolutionsPage"
-import SolutionDetailPage from "../pages/solutions/SolutionDetailPage"
-// import ResourcesPage from "../pages/resources/ResourcesPage"
-import AboutPage from "../pages/company/AboutPage"
-import ContactPage from "../pages/company/ContactPage"
-// import CareersPage from "../pages/company/CareersPage"
-import CustomPricingPage from "../pages/CustomPricingPage"
-import CheckoutPage from "../pages/CheckoutPage"
-import BlogListPage from "../pages/blog/BlogListPage"
-import BlogDetailPage from "../pages/blog/BlogDetailPage"
-
-
+// Lazy Load Pages
+const Home = lazy(() => import("../pages/Home"))
+const ReviewsPage = lazy(() => import("../pages/ReviewsPage"))
+const ProductsPage = lazy(() => import("../pages/products/ProductsPage"))
+const ProductDetailPage = lazy(() => import("../pages/products/ProductDetailPage"))
+const AboutPage = lazy(() => import("../pages/company/AboutPage"))
+const ContactPage = lazy(() => import("../pages/company/ContactPage"))
+const CustomPricingPage = lazy(() => import("../pages/CustomPricingPage"))
+const CheckoutPage = lazy(() => import("../pages/user/CheckoutPage"))
+const BlogListPage = lazy(() => import("../pages/blog/BlogListPage"))
+const BlogDetailPage = lazy(() => import("../pages/blog/BlogDetailPage"))
+const VerificationPage = lazy(() => import("../pages/verification/VerificationPage"))
 
 // Auth Pages
-import LoginPage from "../pages/auth/LoginPage"
-import RegisterPage from "../pages/auth/RegisterPage"
-import ProfilePage from "../pages/ProfilePage"
-import UnauthorizedPage from "../pages/UnauthorizedPage"
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"))
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"))
+const ProfilePage = lazy(() => import("../pages/user/ProfilePage"))
+const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"))
 
-// Admin Pages
-import AdminDashboard from "../pages/admin/AdminDashboard"
-import AdminPricing from "../pages/admin/AdminPricing"
-import AdminReviews from "../pages/admin/AdminReviews"
 
 // Payment Pages
-import PaymentSuccessPage from "../pages/PaymentSuccessPage"
+const PaymentSuccessPage = lazy(() => import("../pages/user/PaymentSuccessPage"))
 
 // Footer Pages
-import DisclaimerPage from '../pages/DisclaimerPage';
-import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
-import TermsAndConditionsPage from "../pages/TermsAndConditionsPage"
+const DisclaimerPage = lazy(() => import("../pages/legal/DisclaimerPage"))
+const PrivacyPolicyPage = lazy(() => import("../pages/legal/PrivacyPolicyPage"))
+const TermsAndConditionsPage = lazy(() => import("../pages/legal/TermsAndConditionsPage"))
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const MainLayout = () => {
   // Validate token on app initialization
   useTokenValidation();
   // Auto-logout after 15 days (must be inside Redux Provider)
   useAutoLogout();
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1"><Outlet /></main>
       <Footer />
     </div>
   )
@@ -72,107 +64,81 @@ const AppRoutes: React.FC = () => {
         <AppProvider>
           <Router>
             <ScrollToTop />
-            <Layout>
+            <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]"><LoadingSpinner /></div>}>
               <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/reviews" element={<ReviewsPage />} />
-                <Route path="/unauthorized" element={<UnauthorizedPage />} />
-                
-                {/* Products */}
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/products/:id" element={<ProductDetailPage />} />
-                
-                {/* Solutions */}
-                <Route path="/solutions" element={<SolutionsPage />} />
-                <Route path="/solutions/:id" element={<SolutionDetailPage />} />
-                
-                {/* Resources */}
-                {/* <Route path="/resources" element={<ResourcesPage />} /> */}
-                <Route path="/resources/:id" element={<div>Resource Detail Page</div>} />
-                
-                {/* Company */}
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                {/* <Route path="/careers" element={<CareersPage />} /> */}
-                
-                {/* Blog */}
-                <Route path="/blog" element={<BlogListPage />} />
-                <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                {/* Standalone Routes (No Navbar/Footer) */}
+                <Route path="/verification/:type" element={<VerificationPage />} />
 
-                {/* Pricing */}
-                <Route path="/custom-pricing" element={<CustomPricingPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                
-                {/* Other Pages */}
-                <Route path="/pricing" element={<div>Pricing Page</div>} />
-                <Route path="/documentation" element={<div>Documentation Page</div>} />
-                <Route path="/api-reference" element={<div>API Reference Page</div>} />
-                <Route path="/help" element={<div>Help Center Page</div>} />
+                {/* Main Application Routes (With Navbar/Footer) */}
+                <Route element={<MainLayout />}>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/reviews" element={<ReviewsPage />} />
+                  <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-                {/* Footer routes */}
-                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                <Route path="/disclaimer" element={<DisclaimerPage />} />
-                <Route path="/terms" element={<TermsAndConditionsPage />} />
-                
-                {/* Auth Routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/verify" element={<div>Verify Page</div>} />
-                
-                {/* Protected Routes - Any Role */}
-                <Route
-                  path="/profile"
-                  element={
-                    <AnyRoleRoute>
-                      <ProfilePage />
-                    </AnyRoleRoute>
-                  }
-                />
-                
-                {/* Admin Routes */}
-                <Route
-                  path="/admin/dashboard"
-                  element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/pricing"
-                  element={
-                    <AdminRoute>
-                      <AdminPricing />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/reviews"
-                  element={
-                    <AdminRoute>
-                      <AdminReviews />
-                    </AdminRoute>
-                  }
-                />
-                
-                {/* User Routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <UserRoute>
-                      <div>User Dashboard Page</div>
-                    </UserRoute>
-                  }
-                />
-                
-                {/* Payment Success */}
-                <Route path="/payment-success" element={<PaymentSuccessPage />} />
-                
-                {/* 404 */}
-                <Route path="*" element={<div>404 Not Found</div>} />
+                  {/* Products */}
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/:id" element={<ProductDetailPage />} />
+
+                  {/* Resources */}
+                  <Route path="/resources/:id" element={<div>Resource Detail Page</div>} />
+
+                  {/* Company */}
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+
+                  {/* Blog */}
+                  <Route path="/blog" element={<BlogListPage />} />
+                  <Route path="/blog/:slug" element={<BlogDetailPage />} />
+
+                  {/* Pricing */}
+                  <Route path="/custom-pricing" element={<CustomPricingPage />} />
+                  <Route path="/checkout" element={<CheckoutPage />} />
+
+                  {/* Other Pages */}
+                  <Route path="/pricing" element={<div>Pricing Page</div>} />
+                  <Route path="/documentation" element={<div>Documentation Page</div>} />
+                  <Route path="/api-reference" element={<div>API Reference Page</div>} />
+                  <Route path="/help" element={<div>Help Center Page</div>} />
+
+                  {/* Footer routes */}
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/disclaimer" element={<DisclaimerPage />} />
+                  <Route path="/terms" element={<TermsAndConditionsPage />} />
+
+                  {/* Auth Routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+
+                  {/* Protected Routes - Any Role */}
+                  <Route
+                    path="/profile"
+                    element={
+                      <AnyRoleRoute>
+                        <ProfilePage />
+                      </AnyRoleRoute>
+                    }
+                  />
+
+
+                  {/* User Routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <UserRoute>
+                        <div>User Dashboard Page</div>
+                      </UserRoute>
+                    }
+                  />
+
+                  {/* Payment Success */}
+                  <Route path="/payment-success" element={<PaymentSuccessPage />} />
+
+                  {/* 404 */}
+                  <Route path="*" element={<div>404 Not Found</div>} />
+                </Route>
               </Routes>
-            </Layout>
+            </Suspense>
           </Router>
         </AppProvider>
       </Provider>

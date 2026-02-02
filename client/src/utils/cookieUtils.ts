@@ -48,7 +48,7 @@ export const setCookie = (name: string, value: string, options: CookieOptions = 
 export const getCookie = (name: string): string | null => {
   const nameEQ = encodeURIComponent(name) + '=';
   const cookies = document.cookie.split(';');
-  
+
   for (let cookie of cookies) {
     cookie = cookie.trim();
     if (cookie.indexOf(nameEQ) === 0) {
@@ -95,7 +95,7 @@ export const removeTokenCookie = (): void => {
 };
 
 // User data cookie utilities
-export const setUserCookie = (userData: any, rememberMe: boolean = false): void => {
+export const setUserCookie = (userData: unknown, rememberMe: boolean = false): void => {
   const options: CookieOptions = {
     path: '/',
     secure: window.location.protocol === 'https:',
@@ -109,10 +109,10 @@ export const setUserCookie = (userData: any, rememberMe: boolean = false): void 
   setCookie('user_data', JSON.stringify(userData), options);
 };
 
-export const getUserCookie = (): any | null => {
+export const getUserCookie = (): unknown | null => {
   const userData = getCookie('user_data');
   if (!userData) return null;
-  
+
   try {
     return JSON.parse(userData);
   } catch {

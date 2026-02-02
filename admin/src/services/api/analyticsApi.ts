@@ -1,4 +1,4 @@
-import axios from 'axios'
+import BaseApi from './baseApi'
 
 // Types
 export interface AnalyticsMetrics {
@@ -56,48 +56,33 @@ export interface RecentActivityItem {
   orderId?: string
 }
 
-// Create axios instance
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('adminToken')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('Analytics API Error:', error.response?.data || error.message)
-    if (error.response?.status === 401) {
-      localStorage.removeItem('adminToken')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
+export interface AnalyticsDateRangeResponse {
+  dateRange: {
+    startDate: string
+    endDate: string
   }
-)
+  metrics: {
+    totalRevenue: number
+    totalOrders: number
+    completedOrders: number
+    pendingOrders: number
+    activeOrders: number
+    expiredOrders: number
+    failedOrders: number
+    successRate: number
+  }
+  revenueTrend: RevenueTrendItem[]
+  serviceDistribution: ServiceDistributionItem[]
+}
 
-class AnalyticsApi {
+class AnalyticsApi extends BaseApi {
   // Get analytics overview
   async getAnalyticsOverview(): Promise<AnalyticsOverview> {
     console.log('Fetching analytics overview...')
     try {
-      const response = await api.get('/analytics/overview')
-      console.log('Analytics overview response:', response.data)
-      return response.data.data
+      const response = await this.get<any>('/analytics/overview')
+      console.log('Analytics overview response:', response)
+      return response.data
     } catch (error) {
       console.error('Error fetching analytics overview:', error)
       throw error
@@ -105,22 +90,22 @@ class AnalyticsApi {
   }
 
   // Get analytics by date range
-  async getAnalyticsByDateRange(startDate: string, endDate: string): Promise<any[]> {
-    const response = await api.get('/analytics/date-range', {
+  async getAnalyticsByDateRange(startDate: string, endDate: string): Promise<AnalyticsDateRangeResponse> {
+    const response = await this.get<any>('/analytics/date-range', {
       params: { startDate, endDate }
     })
-    return response.data.data
+    return response.data
   }
 
   // Get recent activity
   async getRecentActivity(limit: number = 10): Promise<RecentActivityItem[]> {
     console.log('Fetching recent activity...')
     try {
-      const response = await api.get('/analytics/recent-activity', {
+      const response = await this.get<any>('/analytics/recent-activity', {
         params: { limit }
       })
-      console.log('Recent activity response:', response.data)
-      return response.data.data
+      console.log('Recent activity response:', response)
+      return response.data
     } catch (error) {
       console.error('Error fetching recent activity:', error)
       throw error

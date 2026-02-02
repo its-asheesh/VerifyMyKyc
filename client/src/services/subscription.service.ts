@@ -1,25 +1,12 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
-interface AxiosError<T = any> extends Error {
-  config: any;
-  code?: string;
-  request?: any;
-  response?: {
-    data: T;
-    status: number;
-    statusText: string;
-    headers: any;
-    config: any;
-  };
-  isAxiosError: boolean;
-  toJSON: () => object;
-}
+
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ApiErrorResponse {
   message: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export const subscribe = async (email: string) => {
@@ -42,7 +29,7 @@ export const getSubscribers = async (page = 1, limit = 10) => {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
     return response.data;
-  } catch (error) {
+  } catch {
     throw new Error('Failed to fetch subscribers');
   }
 };
@@ -52,7 +39,7 @@ export const deleteSubscriber = async (id: string) => {
     await axios.delete(`${API_URL}/subscribers/${id}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
-  } catch (error) {
+  } catch {
     throw new Error('Failed to delete subscriber');
   }
 };
@@ -64,23 +51,23 @@ export const exportSubscribers = async (format: 'excel' | 'csv' | 'json') => {
       responseType: 'blob',
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     });
-    
+
     // Create a download link and trigger download
     const blobData = response.data as BlobPart;
     const url = window.URL.createObjectURL(new Blob([blobData]));
     const link = document.createElement('a');
     const extension = format === 'excel' ? 'xlsx' : format === 'csv' ? 'csv' : 'json';
     const filename = `subscribers.${extension}`;
-    
+
     link.href = url;
     link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
-    
+
     // Cleanup
     link.remove();
     window.URL.revokeObjectURL(url);
-  } catch (error) {
+  } catch {
     throw new Error('Failed to export subscribers');
   }
 };
