@@ -116,7 +116,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     orderData.couponApplied = couponApplied;
   }
 
-  const order = await Order.create(orderData);
+  let order = await Order.create(orderData);
 
   // GA4: order_created
   try {
@@ -158,6 +158,10 @@ try {
   }
 
   razorpayOrder = await razorpay.orders.create(options);
+  
+  // Store Razorpay order ID in our order
+  order.razorpayOrderId = razorpayOrder.id;
+  await order.save();
 } catch (err: any) {
   console.error('Razorpay order creation failed:', err?.message || err);
   return res.status(500).json({

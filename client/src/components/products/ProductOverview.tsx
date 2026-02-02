@@ -383,7 +383,6 @@ export const ProductOverview: React.FC<ProductOverviewProps> = ({ product }) => 
         </div>
 
 
-
         {/* Title */}
         {/* <h2 className="text-3xl font-bold text-gray-900">{product.title}</h2> */}
 

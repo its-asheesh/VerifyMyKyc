@@ -142,7 +142,7 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
     if (couponApplied) {
         orderData.couponApplied = couponApplied;
     }
-    const order = yield order_model_1.Order.create(orderData);
+    let order = yield order_model_1.Order.create(orderData);
     // GA4: order_created
     try {
         yield (0, ga4_1.sendGaEvent)(String(req.user._id), 'order_created', {
@@ -178,6 +178,9 @@ exports.createOrder = (0, asyncHandler_1.default)((req, res) => __awaiter(void 0
             console.warn('createOrder: Invalid amount for Razorpay', { finalAmount });
         }
         razorpayOrder = yield razorpay_1.razorpay.orders.create(options);
+        // Store Razorpay order ID in our order
+        order.razorpayOrderId = razorpayOrder.id;
+        yield order.save();
     }
     catch (err) {
         console.error('Razorpay order creation failed:', (err === null || err === void 0 ? void 0 : err.message) || err);
