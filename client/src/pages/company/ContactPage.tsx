@@ -6,6 +6,11 @@ import { motion } from "framer-motion"
 import { PageHeader } from "../../components/common/PageHeader"
 import { Mail, Phone, MapPin, Send, CheckCircle, MessageCircle } from "lucide-react"
 import SEOHead from "../../components/seo/SEOHead"
+import TextField from "../../components/forms/TextField"
+import { TextArea } from "../../components/forms/TextArea"
+import { Select } from "../../components/forms/Select"
+import { Container } from "../../components/common/Container"
+import { Heading } from "../../components/common/Heading"
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -91,7 +96,7 @@ const ContactPage: React.FC = () => {
           subtitle="We'd love to hear from you. Let's connect and build something amazing together!"
         />
 
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
+        <Container className="py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             {/* Contact Form */}
             <motion.div
@@ -101,9 +106,9 @@ const ContactPage: React.FC = () => {
               className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 hover:shadow-3xl transition-all duration-500 lg:sticky lg:top-8"
             >
               <div className="p-10">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-8">
+                <Heading level={2} className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-8">
                   Send us a message
-                </h2>
+                </Heading>
 
                 {isSubmitted ? (
                   <motion.div
@@ -122,86 +127,72 @@ const ContactPage: React.FC = () => {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">Name *</label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          required
-                          className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                          placeholder="Your full name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-3">Phone</label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                          placeholder="+91 98765 43210"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">Email *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
+                      <TextField
+                        label="Name"
+                        id="name"
+                        name="name"
+                        value={formData.name}
                         onChange={handleChange}
                         required
-                        className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                        placeholder="your@email.com"
+                        placeholder="Your full name"
+                      />
+                      <TextField
+                        label="Phone"
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="+91 98765 43210"
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">Company</label>
-                      <input
-                        type="text"
-                        name="company"
-                        value={formData.company}
-                        onChange={handleChange}
-                        className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                        placeholder="Your company name"
-                      />
-                    </div>
+                    <TextField
+                      label="Email"
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="your@email.com"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">Subject *</label>
-                      <select
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                      >
-                        <option value="">Select a subject</option>
-                        <option value="general">General Inquiry</option>
-                        <option value="sales">Sales</option>
-                        <option value="support">Technical Support</option>
-                        <option value="partnership">Partnership</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
+                    <TextField
+                      label="Company"
+                      id="company"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      placeholder="Your company name"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-3">Message *</label>
-                      <textarea
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                        rows={5}
-                        className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 resize-none bg-gray-50/50 hover:bg-white"
-                        placeholder="Tell us how we can help you..."
-                      />
-                    </div>
+                    <Select
+                      label="Subject"
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={(value) => setFormData(prev => ({ ...prev, subject: value }))}
+                      required
+                      options={[
+                        { value: "general", label: "General Inquiry" },
+                        { value: "sales", label: "Sales" },
+                        { value: "support", label: "Technical Support" },
+                        { value: "partnership", label: "Partnership" },
+                        { value: "other", label: "Other" },
+                      ]}
+                    />
+
+                    <TextArea
+                      label="Message"
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      rows={5}
+                      placeholder="Tell us how we can help you..."
+                    />
 
                     <motion.button
                       type="submit"
@@ -240,9 +231,9 @@ const ContactPage: React.FC = () => {
             >
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
+                  <Heading level={2} className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
                     Get in touch
-                  </h2>
+                  </Heading>
                   <p className="text-gray-700 leading-relaxed text-lg">
                     Have questions about our services? Need technical support? Want to explore partnership opportunities?
                     We're here to help and would love to hear from you.
@@ -334,7 +325,7 @@ const ContactPage: React.FC = () => {
               </div>
             </motion.div>
           </div>
-        </div>
+        </Container>
       </div>
     </>
   )

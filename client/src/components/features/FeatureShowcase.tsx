@@ -4,6 +4,7 @@ import type React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, TrendingUp } from "lucide-react";
 import { easeOut } from "framer-motion";
+import { Badge } from "../common/Badge";
 
 interface FeatureShowcaseProps {
   title: string;
@@ -73,16 +74,14 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
         <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-orange-400/10 to-pink-400/10 rounded-full blur-xl" />
 
         <div
-          className={`grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-center ${
-            reverse ? "lg:grid-flow-col-dense" : ""
-          }`}
+          className={`grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-center ${reverse ? "lg:grid-flow-col-dense" : ""
+            }`}
         >
           {/* Image Section (2 columns wide) */}
           <motion.div
             variants={imageVariants}
-            className={`relative order-2 lg:order-none ${
-              reverse ? "lg:col-start-4 lg:col-span-2" : "lg:col-span-2"
-            }`}
+            className={`relative order-2 lg:order-none ${reverse ? "lg:col-start-4 lg:col-span-2" : "lg:col-span-2"
+              }`}
           >
             <motion.div
               whileHover={{ scale: 1.02 }}
@@ -139,19 +138,19 @@ export const FeatureShowcase: React.FC<FeatureShowcaseProps> = ({
           {/* Content Section (3 columns wide) */}
           <motion.div
             variants={getTextVariants(reverse)}
-            className={`space-y-4 order-1 lg:order-none ${
-              reverse ? "lg:col-start-1 lg:col-span-3" : "lg:col-span-3"
-            }`}
+            className={`space-y-4 order-1 lg:order-none ${reverse ? "lg:col-start-1 lg:col-span-3" : "lg:col-span-3"
+              }`}
           >
             {/* Category Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg"
             >
-              <TrendingUp className="w-3.5 h-3.5" />
-              {title}
+              <Badge variant="gradient" className="gap-2 shadow-lg px-3 py-1.5" size="md">
+                <TrendingUp className="w-3.5 h-3.5" />
+                {title}
+              </Badge>
             </motion.div>
 
             {/* Title */}

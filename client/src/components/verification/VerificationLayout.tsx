@@ -64,7 +64,7 @@ export const VerificationLayout = <T extends ServiceMeta>({
             <div className="flex-1 overflow-hidden">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
                     {/* Desktop Sidebar (Visible on LG+) */}
-                    <div className="hidden lg:block lg:col-span-4 h-full overflow-y-auto pb-20 pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="hidden lg:block lg:col-span-4 h-full overflow-y-auto pb-20 pr-2 scrollbar-hide">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-2 sticky top-0">
                             {services.map((service) => (
                                 <button
@@ -161,7 +161,7 @@ export const VerificationLayout = <T extends ServiceMeta>({
                     </div>
 
                     {/* Main Content Area */}
-                    <div className="lg:col-span-8 h-full overflow-y-auto pb-20 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="lg:col-span-8 h-full overflow-y-auto pb-20 scrollbar-hide">
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 min-h-[500px]">
                             {children}
                         </div>

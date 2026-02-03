@@ -1,10 +1,10 @@
 // src/pages/auth/LoginPage.tsx
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import type { ConfirmationResult } from 'firebase/auth';
-import { auth } from '../../lib/firebaseClient';
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useForm, FormProvider } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   loginUser,
@@ -14,272 +14,166 @@ import {
   loginWithPhoneAndPassword,
   resetPasswordWithPhoneToken,
 } from "../../redux/slices/authSlice";
-import {
-  Lock,
-  Loader2,
-} from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
-import TextField from "../../components/forms/TextField";
-import { isValidEmail, isValidE164Phone } from "../../utils/validators";
 import AuthCardLayout from "../../components/auth/AuthCardLayout";
 import registerHero from "../../assets/animations/register-hero.json";
+import { formatToE164, isPhoneLike } from "../../utils/authUtils";
+import { CountrySelect } from "../../components/auth/CountrySelect";
+import { FormField } from "../../components/forms/FormField";
+import { usePhoneAuth } from "../../hooks/usePhoneAuth";
+
+// Validation Schemas
+const loginSchema = yup.object({
+  identifier: yup.string().required("Email or phone is required"),
+  password: yup.string().required("Password is required").min(6, "Password must be at least 6 characters"),
+  dialCode: yup.string().default("91"),
+});
+
+const resetSchema = yup.object({
+  identifier: yup.string().required("Email or phone is required"),
+  otp: yup.string().required("OTP is required").length(6, "OTP must be 6 digits"),
+  newPassword: yup.string().required("New password is required").min(6, "Password must be at least 6 characters"),
+  dialCode: yup.string().default("91"),
+});
+
+type LoginFormData = yup.InferType<typeof loginSchema>;
+type ResetFormData = yup.InferType<typeof resetSchema>;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const { isLoading, error, isAuthenticated, user } = useAppSelector(
-    (state) => state.auth
-  );
+  const { isLoading, isAuthenticated, user } = useAppSelector((state) => state.auth);
   const { showToast } = useToast();
 
-  const [showReset, setShowReset] = useState(false);
+  // Reuse our clean phone auth hook
+  const {
+    recaptchaRef,
+    sendOtp: sendPhoneHelper,
+    verifyOtp: verifyPhoneToken,
+    isSendingOtp: isPhoneSending
+  } = usePhoneAuth("recaptcha-container");
 
-  // Check for expired token parameter
+  const [showReset, setShowReset] = useState(false);
+  const [isEmailSending, setIsEmailSending] = useState(false);
+
+  // Forms
+  const loginForm = useForm<LoginFormData>({
+    resolver: yupResolver(loginSchema) as any,
+    defaultValues: { identifier: "", password: "", dialCode: "91" }
+  });
+
+  const resetForm = useForm<ResetFormData>({
+    resolver: yupResolver(resetSchema) as any,
+    defaultValues: { identifier: "", otp: "", newPassword: "", dialCode: "91" }
+  });
+
+  // Watchers for dynamic UI (country code)
+  const loginIdentifier = loginForm.watch("identifier");
+  const resetIdentifier = resetForm.watch("identifier");
+  const isLoginPhone = isPhoneLike(loginIdentifier);
+  const isResetPhone = isPhoneLike(resetIdentifier);
+
+  // Persist dial code selection manually if needed or via form
+  const loginDialCode = loginForm.watch("dialCode");
+  const resetDialCode = resetForm.watch("dialCode");
+
+  // Redirects
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('expired') === 'true') {
-      showToast(
-        'Your session has expired after 15 days of inactivity. Please login again.',
-        { type: 'info' }
-      );
-      // Clean up URL
+      showToast('Your session has expired. Please login again.', { type: 'info' });
       navigate('/login', { replace: true });
     }
   }, [location.search, navigate, showToast]);
 
-  // Login form
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState<{
-    field?: string;
-    message?: string;
-  }>({});
-  const [selectedDialCode, setSelectedDialCode] = useState<string>("91");
-  const [isPhoneLike, setIsPhoneLike] = useState<boolean>(false);
-
-  // Reset form
-  const [resetIdentifier, setResetIdentifier] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
-  const [isPhoneFlow, setIsPhoneFlow] = useState(false);
-  const [isSendingPhoneOtp, setIsSendingPhoneOtp] = useState(false);
-  const [phoneConfirmation, setPhoneConfirmation] = useState<ConfirmationResult | null>(null);
-  const [phoneOtp, setPhoneOtp] = useState("");
-  const [selectedResetDialCode, setSelectedResetDialCode] = useState<string>("91");
-  const [isResetPhoneLike, setIsResetPhoneLike] = useState<boolean>(false);
-
-  // Redirect if authenticated
-
   useEffect(() => {
     if (isAuthenticated && user) {
-      const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
-      const redirectTo = state?.redirectTo || "/";
-      navigate(redirectTo, { state: state?.nextState });
+      const state = location.state as any;
+      navigate(state?.redirectTo || "/", { state: state?.nextState });
     }
-
   }, [isAuthenticated, user, navigate, location.state]);
 
-
   useEffect(() => {
-    const message = (location.state as { message?: string } | null)?.message;
-    if (message) showToast(message, { type: "info" });
-  }, [location.state, showToast]);
-
-  useEffect(() => {
-    return () => {
-      dispatch(clearError());
-    };
+    return () => { dispatch(clearError()); };
   }, [dispatch]);
 
-  // Simple dialing codes (extend as needed)
-  const DIAL_CODES: Array<{ code: string; label: string }> = [
-    { code: "91", label: "+91 (IN)" },
-    { code: "1", label: "+1 (US)" },
-    { code: "44", label: "+44 (UK)" },
-    { code: "61", label: "+61 (AU)" },
-    { code: "65", label: "+65 (SG)" },
-    { code: "971", label: "+971 (AE)" },
-  ];
-
-  // Utility: format to E.164 using selected dial code
-  const formatToE164 = (raw: string, countryCode = "91"): string => {
-    const input = (raw || "").trim();
-    if (input.startsWith("+")) return input;
-    let digits = input.replace(/\D/g, "");
-    digits = digits.replace(/^0+/, "");
-    // Heuristic: if 10-digit local number, prefix selected country code
-    if (digits.length === 10) {
-      return `+${countryCode}${digits}`;
-    }
-    // If user typed country code already and then the local number
-    if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
-      // Collapse duplicated country code if present (e.g., 9191...)
-      while (digits.startsWith(countryCode + countryCode)) {
-        digits = digits.slice(countryCode.length);
-      }
-      return `+${digits}`;
-    }
-    return `+${countryCode}${digits}`;
-  };
-
-  // Detect phone-like input to show country selector
-  useEffect(() => {
-    const val = (identifier || "").trim();
-    const looksLikePhone = /^\+?\d[\d\s-]*$/.test(val) && !val.includes("@");
-    setIsPhoneLike(looksLikePhone);
-  }, [identifier]);
-
-  useEffect(() => {
-    const val = (resetIdentifier || "").trim();
-    const looksLikePhone = /^\+?\d[\d\s-]*$/.test(val) && !val.includes("@");
-    setIsResetPhoneLike(looksLikePhone);
-  }, [resetIdentifier]);
-
-  const validateAndLogin = () => {
-    const value = identifier.trim();
-    if (!value) {
-      setLoginError({ field: "identifier", message: "Email or phone is required" });
-      return false;
-    }
-    const emailOk = isValidEmail(value);
-    const phoneE164 = emailOk ? "" : formatToE164(value, selectedDialCode);
-    const phoneOk = emailOk ? false : isValidE164Phone(phoneE164);
-    if (!emailOk && !phoneOk) {
-      setLoginError({ field: "identifier", message: "Enter a valid email or phone" });
-      return false;
-    }
-    if (!password || password.length < 6) {
-      setLoginError({ field: "password", message: "Password must be at least 6 characters" });
-      return false;
-    }
-    setLoginError({});
-    return true;
-  };
-
-  // Update the handleLogin function in LoginPage.tsx
-  const handleLogin = async () => {
-    if (!validateAndLogin()) return;
-
+  // Handlers
+  const onLoginSubmit = async (data: LoginFormData) => {
     try {
+      const value = data.identifier.trim();
+      const isEmail = !isPhoneLike(value); // Simplified check, can use validator
+
       let result;
-      const value = identifier.trim();
-      const isEmail = isValidEmail(value);
       if (isEmail) {
-        result = await dispatch(loginUser({ email: value, password }));
-        if (loginUser.fulfilled.match(result)) {
-          const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
-          const redirectTo = state?.redirectTo || "/";
-          navigate(redirectTo, { state: state?.nextState, replace: true });
-          return;
-        }
+        result = await dispatch(loginUser({ email: value, password: data.password }));
       } else {
-        const e164 = formatToE164(value, selectedDialCode);
-        result = await dispatch(loginWithPhoneAndPassword({ phone: e164, password }));
-        if (loginWithPhoneAndPassword.fulfilled.match(result)) {
-          const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
-          const redirectTo = state?.redirectTo || "/";
-          navigate(redirectTo, { state: state?.nextState, replace: true });
-          return;
-        }
+        const e164 = formatToE164(value, data.dialCode || "91");
+        result = await dispatch(loginWithPhoneAndPassword({ phone: e164, password: data.password }));
       }
 
-      // If we reach here, it wasn't fulfilled
-      // result is Action, so 'payload' exists if rejected (defined in rejectWithValue)
-      const msg = (result as { payload?: unknown })?.payload || "Login failed";
-      showToast(typeof msg === 'string' ? msg : 'Login failed', { type: 'error' });
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Login failed";
-      showToast(msg, { type: "error" });
+      if (loginUser.fulfilled.match(result) || loginWithPhoneAndPassword.fulfilled.match(result)) {
+        // navigation handled by useEffect
+      } else {
+        const msg = (result.payload as string) || "Login failed";
+        showToast(msg, { type: 'error' });
+      }
+    } catch (e: any) {
+      showToast(e.message || "Login failed", { type: "error" });
     }
   };
 
-  const handleReset = async () => {
-    const value = resetIdentifier.trim();
-    const isEmail = isValidEmail(value);
-    const e164Reset = isEmail ? "" : formatToE164(value, selectedResetDialCode);
-    const isPhone = isEmail ? false : isValidE164Phone(e164Reset);
-
-    if (!isEmail && !isPhone) {
-      showToast("Enter a valid email or phone", { type: "error" });
-      return;
-    }
-    if (!newPassword || newPassword.length < 6) {
-      showToast("Password must be at least 6 characters", { type: "error" });
-      return;
-    }
-
-    if (isEmail) {
-      if (!otp || otp.length !== 6) {
-        showToast("Please enter a 6-digit OTP", { type: "error" });
-        return;
-      }
-      await dispatch(resetPasswordWithOtp({ email: value, otp, newPassword }));
-      setShowReset(false);
+  const onRequestOtp = async () => {
+    const values = resetForm.getValues();
+    if (!values.identifier) {
+      showToast("Please enter email or phone", { type: 'error' });
       return;
     }
 
     try {
-      if (!phoneConfirmation) {
-        showToast("Please send OTP first", { type: "error" });
-        return;
-      }
-      if (!phoneOtp || phoneOtp.replace(/\D/g, '').length !== 6) {
-        showToast("Please enter the 6-digit OTP", { type: "error" });
-        return;
-      }
-
-      setIsPhoneFlow(true);
-      const { PhoneAuthProvider, signInWithCredential } = await import('firebase/auth');
-      const { auth } = await import('../../lib/firebaseClient');
-
-      const credential = PhoneAuthProvider.credential(phoneConfirmation.verificationId, phoneOtp.replace(/\D/g, ''));
-      const userCred = await signInWithCredential(auth, credential);
-      const idToken = await userCred.user.getIdToken();
-
-      const result = await dispatch(resetPasswordWithPhoneToken({ idToken, newPassword }));
-      if (resetPasswordWithPhoneToken.fulfilled.match(result)) {
-        showToast('Password updated successfully', { type: 'success' });
-        setShowReset(false);
+      if (isResetPhone) {
+        await sendPhoneHelper(values.identifier, values.dialCode || "91");
       } else {
-        const msg = result.payload || 'Failed to update password';
-        showToast(typeof msg === 'string' ? msg : 'Failed to update password', { type: 'error' });
+        setIsEmailSending(true);
+        await dispatch(sendPasswordOtp(values.identifier));
+        showToast("OTP sent to email", { type: "success" });
+        setIsEmailSending(false);
       }
-      setIsPhoneFlow(false);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Phone verification failed';
-      showToast(msg, { type: 'error' });
-      setIsPhoneFlow(false);
+    } catch (e: any) {
+      setIsEmailSending(false);
+      showToast("Failed to send OTP", { type: "error" });
     }
   };
 
-  // Send OTP for phone-based reset
-  const handleSendPhoneOtp = async () => {
+  const onResetSubmit = async (data: ResetFormData) => {
     try {
-      if (!resetIdentifier) {
-        showToast('Please enter your phone number', { type: 'error' });
-        return;
+      if (isResetPhone) {
+        // Verify Phone OTP first to get ID Token
+        const idToken = await verifyPhoneToken(data.otp);
+        if (idToken) {
+          const result = await dispatch(resetPasswordWithPhoneToken({ idToken, newPassword: data.newPassword }));
+          if (resetPasswordWithPhoneToken.fulfilled.match(result)) {
+            showToast("Password updated. Please login.", { type: "success" });
+            setShowReset(false);
+          } else {
+            showToast((result.payload as string) || "Update failed", { type: "error" });
+          }
+        }
+      } else {
+        // Email Flow
+        const result = await dispatch(resetPasswordWithOtp({ email: data.identifier, otp: data.otp, newPassword: data.newPassword }));
+        if (resetPasswordWithOtp.fulfilled.match(result)) {
+          showToast("Password updated. Please login.", { type: "success" });
+          setShowReset(false);
+        } else {
+          showToast((result.payload as string) || "Update failed", { type: "error" });
+        }
       }
-      setIsSendingPhoneOtp(true);
-      setIsSendingPhoneOtp(true);
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-      }
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
-      const phoneE164 = formatToE164(resetIdentifier, selectedResetDialCode);
-      const confirmation = await signInWithPhoneNumber(auth, phoneE164, window.recaptchaVerifier);
-      setPhoneConfirmation(confirmation);
-      showToast('OTP sent to your phone', { type: 'success' });
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Failed to send OTP';
-      showToast(msg, { type: 'error' });
-    } finally {
-      setIsSendingPhoneOtp(false);
+    } catch (e: any) {
+      showToast("Reset failed", { type: "error" });
     }
   };
-
-  // Password visibility handled by TextField
 
   return (
     <AuthCardLayout
@@ -297,199 +191,115 @@ const LoginPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className=""
       >
         {showReset ? (
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleReset();
-            }}
-          >
-            {/* Unified reset: Email or Mobile */}
-            <div className="space-y-3">
+          // RESET FORM
+          <FormProvider {...resetForm}>
+            <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-6">
               <div className="grid grid-cols-5 gap-2">
-                {isResetPhoneLike && (
+                {isResetPhone && (
                   <div className="col-span-1">
-                    <label htmlFor="resetDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                    <select
-                      id="resetDialCode"
-                      value={selectedResetDialCode}
-                      onChange={(e) => setSelectedResetDialCode(e.target.value)}
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
-                    >
-                      {DIAL_CODES.map((o) => (
-                        <option key={o.code} value={o.code}>{o.label}</option>
-                      ))}
-                    </select>
+                    <CountrySelect
+                      value={resetDialCode || "91"}
+                      onChange={(val) => resetForm.setValue("dialCode", val)}
+                    />
                   </div>
                 )}
-                <div className={isResetPhoneLike ? "col-span-4" : "col-span-5"}>
-                  <TextField
+                <div className={isResetPhone ? "col-span-4" : "col-span-5"}>
+                  <FormField
+                    name="identifier"
                     label="Email or Mobile"
-                    id="resetIdentifier"
-                    value={resetIdentifier}
-                    onValueChange={setResetIdentifier}
                     autoComplete="username"
                   />
                 </div>
               </div>
+
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={async () => { const value = resetIdentifier.trim(); const isEmail = isValidEmail(value); const e164 = isEmail ? '' : formatToE164(value, selectedResetDialCode); if (!value || (!isEmail && !isValidE164Phone(e164))) { showToast('Enter a valid email or phone', { type: 'error' }); return; } if (isEmail) { setIsSendingEmailOtp(true); await dispatch(sendPasswordOtp(value)); setIsSendingEmailOtp(false); } else { await handleSendPhoneOtp(); } }}
-                  className="text-blue-600 hover:text-blue-700 text-sm"
-                  disabled={isSendingPhoneOtp || isSendingEmailOtp}
+                  onClick={onRequestOtp}
+                  disabled={isPhoneSending || isEmailSending}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
                 >
-                  {isSendingEmailOtp || isSendingPhoneOtp ? 'Sending...' : 'Send OTP'}
+                  {isPhoneSending || isEmailSending ? "Sending..." : "Send OTP"}
                 </button>
-                {phoneConfirmation && <span className="text-xs text-green-600">OTP sent</span>}
               </div>
-              {/* OTP input shows for both flows */}
-              <TextField
-                label="OTP"
-                id="resetOtp"
-                type="text"
+
+              <FormField
+                name="otp"
+                label="enter 6-digit OTP"
                 inputMode="numeric"
-                value={isValidEmail(resetIdentifier) ? otp : phoneOtp}
-                onValueChange={(v) => (isValidEmail(resetIdentifier) ? setOtp(v.replace(/\D/g, '').slice(0, 6)) : setPhoneOtp(v.replace(/\D/g, '').slice(0, 6)))}
                 maxLength={6}
-                showVisibilityToggle={false}
               />
-              {!isValidEmail(resetIdentifier) && <p className="text-xs text-gray-500">We will verify your phone with OTP, then update your password.</p>}
-            </div>
 
-            <TextField
-              label="New Password"
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onValueChange={setNewPassword}
-              icon={Lock}
-              autoComplete="new-password"
-            />
+              <FormField
+                name="newPassword"
+                label="New Password"
+                type="password"
+                icon={Lock}
+              />
 
-            {!isValidEmail(resetIdentifier) && isPhoneFlow && (
-              <div className="text-sm text-gray-600">Verifying your phone and updating password...</div>
-            )}
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="flex items-center justify-between pt-2">
+                <button type="button" onClick={() => setShowReset(false)} className="text-sm text-gray-600">Back to Login</button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : "Reset Password"}
+                </button>
               </div>
-            )}
+            </form>
+          </FormProvider>
+        ) : (
+          // LOGIN FORM
+          <FormProvider {...loginForm}>
+            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+              <div className="grid grid-cols-5 gap-2">
+                {isLoginPhone && (
+                  <div className="col-span-1">
+                    <CountrySelect
+                      value={loginDialCode || "91"}
+                      onChange={(val) => loginForm.setValue("dialCode", val)}
+                    />
+                  </div>
+                )}
+                <div className={isLoginPhone ? "col-span-4" : "col-span-5"}>
+                  <FormField
+                    name="identifier"
+                    label="Email or Mobile"
+                    autoComplete="username"
+                  />
+                </div>
+              </div>
 
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                className="text-sm text-gray-600 hover:text-gray-800"
-                onClick={() => setShowReset(false)}
-              >
-                Back to Login
-              </button>
+              <FormField
+                name="password"
+                label="Password"
+                type="password"
+                icon={Lock}
+                autoComplete="current-password"
+              />
+
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
               >
-                Reset Password
+                {isLoading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Sign in"}
               </button>
-            </div>
 
-            <div className="mt-3 text-center" />
-          </form>
-        ) : (
-          <form
-            className="space-y-8"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleLogin();
-            }}
-          >
-            <div className="grid grid-cols-5 gap-2">
-              {isPhoneLike && (
-                <div className="col-span-1">
-                  <label htmlFor="loginDialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                  <select
-                    id="loginDialCode"
-                    value={selectedDialCode}
-                    onChange={(e) => setSelectedDialCode(e.target.value)}
-                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
-                  >
-                    {DIAL_CODES.map((o) => (
-                      <option key={o.code} value={o.code}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <div className={isPhoneLike ? "col-span-4" : "col-span-5"}>
-                <TextField
-                  label="Email or Mobile"
-                  id="identifier"
-                  value={identifier}
-                  onValueChange={setIdentifier}
-                  autoComplete="username"
-                  error={loginError.field === 'identifier' ? loginError.message : undefined}
-                />
+              <div className="text-center space-y-3">
+                <p className="text-sm text-gray-600">
+                  Don't have an account? <Link to="/register" className="font-medium text-blue-600">Sign up</Link>
+                </p>
+                <button type="button" onClick={() => setShowReset(true)} className="text-sm text-blue-600">Forgot password?</button>
               </div>
-            </div>
-
-            <TextField
-              label="Password"
-              id="loginPassword"
-              type="password"
-              value={password}
-              onValueChange={setPassword}
-              icon={Lock}
-              autoComplete="current-password"
-              error={loginError.field === "password" ? loginError.message : undefined}
-            />
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </button>
-
-            <div className="text-center space-y-3">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  state={location.state}
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Sign up
-                </Link>
-              </p>
-              <button
-                type="button"
-                className="block mx-auto text-sm text-blue-600 hover:text-blue-700"
-                onClick={() => setShowReset(true)}
-              >
-                Forgot password?
-              </button>
-            </div>
-          </form>
+            </form>
+          </FormProvider>
         )}
       </motion.div>
-      <div id="recaptcha-container" className="hidden" />
+      <div id="recaptcha-container" ref={recaptchaRef} className="hidden" />
     </AuthCardLayout>
   );
 };

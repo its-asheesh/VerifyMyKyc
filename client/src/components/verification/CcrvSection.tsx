@@ -1,119 +1,66 @@
 "use client";
 
 import type React from "react";
-import { VerificationLayout } from "./VerificationLayout";
-import { VerificationForm } from "./VerificationForm";
 import { ccrvServices } from "../../config/ccrvConfig";
-import { VerificationConfirmDialog } from "./VerificationConfirmDialog";
-import { useVerificationLogic } from "../../hooks/useVerificationLogic";
-import { NoQuotaDialog } from "./NoQuotaDialog";
+import { GenericVerificationSection } from "./GenericVerificationSection";
+
+// Schema is not strictly defined in original file, but we can infer or use a generic one
+interface CcrvFormData {
+  [key: string]: unknown;
+}
+
+interface CcrvApiPayload {
+  [key: string]: unknown;
+}
 
 export const CcrvSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const {
-    selectedService,
-    isLoading,
-    result,
-    error,
-    showConfirmDialog,
-    showNoQuotaDialog,
-    pendingFormData,
-    handleServiceChange,
-    initiateSubmit,
-    closeConfirmDialog,
-    closeNoQuotaDialog,
-    // confirmSubmit,
-    setError,
-  } = useVerificationLogic({
-    services: ccrvServices,
-  })
 
-  // Get CCRV pricing from backend
-  // const { getVerificationPricingByType } = usePricingContext()
-  // const ccrvPricing = getVerificationPricingByType("ccrv")
+  const preprocessFields = (fields: any[]) => {
+    const placeholders: Record<string, string> = {
+      name: "Enter full name",
+      father_name: "Enter father's name",
+      house_number: "Enter house number",
+      locality: "Enter locality",
+      city: "Enter city",
+      village: "Enter village",
+      state: "Enter state",
+      district: "Enter district",
+      pincode: "Enter pincode",
+      date_of_birth: "Enter DOB (YYYY-MM-DD)",
+      gender: "Enter gender (MALE/FEMALE/OTHER)",
+      mobile_number: "Enter mobile number",
+      email: "Enter email address",
+      callback_url: "Enter callback URL",
+      transaction_id: "Enter transaction ID",
+      address: "Enter complete address",
+    }
 
-  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (field.name === "consent") {
-        return {
-          ...field,
-          type: "radio" as const,
-          options: [
-            { label: "Yes", value: "Y" },
-            { label: "No", value: "N" },
-          ],
-        }
-      }
-      // Add placeholders for specific fields
-      const placeholders: Record<string, string> = {
-        name: "Enter full name",
-        father_name: "Enter father's name",
-        house_number: "Enter house number",
-        locality: "Enter locality",
-        city: "Enter city",
-        village: "Enter village",
-        state: "Enter state",
-        district: "Enter district",
-        pincode: "Enter pincode",
-        date_of_birth: "Enter DOB (YYYY-MM-DD)",
-        gender: "Enter gender (MALE/FEMALE/OTHER)",
-        mobile_number: "Enter mobile number",
-        email: "Enter email address",
-        callback_url: "Enter callback URL",
-        transaction_id: "Enter transaction ID",
-        address: "Enter complete address",
-      }
-      return {
-        ...field,
-        placeholder: placeholders[field.name] || field.placeholder,
-      }
-    })
+    return fields.map((field) => ({
+      ...field,
+      placeholder: placeholders[field.name] || field.placeholder,
+      type: field.name === "consent" ? "radio" : field.type, // Ensure consent is radio (generic handles it, but robust here)
+    }))
   }
 
+  const transformFormData = (formData: CcrvFormData): CcrvApiPayload => {
+    return formData as CcrvApiPayload;
+  }
 
-
-  const handleConfirmSubmit = async () => {
-    // Temporary maintenance message (easy to remove later)
-    closeConfirmDialog()
-    setError("Government source temporarily unavailable. Please try again later.")
+  const handleApiAction = async (serviceKey: string, payload: CcrvApiPayload) => {
+    // Original code just closes dialog and sets error.
+    // We can simulate this by throwing an error.
+    throw new Error("Government source temporarily unavailable. Please try again later.")
   }
 
   return (
-    <>
-      <VerificationLayout
-        title="CCRV Verification"
-        description="Verify CCRV details"
-        services={ccrvServices}
-        selectedService={selectedService}
-        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-      >
-        <VerificationForm
-          fields={getFormFields(selectedService)}
-          onSubmit={async (data: any) => initiateSubmit(data)}
-          isLoading={isLoading}
-          result={result}
-          error={error}
-          serviceKey={selectedService.key}
-          serviceName={selectedService.name}
-          serviceDescription={selectedService.description}
-          productId={productId}
-        />
-      </VerificationLayout>
-
-      <VerificationConfirmDialog
-        isOpen={showConfirmDialog}
-        onClose={closeConfirmDialog}
-        onConfirm={handleConfirmSubmit}
-        isLoading={isLoading}
-        serviceName={selectedService.name}
-        formData={pendingFormData || {}}
-        tokenCost={1}
-      />
-
-      <NoQuotaDialog
-        isOpen={showNoQuotaDialog}
-        onClose={closeNoQuotaDialog}
-        serviceName={selectedService.name}
-      />
-    </>
+    <GenericVerificationSection<typeof ccrvServices[number], CcrvFormData, CcrvApiPayload>
+      services={ccrvServices}
+      title="CCRV Verification"
+      description="Verify CCRV details"
+      productId={productId}
+      apiAction={handleApiAction}
+      preprocessFields={preprocessFields}
+      transformFormData={transformFormData}
+    />
   )
 }

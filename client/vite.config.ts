@@ -1,9 +1,16 @@
-import { defineConfig } from 'vite'
+/// <reference types="vitest" />
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
+    css: true,
+  },
   plugins: [react(), tailwindcss()],
   build: {
     // Optimize for better Core Web Vitals
@@ -19,7 +26,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          ui: ['framer-motion', 'lucide-react', '@mui/material', '@mui/icons-material', '@mui/system', '@emotion/react', '@emotion/styled'],
+          ui: ['framer-motion', 'lucide-react'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/analytics'],
           pdf: ['jspdf'],
           excel: ['exceljs', 'csv-writer'],

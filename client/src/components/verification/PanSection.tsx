@@ -1,13 +1,9 @@
 "use client"
 
 import type React from "react"
-import { VerificationLayout } from "./VerificationLayout"
-import { VerificationForm } from "./VerificationForm"
 import { panServices } from "../../config/panConfig"
 import { identityApi } from "../../services/api/identityApi"
-import { VerificationConfirmDialog } from "./VerificationConfirmDialog"
-import { useVerificationLogic } from "../../hooks/useVerificationLogic"
-import { NoQuotaDialog } from "./NoQuotaDialog";
+import { GenericVerificationSection } from "./GenericVerificationSection"
 
 interface PanFormData {
   pan?: string;
@@ -17,126 +13,74 @@ interface PanFormData {
   [key: string]: unknown;
 }
 
+interface PanApiPayload {
+  pan_number: string;
+  consent: "Y" | "N";
+  father_name?: string;
+  date_of_birth?: string;
+  [key: string]: unknown;
+}
+
 export const PanSection: React.FC<{ productId?: string }> = ({ productId }) => {
-  const {
-    selectedService,
-    isLoading,
-    result,
-    error,
-    showConfirmDialog,
-    showNoQuotaDialog,
-    pendingFormData,
-    handleServiceChange,
-    initiateSubmit,
-    closeConfirmDialog,
-    closeNoQuotaDialog,
-    confirmSubmit,
-  } = useVerificationLogic<typeof panServices[number], PanFormData>({
-    services: panServices,
-  })
+  const transformFormData = (formData: PanFormData): PanApiPayload => {
+    const payload: Partial<PanApiPayload> = {}
 
-  // Get PAN pricing from backend
-  // const { getVerificationPricingByType } = usePricingContext()
-  // const panPricing = getVerificationPricingByType("pan")
+    // Map form 'pan' to API 'pan_number'
+    if (formData.pan) {
+      payload.pan_number = formData.pan.trim();
+    }
 
-  const getFormFields = (service: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    return service.formFields.map((field: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (field.name === "consent") {
-        return {
-          ...field,
-          type: "radio" as const,
-          options: [
-            { label: "Yes", value: "Y" },
-            { label: "No", value: "N" },
-          ],
-        }
+    // Handle other fields
+    for (const [k, v] of Object.entries(formData)) {
+      if (k === 'pan') continue; // Handled above
+
+      if (typeof v === "boolean") {
+        if (k === 'consent') payload[k] = v ? "Y" : "N";
+        else payload[k] = v ? "Y" : "N" as any;
+      } else if (typeof v === "string") {
+        payload[k] = v.trim()
+      } else {
+        payload[k] = v
       }
-      return field
-    })
+    }
+
+    if (!payload.pan_number) throw new Error("PAN is required");
+
+    const consentVal = formData.consent === true || formData.consent === 'Y' ? 'Y' : 'N';
+
+    return {
+      ...payload,
+      pan_number: payload.pan_number!,
+      consent: consentVal
+    } as PanApiPayload;
   }
 
-  const handleConfirmSubmit = async () => {
-    await confirmSubmit(async (formData: PanFormData) => {
-      // 1️⃣  Build clean payload
-      const payload: Record<string, unknown> = {}
-
-      // 2️⃣  Copy fields
-      for (const [k, v] of Object.entries(formData)) {
-        if (typeof v === "boolean") {
-          payload[k] = v ? "Y" : "N"
-        } else if (typeof v === "string") {
-          payload[k] = v.trim()
-        } else {
-          payload[k] = v
-        }
-      }
-
-      // 3️⃣  Basic validations
-      if (payload.consent !== "Y") {
-        throw new Error("Consent is required.")
-      }
-
-      // 4️⃣  Route to correct API
-      let response
-      switch (selectedService.key) {
-        case "father-name":
-          response = await identityApi.fetchPanFatherName(payload as any)
-          break
-        default:
-          response = await identityApi.post(selectedService.apiEndpoint || "", payload)
-      }
-      return response
-    })
+  const handleApiAction = async (serviceKey: string, payload: PanApiPayload) => {
+    switch (serviceKey) {
+      case "father-name":
+        return await identityApi.fetchPanFatherName({
+          pan_number: payload.pan_number,
+          consent: payload.consent,
+          // Only generic signature allows extra fields, but fetchPanFatherName is strict.
+          // However, looking at types/kyc.ts, PanFatherNameRequest ONLY has pan_number and consent.
+          // If we include father_name here (as logic implied), it might be wrong?
+          // Checking type definition: export interface PanFatherNameRequest { pan_number: string; consent: string; }
+          // So we should NOT pass father_name or extra fields.
+        })
+      default:
+        const service = panServices.find(s => s.key === serviceKey)
+        return await identityApi.post(service?.apiEndpoint || "", payload)
+    }
   }
 
   return (
-    <>
-      <VerificationLayout
-        title="PAN Verification Services"
-        description="Verify PAN details"
-        services={panServices}
-        selectedService={selectedService}
-        onServiceChange={handleServiceChange as any} // eslint-disable-line @typescript-eslint/no-explicit-any
-      >
-        {/* Display pricing if available */}
-        {/* {panPricing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-blue-800 mb-2">Service Pricing</h3>
-            <div className="flex gap-4 text-sm">
-              <span className="text-blue-600">One-time: ₹{panPricing.oneTimePrice}</span>
-              <span className="text-blue-600">Monthly: ₹{panPricing.monthlyPrice}</span>
-              <span className="text-blue-600">Yearly: ₹{panPricing.yearlyPrice}</span>
-            </div>
-          </div>
-        )} */}
-        <VerificationForm
-          fields={getFormFields(selectedService)}
-          onSubmit={async (data: any) => initiateSubmit(data)} // eslint-disable-line @typescript-eslint/no-explicit-any
-          isLoading={isLoading}
-          result={result}
-          error={error}
-          serviceKey={selectedService.key}
-          serviceName={selectedService.name}
-          serviceDescription={selectedService.description}
-          productId={productId}
-        />
-      </VerificationLayout>
-
-      <VerificationConfirmDialog
-        isOpen={showConfirmDialog}
-        onClose={closeConfirmDialog}
-        onConfirm={handleConfirmSubmit}
-        isLoading={isLoading}
-        serviceName={selectedService.name}
-        formData={pendingFormData || {}}
-        tokenCost={1}
-      />
-
-      <NoQuotaDialog
-        isOpen={showNoQuotaDialog}
-        onClose={closeNoQuotaDialog}
-        serviceName={selectedService.name}
-      />
-    </>
+    <GenericVerificationSection<typeof panServices[number], PanFormData, PanApiPayload>
+      services={panServices}
+      title="PAN Verification Services"
+      description="Verify PAN details"
+      productId={productId}
+      apiAction={handleApiAction}
+      transformFormData={transformFormData}
+    />
   )
 }

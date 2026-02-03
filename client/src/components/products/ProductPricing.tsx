@@ -8,6 +8,9 @@ import { useState } from "react"
 import type { Product } from "../../types/product"
 import { useVerificationPricing } from "../../hooks/usePricing"
 import { useAppSelector } from "../../redux/hooks"
+import { Button } from "../common/Button"
+import { Card } from "../common/Card"
+import { Section } from "../common/Section"
 
 interface ProductPricingProps {
   product: Product
@@ -111,12 +114,12 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
 
   if (verificationsLoading) {
     return (
-      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px] flex items-center justify-center">
+      <Section variant="gradient" className="rounded-3xl min-h-[600px] flex items-center justify-center">
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 mt-4">Loading pricing information...</p>
         </div>
-      </section>
+      </Section>
     )
   }
 
@@ -174,116 +177,114 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
 
   if (verificationsError || !verificationPricing) {
     return (
-      <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[600px]">
+      <Section variant="gradient" className="rounded-3xl min-h-[600px] flex items-center justify-center">
         <div className="text-center py-12">
           <p className="text-red-600">Failed to load pricing information. Please contact support.</p>
         </div>
-      </section>
+      </Section>
     )
   }
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-6 md:p-12 min-h-[640px] relative">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="text-center mb-8 md:mb-10"
-      >
-        <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
-          Choose Your Plan
-        </h2>
-        <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
-          Flexible pricing options to match your verification needs and scale with your business
-        </p>
-      </motion.div>
+    <Section variant="gradient" className="rounded-3xl min-h-[640px] relative" withContainer={false}>
+      <div className="px-6 md:px-12">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-8 md:mb-10"
+        >
+          <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
+            Choose Your Plan
+          </h2>
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+            Flexible pricing options to match your verification needs and scale with your business
+          </p>
+        </motion.div>
 
-      <div className="hidden md:block">
-        {/* Desktop: Grid layout - 3 in a row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
-          {pricingTiers.map((tier, index) => (
-            <motion.div
-              key={tier.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-3xl font-bold text-gray-900">₹{tier.price}</span>
-                  <span className="text-gray-500 text-sm">/{tier.name === 'One-time' ? 'check' : 'month'}</span>
-                </div>
-                <p className="text-gray-600 text-sm mb-6">{tier.requests}</p>
-                <ul className="space-y-3 mb-8">
-                  {tier.features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
-                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => handleChoosePlan(tier)}
-                  className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors ${tier.popular
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                    }`}
-                >
-                  Choose Plan
-                </button>
-              </div>
-            </motion.div>
-          ))}
+        <div className="hidden md:block">
+          {/* Desktop: Grid layout - 3 in a row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 lg:gap-8">
+            {pricingTiers.map((tier, index) => (
+              <motion.div
+                key={tier.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <Card className="hover:shadow-md transition-shadow">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                  <div className="flex items-baseline gap-1 mb-4">
+                    <span className="text-3xl font-bold text-gray-900">₹{tier.price}</span>
+                    <span className="text-gray-500 text-sm">/{tier.name === 'One-time' ? 'check' : 'month'}</span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-6">{tier.requests}</p>
+                  <ul className="space-y-3 mb-8">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={() => handleChoosePlan(tier)}
+                    className="w-full"
+                    variant={tier.popular ? 'primary' : 'secondary'}
+                  >
+                    Choose Plan
+                  </Button>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Mobile & Small Screens: Horizontal Scroll */}
-      <div className="md:hidden">
-        <div className="flex space-x-6 overflow-x-auto pb-6 px-4 hide-scrollbar">
-          {pricingTiers.map((tier, index) => (
-            <motion.div
-              key={tier.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="flex-shrink-0 w-72"
-            >
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-3xl font-bold text-gray-900">₹{tier.price}</span>
-                  <span className="text-gray-500 text-sm">/{tier.name === 'One-time' ? 'check' : 'month'}</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {tier.features.slice(0, 4).map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
-                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => handleChoosePlan(tier)}
-                  className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors ${tier.popular
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                    }`}
-                >
-                  Choose Plan
-                </button>
-              </div>
-            </motion.div>
-          ))}
+        {/* Mobile & Small Screens: Horizontal Scroll */}
+        <div className="md:hidden">
+          <div className="flex space-x-6 overflow-x-auto pb-6 px-4 scrollbar-hide">
+            {pricingTiers.map((tier, index) => (
+              <motion.div
+                key={tier.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="flex-shrink-0 w-72"
+              >
+                <Card>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                  <div className="flex items-baseline gap-1 mb-4">
+                    <span className="text-3xl font-bold text-gray-900">₹{tier.price}</span>
+                    <span className="text-gray-500 text-sm">/{tier.name === 'One-time' ? 'check' : 'month'}</span>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    {tier.features.slice(0, 4).map((feature, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={() => handleChoosePlan(tier)}
+                    className="w-full"
+                    variant={tier.popular ? 'primary' : 'secondary'}
+                  >
+                    Choose Plan
+                  </Button>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Extra vertical space to increase scrollable area */}
-      <div className="h-16 md:h-20"></div>
-    </section>
+        {/* Extra vertical space to increase scrollable area */}
+        <div className="h-16 md:h-20"></div>
+      </div>
+    </Section >
   )
 }

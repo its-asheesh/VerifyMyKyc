@@ -10,6 +10,8 @@ import { LoadingSpinner } from "../../components/common/LoadingSpinner"
 import { ProductCard } from "../../components/products/ProductCard"
 import SEOHead from "../../components/seo/SEOHead"
 import { ShieldCheck, Search } from "lucide-react"
+import { Container } from "../../components/common/Container"
+import { Heading } from "../../components/common/Heading"
 
 // Import mockProducts for total count
 import { mockProducts } from "../../redux/slices/productSlice"
@@ -129,13 +131,13 @@ const ProductsPage: React.FC = () => {
       <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
         {/* Modern Header Section */}
         <div className="bg-white border-b border-gray-300 sticky top-0 z-30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Container className="py-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Heading level={1} className="flex items-center gap-2 text-2xl">
                   <ShieldCheck className="w-6 h-6 text-blue-600" />
                   Verification Solutions
-                </h1>
+                </Heading>
                 <p className="text-gray-600 text-sm mt-1">Secure, compliant, and instant verification APIs for your business.</p>
               </div>
 
@@ -189,10 +191,10 @@ const ProductsPage: React.FC = () => {
                 </button>
               ))}
             </div>
-          </div>
+          </Container>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Container className="py-8">
           {/* Products Grid/List */}
           {isLoading ? (
             <div className="flex justify-center py-20">
@@ -244,7 +246,7 @@ const ProductsPage: React.FC = () => {
               </button>
             </motion.div>
           )}
-        </div>
+        </Container>
 
         {/* Elegant Buy Prompt Modal */}
         {showBuyPrompt && (

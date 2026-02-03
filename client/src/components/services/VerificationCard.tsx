@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import type { FC } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { reviewApi } from "../../services/api/reviewApi";
+import { Badge } from "../common/Badge";
 
 type VerificationCardProps = {
   title: string;
@@ -19,11 +20,11 @@ type VerificationCardProps = {
   link?: string;
 };
 
-const gradientMap = {
-  high: "bg-gradient-to-r from-red-500 to-pink-500",
-  medium: "bg-gradient-to-r from-yellow-500 to-orange-500",
-  low: "bg-gradient-to-r from-gray-400 to-gray-600",
-};
+const variantMap = {
+  high: "solid-error",
+  medium: "solid-warning",
+  low: "default",
+} as const;
 
 export const VerificationCard: FC<VerificationCardProps> = ({
   title,
@@ -88,28 +89,28 @@ export const VerificationCard: FC<VerificationCardProps> = ({
       </div>
 
       <div className="p-3 sm:p-4 md:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col">
-        <span
-          className={`w-fit px-2 py-1 rounded-full text-white text-xs sm:text-sm font-semibold ${gradientMap[demandLevel]} flex-shrink-0`}
+        <Badge
+          variant={variantMap[demandLevel]}
+          className="flex-shrink-0"
+          size="sm"
         >
           {demand}
-        </span>
+        </Badge>
 
         {(typeof remaining === "number" || formattedExpiry) && (
           <div className="flex flex-wrap gap-1 sm:gap-2 flex-shrink-0">
             {typeof remaining === "number" && (
-              <span
-                className={`inline-block px-2 py-1 rounded text-xs sm:text-sm ${remaining === 0
-                    ? "bg-red-100 text-red-600"
-                    : "bg-green-100 text-green-600"
-                  }`}
+              <Badge
+                variant={remaining === 0 ? "error" : "success"}
+                size="sm"
               >
                 Remaining: {remaining}
-              </span>
+              </Badge>
             )}
             {formattedExpiry && (
-              <span className="inline-block px-2 py-1 rounded bg-gray-100 text-gray-600 text-xs sm:text-sm">
+              <Badge variant="default" size="sm">
                 Expires: {formattedExpiry}
-              </span>
+              </Badge>
             )}
           </div>
         )}

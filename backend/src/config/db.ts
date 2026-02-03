@@ -11,8 +11,10 @@ export const connectDB = async () => {
     if (!mongoUri) {
       throw new Error('MONGO_URI environment variable is not defined');
     }
-    
-    await mongoose.connect(mongoUri);
+
+    await mongoose.connect(mongoUri, {
+      family: 4, // Force IPv4 to resolve querySrv ETIMEOUT
+    });
     console.log('MongoDB connected successfully');
   } catch (err) {
     console.error('MongoDB connection error:', err);

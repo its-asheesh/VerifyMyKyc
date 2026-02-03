@@ -4,6 +4,7 @@ import { Provider } from "react-redux"
 import { store } from "../redux/store"
 import { AppProvider } from "../context/AppContext"
 import { ErrorBoundary } from "../components/common/ErrorBoundary"
+import NotFoundPage from "../pages/NotFoundPage"
 import { UserRoute, AnyRoleRoute } from "../components/auth/ProtectedRoute"
 import { useTokenValidation } from "../hooks/useTokenValidation"
 import { useAutoLogout } from "../hooks/useAutoLogout"
@@ -11,6 +12,7 @@ import { useAutoLogout } from "../hooks/useAutoLogout"
 // Layout
 import Navbar from "../components/layout/Navbar"
 import Footer from "../components/layout/Footer"
+import { Section } from "../components/common/Section"
 import ScrollToTop from "../components/common/ScrollToTop"
 import { LoadingSpinner } from "../components/common/LoadingSpinner"
 
@@ -57,6 +59,10 @@ const MainLayout = () => {
   )
 }
 
+// Imports removed
+
+// Inline NotFound component removed in favor of pages/NotFoundPage
+
 const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -64,7 +70,11 @@ const AppRoutes: React.FC = () => {
         <AppProvider>
           <Router>
             <ScrollToTop />
-            <Suspense fallback={<div className="flex justify-center items-center min-h-[60vh]"><LoadingSpinner /></div>}>
+            <Suspense fallback={
+              <Section variant="white" className="min-h-[60vh] flex items-center justify-center">
+                <LoadingSpinner />
+              </Section>
+            }>
               <Routes>
                 {/* Standalone Routes (No Navbar/Footer) */}
                 <Route path="/verification/:type" element={<VerificationPage />} />
@@ -135,7 +145,7 @@ const AppRoutes: React.FC = () => {
                   <Route path="/payment-success" element={<PaymentSuccessPage />} />
 
                   {/* 404 */}
-                  <Route path="*" element={<div>404 Not Found</div>} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
             </Suspense>

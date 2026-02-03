@@ -5,7 +5,7 @@ import { motion, type HTMLMotionProps } from "framer-motion"
 
 interface ButtonProps extends HTMLMotionProps<"button"> {
     children: React.ReactNode
-    variant?: "default" | "contained" | "outlined" | "ghost" | "gradient"
+    variant?: "default" | "primary" | "secondary" | "contained" | "outlined" | "ghost" | "gradient"
     size?: "default" | "sm" | "lg"
 }
 
@@ -22,6 +22,8 @@ export const Button: React.FC<ButtonProps> = ({
 
     const variantClasses = {
         default: "text-gray-700 hover:text-blue-600 hover:bg-blue-50",
+        primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg",
+        secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
         contained: "bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl",
         outlined: "border-2 border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50",
         ghost: "text-gray-700 hover:text-blue-600 hover:bg-blue-50",

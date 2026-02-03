@@ -4,6 +4,9 @@ import type React from "react"
 import { motion } from "framer-motion"
 import { BackButton } from "./BackButton"
 import { useNavigate } from "react-router-dom"
+import { Container } from "./Container"
+import { Heading } from "./Heading"
+import { Section } from "./Section"
 
 interface PageHeaderProps {
   title: string
@@ -27,18 +30,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className={`bg-gradient-to-r from-blue-50 to-purple-50 py-6 md:py-10 ${className}`}
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <Section variant="gradient" className={`py-6 md:py-10 ${className}`}>
         <div className="flex items-center justify-between">
           {/* Header content only half width */}
           <div className="w-full">
             {showBackButton && (
               <BackButton />
             )}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+            <Heading level={1} className="mb-3">
               {title}
-            </h1>
+            </Heading>
             {subtitle && (
               <p className="text-lg md:text-xl text-gray-600 max-w-3xl">
                 {subtitle}
@@ -49,7 +51,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           {/* Children (actions) stay on right */}
           {children && <div className="ml-6">{children}</div>}
         </div>
-      </div>
+      </Section>
     </motion.div>
   )
 }

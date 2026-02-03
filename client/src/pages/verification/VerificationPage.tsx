@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
+import { Button } from "../../components/common/Button";
 
 // Import all verification sections
 import { AadhaarSection } from "../../components/verification/AadhaarSection";
@@ -59,19 +60,20 @@ const VerificationPage: React.FC = () => {
                     <div className="text-center py-12">
                         <h2 className="text-2xl font-bold text-gray-900">Service Not Found</h2>
                         <p className="text-gray-600 mt-2">The requested verification service could not be found.</p>
-                        <button
+                        <Button
                             onClick={() => navigate("/products")}
-                            className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="mt-6"
+                            variant="primary"
                         >
                             Browse Products
-                        </button>
+                        </Button>
                     </div>
                 );
         }
     };
 
     return (
-        <div className="h-screen overflow-y-auto bg-gray-50 flex flex-col [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="h-screen overflow-y-auto bg-gray-50 flex flex-col scrollbar-hide">
             {/* Fixed Close Button */}
             <button
                 onClick={() => navigate(-1)}

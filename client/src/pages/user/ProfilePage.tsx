@@ -9,6 +9,8 @@ import {
   User, Mail, Building, Phone, Shield, Edit, LogOut,
   Loader2, FileCheck, BadgeCheck, ShieldCheck, RefreshCw, PlusCircle, Lock
 } from 'lucide-react'
+import { Button } from '../../components/common/Button'
+import { Card } from '../../components/common/Card'
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
@@ -155,7 +157,7 @@ const ProfilePage: React.FC = () => {
           {/* Authentic Sidebar */}
           <div className="lg:col-span-3">
             <div className="sticky top-24 space-y-6">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+              <Card className="overflow-hidden flex flex-col" noPadding>
                 {/* User Identity Card */}
                 <div className="p-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -204,7 +206,7 @@ const ProfilePage: React.FC = () => {
                     Sign Out
                   </button>
                 </nav>
-              </div>
+              </Card>
 
               {/* Security Badge */}
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3 shadow-sm">
@@ -249,9 +251,10 @@ const ProfilePage: React.FC = () => {
                                 const isExpiringSoon = daysRemaining <= 7;
 
                                 return (
-                                  <div
+                                  <Card
                                     key={verification._id}
-                                    className="group bg-white border border-gray-200 rounded-xl hover:border-blue-300 transition-all duration-200 cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
+                                    className="group hover:border-blue-300 transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-md"
+                                    noPadding
                                     onClick={() => handleOpenService(verification)}
                                   >
                                     {/* Security Strip */}
@@ -317,7 +320,7 @@ const ProfilePage: React.FC = () => {
                                         </button>
                                       )}
                                     </div>
-                                  </div>
+                                  </Card>
                                 );
                               })}
                             </div>
@@ -328,7 +331,7 @@ const ProfilePage: React.FC = () => {
                         {activeServices.plans.length > 0 && (
                           <div>
                             <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
-                              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                              <h3 className="text-lg font-bold text-purple-600 flex items-center gap-2">
                                 <FileCheck className="w-5 h-5 text-purple-600" />
                                 Subscription Plans
                               </h3>
@@ -343,44 +346,46 @@ const ProfilePage: React.FC = () => {
                                 const isExpiringSoon = daysRemaining <= 7;
 
                                 return (
-                                  <div key={plan._id} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-purple-300 transition-all shadow-sm group">
-                                    <div className="flex justify-between items-start mb-4">
-                                      <div>
-                                        <h4 className="font-bold text-gray-900 text-lg">{plan.serviceName}</h4>
-                                        <span className="inline-block mt-1 px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-bold rounded border border-purple-100 uppercase tracking-wide">
-                                          {plan.billingPeriod} Plan
+                                  <Card key={plan._id} className="hover:border-purple-300 transition-all group" noPadding>
+                                    <div className="p-5">
+                                      <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                          <h4 className="font-bold text-gray-900 text-lg">{plan.serviceName}</h4>
+                                          <span className="inline-block mt-1 px-2 py-0.5 bg-purple-50 text-purple-700 text-xs font-bold rounded border border-purple-100 uppercase tracking-wide">
+                                            {plan.billingPeriod} Plan
+                                          </span>
+                                        </div>
+                                        <span className={`px-2 py-1 rounded text-xs font-bold border uppercase tracking-wider ${getStatusColor(plan.status, plan.endDate)}`}>
+                                          Active
                                         </span>
                                       </div>
-                                      <span className={`px-2 py-1 rounded text-xs font-bold border uppercase tracking-wider ${getStatusColor(plan.status, plan.endDate)}`}>
-                                        Active
-                                      </span>
-                                    </div>
 
-                                    <div className="space-y-2 mb-4 text-sm text-gray-600">
-                                      <div className="flex justify-between border-b border-gray-100 pb-2">
-                                        <span>Expiration Date</span>
-                                        <span className="font-semibold text-gray-900">{formatDate(plan.endDate)}</span>
+                                      <div className="space-y-2 mb-4 text-sm text-gray-600">
+                                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                                          <span>Expiration Date</span>
+                                          <span className="font-semibold text-gray-900">{formatDate(plan.endDate)}</span>
+                                        </div>
+                                        <div className="flex justify-between pt-1">
+                                          <span>Time Remaining</span>
+                                          <span className={`font-semibold ${isExpiringSoon ? 'text-red-600' : 'text-purple-600'}`}>
+                                            {daysRemaining} days
+                                          </span>
+                                        </div>
                                       </div>
-                                      <div className="flex justify-between pt-1">
-                                        <span>Time Remaining</span>
-                                        <span className={`font-semibold ${isExpiringSoon ? 'text-red-600' : 'text-purple-600'}`}>
-                                          {daysRemaining} days
-                                        </span>
-                                      </div>
-                                    </div>
 
-                                    {isExpiringSoon ? (
-                                      <button className="w-full py-2.5 rounded-lg bg-red-50 text-red-700 font-semibold text-sm hover:bg-red-100 border border-red-200 transition-colors flex items-center justify-center gap-2">
-                                        <RefreshCw className="w-4 h-4" />
-                                        Renew Subscription
-                                      </button>
-                                    ) : (
-                                      <button className="w-full py-2.5 rounded-lg bg-purple-50 text-purple-700 font-semibold text-sm hover:bg-purple-100 border border-purple-200 transition-colors flex items-center justify-center gap-2">
-                                        <PlusCircle className="w-4 h-4" />
-                                        Extend Plan
-                                      </button>
-                                    )}
-                                  </div>
+                                      {isExpiringSoon ? (
+                                        <button className="w-full py-2.5 rounded-lg bg-red-50 text-red-700 font-semibold text-sm hover:bg-red-100 border border-red-200 transition-colors flex items-center justify-center gap-2">
+                                          <RefreshCw className="w-4 h-4" />
+                                          Renew Subscription
+                                        </button>
+                                      ) : (
+                                        <button className="w-full py-2.5 rounded-lg bg-purple-50 text-purple-700 font-semibold text-sm hover:bg-purple-100 border border-purple-200 transition-colors flex items-center justify-center gap-2">
+                                          <PlusCircle className="w-4 h-4" />
+                                          Extend Plan
+                                        </button>
+                                      )}
+                                    </div>
+                                  </Card>
                                 );
                               })}
                             </div>
@@ -414,7 +419,7 @@ const ProfilePage: React.FC = () => {
 
                 {/* Orders Tab */}
                 {activeTab === 'orders' && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <Card className="overflow-hidden" noPadding>
                     <div className="p-5 border-b border-gray-200 bg-gray-50">
                       <h2 className="text-lg font-bold text-gray-900">Transaction History</h2>
                     </div>
@@ -450,12 +455,12 @@ const ProfilePage: React.FC = () => {
                         <div className="p-12 text-center text-gray-500">No transactions found</div>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 )}
 
                 {/* Profile Settings Tab */}
                 {activeTab === 'profile' && (
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                  <Card className="p-8" noPadding>
                     <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
                       <div>
                         <h2 className="text-lg font-bold text-gray-900">Account Settings</h2>
@@ -477,12 +482,13 @@ const ProfilePage: React.FC = () => {
                           >
                             Cancel
                           </button>
-                          <button
+                          <Button
                             onClick={handleSave}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm shadow-sm"
+                            variant="primary"
+                            className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                           >
                             Save Changes
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -509,7 +515,7 @@ const ProfilePage: React.FC = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
               </motion.div>
             </AnimatePresence>

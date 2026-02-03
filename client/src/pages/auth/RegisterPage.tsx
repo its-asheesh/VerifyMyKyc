@@ -1,269 +1,107 @@
 // src/pages/auth/RegisterPage.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  registerUser,
-  sendEmailOtp,
-  verifyEmailOtp,
-  verifyPhoneOtp,
-} from "../../redux/slices/authSlice";
-import {
-  Lock,
-  User,
-  Building,
-  Loader2,
-  UserPlus,
-} from "lucide-react";
-import { useToast } from "../../components/common/ToastProvider";
-import { auth } from "../../lib/firebaseClient";
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  PhoneAuthProvider,
-  signInWithCredential,
-} from "firebase/auth";
-import type { ConfirmationResult } from "firebase/auth";
-import TextField from "../../components/forms/TextField";
-import { isValidEmail, isValidE164Phone } from "../../utils/validators";
+import { useForm, useWatch, FormProvider } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { User, Lock, Building, Loader2, UserPlus } from "lucide-react";
+
+import { useAppSelector } from "../../redux/hooks";
+import AuthCardLayout from "../../components/auth/AuthCardLayout";
+import { BackButton } from "../../components/common/BackButton";
+import { CountrySelect } from "../../components/auth/CountrySelect";
+import { FormField } from "../../components/forms/FormField";
 import OtpInputWithTimer from "../../components/forms/OtpInputWithTimer";
 import PasswordStrengthMeter from "../../components/forms/PasswordStrengthMeter";
-import AuthCardLayout from "../../components/auth/AuthCardLayout";
+import { useAuthFlow } from "../../hooks/useAuthFlow";
+import { isPhoneLike } from "../../utils/authUtils";
+import { isValidEmail, isValidE164Phone } from "../../utils/validators";
+import { formatToE164 } from "../../utils/authUtils";
 import registerHero from "../../assets/animations/register-hero.json";
-import { BackButton } from "../../components/common/BackButton";
+
+// Validation Schema
+const registerSchema = yup.object().shape({
+  name: yup.string().required("Full name is required"),
+  identifier: yup.string().required("Email or mobile is required")
+    .test('is-valid-contact', 'Invalid email or mobile number', function (value) {
+      if (!value) return false;
+      const { dialCode } = this.parent;
+      if (isValidEmail(value)) return true;
+      // Phone check
+      if (!dialCode) return false;
+      const e164 = formatToE164(value, dialCode);
+      return isValidE164Phone(e164);
+    }),
+  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  confirmPassword: yup.string()
+    .oneOf([yup.ref('password')], 'Passwords must match')
+    .required('Confirm password is required'),
+  company: yup.string().optional(),
+  dialCode: yup.string().default("91")
+});
+
+type RegisterFormData = yup.InferType<typeof registerSchema>;
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useAppDispatch();
-  const { isLoading, error, isAuthenticated } = useAppSelector(
-    (state) => state.auth
-  );
-  const { showToast } = useToast();
+  const authState = useAppSelector((state) => state.auth);
 
   const [step, setStep] = useState<1 | 2>(1);
-
-  // Step 1 (Details)
-  const [name, setName] = useState("");
-  const [identifier, setIdentifier] = useState(""); // email or phone in one field
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [company, setCompany] = useState("");
-  const [selectedDialCode, setSelectedDialCode] = useState<string>("91"); // Default India
-  const [isPhoneLike, setIsPhoneLike] = useState<boolean>(false);
-
-  // Step 2 (Verify)
   const [otp, setOtp] = useState("");
-  const [pendingEmail, setPendingEmail] = useState<string | undefined>(
-    undefined
-  );
-  const [pendingPhone, setPendingPhone] = useState<string | undefined>(
-    undefined
-  );
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
-  const recaptchaRef = useRef<HTMLDivElement>(null);
+  const { isSendingOtp, initiateRegister, verifyOtp, resendOtp, recaptchaRef } = useAuthFlow({ onStepChange: setStep });
 
-  // Auto-login
+  const methods = useForm<RegisterFormData>({
+    resolver: yupResolver(registerSchema) as any,
+    mode: "onChange",
+    defaultValues: {
+      dialCode: "91",
+      name: "",
+      identifier: "",
+      password: "",
+      confirmPassword: "",
+      company: ""
+    }
+  });
+
+  const { handleSubmit, setValue, watch } = methods;
+  const control = methods.control;
+  const identifier = useWatch({ control, name: "identifier" });
+  const dialCode = useWatch({ control, name: "dialCode" });
+  const isIdentifierPhoneLike = isPhoneLike(identifier || "");
+
+  // Auto-login redirect
   useEffect(() => {
-    if (isAuthenticated) {
+    if (authState.isAuthenticated) {
       const state = location.state as { redirectTo?: string; nextState?: unknown } | null;
-      const redirectTo = state?.redirectTo || "/";
-      navigate(redirectTo, { state: state?.nextState });
+      navigate(state?.redirectTo || "/", { state: state?.nextState });
     }
-  }, [isAuthenticated, navigate, location.state]);
+  }, [authState.isAuthenticated, navigate, location.state]);
 
-  // reCAPTCHA cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined;
-      }
-    };
-  }, []);
-
-  // Simple country dialing code options (extend as needed)
-  const DIAL_CODES: Array<{ code: string; label: string }> = [
-    { code: "91", label: "+91 (IN)" },
-    { code: "1", label: "+1 (US)" },
-    { code: "44", label: "+44 (UK)" },
-    { code: "61", label: "+61 (AU)" },
-    { code: "65", label: "+65 (SG)" },
-    { code: "971", label: "+971 (AE)" },
-  ];
-
-  // Detect if identifier is phone-like to show country selector
-  useEffect(() => {
-    const val = (identifier || "").trim();
-    const looksLikePhone = /^\+?\d[\d\s-]*$/.test(val) && !val.includes("@");
-    setIsPhoneLike(looksLikePhone);
-  }, [identifier]);
-
-  const formatToE164 = (phone: string, countryCode = "91"): string => {
-    const input = (phone || "").trim();
-    if (input.startsWith("+")) return input;
-    let digits = input.replace(/\D/g, "");
-    digits = digits.replace(/^0+/, "");
-    if (digits.length === 10) {
-      return `+${countryCode}${digits}`;
-    }
-    if (digits.startsWith(countryCode) && digits.length > countryCode.length) {
-      while (digits.startsWith(countryCode + countryCode)) {
-        digits = digits.slice(countryCode.length);
-      }
-      return `+${digits}`;
-    }
-    return `+${countryCode}${digits}`;
+  const onSubmitStep1 = async (data: RegisterFormData) => {
+    await initiateRegister({
+      name: data.name,
+      identifier: data.identifier,
+      password: data.password,
+      company: data.company,
+      dialCode: data.dialCode || "91"
+    });
   };
 
-  const safeSet = (
-    setter: React.Dispatch<React.SetStateAction<string>>,
-    value: unknown
-  ) => {
-    if (typeof value === "string") {
-      setter(value);
-    } else {
-      console.warn("Attempted to set non-string value:", value);
-      setter("");
-    }
-  };
-
-  // No explicit continue; we submit details to send OTP directly
-
-  const validateStep2 = () => {
-    const trimmed = identifier.trim();
-    const looksLikeEmail = isValidEmail(trimmed);
-    let looksLikePhone = false;
-    let e164Candidate = "";
-    if (!looksLikeEmail) {
-      e164Candidate = formatToE164(trimmed, selectedDialCode);
-      looksLikePhone = isValidE164Phone(e164Candidate);
-    }
-
-    if (!looksLikeEmail && !looksLikePhone) {
-      showToast("Enter a valid email or mobile number", { type: "error" });
-      return false;
-    }
-
-    if (!password || password.length < 6) {
-      showToast("Password must be at least 6 characters", { type: "error" });
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      showToast("Passwords do not match", { type: "error" });
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSendOtp = async () => {
-    if (!validateStep2()) return;
-    setIsSendingOtp(true);
-
-    const trimmed = identifier.trim();
-    const isEmail = isValidEmail(trimmed);
-
-    if (isEmail) {
-      const result = await dispatch(
-        registerUser({ name, email: trimmed, password, company })
-      );
-      if (registerUser.fulfilled.match(result)) {
-        setPendingEmail(trimmed);
-        setStep(2);
-      }
-      setIsSendingOtp(false);
-      return;
-    }
-
-    // Phone flow
-    try {
-      const e164Phone = formatToE164(trimmed, selectedDialCode);
-      let appVerifier = window.recaptchaVerifier;
-      if (!appVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-        try { window.recaptchaVerifier.render?.(); } catch {
-          // ignore
-        }
-        appVerifier = window.recaptchaVerifier;
-      }
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        e164Phone,
-        appVerifier
-      );
-      setConfirmationResult(confirmation);
-      setPendingPhone(e164Phone);
-      setStep(2);
-    } catch (err: unknown) {
-      let msg = "Failed to send OTP";
-      if ((err as { code?: string }).code === "auth/invalid-phone-number") msg = "Invalid phone number";
-      showToast(msg, { type: "error" });
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
-
-  // In RegisterPage.tsx
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) {
-      showToast("Please enter a 6-digit OTP", { type: "error" });
-      return;
-    }
-
-    if (pendingEmail) {
-      await dispatch(verifyEmailOtp({ email: pendingEmail, otp }));
-    } else if (pendingPhone && confirmationResult) {
-      try {
-        const credential = PhoneAuthProvider.credential(
-          confirmationResult.verificationId,
-          otp
-        );
-        const userCredential = await signInWithCredential(auth, credential);
-        const idToken = await userCredential.user.getIdToken();
-
-        // ✅ Include password in the payload for phone registration
-        await dispatch(
-          verifyPhoneOtp({
-            idToken,
-            name,
-            company,
-            password, // This will be the password collected in step 2
-          })
-        );
-      } catch {
-        showToast("Invalid OTP", { type: "error" });
-      }
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (pendingEmail) {
-      await dispatch(sendEmailOtp(pendingEmail));
-    } else if (pendingPhone) {
-      try {
-        const appVerifier = window.recaptchaVerifier;
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          pendingPhone,
-          appVerifier
-        );
-        setConfirmationResult(confirmation);
-      } catch {
-        showToast("Failed to resend OTP", { type: "error" });
-      }
-    }
+    const data = methods.getValues();
+    await verifyOtp(otp, {
+      name: data.name,
+      company: data.company,
+      password: data.password
+    });
   };
 
   const goBack = () => {
-    if (step === 2) {
-      setStep(1);
-      setOtp("");
-    }
+    setStep(1);
+    setOtp("");
   };
 
   return (
@@ -292,153 +130,146 @@ const RegisterPage: React.FC = () => {
         </div>
       }
     >
-      <motion.div
-        key={step}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className=""
-      >
-        {/* Title moved to rightHeader to align with progress bar; back button moved to header */}
-        {step === 1 && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TextField
-                label="Full Name"
-                id="name"
-                value={name}
-                onValueChange={(val) => safeSet(setName, val)}
-                icon={User}
-                required
-                autoComplete="name"
-              />
-              <div className="grid grid-cols-5 gap-2">
-                {isPhoneLike && (
-                  <div className="col-span-2">
-                    <label htmlFor="dialCode" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                    <select
-                      id="dialCode"
-                      value={selectedDialCode}
-                      onChange={(e) => setSelectedDialCode(e.target.value)}
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm bg-white"
-                    >
-                      {DIAL_CODES.map((o) => (
-                        <option key={o.code} value={o.code}>{o.label}</option>
-                      ))}
-                    </select>
+      <FormProvider {...methods}>
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="hidden" id="recaptcha-container" ref={recaptchaRef} />
+
+          {step === 1 && (
+            <form onSubmit={handleSubmit(onSubmitStep1)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  name="name"
+                  label="Full Name"
+                  icon={User}
+                  autoComplete="name"
+                />
+                <div className="grid grid-cols-5 gap-2">
+                  {isIdentifierPhoneLike && (
+                    <div className="col-span-2">
+                      <CountrySelect
+                        value={dialCode}
+                        onChange={(code) => setValue("dialCode", code)}
+                      />
+                    </div>
+                  )}
+                  <div className={isIdentifierPhoneLike ? "col-span-3" : "col-span-5"}>
+                    <FormField
+                      name="identifier"
+                      label="Email or Mobile"
+                      autoComplete="username"
+                    />
                   </div>
-                )}
-                <div className={isPhoneLike ? "col-span-3" : "col-span-5"}>
-                  <TextField
-                    label="Email or Mobile"
-                    id="identifier"
-                    value={identifier}
-                    onValueChange={(val) => safeSet(setIdentifier, val)}
-                    autoComplete="username"
-                  />
                 </div>
               </div>
-            </div>
 
-            <TextField
-              label="Password"
-              id="password"
-              type="password"
-              value={password}
-              onValueChange={(val) => safeSet(setPassword, val)}
-              icon={Lock}
-              required
-              autoComplete="new-password"
-            />
-            <PasswordStrengthMeter password={password} />
+              <FormField
+                name="password"
+                label="Password"
+                type="password"
+                icon={Lock}
+                autoComplete="new-password"
+              />
+              <PasswordStrengthMeter password={watch("password")} />
 
-            <TextField
-              label="Confirm Password"
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onValueChange={(val) => safeSet(setConfirmPassword, val)}
-              icon={Lock}
-              required
-              autoComplete="new-password"
-            />
+              <FormField
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                icon={Lock}
+                autoComplete="new-password"
+              />
 
-            <TextField
-              label="Company (Optional)"
-              id="company"
-              value={company}
-              onValueChange={(val) => safeSet(setCompany, val)}
-              icon={Building}
-              autoComplete="organization"
-            />
+              <FormField
+                name="company"
+                label="Company (Optional)"
+                icon={Building}
+                autoComplete="organization"
+              />
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSendOtp}
-              disabled={isLoading || isSendingOtp}
-              className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSendingOtp ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating account...</span>
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-5 h-5" />
-                  <span>Create account</span>
-                </>
+              {authState.error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-600">{authState.error}</p>
+                </div>
               )}
-            </motion.button>
 
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{" "}
-                <Link to="/login" className="text-blue-600 hover:underline">
-                  Sign in
-                </Link>
-              </p>
-            </div>
-          </div>
-        )}
+              <motion.button
+                type="submit"
+                whileTap={{ scale: 0.98 }}
+                disabled={authState.isLoading || isSendingOtp}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSendingOtp ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating account...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5" />
+                    <span>Create account</span>
+                  </>
+                )}
+              </motion.button>
 
-        {step === 2 && (
-          <div className="space-y-6">
-            <div className="mt-12 md:mt-12">
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Link to="/login" className="text-blue-600 hover:underline">
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </form>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  We sent a verification code to{" "}
+                  <span className="font-semibold">{methods.getValues("identifier")}</span>
+                </p>
+                <button
+                  onClick={goBack}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Change email/mobile
+                </button>
+              </div>
+
               <OtpInputWithTimer
                 value={otp}
-                onChange={(val) => safeSet(setOtp, val)}
-                onResend={handleResendOtp}
-                error={error}
+                onChange={setOtp}
+                onResend={resendOtp}
               />
-            </div>
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isLoading ? "Verifying..." : "Verify & Sign Up"}
-            </button>
-            <button
-              type="button"
-              onClick={goBack}
-              className="w-full text-sm text-blue-600 hover:text-blue-700"
-            >
-              ← Change email/phone
-            </button>
-          </div>
-        )}
 
-        <div id="recaptcha-container" ref={recaptchaRef} className="hidden" />
-      </motion.div>
+              <motion.button
+                onClick={handleVerifyOtp}
+                whileTap={{ scale: 0.98 }}
+                disabled={authState.isLoading || otp.length !== 6}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {authState.isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-5 h-5" />
+                    <span>Verify & Create Account</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
+          )}
+        </motion.div>
+      </FormProvider>
     </AuthCardLayout>
   );
 };
