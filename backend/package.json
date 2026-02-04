@@ -4,10 +4,10 @@
   "description": "Backend API for VerifyMyKyc",
   "main": "server.ts",
   "scripts": {
-    "start": "ts-node server.ts",
+    "start": "tsc && node dist/server.js",
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc",
-    "prod": "ts-node server.ts",
+    "prod": "tsc && node dist/server.js",
     "seed-pricing": "ts-node src/modules/pricing/seed-pricing.ts",
     "seed-users": "ts-node src/modules/auth/seed-users.ts",
     "seed-orders": "ts-node src/modules/orders/seed-orders.ts",
