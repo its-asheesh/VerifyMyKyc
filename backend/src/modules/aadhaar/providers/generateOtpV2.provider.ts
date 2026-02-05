@@ -44,7 +44,6 @@ export async function generateOtpV2Provider(
       {
         key: apiKey,
         id_number: payload.id_number,
-        consent: payload.consent,
       },
       {
         headers: {
