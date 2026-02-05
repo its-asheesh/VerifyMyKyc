@@ -37,19 +37,13 @@ export interface HomepagePlan {
 export interface VerificationPricing {
   _id: string
   verificationType: string // 'aadhaar', 'pan', 'drivinglicense', 'gstin'
-  monthlyPrice: number
-  yearlyPrice: number
   oneTimePrice: number
   title?: string
   description?: string
   // Separate features for each pricing tier
   oneTimeFeatures?: string[]
-  monthlyFeatures?: string[]
-  yearlyFeatures?: string[]
   // Per-tier quotas (as defined by admin)
   oneTimeQuota?: { count?: number; validityDays?: number }
-  monthlyQuota?: { count?: number; validityDays?: number }
-  yearlyQuota?: { count?: number; validityDays?: number }
   highlighted?: boolean
   popular?: boolean
   color?: string

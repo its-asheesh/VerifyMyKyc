@@ -12,7 +12,7 @@ async function testAadhaar() {
     console.log(`Testing Aadhaar OTP for number: ${aadhaarNumber}`);
 
     try {
-        const result = await generateOtpV2Provider({ id_number: aadhaarNumber });
+        const result = await generateOtpV2Provider({ id_number: aadhaarNumber, consent: 'Y' });
         console.log('SUCCESS:', JSON.stringify(result, null, 2));
     } catch (error: any) {
         console.error('ERROR:', JSON.stringify(error, null, 2));

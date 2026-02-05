@@ -17,17 +17,17 @@ export const getAllVerificationPricing = async (req: Request, res: Response) => 
 export const getVerificationPricingByType = async (req: Request, res: Response) => {
   try {
     const { verificationType } = req.params
-    console.log('Backend: Looking for verification type:', verificationType)
-    
+    // console.log('Backend: Looking for verification type:', verificationType)
+
     const pricing = await VerificationPricing.findOne({ verificationType })
-    console.log('Backend: Found pricing data:', pricing)
-    
+    // console.log('Backend: Found pricing data:', pricing)
+
     if (!pricing) {
-      console.log('Backend: No pricing found for type:', verificationType)
+      // console.log('Backend: No pricing found for type:', verificationType)
       return res.status(404).json({ message: "Verification pricing not found" })
     }
-    
-    console.log('Backend: Sending pricing data:', pricing)
+
+    // console.log('Backend: Sending pricing data:', pricing)
     res.json(pricing)
   } catch (err) {
     console.error('Backend: Error fetching verification pricing:', err)
@@ -138,7 +138,7 @@ export const getAllPricing = async (req: Request, res: Response) => {
       VerificationPricing.find(),
       HomepagePlan.find()
     ])
-    
+
     res.json({
       verificationPricing,
       homepagePlans
@@ -162,11 +162,11 @@ export const getHomepagePricing = async (req: Request, res: Response) => {
 export const getHomepagePlansByPeriod = async (req: Request, res: Response) => {
   try {
     const { period } = req.params // 'monthly' or 'yearly'
-    
+
     if (!['monthly', 'yearly'].includes(period)) {
       return res.status(400).json({ message: "Invalid period. Must be 'monthly' or 'yearly'" })
     }
-    
+
     const plans = await HomepagePlan.find({ planType: period }).sort({ planName: 1 })
     res.json(plans)
   } catch (err) {
@@ -177,7 +177,7 @@ export const getHomepagePlansByPeriod = async (req: Request, res: Response) => {
 // Get all available verification types for custom selection
 export const getAvailableVerifications = async (req: Request, res: Response) => {
   try {
-    const verifications = await VerificationPricing.find({}, 'verificationType title description monthlyPrice yearlyPrice oneTimePrice')
+    const verifications = await VerificationPricing.find({}, 'verificationType title description oneTimePrice')
     res.json(verifications)
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch available verifications" })

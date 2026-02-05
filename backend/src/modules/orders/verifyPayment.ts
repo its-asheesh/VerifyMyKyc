@@ -74,51 +74,8 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
 
   // 🔁 If it's a plan, auto-provision included verifications (same logic as processPayment)
   try {
-    if (order.orderType === 'plan' && order.status === 'active') {
-      const planType = order.serviceDetails?.planType || order.billingPeriod;
-      const planName = order.serviceDetails?.planName;
-
-      if (planName) {
-        const { HomepagePlan } = await import('../pricing/pricing.model');
-        const plan = await HomepagePlan.findOne({ planType, planName });
-
-        if (plan && Array.isArray(plan.includesVerifications)) {
-          const { VerificationPricing } = await import('../pricing/pricing.model');
-
-          for (const vType of plan.includesVerifications) {
-            const pricing = await VerificationPricing.findOne({ verificationType: vType });
-            if (!pricing) continue;
-
-            const quotaCfg = planType === 'yearly' ? pricing.yearlyQuota : pricing.monthlyQuota;
-            if (!quotaCfg || typeof (quotaCfg as any).count !== 'number' || (quotaCfg as any).count <= 0) continue;
-
-            const childOrderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            await Order.create({
-              userId: order.userId,
-              orderId: childOrderId,
-              orderType: 'verification',
-              serviceName: `${vType.toUpperCase()} Verification (Included in ${planName})`,
-              serviceDetails: { verificationType: vType },
-              totalAmount: 0,
-              finalAmount: 0,
-              billingPeriod: planType,
-              paymentMethod: order.paymentMethod,
-              paymentStatus: 'completed',
-              status: 'active',
-              startDate: order.startDate,
-              endDate: order.endDate,
-              verificationQuota: {
-                totalAllowed: (quotaCfg as any).count,
-                used: 0,
-                remaining: (quotaCfg as any).count,
-                validityDays: (quotaCfg as any).validityDays || (planType === 'monthly' ? 30 : 365),
-                expiresAt: order.endDate
-              }
-            });
-          }
-        }
-      }
-    }
+    // Auto-provisioning logic removed as plans are no longer supported
+    // (Previously provisioning based on monthly/yearly quotas)
   } catch (err) {
     console.error('Error provisioning plan verifications:', err);
   }

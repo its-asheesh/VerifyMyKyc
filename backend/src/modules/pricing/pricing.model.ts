@@ -3,19 +3,13 @@ import mongoose, { Schema, Document } from "mongoose"
 // Interface for individual verification pricing
 export interface IVerificationPricing extends Document {
   verificationType: string // 'aadhaar', 'pan', 'drivinglicense', etc.
-  monthlyPrice: number
-  yearlyPrice: number
   oneTimePrice: number
   title?: string
   description?: string
   // Separate features for each pricing tier
   oneTimeFeatures?: string[]
-  monthlyFeatures?: string[]
-  yearlyFeatures?: string[]
   // Per-tier verification quotas
   oneTimeQuota?: { count: number; validityDays: number }
-  monthlyQuota?: { count: number; validityDays: number }
-  yearlyQuota?: { count: number; validityDays: number }
   highlighted?: boolean
   popular?: boolean
   color?: string
@@ -43,25 +37,13 @@ export interface IHomepagePlan extends Document {
 const VerificationPricingSchema = new Schema<IVerificationPricing>(
   {
     verificationType: { type: String, required: true, unique: true },
-    monthlyPrice: { type: Number, required: true },
-    yearlyPrice: { type: Number, required: true },
     oneTimePrice: { type: Number, required: true },
     title: { type: String },
     description: { type: String },
     // Separate features for each pricing tier
     oneTimeFeatures: { type: [String], default: [] },
-    monthlyFeatures: { type: [String], default: [] },
-    yearlyFeatures: { type: [String], default: [] },
     // Per-tier verification quotas
     oneTimeQuota: {
-      count: { type: Number, default: 0 },
-      validityDays: { type: Number, default: 365 }
-    },
-    monthlyQuota: {
-      count: { type: Number, default: 0 },
-      validityDays: { type: Number, default: 30 }
-    },
-    yearlyQuota: {
       count: { type: Number, default: 0 },
       validityDays: { type: Number, default: 365 }
     },
@@ -94,4 +76,3 @@ HomepagePlanSchema.index({ planType: 1, planName: 1 }, { unique: true })
 
 export const VerificationPricing = mongoose.model<IVerificationPricing>("VerificationPricing", VerificationPricingSchema)
 export const HomepagePlan = mongoose.model<IHomepagePlan>("HomepagePlan", HomepagePlanSchema)
- 

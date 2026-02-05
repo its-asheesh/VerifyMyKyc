@@ -57,16 +57,18 @@ export const useVerificationLogic = <
             // Safe error extraction
             let errorMessage = "";
             if (err && typeof err === 'object') {
-                const errorData = (err as { response?: { data?: { message?: string }, status?: number }, message?: string });
-                errorMessage = errorData.response?.data?.message || errorData.message || "";
+                const errorData = (err as { response?: { data?: { message?: string, error?: string | { message: string } }, status?: number }, message?: string });
+
+                // prioritized error message extraction
+                errorMessage =
+                    errorData.response?.data?.message ||
+                    (typeof errorData.response?.data?.error === 'string' ? errorData.response?.data?.error : errorData.response?.data?.error?.message) ||
+                    errorData.message ||
+                    "";
 
                 // Check for quota error
                 if (errorData.response?.status === 403 || /quota|exhaust|exhausted|limit|token/i.test(errorMessage)) {
                     setShowNoQuotaDialog(true);
-                    // We don't set error message if it's a quota dialog, usually? 
-                    // Original logic returned early.
-                    // But React Query calls onError.
-                    // We'll set generic error if needed, but the dialog handles the UI.
                     return;
                 }
             }

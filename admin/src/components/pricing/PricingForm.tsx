@@ -15,23 +15,17 @@ interface PricingFormProps {
 interface FormData {
   // Verification pricing fields
   verificationType: string
-  monthlyPrice: number
-  yearlyPrice: number
   oneTimePrice: number
   title: string
   description: string
   // Separate features for each pricing tier
   oneTimeFeatures: string[]
-  monthlyFeatures: string[]
-  yearlyFeatures: string[]
   // Per-tier verification quotas
   oneTimeQuota: { count: number; validityDays: number }
-  monthlyQuota: { count: number; validityDays: number }
-  yearlyQuota: { count: number; validityDays: number }
   highlighted: boolean
   popular: boolean
   color: string
-  
+
   // Homepage plan fields
   planType: 'monthly' | 'yearly'
   planName: 'Personal' | 'Professional' | 'Business'
@@ -51,23 +45,17 @@ const PricingForm: React.FC<PricingFormProps> = ({
   const [formData, setFormData] = useState<FormData>({
     // Verification pricing fields
     verificationType: '',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
     oneTimePrice: 0,
     title: '',
     description: '',
     // Separate features for each pricing tier
     oneTimeFeatures: [''],
-    monthlyFeatures: [''],
-    yearlyFeatures: [''],
     // Per-tier verification quotas defaults
     oneTimeQuota: { count: 0, validityDays: 365 },
-    monthlyQuota: { count: 0, validityDays: 30 },
-    yearlyQuota: { count: 0, validityDays: 365 },
     highlighted: false,
     popular: false,
     color: '',
-    
+
     // Homepage plan fields
     planType: 'monthly',
     planName: 'Personal',
@@ -78,28 +66,22 @@ const PricingForm: React.FC<PricingFormProps> = ({
 
   useEffect(() => {
     if (editData) {
-      console.log('EditData received:', editData)
-      console.log('Type:', type)
-      
+      // console.log('EditData received:', editData)
+      // console.log('Type:', type)
+
       // Handle different data types properly
       if (type === 'verification') {
         const verificationData = editData as VerificationPricing
-        console.log('Verification data:', verificationData)
+        // console.log('Verification data:', verificationData)
         setFormData({
           verificationType: verificationData.verificationType || '',
-          monthlyPrice: verificationData.monthlyPrice || 0,
-          yearlyPrice: verificationData.yearlyPrice || 0,
           oneTimePrice: verificationData.oneTimePrice || 0,
           title: verificationData.title || '',
           description: verificationData.description || '',
           // Separate features for each pricing tier
           oneTimeFeatures: verificationData.oneTimeFeatures || [''],
-          monthlyFeatures: verificationData.monthlyFeatures || [''],
-          yearlyFeatures: verificationData.yearlyFeatures || [''],
           // quotas (fallback to sensible defaults)
           oneTimeQuota: verificationData.oneTimeQuota || { count: 0, validityDays: 365 },
-          monthlyQuota: verificationData.monthlyQuota || { count: 0, validityDays: 30 },
-          yearlyQuota: verificationData.yearlyQuota || { count: 0, validityDays: 365 },
           highlighted: verificationData.highlighted || false,
           popular: verificationData.popular || false,
           color: verificationData.color || '',
@@ -111,23 +93,16 @@ const PricingForm: React.FC<PricingFormProps> = ({
         })
       } else {
         const homepageData = editData as HomepagePlan
-        console.log('Homepage data:', homepageData)
-        console.log('Homepage features:', homepageData.features)
+        // console.log('Homepage data:', homepageData)
         setFormData({
           verificationType: '',
-          monthlyPrice: 0,
-          yearlyPrice: 0,
           oneTimePrice: 0,
           title: '',
           description: homepageData.description || '',
-          // For homepage plans, use the features field and populate monthlyFeatures
-          oneTimeFeatures: [''],
-          monthlyFeatures: homepageData.features || [''],
-          yearlyFeatures: [''],
+          // For homepage plans, features are generic but we map to oneTime for form simplicity, or separate logic
+          oneTimeFeatures: homepageData.features || [''],
           // quotas unused for homepage; keep defaults
           oneTimeQuota: { count: 0, validityDays: 365 },
-          monthlyQuota: { count: 0, validityDays: 30 },
-          yearlyQuota: { count: 0, validityDays: 365 },
           highlighted: homepageData.highlighted || false,
           popular: homepageData.popular || false,
           color: homepageData.color || '',
@@ -142,19 +117,13 @@ const PricingForm: React.FC<PricingFormProps> = ({
       // Reset form for new entry
       setFormData({
         verificationType: '',
-        monthlyPrice: 0,
-        yearlyPrice: 0,
         oneTimePrice: 0,
         title: '',
         description: '',
         // Separate features for each pricing tier
         oneTimeFeatures: [''],
-        monthlyFeatures: [''],
-        yearlyFeatures: [''],
         // reset quotas to defaults
         oneTimeQuota: { count: 0, validityDays: 365 },
-        monthlyQuota: { count: 0, validityDays: 30 },
-        yearlyQuota: { count: 0, validityDays: 365 },
         highlighted: false,
         popular: false,
         color: '',
@@ -174,7 +143,7 @@ const PricingForm: React.FC<PricingFormProps> = ({
   const handleFeatureChange = (tier: 'oneTime' | 'monthly' | 'yearly', index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [`${tier}Features`]: (prev[`${tier}Features` as keyof FormData] as string[]).map((feature, i) => 
+      [`${tier}Features`]: (prev[`${tier}Features` as keyof FormData] as string[]).map((feature, i) =>
         i === index ? value : feature
       )
     }))
@@ -196,41 +165,35 @@ const PricingForm: React.FC<PricingFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Filter out empty features
     const submitData = type === 'verification'
       ? {
-          verificationType: formData.verificationType,
-          monthlyPrice: formData.monthlyPrice,
-          yearlyPrice: formData.yearlyPrice,
-          oneTimePrice: formData.oneTimePrice,
-          title: formData.title,
-          description: formData.description,
-          oneTimeFeatures: formData.oneTimeFeatures.filter(f => f.trim() !== ''),
-          monthlyFeatures: formData.monthlyFeatures.filter(f => f.trim() !== ''),
-          yearlyFeatures: formData.yearlyFeatures.filter(f => f.trim() !== ''),
-          oneTimeQuota: formData.oneTimeQuota,
-          monthlyQuota: formData.monthlyQuota,
-          yearlyQuota: formData.yearlyQuota,
-          highlighted: formData.highlighted,
-          popular: formData.popular,
-          color: formData.color
-        }
+        verificationType: formData.verificationType,
+        oneTimePrice: formData.oneTimePrice,
+        title: formData.title,
+        description: formData.description,
+        oneTimeFeatures: formData.oneTimeFeatures.filter(f => f.trim() !== ''),
+        oneTimeQuota: formData.oneTimeQuota,
+        highlighted: formData.highlighted,
+        popular: formData.popular,
+        color: formData.color
+      }
       : {
-          planType: formData.planType,
-          planName: formData.planName,
-          name: formData.name,
-          price: formData.price,
-          description: formData.description,
-          features: formData.monthlyFeatures.filter(f => f.trim() !== ''), // Use monthlyFeatures for homepage plans
-          highlighted: formData.highlighted,
-          popular: formData.popular,
-          color: formData.color,
-          includesVerifications: formData.includesVerifications.length > 0
-            ? formData.includesVerifications
-            : ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'voterid', 'vehicle', 'passport'] // Default to all verifications
-        }
-    
+        planType: formData.planType,
+        planName: formData.planName,
+        name: formData.name,
+        price: formData.price,
+        description: formData.description,
+        features: formData.oneTimeFeatures.filter(f => f.trim() !== ''), // Re-using oneTimeFeatures for homepage simplifiction
+        highlighted: formData.highlighted,
+        popular: formData.popular,
+        color: formData.color,
+        includesVerifications: formData.includesVerifications.length > 0
+          ? formData.includesVerifications
+          : ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'voterid', 'vehicle', 'passport'] // Default to all verifications
+      }
+
     console.log('Submitting data:', submitData)
     onSubmit(submitData)
   }
@@ -296,31 +259,18 @@ const PricingForm: React.FC<PricingFormProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Monthly Price *
                   </label>
-                  <input
-                    type="number"
-                    value={formData.monthlyPrice}
-                    onChange={(e) => handleInputChange('monthlyPrice', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+                  {/* Keeping these as hidden/disabled if needed for any reason, but for cleanup effectively removing */}
+                  {/* Removed */}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Yearly Price *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.yearlyPrice}
-                    onChange={(e) => handleInputChange('yearlyPrice', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Only One Time Price Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     One Time Price *
@@ -340,7 +290,7 @@ const PricingForm: React.FC<PricingFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700">
                   Verification Quotas
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-gray-700">One-time</div>
                     <input
@@ -359,52 +309,6 @@ const PricingForm: React.FC<PricingFormProps> = ({
                       value={formData.oneTimeQuota.validityDays}
                       onChange={(e) =>
                         setFormData(prev => ({ ...prev, oneTimeQuota: { ...prev.oneTimeQuota, validityDays: Number(e.target.value) } }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Validity (days)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-700">Monthly</div>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.monthlyQuota.count}
-                      onChange={(e) =>
-                        setFormData(prev => ({ ...prev, monthlyQuota: { ...prev.monthlyQuota, count: Number(e.target.value) } }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Count"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      value={formData.monthlyQuota.validityDays}
-                      onChange={(e) =>
-                        setFormData(prev => ({ ...prev, monthlyQuota: { ...prev.monthlyQuota, validityDays: Number(e.target.value) } }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Validity (days)"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-700">Yearly</div>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.yearlyQuota.count}
-                      onChange={(e) =>
-                        setFormData(prev => ({ ...prev, yearlyQuota: { ...prev.yearlyQuota, count: Number(e.target.value) } }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Count"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      value={formData.yearlyQuota.validityDays}
-                      onChange={(e) =>
-                        setFormData(prev => ({ ...prev, yearlyQuota: { ...prev.yearlyQuota, validityDays: Number(e.target.value) } }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Validity (days)"
@@ -552,72 +456,6 @@ const PricingForm: React.FC<PricingFormProps> = ({
                   </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Monthly Features
-                </label>
-                <div className="space-y-2">
-                  {formData.monthlyFeatures.map((feature: string, index: number) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={feature}
-                        onChange={(e) => handleFeatureChange('monthly', index, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={`Monthly Feature ${index + 1}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeFeature('monthly', index)}
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addFeature('monthly')}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    + Add Monthly Feature
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Yearly Features
-                </label>
-                <div className="space-y-2">
-                  {formData.yearlyFeatures.map((feature: string, index: number) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={feature}
-                        onChange={(e) => handleFeatureChange('yearly', index, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={`Yearly Feature ${index + 1}`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeFeature('yearly', index)}
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addFeature('yearly')}
-                    className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    + Add Yearly Feature
-                  </button>
-                </div>
-              </div>
             </div>
           ) : (
             // Single features section for homepage plans
@@ -626,18 +464,18 @@ const PricingForm: React.FC<PricingFormProps> = ({
                 Features
               </label>
               <div className="space-y-2">
-                {formData.monthlyFeatures.map((feature: string, index: number) => (
+                {formData.oneTimeFeatures.map((feature: string, index: number) => (
                   <div key={index} className="flex gap-2">
                     <input
                       type="text"
                       value={feature}
-                      onChange={(e) => handleFeatureChange('monthly', index, e.target.value)}
+                      onChange={(e) => handleFeatureChange('oneTime', index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder={`Feature ${index + 1}`}
                     />
                     <button
                       type="button"
-                      onClick={() => removeFeature('monthly', index)}
+                      onClick={() => removeFeature('oneTime', index)}
                       className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <X className="w-4 h-4" />
@@ -646,7 +484,7 @@ const PricingForm: React.FC<PricingFormProps> = ({
                 ))}
                 <button
                   type="button"
-                  onClick={() => addFeature('monthly')}
+                  onClick={() => addFeature('oneTime')}
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
                   + Add Feature

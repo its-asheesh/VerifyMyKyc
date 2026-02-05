@@ -8,17 +8,15 @@ dotenv.config()
 const seedPricingData = async () => {
   try {
     await connectDB()
-    
+
     // Clear existing data
     await VerificationPricing.deleteMany({})
     await HomepagePlan.deleteMany({})
-    
+
     // Seed verification pricing
     const verificationPricingData = [
       {
         verificationType: 'aadhaar',
-        monthlyPrice: 299,
-        yearlyPrice: 2999,
         oneTimePrice: 99,
         title: 'Aadhaar Verification',
         description: 'Complete Aadhaar verification services',
@@ -27,32 +25,12 @@ const seedPricingData = async () => {
           'Basic Verification',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'OCR Data Extraction',
-          'Digilocker Integration',
-          'Real-time Verification',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'OCR Data Extraction',
-          'Digilocker Integration',
-          'Real-time Verification',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         highlighted: true,
         popular: true,
         color: 'blue'
       },
       {
         verificationType: 'pan',
-        monthlyPrice: 199,
-        yearlyPrice: 1999,
         oneTimePrice: 79,
         title: 'PAN Verification',
         description: 'Comprehensive PAN verification services',
@@ -61,32 +39,12 @@ const seedPricingData = async () => {
           'Basic Verification',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'PAN Data Validation',
-          'Digilocker Pull',
-          'Father Name Fetch',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'PAN Data Validation',
-          'Digilocker Pull',
-          'Father Name Fetch',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         highlighted: false,
         popular: true,
         color: 'green'
       },
       {
         verificationType: 'drivinglicense',
-        monthlyPrice: 249,
-        yearlyPrice: 2499,
         oneTimePrice: 89,
         title: 'Driving License Verification',
         description: 'Driving license verification and OCR services',
@@ -95,32 +53,12 @@ const seedPricingData = async () => {
           'Basic Verification',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'OCR Data Extraction',
-          'RTA Database Check',
-          'Document Validation',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'OCR Data Extraction',
-          'RTA Database Check',
-          'Document Validation',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         highlighted: false,
         popular: false,
         color: 'purple'
       },
       {
         verificationType: 'gstin',
-        monthlyPrice: 179,
-        yearlyPrice: 1799,
         oneTimePrice: 69,
         title: 'GSTIN Verification',
         description: 'GSTIN verification and business data services',
@@ -129,32 +67,12 @@ const seedPricingData = async () => {
           'Basic Business Details',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'GSTIN Validation',
-          'Business Details',
-          'Contact Information',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'GSTIN Validation',
-          'Business Details',
-          'Contact Information',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         highlighted: false,
         popular: false,
         color: 'orange'
       },
       {
         verificationType: 'voterid',
-        monthlyPrice: 349,
-        yearlyPrice: 3499,
         oneTimePrice: 99,
         title: 'Voter ID Verification',
         description: 'Voter verification with direct, captcha, and OCR flows',
@@ -164,36 +82,14 @@ const seedPricingData = async () => {
           'OCR Data Extraction',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'Direct Fetch (Boson)',
-          'Captcha Flow (Meson)',
-          'OCR Data Extraction',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'Direct Fetch (Boson)',
-          'Captcha Flow (Meson)',
-          'OCR Data Extraction',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         // Quotas for display in UI
         oneTimeQuota: { count: 1, validityDays: 30 },
-        monthlyQuota: { count: 100, validityDays: 30 },
-        yearlyQuota: { count: 1200, validityDays: 365 },
         highlighted: false,
         popular: true,
         color: 'indigo'
       },
       {
         verificationType: 'company',
-        monthlyPrice: 499,
-        yearlyPrice: 4999,
         oneTimePrice: 149,
         title: 'Company Verification',
         description: 'MCA company verification with CIN and DIN lookups',
@@ -203,35 +99,13 @@ const seedPricingData = async () => {
           'Directors (DIN) Lookup',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'MCA Company Details',
-          'CIN Lookup',
-          'Directors (DIN) Lookup',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'MCA Company Details',
-          'CIN Lookup',
-          'Directors (DIN) Lookup',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         oneTimeQuota: { count: 1, validityDays: 30 },
-        monthlyQuota: { count: 200, validityDays: 30 },
-        yearlyQuota: { count: 2400, validityDays: 365 },
         highlighted: false,
         popular: false,
         color: 'emerald'
       },
       {
         verificationType: 'vehicle',
-        monthlyPrice: 399,
-        yearlyPrice: 3999,
         oneTimePrice: 99,
         title: 'RC Verification',
         description: 'Vehicle RC, eChallan and FASTag verification',
@@ -240,32 +114,13 @@ const seedPricingData = async () => {
           'Basic Verification',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'RC Detailed + Challan',
-          'Chassis-to-RC Lookup',
-          'FASTag Details',
-          'API Access',
-          'Priority Support',
-          'Quota-aware Billing'
-        ],
-        yearlyFeatures: [
-          'All Monthly Features',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         oneTimeQuota: { count: 10, validityDays: 30 },
-        monthlyQuota: { count: 500, validityDays: 30 },
-        yearlyQuota: { count: 5000, validityDays: 365 },
         highlighted: false,
         popular: true,
         color: 'cyan'
       },
       {
         verificationType: 'ccrv',
-        monthlyPrice: 499,
-        yearlyPrice: 4999,
         oneTimePrice: 199,
         title: 'Criminal Case Record Verification',
         description: 'Comprehensive criminal background check and case record verification',
@@ -275,36 +130,14 @@ const seedPricingData = async () => {
           'Fetch Verification Results',
           'Email Support'
         ],
-        monthlyFeatures: [
-          'Generate CCRV Report',
-          'Search CCRV Records',
-          'Fetch Verification Results',
-          'API Access',
-          'Priority Support',
-          'Bulk Processing'
-        ],
-        yearlyFeatures: [
-          'Generate CCRV Report',
-          'Search CCRV Records',
-          'Fetch Verification Results',
-          'API Access',
-          '24/7 Support',
-          'Bulk Processing',
-          'Custom Integration',
-          'Dedicated Account Manager'
-        ],
         // Quotas for display in UI
         oneTimeQuota: { count: 1, validityDays: 30 },
-        monthlyQuota: { count: 50, validityDays: 30 },
-        yearlyQuota: { count: 600, validityDays: 365 },
         highlighted: false,
         popular: true,
         color: 'indigo'
       },
       {
         verificationType: 'epfo',
-        monthlyPrice: 1499,
-        yearlyPrice: 14999,
         oneTimePrice: 149,
         title: 'EPFO Verification',
         description: 'EPFO UAN, employment history, and passbook verification',
@@ -313,28 +146,15 @@ const seedPricingData = async () => {
           'Employment History by UAN',
           'Employer Verification'
         ],
-        monthlyFeatures: [
-          'UAN Discovery',
-          'Employment History',
-          'Passbook V1 Flow (OTP)',
-          'API Access',
-          'Priority Support'
-        ],
-        yearlyFeatures: [
-          'All Monthly Features',
-          '24/7 Support',
-          'Bulk Processing',
-          'Dedicated Account Manager'
-        ],
         highlighted: false,
         popular: true,
         color: 'rose'
       },
     ]
-    
+
     await VerificationPricing.insertMany(verificationPricingData)
     console.log('✅ Verification pricing seeded successfully')
-    
+
     // Seed homepage plans
     const homepagePlansData = [
       // Personal Plans
@@ -375,7 +195,7 @@ const seedPricingData = async () => {
         color: 'blue',
         includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
-      
+
       // Professional Plans
       {
         planType: 'monthly',
@@ -416,7 +236,7 @@ const seedPricingData = async () => {
         color: 'purple',
         includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       },
-      
+
       // Business Plans
       {
         planType: 'monthly',
@@ -460,10 +280,10 @@ const seedPricingData = async () => {
         includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
       }
     ]
-    
+
     await HomepagePlan.insertMany(homepagePlansData)
     console.log('✅ Homepage plans seeded successfully')
-    
+
     console.log('🎉 All pricing data seeded successfully!')
     process.exit(0)
   } catch (error) {

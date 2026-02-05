@@ -84,12 +84,12 @@ class AadhaarController extends BaseController {
       }
 
       // Log request
-      this.logRequest('Aadhaar V2 Generate OTP', userId, { 
-        aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X') 
+      this.logRequest('Aadhaar V2 Generate OTP', userId, {
+        aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X')
       });
 
       // Generate OTP without consuming quota
-      const result = await service.generateOtpV2({ id_number });
+      const result = await service.generateOtpV2({ id_number, consent: req.body.consent });
       res.json(result);
     } catch (error: any) {
       // Log error for debugging
@@ -99,7 +99,7 @@ class AadhaarController extends BaseController {
         status: error?.status,
         response: error?.response?.data
       });
-      
+
       // Re-throw to let asyncHandler handle it properly
       throw error;
     }
@@ -108,7 +108,7 @@ class AadhaarController extends BaseController {
   // POST /api/aadhaar/v2/submit-otp - QuickEKYC Aadhaar V2
   // NOTE: Consumes quota ONLY after successful OTP verification
   submitOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { request_id, otp, client_id } = req.body;
+    const { request_id, otp, client_id, consent } = req.body;
     const userId = req.user._id;
 
     // Validate required fields
@@ -135,7 +135,7 @@ class AadhaarController extends BaseController {
 
     try {
       // Submit OTP and verify
-      const result = await service.submitOtpV2({ request_id, otp, client_id });
+      const result = await service.submitOtpV2({ request_id, otp, client_id, consent });
 
       // Only consume quota if verification was successful
       if (result.status === 'success' && result.data?.aadhaar_number) {

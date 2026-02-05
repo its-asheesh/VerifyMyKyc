@@ -140,39 +140,7 @@ export const ProductPricing: React.FC<ProductPricingProps> = ({ product }) => {
       period: "one-time",
       billingPeriod: 'custom' as const,
       popular: false
-    },
-    {
-      name: "Monthly",
-      price: verificationPricing.monthlyPrice,
-      requests: (() => {
-        const c = verificationPricing.monthlyQuota?.count
-        const v = verificationPricing.monthlyQuota?.validityDays
-        const base = c ? `Includes ${c} verification${c > 1 ? 's' : ''}` : 'Unlimited verifications'
-        return v && v > 0 ? `${base} • valid ${v} days` : base
-      })(),
-      features: verificationPricing.monthlyFeatures || [],
-      color: "blue" as const,
-      support: "Priority support",
-      period: "month",
-      billingPeriod: 'monthly' as const,
-      popular: true
-    },
-    {
-      name: "Yearly",
-      price: verificationPricing.yearlyPrice,
-      requests: (() => {
-        const c = verificationPricing.yearlyQuota?.count
-        const v = verificationPricing.yearlyQuota?.validityDays
-        const base = c ? `Includes ${c} verification${c > 1 ? 's' : ''}` : 'Unlimited verifications'
-        return v && v > 0 ? `${base} • valid ${v} days` : base
-      })(),
-      features: verificationPricing.yearlyFeatures || [],
-      color: "purple" as const,
-      support: "24/7 support",
-      period: "year",
-      billingPeriod: 'yearly' as const,
-      popular: false
-    },
+    }
   ] : []
 
   if (verificationsError || !verificationPricing) {

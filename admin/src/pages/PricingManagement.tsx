@@ -334,15 +334,7 @@ const PricingManagement: React.FC = () => {
 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">{verification.description}</p>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900">₹{verification.monthlyPrice}</p>
-                      <p className="text-gray-500">Monthly</p>
-                    </div>
-                    <div className="text-center p-2 bg-gray-50 rounded">
-                      <p className="font-semibold text-gray-900">₹{verification.yearlyPrice}</p>
-                      <p className="text-gray-500">Yearly</p>
-                    </div>
+                  <div className="grid grid-cols-1 gap-2 text-sm">
                     <div className="text-center p-2 bg-gray-50 rounded">
                       <p className="font-semibold text-gray-900">₹{verification.oneTimePrice}</p>
                       <p className="text-gray-500">One Time</p>
@@ -355,53 +347,17 @@ const PricingManagement: React.FC = () => {
                   <div className="space-y-3">
                     {/* One Time Features */}
                     <div>
-                      <h5 className="text-xs font-medium text-gray-700 mb-1">One Time:</h5>
+                      <h5 className="text-xs font-medium text-gray-700 mb-1">Features:</h5>
                       <ul className="space-y-1">
-                        {verification.oneTimeFeatures?.slice(0, 2).map((feature, index) => (
+                        {verification.oneTimeFeatures?.slice(0, 3).map((feature, index) => (
                           <li key={index} className="flex items-center text-xs text-gray-600">
                             <Check className="w-3 h-3 text-green-500 mr-1" />
                             {feature}
                           </li>
                         ))}
-                        {verification.oneTimeFeatures && verification.oneTimeFeatures.length > 2 && (
+                        {verification.oneTimeFeatures && verification.oneTimeFeatures.length > 3 && (
                           <li className="text-xs text-gray-500">
-                            +{verification.oneTimeFeatures.length - 2} more
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
-                    {/* Monthly Features */}
-                    <div>
-                      <h5 className="text-xs font-medium text-gray-700 mb-1">Monthly:</h5>
-                      <ul className="space-y-1">
-                        {verification.monthlyFeatures?.slice(0, 2).map((feature, index) => (
-                          <li key={index} className="flex items-center text-xs text-gray-600">
-                            <Check className="w-3 h-3 text-green-500 mr-1" />
-                            {feature}
-                          </li>
-                        ))}
-                        {verification.monthlyFeatures && verification.monthlyFeatures.length > 2 && (
-                          <li className="text-xs text-gray-500">
-                            +{verification.monthlyFeatures.length - 2} more
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
-                    {/* Yearly Features */}
-                    <div>
-                      <h5 className="text-xs font-medium text-gray-700 mb-1">Yearly:</h5>
-                      <ul className="space-y-1">
-                        {verification.yearlyFeatures?.slice(0, 2).map((feature, index) => (
-                          <li key={index} className="flex items-center text-xs text-gray-600">
-                            <Check className="w-3 h-3 text-green-500 mr-1" />
-                            {feature}
-                          </li>
-                        ))}
-                        {verification.yearlyFeatures && verification.yearlyFeatures.length > 2 && (
-                          <li className="text-xs text-gray-500">
-                            +{verification.yearlyFeatures.length - 2} more
+                            +{verification.oneTimeFeatures.length - 3} more
                           </li>
                         )}
                       </ul>

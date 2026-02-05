@@ -33,15 +33,15 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
   const event = req.body.event;
   const payload = req.body.payload;
 
-  console.log(`Razorpay webhook received: ${event}`, { 
+  console.log(`Razorpay webhook received: ${event}`, {
     paymentId: payload?.payment?.entity?.id,
-    orderId: payload?.payment?.entity?.order_id 
+    orderId: payload?.payment?.entity?.order_id
   });
 
   // Handle payment success events
   if (event === 'payment.captured' || event === 'payment.authorized') {
     const payment = payload?.payment?.entity;
-    
+
     if (!payment) {
       console.error('Razorpay webhook: Missing payment entity');
       return res.status(400).json({ error: 'Missing payment entity' });
@@ -67,10 +67,10 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
         console.error(`Razorpay webhook: Invalid payment amount for ${razorpayPaymentId}`);
         return res.status(200).json({ received: true, message: 'Invalid payment amount' });
       }
-      
+
       // Find order by Razorpay order ID (stored in order.razorpayOrderId or similar)
       // We need to check if we store razorpayOrderId in the order
-      let order = await Order.findOne({ 
+      let order = await Order.findOne({
         $or: [
           { transactionId: razorpayPaymentId },
           { 'razorpayOrderId': razorpayOrderId }
@@ -89,7 +89,7 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
         }).sort({ createdAt: -1 });
 
         // Match by amount (with small tolerance) and currency
-        order = orders.find(o => 
+        order = orders.find(o =>
           Math.abs(o.finalAmount - paymentAmount) < 1 &&
           o.currency === razorpayPayment.currency
         ) || null;
@@ -140,63 +140,8 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
       await order.save();
 
       // If it's a plan, auto-provision included verifications
-      if (order.orderType === 'plan' && order.status === 'active') {
-        const planType = order.serviceDetails?.planType || order.billingPeriod;
-        const planName = order.serviceDetails?.planName;
-
-        if (planName) {
-          const { HomepagePlan } = await import('../pricing/pricing.model');
-          const plan = await HomepagePlan.findOne({ planType, planName });
-
-          if (plan && Array.isArray(plan.includesVerifications)) {
-            const { VerificationPricing } = await import('../pricing/pricing.model');
-
-            for (const vType of plan.includesVerifications) {
-              const pricing = await VerificationPricing.findOne({ verificationType: vType });
-              if (!pricing) continue;
-
-              const quotaCfg = planType === 'yearly' ? pricing.yearlyQuota : pricing.monthlyQuota;
-              if (!quotaCfg || typeof (quotaCfg as any).count !== 'number' || (quotaCfg as any).count <= 0) continue;
-
-              // Check if child order already exists
-              const existingChild = await Order.findOne({
-                userId: order.userId,
-                orderType: 'verification',
-                'serviceDetails.verificationType': vType,
-                paymentStatus: 'completed',
-                status: 'active',
-                createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) } // Within last 5 minutes
-              });
-
-              if (existingChild) continue; // Already provisioned
-
-              const childOrderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              await Order.create({
-                userId: order.userId,
-                orderId: childOrderId,
-                orderType: 'verification',
-                serviceName: `${vType.toUpperCase()} Verification (Included in ${planName})`,
-                serviceDetails: { verificationType: vType },
-                totalAmount: 0,
-                finalAmount: 0,
-                billingPeriod: planType,
-                paymentMethod: order.paymentMethod,
-                paymentStatus: 'completed',
-                status: 'active',
-                startDate: order.startDate,
-                endDate: order.endDate,
-                verificationQuota: {
-                  totalAllowed: (quotaCfg as any).count,
-                  used: 0,
-                  remaining: (quotaCfg as any).count,
-                  validityDays: (quotaCfg as any).validityDays || (planType === 'monthly' ? 30 : 365),
-                  expiresAt: order.endDate
-                }
-              });
-            }
-          }
-        }
-      }
+      // Auto-provisioning logic removed as plans are no longer supported
+      // (Previously provisioning based on monthly/yearly quotas)
 
       console.log(`Razorpay webhook: Order ${order.orderId} activated successfully`);
       return res.status(200).json({ received: true, orderId: order.orderId });
@@ -212,9 +157,9 @@ export const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Resp
     const payment = payload?.payment?.entity;
     if (payment) {
       const razorpayPaymentId = payment.id;
-      
+
       // Find and mark order as failed
-      const order = await Order.findOne({ 
+      const order = await Order.findOne({
         $or: [
           { transactionId: razorpayPaymentId },
           { 'razorpayOrderId': payment.order_id }

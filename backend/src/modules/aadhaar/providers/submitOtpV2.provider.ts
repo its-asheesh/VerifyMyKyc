@@ -6,6 +6,7 @@ export interface SubmitOtpV2Request {
   request_id: string | number;
   otp: string;
   client_id?: string;
+  consent: string;
 }
 
 export interface AadhaarV2Address {
@@ -69,6 +70,7 @@ export async function submitOtpV2Provider(
         key: apiKey,
         request_id: payload.request_id,
         otp: payload.otp,
+        consent: payload.consent,
         ...(payload.client_id && { client_id: payload.client_id }),
       },
       {

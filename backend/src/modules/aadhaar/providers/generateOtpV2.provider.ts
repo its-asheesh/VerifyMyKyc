@@ -4,6 +4,7 @@ import { createStandardErrorMapper } from '../../../common/providers/BaseProvide
 
 export interface GenerateOtpV2Request {
   id_number: string; // Aadhaar Number
+  consent: string;
 }
 
 export interface GenerateOtpV2Response {
@@ -43,6 +44,7 @@ export async function generateOtpV2Provider(
       {
         key: apiKey,
         id_number: payload.id_number,
+        consent: payload.consent,
       },
       {
         headers: {

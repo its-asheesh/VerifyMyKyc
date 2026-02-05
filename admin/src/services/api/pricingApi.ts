@@ -4,19 +4,13 @@ import BaseApi from './baseApi'
 export interface VerificationPricing {
   _id: string
   verificationType: string
-  monthlyPrice: number
-  yearlyPrice: number
   oneTimePrice: number
   title?: string
   description?: string
   // Separate features for each pricing tier
   oneTimeFeatures?: string[]
-  monthlyFeatures?: string[]
-  yearlyFeatures?: string[]
   // Per-tier verification quotas
   oneTimeQuota?: { count: number; validityDays: number }
-  monthlyQuota?: { count: number; validityDays: number }
-  yearlyQuota?: { count: number; validityDays: number }
   highlighted?: boolean
   popular?: boolean
   color?: string
