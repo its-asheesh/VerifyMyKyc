@@ -169,14 +169,6 @@ const CustomPricingPage: React.FC = () => {
                       <span className="text-gray-600">One-time:</span>
                       <span className="font-semibold">₹{verification.oneTimePrice}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Monthly:</span>
-                      <span className="font-semibold">₹{verification.monthlyPrice}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Yearly:</span>
-                      <span className="font-semibold">₹{verification.yearlyPrice}</span>
-                    </div>
                   </div>
 
                   {/* Features */}
