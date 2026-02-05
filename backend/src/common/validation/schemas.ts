@@ -4,27 +4,27 @@ import { z } from 'zod';
 export const envSchema = z.object({
   // MongoDB
   MONGO_URI: z.string().url('MONGO_URI must be a valid URL'),
-  
+
   // JWT
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
-  
+
   // Gridlines API
   GRIDLINES_BASE_URL: z.string().url('GRIDLINES_BASE_URL must be a valid URL'),
   GRIDLINES_API_KEY: z.string().min(1, 'GRIDLINES_API_KEY is required'),
-  
+
   // Node Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().regex(/^\d+$/).optional(),
-  
+
   // Razorpay
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
-  
+
   // Firebase
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
-  
+
   // QuickEKYC API
   QUICKEKYC_API_KEY: z.string().optional(),
   QUICKEKYC_BASE_URL: z.string().url().optional(),
@@ -163,7 +163,7 @@ export const aadhaarNumberSchema = z.string()
 
 export const aadhaarGenerateOtpV2Schema = z.object({
   id_number: aadhaarNumberSchema,
-  consent: z.enum(['Y', 'N']).optional(), // Consent handled in controller
+  consent: z.enum(['Y', 'N']),
 });
 
 export const aadhaarSubmitOtpV2Schema = z.object({
@@ -174,7 +174,7 @@ export const aadhaarSubmitOtpV2Schema = z.object({
   otp: z.string()
     .regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
   client_id: z.string().optional(),
-  consent: z.enum(['Y', 'N']).optional(), // Consent handled in controller
+  consent: z.enum(['Y', 'N']),
 });
 
 // GSTIN Schemas
