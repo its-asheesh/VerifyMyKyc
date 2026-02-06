@@ -11,6 +11,9 @@ import {
   getOrderStats,
 } from './order.controller';
 import { authenticate, requireAdmin, requireUser } from '../../common/middleware/auth';
+
+import { validate } from '../../common/validation/middleware';
+import { createOrderSchema, verifyPaymentSchema, processPaymentSchema } from '../../common/validation/schemas';
 // routes/order.routes.ts
 import { verifyPayment } from './verifyPayment';
 import { handleRazorpayWebhook } from './razorpay.webhook';
@@ -24,11 +27,11 @@ router.get('/stats/overview', authenticate, requireAdmin, getOrderStats);
 router.post('/razorpay-webhook', handleRazorpayWebhook);
 
 // User routes (require authentication)
-router.post('/', authenticate, requireUser, createOrder);
-router.post('/process-payment', authenticate, requireUser, processPayment);
+router.post('/', authenticate, requireUser, validate(createOrderSchema), createOrder);
+router.post('/process-payment', authenticate, requireUser, validate(processPaymentSchema), processPayment);
 router.get('/my-orders', authenticate, requireUser, getUserOrders);
 router.get('/my-services', authenticate, requireUser, getActiveServices);
-router.post('/verify-payment', verifyPayment);
+router.post('/verify-payment', validate(verifyPaymentSchema), verifyPayment);
 
 // Admin routes (require admin role)
 router.get('/', authenticate, requireAdmin, getAllOrders);

@@ -5,9 +5,12 @@ import asyncHandler from '../../common/middleware/asyncHandler';
 import { VerificationPricing, HomepagePlan } from '../pricing/pricing.model';
 import { razorpay } from '../../common/services/razorpay';
 import { sendGaEvent } from '../../common/services/ga4';
+import { logger } from '../../common/utils/logger';
 import crypto from 'crypto';
+import { AuthenticatedRequest } from '../../common/middleware/auth';
+import { CreateOrderRequest, ProcessPaymentRequest } from '../../common/validation/schemas';
 // Create new order
-export const createOrder = asyncHandler(async (req: Request, res: Response) => {
+export const createOrder = asyncHandler(async (req: AuthenticatedRequest<{}, {}, CreateOrderRequest>, res: Response) => {
   const {
     orderType,
     serviceName,
@@ -19,30 +22,28 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     couponApplied,
   } = req.body;
 
-  console.log('Creating order with data:', {
+  logger.info('Creating order with data:', {
+    userId: req.user._id,
     orderType,
     serviceName,
-    serviceDetails,
     totalAmount,
     finalAmount,
-    billingPeriod,
-    paymentMethod,
-    couponApplied,
+    billingPeriod, // Log concise info
   });
 
   const userId = req.user._id;
   const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  console.log('Generated orderId:', orderId);
+  logger.info('Generated orderId:', { orderId });
 
   // Prepare verification quota if this is a verification order
   let verificationQuota:
     | {
-        totalAllowed: number;
-        used: number;
-        remaining: number;
-        validityDays: number;
-      }
+      totalAllowed: number;
+      used: number;
+      remaining: number;
+      validityDays: number;
+    }
     | undefined = undefined;
 
   if (orderType === 'verification' && serviceDetails?.verificationType) {
@@ -69,7 +70,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Derive a clearer serviceName for verification orders (e.g., PAN, GSTIN)
-  let serviceNameToUse: string = serviceName;
+  let serviceNameToUse: string = serviceName || '';
   try {
     if (orderType === 'verification') {
       const rawType = (serviceDetails as any)?.verificationType;
@@ -123,7 +124,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
       order_type: order.orderType,
       service: (order.serviceDetails as any)?.verificationType || order.serviceName,
     });
-  } catch {}
+  } catch { }
 
   // Razorpay order creation starts here
   // make sure to import at top
@@ -132,7 +133,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   const currency = 'INR';
 
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    console.error('Razorpay env missing: RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET not set');
+    logger.error('Razorpay env missing: RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET not set');
     return res.status(500).json({
       success: false,
       message: 'Payment gateway is not configured. Please contact support.',
@@ -159,7 +160,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     order.razorpayOrderId = razorpayOrder.id;
     await order.save();
   } catch (err: any) {
-    console.error('Razorpay order creation failed:', err?.message || err);
+    logger.error('Razorpay order creation failed:', err?.message || err);
     return res.status(500).json({
       success: false,
       message: 'Payment initialization failed',
@@ -203,7 +204,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Process payment and activate order
-export const processPayment = asyncHandler(async (req: Request, res: Response) => {
+export const processPayment = asyncHandler(async (req: AuthenticatedRequest<{}, {}, ProcessPaymentRequest>, res: Response) => {
   const { orderId, transactionId } = req.body;
 
   const order = await Order.findOne({ orderId, userId: req.user._id });
@@ -270,7 +271,7 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
       currency: order.currency || 'INR',
       payment_method: order.paymentMethod,
     });
-  } catch {}
+  } catch { }
 });
 
 // Get user's orders
@@ -412,88 +413,7 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   });
 });
 
-// controllers/order/verifyPayment.ts
-
-export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
-
-  if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !orderId) {
-    return res.status(400).json({
-      success: false,
-      message: 'Missing required payment details',
-    });
-  }
-
-  // Verify Razorpay signature
-  const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-    .update(razorpay_order_id + '|' + razorpay_payment_id)
-    .digest('hex');
-
-  if (generatedSignature !== razorpay_signature) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid payment signature',
-    });
-  }
-
-  // Find the order by your internal orderId
-  const order = await Order.findOne({ orderId, paymentStatus: 'pending' });
-
-  if (!order) {
-    return res.status(404).json({
-      success: false,
-      message: 'Order not found or already processed',
-    });
-  }
-
-  // Update payment details
-  order.paymentStatus = 'completed';
-  order.transactionId = razorpay_payment_id;
-  order.status = 'active';
-  order.startDate = new Date();
-
-  // Recompute endDate (already in your processPayment logic)
-  try {
-    const start = new Date(order.startDate);
-    const newEnd = new Date(start);
-
-    if (order.orderType === 'verification' && order.verificationQuota?.validityDays) {
-      newEnd.setDate(newEnd.getDate() + order.verificationQuota.validityDays);
-      order.endDate = newEnd;
-      if (order.verificationQuota) {
-        order.verificationQuota.expiresAt = newEnd;
-      }
-    } else {
-      switch (order.billingPeriod) {
-        case 'one-time':
-          newEnd.setFullYear(newEnd.getFullYear() + 1);
-          break;
-        case 'monthly':
-          newEnd.setMonth(newEnd.getMonth() + 1);
-          break;
-        case 'yearly':
-          newEnd.setFullYear(newEnd.getFullYear() + 1);
-          break;
-      }
-      order.endDate = newEnd;
-    }
-  } catch (err) {
-    console.error('Failed to recompute endDate:', err);
-  }
-
-  await order.save();
-
-  // 🔁 Reuse your plan provisioning logic
-  // Auto-provisioning logic removed as plans are no longer supported
-  // (Previously provisioning based on monthly/yearly quotas)
-
-  res.json({
-    success: true,
-    message: 'Payment verified and order activated',
-    data: { order },
-  });
-});
+// verifyPayment is handled in specific file: verifyPayment.ts
 
 // Admin: Get order statistics
 export const getOrderStats = asyncHandler(async (req: Request, res: Response) => {

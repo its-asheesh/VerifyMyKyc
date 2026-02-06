@@ -336,9 +336,42 @@ export const fastagSchema = z.object({
   message: 'At least one of rc_number or tag_id is required'
 });
 
+// Order Schemas
+export const createOrderSchema = z.object({
+  orderType: z.enum(['verification', 'plan', 'credit']), // Adjusted based on code
+  serviceName: z.string().optional(),
+  serviceDetails: z.record(z.string(), z.any()).optional(),
+  totalAmount: z.number().min(0, 'Total amount must be positive'),
+  finalAmount: z.number().min(0, 'Final amount must be positive'),
+  billingPeriod: z.enum(['one-time', 'monthly', 'yearly']).optional(),
+  paymentMethod: z.string().optional(),
+  couponApplied: z.object({
+    couponId: z.string(),
+    code: z.string(),
+    discount: z.number(),
+    discountType: z.string(),
+    discountValue: z.number()
+  }).optional(),
+});
+
+export const verifyPaymentSchema = z.object({
+  razorpay_payment_id: z.string().min(1, 'Payment ID is required'),
+  razorpay_order_id: z.string().min(1, 'Order ID is required'),
+  razorpay_signature: z.string().min(1, 'Signature is required'),
+  orderId: z.string().min(1, 'Internal Order ID is required'),
+});
+
+export const processPaymentSchema = z.object({
+  orderId: z.string().min(1, 'Order ID is required'),
+  transactionId: z.string().min(1, 'Transaction ID is required'),
+});
+
 export type RcLiteRequest = z.infer<typeof rcLiteSchema>;
 export type RcDetailedRequest = z.infer<typeof rcDetailedSchema>;
 export type RcDetailedWithChallanRequest = z.infer<typeof rcDetailedWithChallanSchema>;
 export type EChallanRequest = z.infer<typeof eChallanSchema>;
 export type RegNumByChassisRequest = z.infer<typeof regNumByChassisSchema>;
 export type FastagRequest = z.infer<typeof fastagSchema>;
+export type CreateOrderRequest = z.infer<typeof createOrderSchema>;
+export type VerifyPaymentRequest = z.infer<typeof verifyPaymentSchema>;
+export type ProcessPaymentRequest = z.infer<typeof processPaymentSchema>;

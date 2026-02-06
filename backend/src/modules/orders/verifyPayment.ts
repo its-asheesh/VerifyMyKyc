@@ -5,16 +5,11 @@ import { Order } from './order.model'; // Adjust path as needed
 import asyncHandler from '../../common/middleware/asyncHandler';
 import crypto from 'crypto';
 import { razorpay } from '../../common/services/razorpay';
+import { VerifyPaymentRequest } from '../../common/validation/schemas';
+import { AuthenticatedRequest } from '../../common/middleware/auth';
 
-export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+export const verifyPayment = asyncHandler(async (req: Request<{}, {}, VerifyPaymentRequest>, res: Response) => {
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
-
-  if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !orderId) {
-    return res.status(400).json({
-      success: false,
-      message: 'Missing required payment details',
-    });
-  }
 
   // Verify Razorpay signature
   const generatedSignature = crypto
