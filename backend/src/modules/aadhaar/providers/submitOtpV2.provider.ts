@@ -89,6 +89,15 @@ export async function submitOtpV2Provider(
 
     // Handle API errors (200 OK with error status)
     if (response.data.status === 'error') {
+      // Special case for generic "Something went wrong"
+      if (response.data.status_code === 500 && response.data.message === 'Something went wrong.') {
+        throw new HTTPError(
+          'An error occurred while verifying OTP. Please try again.',
+          502,
+          response.data
+        );
+      }
+
       throw new HTTPError(
         response.data.message || 'QuickEKYC API Error',
         response.data.status_code || 502,

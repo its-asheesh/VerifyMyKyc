@@ -65,7 +65,7 @@ export async function generateOtpV2Provider(
       // Special case for generic "Something went wrong" which usually means invalid aadhaar in test environment
       if (response.data.status_code === 500 && response.data.message === 'Something went wrong.') {
         throw new HTTPError(
-          'External Provider Error: The Aadhaar service returned a generic error. This often happens with invalid Aadhaar numbers in the test environment.',
+          'An error occurred while sending OTP. Please check the Aadhaar number and try again.',
           502,
           response.data
         );
