@@ -23,9 +23,14 @@ import {
   resetPasswordWithPhoneToken,
   firebasePhoneRegister,
   firebasePhoneLogin,
-  loginWithPhoneAndPassword
+  loginWithPhoneAndPassword,
 } from './auth.controller';
-import { authenticate, requireAdmin, requireUser, requireAnyRole } from '../../common/middleware/auth';
+import {
+  authenticate,
+  requireAdmin,
+  requireUser,
+  requireAnyRole,
+} from '../../common/middleware/auth';
 import { validate } from '../../common/validation/middleware';
 import {
   registerSchema,
@@ -51,7 +56,13 @@ router.post('/logout', logout);
 // Protected routes
 router.get('/profile', authenticate, requireUser, getProfile);
 router.put('/profile', authenticate, requireUser, updateProfile);
-router.put('/change-password', authenticate, requireUser, validate(changePasswordSchema), changePassword);
+router.put(
+  '/change-password',
+  authenticate,
+  requireUser,
+  validate(changePasswordSchema),
+  changePassword,
+);
 
 // Admin-only routes
 router.get('/users', authenticate, requireAdmin, getAllUsers);
@@ -68,5 +79,4 @@ router.post('/phone/register', firebasePhoneRegister);
 router.post('/phone/login', firebasePhoneLogin);
 router.post('/login/phone-password', loginWithPhoneAndPassword);
 
-
-export default router; 
+export default router;

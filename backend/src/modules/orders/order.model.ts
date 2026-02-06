@@ -47,103 +47,106 @@ export interface IOrder extends Document {
   useVerification(): Promise<void>;
 }
 
-const orderSchema = new Schema<IOrder>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  orderId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  orderNumber: {
-    type: String,
-    unique: true
-  },
-  orderType: {
-    type: String,
-    enum: ['verification', 'plan'],
-    required: true
-  },
-  serviceName: {
-    type: String,
-    required: true
-  },
-  serviceDetails: {
-    verificationType: String,
-    planName: String,
-    planType: {
-      type: String,
-      enum: ['monthly', 'yearly', 'one-time']
-    },
-    features: [String]
-  },
-  totalAmount: {
-    type: Number,
-    required: true
-  },
-  finalAmount: {
-    type: Number,
-    required: true
-  },
-  currency: {
-    type: String,
-    default: 'INR'
-  },
-  billingPeriod: {
-    type: String,
-    enum: ['one-time', 'monthly', 'yearly'],
-    required: true
-  },
-  paymentStatus: {
-    type: String,
-    enum: ['pending', 'completed', 'failed', 'refunded'],
-    default: 'pending'
-  },
-  paymentMethod: {
-    type: String,
-    enum: ['card', 'upi', 'netbanking', 'admin'],
-    required: true
-  },
-  transactionId: String,
-  razorpayOrderId: String,
-  status: {
-    type: String,
-    enum: ['pending', 'active', 'expired', 'cancelled'],
-    default: 'pending'
-  },
-  startDate: {
-    type: Date,
-    default: Date.now
-  },
-  endDate: {
-    type: Date
-  },
-  verificationQuota: {
-    totalAllowed: { type: Number, default: 0 },
-    used: { type: Number, default: 0 },
-    remaining: { type: Number, default: 0 },
-    validityDays: { type: Number, default: 0 },
-    expiresAt: { type: Date }
-  },
-  couponApplied: {
-    couponId: {
+const orderSchema = new Schema<IOrder>(
+  {
+    userId: {
       type: Schema.Types.ObjectId,
-      ref: 'Coupon'
+      ref: 'User',
+      required: true,
     },
-    code: String,
-    discount: Number,
-    discountType: {
+    orderId: {
       type: String,
-      enum: ['percentage', 'fixed']
+      required: true,
+      unique: true,
     },
-    discountValue: Number
-  }
-}, {
-  timestamps: true
-});
+    orderNumber: {
+      type: String,
+      unique: true,
+    },
+    orderType: {
+      type: String,
+      enum: ['verification', 'plan'],
+      required: true,
+    },
+    serviceName: {
+      type: String,
+      required: true,
+    },
+    serviceDetails: {
+      verificationType: String,
+      planName: String,
+      planType: {
+        type: String,
+        enum: ['monthly', 'yearly', 'one-time'],
+      },
+      features: [String],
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
+    },
+    finalAmount: {
+      type: Number,
+      required: true,
+    },
+    currency: {
+      type: String,
+      default: 'INR',
+    },
+    billingPeriod: {
+      type: String,
+      enum: ['one-time', 'monthly', 'yearly'],
+      required: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'refunded'],
+      default: 'pending',
+    },
+    paymentMethod: {
+      type: String,
+      enum: ['card', 'upi', 'netbanking', 'admin'],
+      required: true,
+    },
+    transactionId: String,
+    razorpayOrderId: String,
+    status: {
+      type: String,
+      enum: ['pending', 'active', 'expired', 'cancelled'],
+      default: 'pending',
+    },
+    startDate: {
+      type: Date,
+      default: Date.now,
+    },
+    endDate: {
+      type: Date,
+    },
+    verificationQuota: {
+      totalAllowed: { type: Number, default: 0 },
+      used: { type: Number, default: 0 },
+      remaining: { type: Number, default: 0 },
+      validityDays: { type: Number, default: 0 },
+      expiresAt: { type: Date },
+    },
+    couponApplied: {
+      couponId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Coupon',
+      },
+      code: String,
+      discount: Number,
+      discountType: {
+        type: String,
+        enum: ['percentage', 'fixed'],
+      },
+      discountValue: Number,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 // Index for better query performance
 orderSchema.index({ userId: 1, status: 1 });
@@ -155,25 +158,31 @@ orderSchema.index({ 'couponApplied.couponId': 1 });
 orderSchema.index({ 'verificationQuota.expiresAt': 1 });
 
 // Generate order number
-orderSchema.pre('save', function(this: any, next) {
+orderSchema.pre('save', function (this: any, next) {
   if (this.isNew && !this.orderNumber) {
     const timestamp = Date.now().toString().slice(-8);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
     this.orderNumber = `ORD${timestamp}${random}`;
   }
-  
+
   // Set final amount if not set (only if no coupon is applied)
   if (this.isNew && !this.finalAmount && !this.couponApplied) {
     this.finalAmount = this.totalAmount;
   }
-  
+
   // Calculate end date based on quota validity or billing period
   if (this.isNew) {
     const startDate = this.startDate || new Date();
-    let endDate = new Date(startDate);
+    const endDate = new Date(startDate);
 
     // If verification order has a quota validity, prefer that
-    if (this.orderType === 'verification' && this.verificationQuota && this.verificationQuota.validityDays) {
+    if (
+      this.orderType === 'verification' &&
+      this.verificationQuota &&
+      this.verificationQuota.validityDays
+    ) {
       endDate.setDate(endDate.getDate() + this.verificationQuota.validityDays);
       this.verificationQuota.expiresAt = endDate;
     } else {
@@ -198,12 +207,12 @@ orderSchema.pre('save', function(this: any, next) {
 });
 
 // Method to check if order is expired
-orderSchema.methods.isExpired = function(this: any): boolean {
+orderSchema.methods.isExpired = function (this: any): boolean {
   return new Date() > this.endDate;
 };
 
 // Method to get remaining days
-orderSchema.methods.getRemainingDays = function(this: any): number {
+orderSchema.methods.getRemainingDays = function (this: any): number {
   const now = new Date();
   const end = new Date(this.endDate);
   const diffTime = end.getTime() - now.getTime();
@@ -212,12 +221,12 @@ orderSchema.methods.getRemainingDays = function(this: any): number {
 };
 
 // Method to get discount amount
-orderSchema.methods.getDiscountAmount = function(this: any): number {
+orderSchema.methods.getDiscountAmount = function (this: any): number {
   return this.totalAmount - this.finalAmount;
 };
 
 // Verification quota helpers
-orderSchema.methods.canUseVerification = function(this: any): boolean {
+orderSchema.methods.canUseVerification = function (this: any): boolean {
   if (this.orderType !== 'verification') return false;
   if (!this.verificationQuota) return false;
   const now = new Date();
@@ -225,7 +234,7 @@ orderSchema.methods.canUseVerification = function(this: any): boolean {
   return (this.verificationQuota.remaining || 0) > 0 && this.status === 'active';
 };
 
-orderSchema.methods.useVerification = async function(this: any): Promise<void> {
+orderSchema.methods.useVerification = async function (this: any): Promise<void> {
   if (!this.canUseVerification()) {
     throw new Error('Verification quota exhausted or expired');
   }

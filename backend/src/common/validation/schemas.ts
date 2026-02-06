@@ -33,55 +33,57 @@ export const envSchema = z.object({
 export type EnvConfig = z.infer<typeof envSchema>;
 
 // Auth Schemas
-export const registerSchema = z.object({
-  name: z.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name cannot exceed 50 characters')
-    .trim(),
-  email: z.string()
-    .email('Invalid email address')
-    .optional()
-    .or(z.literal('')),
-  phone: z.string()
-    .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number')
-    .optional()
-    .or(z.literal('')),
-  password: z.string()
-    .min(6, 'Password must be at least 6 characters')
-    .max(128, 'Password cannot exceed 128 characters'),
-  company: z.string()
-    .max(100, 'Company name cannot exceed 100 characters')
-    .optional(),
-  location: z.object({
-    country: z.string().optional(),
-    city: z.string().optional(),
-    region: z.string().optional(),
-    timezone: z.string().optional(),
-    ipAddress: z.string().optional(),
-  }).optional(),
-}).refine(
-  (data) => data.email || data.phone,
-  {
+export const registerSchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, 'Name must be at least 2 characters')
+      .max(50, 'Name cannot exceed 50 characters')
+      .trim(),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    phone: z
+      .string()
+      .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number')
+      .optional()
+      .or(z.literal('')),
+    password: z
+      .string()
+      .min(6, 'Password must be at least 6 characters')
+      .max(128, 'Password cannot exceed 128 characters'),
+    company: z.string().max(100, 'Company name cannot exceed 100 characters').optional(),
+    location: z
+      .object({
+        country: z.string().optional(),
+        city: z.string().optional(),
+        region: z.string().optional(),
+        timezone: z.string().optional(),
+        ipAddress: z.string().optional(),
+      })
+      .optional(),
+  })
+  .refine((data) => data.email || data.phone, {
     message: 'Either email or phone number is required',
     path: ['email'],
-  }
-);
+  });
 
 export const loginSchema = z.object({
   email: z.string().min(1, 'Email or phone is required'),
   password: z.string().min(1, 'Password is required'),
-  location: z.object({
-    country: z.string().optional(),
-    city: z.string().optional(),
-    region: z.string().optional(),
-    timezone: z.string().optional(),
-    ipAddress: z.string().optional(),
-  }).optional(),
+  location: z
+    .object({
+      country: z.string().optional(),
+      city: z.string().optional(),
+      region: z.string().optional(),
+      timezone: z.string().optional(),
+      ipAddress: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string()
+  newPassword: z
+    .string()
     .min(6, 'Password must be at least 6 characters')
     .max(128, 'Password cannot exceed 128 characters'),
 });
@@ -89,57 +91,62 @@ export const changePasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
   otp: z.string().length(6, 'OTP must be 6 digits'),
-  newPassword: z.string()
+  newPassword: z
+    .string()
     .min(6, 'Password must be at least 6 characters')
     .max(128, 'Password cannot exceed 128 characters'),
 });
 
-export const sendOtpSchema = z.object({
-  email: z.string().email('Invalid email address').optional(),
-  phone: z.string().regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number').optional(),
-}).refine(
-  (data) => data.email || data.phone,
-  {
+export const sendOtpSchema = z
+  .object({
+    email: z.string().email('Invalid email address').optional(),
+    phone: z
+      .string()
+      .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number')
+      .optional(),
+  })
+  .refine((data) => data.email || data.phone, {
     message: 'Either email or phone is required',
     path: ['email'],
-  }
-);
+  });
 
-export const verifyOtpSchema = z.object({
-  email: z.string().email('Invalid email address').optional(),
-  phone: z.string().regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number').optional(),
-  otp: z.string().length(6, 'OTP must be 6 digits'),
-}).refine(
-  (data) => data.email || data.phone,
-  {
+export const verifyOtpSchema = z
+  .object({
+    email: z.string().email('Invalid email address').optional(),
+    phone: z
+      .string()
+      .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number')
+      .optional(),
+    otp: z.string().length(6, 'OTP must be 6 digits'),
+  })
+  .refine((data) => data.email || data.phone, {
     message: 'Either email or phone is required',
     path: ['email'],
-  }
-);
+  });
 
 // PAN Schemas
-export const panNumberSchema = z.string()
+export const panNumberSchema = z
+  .string()
   .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format')
   .transform((val) => val.toUpperCase());
 
 export const panFatherNameSchema = z.object({
   pan_number: panNumberSchema,
-  consent: z.enum(['Y', 'N']).refine(
-    (val) => val === 'Y' || val === 'N',
-    { message: 'Consent must be Y or N' }
-  ),
+  consent: z
+    .enum(['Y', 'N'])
+    .refine((val) => val === 'Y' || val === 'N', { message: 'Consent must be Y or N' }),
 });
 
 export const panAadhaarLinkSchema = z.object({
   pan_number: panNumberSchema,
-  aadhaar_number: z.string()
-    .regex(/^[0-9]{12}$/, 'Aadhaar must be 12 digits'),
+  aadhaar_number: z.string().regex(/^[0-9]{12}$/, 'Aadhaar must be 12 digits'),
   consent: z.enum(['Y', 'N']),
 });
 
 // Aadhaar Schemas
 export const aadhaarOcrV1Schema = z.object({
-  base64_data: z.string()
+  base64_data: z
+    .string()
     .min(1, 'Base64 data is required')
     .refine(
       (val) => {
@@ -151,13 +158,14 @@ export const aadhaarOcrV1Schema = z.object({
           return false;
         }
       },
-      { message: 'Invalid base64 image format' }
+      { message: 'Invalid base64 image format' },
     ),
   consent: z.enum(['Y', 'N']),
 });
 
 // Aadhaar V2 Schemas (QuickEKYC)
-export const aadhaarNumberSchema = z.string()
+export const aadhaarNumberSchema = z
+  .string()
   .regex(/^[0-9]{12}$/, 'Aadhaar number must be exactly 12 digits')
   .transform((val) => val.trim());
 
@@ -167,22 +175,21 @@ export const aadhaarGenerateOtpV2Schema = z.object({
 });
 
 export const aadhaarSubmitOtpV2Schema = z.object({
-  request_id: z.union([
-    z.string().min(1, 'Request ID is required'),
-    z.number().positive('Request ID must be positive')
-  ]).transform((val) => String(val)),
-  otp: z.string()
-    .regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+  request_id: z
+    .union([
+      z.string().min(1, 'Request ID is required'),
+      z.number().positive('Request ID must be positive'),
+    ])
+    .transform((val) => String(val)),
+  otp: z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
   client_id: z.string().optional(),
   consent: z.enum(['Y', 'N']),
 });
 
 // GSTIN Schemas
-export const gstinSchema = z.string()
-  .regex(
-    /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-    'Invalid GSTIN format'
-  )
+export const gstinSchema = z
+  .string()
+  .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GSTIN format')
   .transform((val) => val.toUpperCase());
 
 export const gstinFetchSchema = z.object({
@@ -214,40 +221,46 @@ export const voterBosonFetchSchema = z.object({
 // Bank Account Schemas
 export const bankAccountVerifySchema = z.object({
   account_number: z.string().min(9, 'Account number must be at least 9 digits'),
-  ifsc: z.string()
+  ifsc: z
+    .string()
     .transform((val) => val.toUpperCase().trim())
     .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
-      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)'
+      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)',
     }),
   consent: z.enum(['Y', 'N']),
 });
 
 export const ifscValidateSchema = z.object({
-  ifsc: z.string()
+  ifsc: z
+    .string()
     .transform((val) => val.toUpperCase().trim())
     .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
-      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)'
+      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)',
     }),
   consent: z.enum(['Y', 'N']),
 });
 
-export const upiVerifySchema = z.preprocess((data: any) => {
-  // Normalize 'vpa' to 'upi' for compatibility with frontend
-  if (data && typeof data === 'object') {
-    if (data.vpa && !data.upi) {
-      data.upi = data.vpa;
+export const upiVerifySchema = z.preprocess(
+  (data: any) => {
+    // Normalize 'vpa' to 'upi' for compatibility with frontend
+    if (data && typeof data === 'object') {
+      if (data.vpa && !data.upi) {
+        data.upi = data.vpa;
+      }
     }
-  }
-  return data;
-}, z.object({
-  upi: z.string()
-    .min(1, 'UPI ID is required')
-    .transform((val) => val.toLowerCase().trim())
-    .refine((val) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(val), {
-      message: 'Invalid UPI ID format. Expected format: username@bankname (e.g., user@paytm)'
-    }),
-  consent: z.enum(['Y', 'N']),
-}));
+    return data;
+  },
+  z.object({
+    upi: z
+      .string()
+      .min(1, 'UPI ID is required')
+      .transform((val) => val.toLowerCase().trim())
+      .refine((val) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(val), {
+        message: 'Invalid UPI ID format. Expected format: username@bankname (e.g., user@paytm)',
+      }),
+    consent: z.enum(['Y', 'N']),
+  }),
+);
 
 // EPFO Schemas
 export const epfoFetchUanSchema = z.object({
@@ -271,8 +284,6 @@ export const cinByPanSchema = z.object({
 });
 
 // Common Schemas
-export const consentSchema = z.enum(['Y', 'N']).refine(
-  (val) => val === 'Y' || val === 'N',
-  { message: 'Consent must be Y or N' }
-);
-
+export const consentSchema = z
+  .enum(['Y', 'N'])
+  .refine((val) => val === 'Y' || val === 'N', { message: 'Consent must be Y or N' });

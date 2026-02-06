@@ -9,4 +9,4 @@ const service = new EChallanService();
 export const fetchEChallanHandler = asyncHandler(async (req: Request, res: Response) => {
   const result = await service.fetch(req.body);
   res.json(result);
-}); 
+});

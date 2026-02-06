@@ -5,7 +5,7 @@ import { connectDB } from '../../config/db';
 const seedOrders = async () => {
   try {
     await connectDB();
-    
+
     // Get existing users
     const users = await User.find().limit(10);
     if (users.length === 0) {
@@ -25,7 +25,8 @@ const seedOrders = async () => {
     const getRandomDateInMonth = (year: number, month: number) => {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
-      const randomTime = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime());
+      const randomTime =
+        startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime());
       return new Date(randomTime);
     };
 
@@ -52,20 +53,64 @@ const seedOrders = async () => {
       { name: 'Driving License Verification', type: 'drivinglicense', price: 300 },
       { name: 'GSTIN Verification', type: 'gstin', price: 500 },
       { name: 'Passport Verification', type: 'passport', price: 400 },
-      { name: 'Voter ID Verification', type: 'voterid', price: 200 }
+      { name: 'Voter ID Verification', type: 'voterid', price: 200 },
     ];
 
     const planServices = [
-      { name: 'Personal Monthly Plan', planName: 'Personal', planType: 'monthly', price: 800, features: ['Aadhaar', 'PAN'] },
-      { name: 'Personal Yearly Plan', planName: 'Personal', planType: 'yearly', price: 8000, features: ['Aadhaar', 'PAN'] },
-      { name: 'Professional Monthly Plan', planName: 'Professional', planType: 'monthly', price: 1500, features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN'] },
-      { name: 'Professional Yearly Plan', planName: 'Professional', planType: 'yearly', price: 15000, features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN'] },
-      { name: 'Business Monthly Plan', planName: 'Business', planType: 'monthly', price: 2500, features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN', 'MCA'] },
-      { name: 'Business Yearly Plan', planName: 'Business', planType: 'yearly', price: 25000, features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN', 'MCA'] }
+      {
+        name: 'Personal Monthly Plan',
+        planName: 'Personal',
+        planType: 'monthly',
+        price: 800,
+        features: ['Aadhaar', 'PAN'],
+      },
+      {
+        name: 'Personal Yearly Plan',
+        planName: 'Personal',
+        planType: 'yearly',
+        price: 8000,
+        features: ['Aadhaar', 'PAN'],
+      },
+      {
+        name: 'Professional Monthly Plan',
+        planName: 'Professional',
+        planType: 'monthly',
+        price: 1500,
+        features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN'],
+      },
+      {
+        name: 'Professional Yearly Plan',
+        planName: 'Professional',
+        planType: 'yearly',
+        price: 15000,
+        features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN'],
+      },
+      {
+        name: 'Business Monthly Plan',
+        planName: 'Business',
+        planType: 'monthly',
+        price: 2500,
+        features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN', 'MCA'],
+      },
+      {
+        name: 'Business Yearly Plan',
+        planName: 'Business',
+        planType: 'yearly',
+        price: 25000,
+        features: ['Aadhaar', 'PAN', 'Driving License', 'GSTIN', 'MCA'],
+      },
     ];
 
     const paymentMethods = ['card', 'upi', 'netbanking'];
-    const paymentStatuses = ['completed', 'completed', 'completed', 'completed', 'completed', 'pending', 'failed']; // 71% success rate
+    const paymentStatuses = [
+      'completed',
+      'completed',
+      'completed',
+      'completed',
+      'completed',
+      'pending',
+      'failed',
+    ]; // 71% success rate
 
     // Generate data for each month (March 2023 to February 2024)
     for (let year = 2023; year <= 2024; year++) {
@@ -92,11 +137,19 @@ const seedOrders = async () => {
             currency: 'INR',
             paymentStatus,
             paymentMethod,
-            transactionId: paymentStatus === 'completed' ? `TXN${orderCounter.toString().padStart(3, '0')}` : undefined,
-            status: paymentStatus === 'completed' ? 'active' : (paymentStatus === 'pending' ? 'active' : 'cancelled'),
+            transactionId:
+              paymentStatus === 'completed'
+                ? `TXN${orderCounter.toString().padStart(3, '0')}`
+                : undefined,
+            status:
+              paymentStatus === 'completed'
+                ? 'active'
+                : paymentStatus === 'pending'
+                  ? 'active'
+                  : 'cancelled',
             startDate: orderDate,
             createdAt: orderDate,
-            updatedAt: orderDate
+            updatedAt: orderDate,
           };
 
           if (isPlan) {
@@ -108,26 +161,27 @@ const seedOrders = async () => {
               serviceDetails: {
                 planName: plan.planName,
                 planType: plan.planType,
-                features: plan.features
+                features: plan.features,
               },
               totalAmount: plan.price,
               finalAmount: plan.price,
               billingPeriod: plan.planType,
-              endDate: getEndDate(orderDate, plan.planType)
+              endDate: getEndDate(orderDate, plan.planType),
             };
           } else {
-            const service = verificationServices[Math.floor(Math.random() * verificationServices.length)];
+            const service =
+              verificationServices[Math.floor(Math.random() * verificationServices.length)];
             orderData = {
               ...orderData,
               orderType: 'verification',
               serviceName: service.name,
               serviceDetails: {
-                verificationType: service.type
+                verificationType: service.type,
               },
               totalAmount: service.price,
               finalAmount: service.price,
               billingPeriod: 'one-time',
-              endDate: getEndDate(orderDate, 'one-time')
+              endDate: getEndDate(orderDate, 'one-time'),
             };
           }
 
@@ -155,7 +209,7 @@ const seedOrders = async () => {
         status: 'active',
         startDate: orderDate,
         createdAt: orderDate,
-        updatedAt: orderDate
+        updatedAt: orderDate,
       };
 
       if (isPlan) {
@@ -167,26 +221,27 @@ const seedOrders = async () => {
           serviceDetails: {
             planName: plan.planName,
             planType: plan.planType,
-            features: plan.features
+            features: plan.features,
           },
           totalAmount: plan.price,
           finalAmount: plan.price,
           billingPeriod: plan.planType,
-          endDate: getEndDate(orderDate, plan.planType)
+          endDate: getEndDate(orderDate, plan.planType),
         };
       } else {
-        const service = verificationServices[Math.floor(Math.random() * verificationServices.length)];
+        const service =
+          verificationServices[Math.floor(Math.random() * verificationServices.length)];
         orderData = {
           ...orderData,
           orderType: 'verification',
           serviceName: service.name,
           serviceDetails: {
-            verificationType: service.type
+            verificationType: service.type,
           },
           totalAmount: service.price,
           finalAmount: service.price,
           billingPeriod: 'one-time',
-          endDate: getEndDate(orderDate, 'one-time')
+          endDate: getEndDate(orderDate, 'one-time'),
         };
       }
 
@@ -199,7 +254,9 @@ const seedOrders = async () => {
     for (let i = 0; i < recentHighValueOrders; i++) {
       const orderDate = getRandomDateInMonth(2024, 1 + Math.floor(Math.random() * 2)); // Jan-Feb
       const user = users[Math.floor(Math.random() * users.length)];
-      const plan = planServices.filter(p => p.planType === 'yearly')[Math.floor(Math.random() * 3)]; // Only yearly plans
+      const plan = planServices.filter((p) => p.planType === 'yearly')[
+        Math.floor(Math.random() * 3)
+      ]; // Only yearly plans
 
       const orderData = {
         orderId: `ORD${orderCounter.toString().padStart(3, '0')}`,
@@ -209,7 +266,7 @@ const seedOrders = async () => {
         serviceDetails: {
           planName: plan.planName,
           planType: plan.planType,
-          features: plan.features
+          features: plan.features,
         },
         totalAmount: plan.price,
         finalAmount: plan.price,
@@ -222,7 +279,7 @@ const seedOrders = async () => {
         startDate: orderDate,
         endDate: getEndDate(orderDate, plan.planType),
         createdAt: orderDate,
-        updatedAt: orderDate
+        updatedAt: orderDate,
       };
 
       sampleOrders.push(orderData);
@@ -230,7 +287,7 @@ const seedOrders = async () => {
     }
 
     await Order.insertMany(sampleOrders);
-    
+
     // Calculate and display summary
     const totalOrders = await Order.countDocuments();
     const completedOrders = await Order.countDocuments({ paymentStatus: 'completed' });
@@ -238,7 +295,7 @@ const seedOrders = async () => {
     const failedOrders = await Order.countDocuments({ paymentStatus: 'failed' });
     const totalRevenue = await Order.aggregate([
       { $match: { paymentStatus: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+      { $group: { _id: null, total: { $sum: '$finalAmount' } } },
     ]);
 
     console.log('✅ 1 Year Sample Data Created Successfully');
@@ -249,7 +306,7 @@ const seedOrders = async () => {
     console.log(`💰 Total Revenue: ₹${totalRevenue[0]?.total?.toLocaleString() || 0}`);
     console.log(`📈 Success Rate: ${((completedOrders / totalOrders) * 100).toFixed(1)}%`);
     console.log(`📅 Data Period: March 2023 - February 2024`);
-    
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding orders:', error);
@@ -257,4 +314,4 @@ const seedOrders = async () => {
   }
 };
 
-seedOrders(); 
+seedOrders();

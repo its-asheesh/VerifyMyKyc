@@ -159,7 +159,7 @@ export interface DigilockerIssuedFileResponse {
     document?: any;
   };
   [key: string]: any;
-} 
+}
 
 export interface FetchPanAdvanceRequest {
   pan_number: string;
@@ -209,5 +209,3 @@ export interface FetchPanDetailResponse {
   timestamp: number;
   path: string;
 }
-
-  

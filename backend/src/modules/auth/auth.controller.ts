@@ -5,15 +5,19 @@ import asyncHandler from '../../common/middleware/asyncHandler';
 import { buildOtpEmailHtml, sendEmail } from '../../common/services/email';
 import admin from '../../firebase-admin';
 import { sendGaEvent } from '../../common/services/ga4';
+import { logger } from '../../common/utils/logger';
 
 // Helper: notify admins about new user sign-ups
 async function notifyAdminsOfNewUser(
   user: any,
   method: 'email' | 'phone',
-  status: 'successful' | 'attempted' | 'failed' = 'successful'
+  status: 'successful' | 'attempted' | 'failed' = 'successful',
 ) {
   try {
-    const recipients = (process.env.ADMIN_NOTIFY_EMAILS || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const recipients = (process.env.ADMIN_NOTIFY_EMAILS || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (!recipients.length) return;
     const lines = [
       `<p><strong>Name:</strong> ${user.name || '-'}</p>`,
@@ -25,7 +29,7 @@ async function notifyAdminsOfNewUser(
     const html = `<div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#111;">${lines.join('')}</div>`;
     await Promise.all(recipients.map((to) => sendEmail(to, 'New user signed up', html)));
   } catch (e) {
-    console.error('Failed to notify admins of new user:', (e as any)?.message || e);
+    logger.error('Failed to notify admins of new user:', (e as any)?.message || e);
   }
 }
 
@@ -48,7 +52,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     password,
     company,
     phone,
-    role: 'user' // Default role
+    role: 'user', // Default role
   };
 
   // Add location data if provided
@@ -72,7 +76,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       email_verified: !!user.emailVerified,
       phone_verified: !!user.phoneVerified,
     });
-  } catch { }
+  } catch {}
 
   // Notify admins (successful registration)
   void notifyAdminsOfNewUser(user, 'email', 'successful');
@@ -83,7 +87,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     await sendEmail(email, 'Verify your email', buildOtpEmailHtml(name, code));
   } catch (e: any) {
     otpSent = false;
-    console.error('Email send failed during registration:', e?.message || e);
+    logger.error('Email send failed during registration:', e?.message || e);
     if (process.env.NODE_ENV === 'development') {
       throw new Error(`Email send failed: ${e?.message || 'Unknown error'}`);
     }
@@ -105,10 +109,10 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
         location: user.location,
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       },
-      otpSent
-    }
+      otpSent,
+    },
   });
 });
 
@@ -120,8 +124,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findOne({
     $or: [
       { email },
-      { phone: email } // allow phone number in "email" field
-    ]
+      { phone: email }, // allow phone number in "email" field
+    ],
   }).select('+password');
 
   if (!user) {
@@ -146,7 +150,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   // 🔐 Require verified email OR verified phone
   if (!user.emailVerified && !user.phoneVerified) {
     return res.status(401).json({
-      message: 'Please verify your email or phone number to continue'
+      message: 'Please verify your email or phone number to continue',
     });
   }
 
@@ -173,10 +177,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         emailVerified: user.emailVerified,
         phoneVerified: user.phoneVerified,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       },
-      token
-    }
+      token,
+    },
   });
 });
 
@@ -194,9 +198,11 @@ export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => 
     await sendEmail(email, 'Verify your email', buildOtpEmailHtml(user.name, code));
     res.json({ success: true, message: 'OTP sent to email' });
   } catch (e: any) {
-    console.error('Email send failed:', e?.message || e);
+    logger.error('Email send failed:', e?.message || e);
     if (process.env.NODE_ENV === 'development') {
-      return res.status(500).json({ message: `Email send failed: ${e?.message || 'Unknown error'}` });
+      return res
+        .status(500)
+        .json({ message: `Email send failed: ${e?.message || 'Unknown error'}` });
     }
     // In production, generic message but log error
     res.json({ success: true, message: 'OTP sent to email (if valid)' });
@@ -218,13 +224,16 @@ export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) =
   user.emailOtpCode = undefined;
   user.emailOtpExpires = undefined;
   user.lastLogin = new Date();
-  console.log('Before save - emailVerified:', user.emailVerified);
+  // console.log('Before save - emailVerified:', user.emailVerified);
   await user.save();
-  console.log('After save - emailVerified:', user.emailVerified);
+  // console.log('After save - emailVerified:', user.emailVerified);
   const token = generateToken(user);
   res.json({
-    success: true, message: 'Email verified', data: {
-      token, user: {
+    success: true,
+    message: 'Email verified',
+    data: {
+      token,
+      user: {
         id: user._id,
         name: user.name,
         email: user.email,
@@ -233,9 +242,9 @@ export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) =
         phone: user.phone,
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    }
+        updatedAt: user.updatedAt,
+      },
+    },
   });
 });
 
@@ -251,9 +260,11 @@ export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Respo
     try {
       await sendEmail(email, 'Password reset code', buildOtpEmailHtml(user.name, code));
     } catch (e: any) {
-      console.error('Password reset email failed:', e?.message || e);
+      logger.error('Password reset email failed:', e?.message || e);
       if (process.env.NODE_ENV === 'development') {
-        return res.status(500).json({ message: `Email send failed: ${e?.message || 'Unknown error'}` });
+        return res
+          .status(500)
+          .json({ message: `Email send failed: ${e?.message || 'Unknown error'}` });
       }
     }
   }
@@ -263,14 +274,20 @@ export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Respo
 
 // Reset password with OTP
 export const resetPasswordWithOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { email, otp, newPassword } = req.body as { email: string; otp: string; newPassword: string };
+  const { email, otp, newPassword } = req.body as {
+    email: string;
+    otp: string;
+    newPassword: string;
+  };
   const user = await User.findOne({ email }).select('+password');
 
-  if (!user ||
+  if (
+    !user ||
     !user.passwordResetToken ||
     !user.passwordResetExpires ||
     user.passwordResetExpires < new Date() ||
-    user.passwordResetToken !== otp) {
+    user.passwordResetToken !== otp
+  ) {
     return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
 
@@ -295,9 +312,9 @@ export const resetPasswordWithOtp = asyncHandler(async (req: Request, res: Respo
         phone: user.phone,
         emailVerified: user.emailVerified, // now true
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    }
+        updatedAt: user.updatedAt,
+      },
+    },
   });
 });
 
@@ -381,9 +398,9 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
         lastLogin: user.lastLogin,
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    }
+        updatedAt: user.updatedAt,
+      },
+    },
   });
 });
 
@@ -406,9 +423,9 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
       name,
       email,
       company,
-      phone
+      phone,
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   if (!updatedUser) {
@@ -430,9 +447,9 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
         lastLogin: updatedUser.lastLogin,
         emailVerified: updatedUser.emailVerified,
         createdAt: updatedUser.createdAt,
-        updatedAt: updatedUser.updatedAt
-      }
-    }
+        updatedAt: updatedUser.updatedAt,
+      },
+    },
   });
 });
 
@@ -459,7 +476,7 @@ export const changePassword = asyncHandler(async (req: Request, res: Response) =
 
   res.json({
     success: true,
-    message: 'Password changed successfully'
+    message: 'Password changed successfully',
   });
 });
 
@@ -469,7 +486,7 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
   // For now, we'll just return success
   res.json({
     success: true,
-    message: 'Logged out successfully'
+    message: 'Logged out successfully',
   });
 });
 
@@ -480,7 +497,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      users: users.map(user => ({
+      users: users.map((user) => ({
         id: user._id,
         name: user.name,
         email: user.email,
@@ -493,9 +510,9 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
         phoneVerified: user.phoneVerified,
         location: user.location,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }))
-    }
+        updatedAt: user.updatedAt,
+      })),
+    },
   });
 });
 
@@ -520,7 +537,7 @@ export const updateUserRole = asyncHandler(async (req: Request, res: Response) =
   res.json({
     success: true,
     message: 'User role updated successfully',
-    data: { user }
+    data: { user },
   });
 });
 
@@ -545,7 +562,7 @@ export const toggleUserStatus = asyncHandler(async (req: Request, res: Response)
   res.json({
     success: true,
     message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
-    data: { user }
+    data: { user },
   });
 });
 
@@ -583,9 +600,9 @@ export const verifyUserEmail = asyncHandler(async (req: Request, res: Response) 
         phoneVerified: user.phoneVerified,
         location: user.location,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    }
+        updatedAt: user.updatedAt,
+      },
+    },
   });
 });
 
@@ -623,9 +640,9 @@ export const verifyUserPhone = asyncHandler(async (req: Request, res: Response) 
         phoneVerified: user.phoneVerified,
         location: user.location,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    }
+        updatedAt: user.updatedAt,
+      },
+    },
   });
 });
 
@@ -659,7 +676,9 @@ export const addUserTokens = asyncHandler(async (req: Request, res: Response) =>
 
   // Get verification pricing to get service name
   const pricing = await VerificationPricing.findOne({ verificationType });
-  const serviceName = pricing?.title || verificationType.charAt(0).toUpperCase() + verificationType.slice(1) + ' Verification';
+  const serviceName =
+    pricing?.title ||
+    verificationType.charAt(0).toUpperCase() + verificationType.slice(1) + ' Verification';
 
   // Generate order ID
   const orderId = `ADMIN-TOKEN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -676,7 +695,7 @@ export const addUserTokens = asyncHandler(async (req: Request, res: Response) =>
     orderType: 'verification',
     serviceName,
     serviceDetails: {
-      verificationType
+      verificationType,
     },
     totalAmount: 0, // Admin-added tokens are free
     finalAmount: 0,
@@ -692,8 +711,8 @@ export const addUserTokens = asyncHandler(async (req: Request, res: Response) =>
       used: 0,
       remaining: numberOfTokens,
       validityDays,
-      expiresAt: endDate
-    }
+      expiresAt: endDate,
+    },
   });
 
   await order.save();
@@ -711,9 +730,9 @@ export const addUserTokens = asyncHandler(async (req: Request, res: Response) =>
         numberOfTokens,
         validityDays,
         expiresAt: endDate,
-        remaining: numberOfTokens
-      }
-    }
+        remaining: numberOfTokens,
+      },
+    },
   });
 });
 
@@ -725,7 +744,7 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
   const totalAdmins = await User.countDocuments({ role: 'admin' });
   const regularUsers = await User.countDocuments({ role: 'user' });
   const pendingVerifications = await User.countDocuments({
-    $or: [{ emailVerified: false }, { phoneVerified: false }]
+    $or: [{ emailVerified: false }, { phoneVerified: false }],
   });
 
   // Get new users this month
@@ -733,7 +752,7 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
   const newUsersThisMonth = await User.countDocuments({
-    createdAt: { $gte: startOfMonth }
+    createdAt: { $gte: startOfMonth },
   });
 
   // Calculate trends (mocked for now as we need historical data snapshots)
@@ -741,7 +760,7 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
   const trends = {
     users: { percentage: 12, direction: 'up' },
     active: { percentage: 5, direction: 'up' },
-    pending: { percentage: 2, direction: 'down' }
+    pending: { percentage: 2, direction: 'down' },
   };
 
   res.json({
@@ -754,8 +773,8 @@ export const getUserStats = asyncHandler(async (req: Request, res: Response) => 
       regularUsers,
       newUsersThisMonth,
       pendingVerifications,
-      trends
-    }
+      trends,
+    },
   });
 });
 
@@ -765,16 +784,16 @@ export const getUserLocationAnalytics = asyncHandler(async (req: Request, res: R
   const locationStats = await User.aggregate([
     {
       $match: {
-        'location.country': { $exists: true, $ne: null }
-      }
+        'location.country': { $exists: true, $ne: null },
+      },
     },
     {
       $group: {
         _id: '$location.country',
         count: { $sum: 1 },
         cities: { $addToSet: '$location.city' },
-        regions: { $addToSet: '$location.region' }
-      }
+        regions: { $addToSet: '$location.region' },
+      },
     },
     {
       $project: {
@@ -783,39 +802,39 @@ export const getUserLocationAnalytics = asyncHandler(async (req: Request, res: R
         cityCount: { $size: '$cities' },
         regionCount: { $size: '$regions' },
         cities: { $slice: ['$cities', 5] }, // Top 5 cities
-        regions: { $slice: ['$regions', 5] } // Top 5 regions
-      }
+        regions: { $slice: ['$regions', 5] }, // Top 5 regions
+      },
     },
     {
-      $sort: { userCount: -1 }
-    }
+      $sort: { userCount: -1 },
+    },
   ]);
 
   // Get total users with location data
   const totalUsersWithLocation = await User.countDocuments({
-    'location.country': { $exists: true, $ne: null }
+    'location.country': { $exists: true, $ne: null },
   });
 
   // Get top cities
   const topCities = await User.aggregate([
     {
       $match: {
-        'location.city': { $exists: true, $ne: null }
-      }
+        'location.city': { $exists: true, $ne: null },
+      },
     },
     {
       $group: {
         _id: '$location.city',
         count: { $sum: 1 },
-        country: { $first: '$location.country' }
-      }
+        country: { $first: '$location.country' },
+      },
     },
     {
-      $sort: { count: -1 }
+      $sort: { count: -1 },
     },
     {
-      $limit: 10
-    }
+      $limit: 10,
+    },
   ]);
 
   // Get recent location activity (last 30 days)
@@ -826,21 +845,21 @@ export const getUserLocationAnalytics = asyncHandler(async (req: Request, res: R
     {
       $match: {
         createdAt: { $gte: thirtyDaysAgo },
-        'location.country': { $exists: true, $ne: null }
-      }
+        'location.country': { $exists: true, $ne: null },
+      },
     },
     {
       $group: {
         _id: {
           country: '$location.country',
-          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
         },
-        count: { $sum: 1 }
-      }
+        count: { $sum: 1 },
+      },
     },
     {
-      $sort: { '_id.date': -1 }
-    }
+      $sort: { '_id.date': -1 },
+    },
   ]);
 
   res.json({
@@ -849,8 +868,8 @@ export const getUserLocationAnalytics = asyncHandler(async (req: Request, res: R
       locationStats,
       totalUsersWithLocation,
       topCities,
-      recentLocationActivity
-    }
+      recentLocationActivity,
+    },
   });
 });
 
@@ -867,10 +886,10 @@ export const updateUserLocation = asyncHandler(async (req: Request, res: Respons
         city,
         region,
         timezone,
-        ipAddress
-      }
+        ipAddress,
+      },
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   if (!user) {
@@ -880,7 +899,7 @@ export const updateUserLocation = asyncHandler(async (req: Request, res: Respons
   res.json({
     success: true,
     message: 'User location updated successfully',
-    data: { user }
+    data: { user },
   });
 });
 
@@ -888,7 +907,7 @@ export const updateUserLocation = asyncHandler(async (req: Request, res: Respons
 export const getUsersWithLocation = asyncHandler(async (req: Request, res: Response) => {
   const users = await User.find({}).select('-password').sort({ createdAt: -1 });
 
-  const usersWithLocation = users.map(user => ({
+  const usersWithLocation = users.map((user) => ({
     id: user._id,
     name: user.name,
     email: user.email,
@@ -900,14 +919,14 @@ export const getUsersWithLocation = asyncHandler(async (req: Request, res: Respo
     emailVerified: user.emailVerified,
     location: user.location || null,
     createdAt: user.createdAt,
-    updatedAt: user.updatedAt
+    updatedAt: user.updatedAt,
   }));
 
   res.json({
     success: true,
     data: {
-      users: usersWithLocation
-    }
+      users: usersWithLocation,
+    },
   });
 });
 
@@ -944,7 +963,7 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
       // Attempted registration with existing phone
       void notifyAdminsOfNewUser({ name, email: undefined, phone, company }, 'phone', 'attempted');
       return res.status(409).json({
-        message: 'User with this phone number already exists. Please log in instead.'
+        message: 'User with this phone number already exists. Please log in instead.',
       });
     }
 
@@ -970,7 +989,7 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
         email_verified: !!newUser.emailVerified,
         phone_verified: !!newUser.phoneVerified,
       });
-    } catch { }
+    } catch {}
 
     // Notify admins (successful registration)
     void notifyAdminsOfNewUser(newUser, 'phone', 'successful');
@@ -996,30 +1015,48 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
         },
       },
     });
-
   } catch (error: any) {
-    console.error('Firebase phone register error:', error.message || error);
+    logger.error('Firebase phone register error:', error.message || error);
 
     if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
       // Failed phone registration (invalid token)
-      void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
+      void notifyAdminsOfNewUser(
+        { name, email: undefined, phone: undefined, company },
+        'phone',
+        'failed',
+      );
       return res.status(401).json({ message: 'Invalid or expired ID token' });
     }
     // Handle duplicate key (email unique index) gracefully
-    if ((error.code === 11000 || error.name === 'MongoServerError') && String(error.message || '').includes('email_1')) {
+    if (
+      (error.code === 11000 || error.name === 'MongoServerError') &&
+      String(error.message || '').includes('email_1')
+    ) {
       // Attempted phone registration but email duplicate
-      void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'attempted');
+      void notifyAdminsOfNewUser(
+        { name, email: undefined, phone: undefined, company },
+        'phone',
+        'attempted',
+      );
       return res.status(409).json({ message: 'Email already in use' });
     }
 
     // Handle Mongoose validation errors (like password too short)
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map((err: any) => err.message);
-      void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
+      void notifyAdminsOfNewUser(
+        { name, email: undefined, phone: undefined, company },
+        'phone',
+        'failed',
+      );
       return res.status(400).json({ message: messages.join(', ') });
     }
 
-    void notifyAdminsOfNewUser({ name, email: undefined, phone: undefined, company }, 'phone', 'failed');
+    void notifyAdminsOfNewUser(
+      { name, email: undefined, phone: undefined, company },
+      'phone',
+      'failed',
+    );
     res.status(500).json({ message: 'Registration failed' });
   }
 });
@@ -1067,7 +1104,8 @@ export const firebasePhoneLogin = asyncHandler(async (req: Request, res: Respons
     res.json({
       success: true,
       message: user.isNew ? 'Account created and logged in' : 'Login successful',
-      data: {  // 🔥 FIXED: Added missing 'data' property name
+      data: {
+        // 🔥 FIXED: Added missing 'data' property name
         token,
         user: {
           id: user._id,
@@ -1083,9 +1121,8 @@ export const firebasePhoneLogin = asyncHandler(async (req: Request, res: Respons
         },
       },
     });
-
   } catch (error: any) {
-    console.error('Firebase phone login error:', error.message || error);
+    logger.error('Firebase phone login error:', error.message || error);
 
     // Handle common Firebase errors
     if (error.code === 'auth/argument-error' || error.name === 'FirebaseTokenError') {
@@ -1128,7 +1165,8 @@ export const loginWithPhoneAndPassword = asyncHandler(async (req: Request, res: 
 
   res.json({
     success: true,
-    data: { // ✅ Make sure you have the 'data' property
+    data: {
+      // ✅ Make sure you have the 'data' property
       token,
       user: {
         id: user._id,
@@ -1141,7 +1179,7 @@ export const loginWithPhoneAndPassword = asyncHandler(async (req: Request, res: 
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-      }
-    }
+      },
+    },
   });
 });

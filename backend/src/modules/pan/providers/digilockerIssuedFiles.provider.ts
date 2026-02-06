@@ -1,13 +1,16 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
 import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
-import { DigilockerIssuedFilesRequest, DigilockerIssuedFilesResponse } from '../../../common/types/pan';
+import {
+  DigilockerIssuedFilesRequest,
+  DigilockerIssuedFilesResponse,
+} from '../../../common/types/pan';
 
 const digilockerApiClient = axios.create({
   baseURL: process.env.GRIDLINES_BASE_URL,
   timeout: 10000,
   headers: {
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'Content-Type': 'application/json',
     'X-API-Key': process.env.GRIDLINES_API_KEY || '',
     'X-Auth-Type': 'API-Key',
@@ -15,7 +18,7 @@ const digilockerApiClient = axios.create({
 });
 
 export async function digilockerIssuedFilesProvider(
-  payload: DigilockerIssuedFilesRequest
+  payload: DigilockerIssuedFilesRequest,
 ): Promise<DigilockerIssuedFilesResponse> {
   try {
     const headers: any = {
@@ -36,11 +39,13 @@ export async function digilockerIssuedFilesProvider(
       config: {
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL
-      }
+        baseURL: error.config?.baseURL,
+      },
     });
 
-    const { message, statusCode } = createStandardErrorMapper('Digilocker Issued Files fetch failed')(error);
+    const { message, statusCode } = createStandardErrorMapper(
+      'Digilocker Issued Files fetch failed',
+    )(error);
     throw new HTTPError(message, statusCode, error.response?.data);
   }
-} 
+}

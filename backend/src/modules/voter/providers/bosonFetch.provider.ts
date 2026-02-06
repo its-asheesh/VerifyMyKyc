@@ -1,8 +1,13 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 import { HTTPError } from '../../../common/http/error';
 import { VoterBosonFetchRequest, VoterBosonFetchResponse } from '../../../common/types/voter';
 
-export async function voterBosonFetchProvider(payload: VoterBosonFetchRequest): Promise<VoterBosonFetchResponse> {
+export async function voterBosonFetchProvider(
+  payload: VoterBosonFetchRequest,
+): Promise<VoterBosonFetchResponse> {
   // Validation
   if (payload.consent !== 'Y') {
     throw new HTTPError('Consent is required to fetch Voter details', 400);
@@ -17,6 +22,6 @@ export async function voterBosonFetchProvider(payload: VoterBosonFetchRequest): 
     endpoint: '/voter-api/boson/fetch',
     payload,
     operationName: 'Voter Boson Fetch',
-    customErrorMapper: createStandardErrorMapper('Fetch Voter details (Boson) failed')
+    customErrorMapper: createStandardErrorMapper('Fetch Voter details (Boson) failed'),
   });
 }

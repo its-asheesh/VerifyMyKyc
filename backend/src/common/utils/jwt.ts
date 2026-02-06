@@ -13,21 +13,21 @@ export const generateToken = (user: IUser): string => {
   const payload: JWTPayload = {
     userId: (user._id as any).toString(),
     email: user.email || '',
-    role: user.role
+    role: user.role,
   };
 
   // For now, create a simple token (replace with actual JWT)
   const tokenData = Buffer.from(JSON.stringify(payload)).toString('base64');
   const timestamp = Date.now();
   const signature = Buffer.from(`${JWT_SECRET}${timestamp}`).toString('base64');
-  
+
   return `${tokenData}.${timestamp}.${signature}`;
 };
 
 export const verifyToken = (token: string): JWTPayload => {
   try {
     const [tokenData, timestamp, signature] = token.split('.');
-    
+
     if (!tokenData || !timestamp || !signature) {
       throw new Error('Invalid token format');
     }
@@ -43,7 +43,7 @@ export const verifyToken = (token: string): JWTPayload => {
     const tokenTime = parseInt(timestamp);
     const currentTime = Date.now();
     const expirationMs = 15 * 24 * 60 * 60 * 1000;
-    
+
     if (currentTime - tokenTime > expirationMs) {
       console.error('Token expired:', { tokenTime, currentTime });
       throw new Error('Token expired');
@@ -61,6 +61,6 @@ export const extractTokenFromHeader = (authHeader: string): string => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new Error('No token provided');
   }
-  
+
   return authHeader.substring(7); // Remove 'Bearer ' prefix
-}; 
+};

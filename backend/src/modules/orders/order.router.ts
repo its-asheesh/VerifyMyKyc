@@ -15,7 +15,6 @@ import { authenticate, requireAdmin, requireUser } from '../../common/middleware
 import { verifyPayment } from './verifyPayment';
 import { handleRazorpayWebhook } from './razorpay.webhook';
 
-
 const router = Router();
 
 // Admin routes (require admin role) - Must come before parameterized routes
@@ -39,4 +38,4 @@ router.get('/:orderId', authenticate, requireUser, getOrderById);
 router.put('/:orderId/cancel', authenticate, requireUser, cancelOrder);
 router.put('/:orderId/status', authenticate, requireAdmin, updateOrderStatus);
 
-export default router; 
+export default router;

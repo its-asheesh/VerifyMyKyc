@@ -5,4 +5,4 @@ export class EChallanService {
   async fetch(payload: EChallanFetchRequest) {
     return fetchEChallanProvider(payload);
   }
-} 
+}

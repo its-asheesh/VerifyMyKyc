@@ -1,7 +1,15 @@
 import { Router } from 'express';
-import { verifyBankAccountHandler, verifyIfscHandler, verifyUpiHandler } from './bankaccount.controller';
+import {
+  verifyBankAccountHandler,
+  verifyIfscHandler,
+  verifyUpiHandler,
+} from './bankaccount.controller';
 import { validate } from '../../common/validation/middleware';
-import { bankAccountVerifySchema, ifscValidateSchema, upiVerifySchema } from '../../common/validation/schemas';
+import {
+  bankAccountVerifySchema,
+  ifscValidateSchema,
+  upiVerifySchema,
+} from '../../common/validation/schemas';
 
 const router = Router();
 
@@ -18,5 +26,3 @@ router.post('/verify-ifsc', validate(ifscValidateSchema), verifyIfscHandler);
 router.post('/verify-upi', validate(upiVerifySchema), verifyUpiHandler);
 
 export default router;
-
-

@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getAnalyticsOverview, getAnalyticsByDateRange, getRecentActivity } from './analytics.controller';
+import {
+  getAnalyticsOverview,
+  getAnalyticsByDateRange,
+  getRecentActivity,
+} from './analytics.controller';
 import { authenticate, requireAdmin } from '../../common/middleware/auth';
 
 const router = Router();
@@ -16,4 +20,4 @@ router.get('/date-range', getAnalyticsByDateRange);
 // Get recent activity
 router.get('/recent-activity', getRecentActivity);
 
-export default router; 
+export default router;

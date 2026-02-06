@@ -12,7 +12,13 @@ export class AadhaarService {
   }
 
   // For file upload OCR (V2) - Legacy
-  async ocrV2(file_front: Buffer, file_front_name: string, consent: string, file_back?: Buffer, file_back_name?: string) {
+  async ocrV2(
+    file_front: Buffer,
+    file_front_name: string,
+    consent: string,
+    file_back?: Buffer,
+    file_back_name?: string,
+  ) {
     return aadhaarOcrV2Provider(file_front, file_front_name, consent, file_back, file_back_name);
   }
 

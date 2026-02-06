@@ -22,7 +22,12 @@ router.post('/rc/fetch-lite', authenticate, requireUser, fetchRcLiteHandler);
 router.post('/rc/fetch-detailed', authenticate, requireUser, fetchRcDetailedHandler);
 
 // Fetch RC details with linked challans
-router.post('/rc/fetch-detailed-challan', authenticate, requireUser, fetchRcDetailedWithChallanHandler);
+router.post(
+  '/rc/fetch-detailed-challan',
+  authenticate,
+  requireUser,
+  fetchRcDetailedWithChallanHandler,
+);
 
 // Fetch e-challan details by RC, chassis, and engine number
 router.post('/challan/fetch', authenticate, requireUser, fetchEChallanHandler);

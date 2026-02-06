@@ -10,4 +10,4 @@ export interface EChallanFetchResponse {
   message: string;
   challan_details?: any;
   [key: string]: any;
-} 
+}

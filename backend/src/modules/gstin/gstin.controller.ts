@@ -18,25 +18,35 @@ class GstinController extends BaseController {
   // POST /api/gstin/fetch-lite
   // Expects body: { gstin: string, consent: string }
   fetchGstinLiteHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'gstin',
-      requireConsent: true,
-      requiredFields: ['gstin']
-    }, async () => {
-      return service.fetchLite(req.body);
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'gstin',
+        requireConsent: true,
+        requiredFields: ['gstin'],
+      },
+      async () => {
+        return service.fetchLite(req.body);
+      },
+    );
   });
 
   // POST /api/gstin/fetch-contact
   // Expects body: { gstin: string, consent: string }
   fetchGstinContactHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'gstin',
-      requireConsent: true,
-      requiredFields: ['gstin']
-    }, async () => {
-      return service.fetchContact(req.body);
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'gstin',
+        requireConsent: true,
+        requiredFields: ['gstin'],
+      },
+      async () => {
+        return service.fetchContact(req.body);
+      },
+    );
   });
 }
 

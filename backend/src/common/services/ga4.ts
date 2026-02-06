@@ -21,7 +21,7 @@ function postJSON(url: string, data: any): Promise<void> {
           // Drain response; we don't need body
           res.on('data', () => {});
           res.on('end', () => resolve());
-        }
+        },
       );
       req.on('error', () => resolve());
       req.write(payload);
@@ -35,7 +35,7 @@ function postJSON(url: string, data: any): Promise<void> {
 export async function sendGaEvent(
   userId: string | undefined,
   name: string,
-  params: GaParams = {}
+  params: GaParams = {},
 ): Promise<void> {
   const measurementId = process.env.GA4_MEASUREMENT_ID;
   const apiSecret = process.env.GA4_API_SECRET;
@@ -56,5 +56,3 @@ export async function sendGaEvent(
   const url = `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`;
   await postJSON(url, body);
 }
-
-

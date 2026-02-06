@@ -1,6 +1,6 @@
-import mongoose from 'mongoose'
-import { Order } from './order.model'
-import { HTTPError } from '../../common/http/error'
+import mongoose from 'mongoose';
+import { Order } from './order.model';
+import { HTTPError } from '../../common/http/error';
 
 /**
  * Find an eligible verification order for a user and verification type.
@@ -8,9 +8,9 @@ import { HTTPError } from '../../common/http/error'
  */
 export async function findEligibleVerificationOrder(
   userId: mongoose.Types.ObjectId | string,
-  verificationType: string
+  verificationType: string,
 ) {
-  const now = new Date()
+  const now = new Date();
   return Order.findOne({
     userId,
     orderType: 'verification',
@@ -24,7 +24,7 @@ export async function findEligibleVerificationOrder(
     ],
   })
     .sort({ 'verificationQuota.expiresAt': 1, endDate: 1, createdAt: 1 })
-    .exec()
+    .exec();
 }
 
 /**
@@ -32,23 +32,23 @@ export async function findEligibleVerificationOrder(
  */
 export async function ensureVerificationQuota(
   userId: mongoose.Types.ObjectId | string,
-  verificationType: string
+  verificationType: string,
 ) {
-  return findEligibleVerificationOrder(userId, verificationType)
+  return findEligibleVerificationOrder(userId, verificationType);
 }
 
 /**
  * Consume one verification from the provided order.
  */
 export async function consumeVerificationQuota(order: any) {
-  if (!order) throw new Error('Order not provided')
+  if (!order) throw new Error('Order not provided');
   try {
-    await order.useVerification()
+    await order.useVerification();
   } catch (err: any) {
     // Normalize quota errors to 403 instead of generic 500
     if (typeof err?.message === 'string' && err.message.includes('Verification quota exhausted')) {
-      throw new HTTPError('Verification quota exhausted or expired', 403)
+      throw new HTTPError('Verification quota exhausted or expired', 403);
     }
-    throw err
+    throw err;
   }
 }

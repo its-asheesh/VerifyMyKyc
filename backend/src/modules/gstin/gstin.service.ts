@@ -1,10 +1,7 @@
 import { fetchGstinByPanProvider } from './providers/fetchByPan.provider';
 import { fetchGstinLiteProvider } from './providers/fetchLite.provider';
 import { fetchGstinContactProvider } from './providers/fetchContact.provider';
-import { 
-  GstinByPanRequest, 
-  GstinContactRequest 
-} from '../../common/types/pan';
+import { GstinByPanRequest, GstinContactRequest } from '../../common/types/pan';
 
 import { FetchGstinLiteRequest } from '../../common/types/gst';
 

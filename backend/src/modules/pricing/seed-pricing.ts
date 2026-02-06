@@ -1,17 +1,17 @@
-import dotenv from 'dotenv'
-import { connectDB } from '../../config/db'
-import { VerificationPricing, HomepagePlan } from './pricing.model'
+import dotenv from 'dotenv';
+import { connectDB } from '../../config/db';
+import { VerificationPricing, HomepagePlan } from './pricing.model';
 
 // Load environment variables
-dotenv.config()
+dotenv.config();
 
 const seedPricingData = async () => {
   try {
-    await connectDB()
+    await connectDB();
 
     // Clear existing data
-    await VerificationPricing.deleteMany({})
-    await HomepagePlan.deleteMany({})
+    await VerificationPricing.deleteMany({});
+    await HomepagePlan.deleteMany({});
 
     // Seed verification pricing
     const verificationPricingData = [
@@ -20,56 +20,40 @@ const seedPricingData = async () => {
         oneTimePrice: 99,
         title: 'Aadhaar Verification',
         description: 'Complete Aadhaar verification services',
-        oneTimeFeatures: [
-          'OCR Data Extraction',
-          'Basic Verification',
-          'Email Support'
-        ],
+        oneTimeFeatures: ['OCR Data Extraction', 'Basic Verification', 'Email Support'],
         highlighted: true,
         popular: true,
-        color: 'blue'
+        color: 'blue',
       },
       {
         verificationType: 'pan',
         oneTimePrice: 79,
         title: 'PAN Verification',
         description: 'Comprehensive PAN verification services',
-        oneTimeFeatures: [
-          'PAN Data Validation',
-          'Basic Verification',
-          'Email Support'
-        ],
+        oneTimeFeatures: ['PAN Data Validation', 'Basic Verification', 'Email Support'],
         highlighted: false,
         popular: true,
-        color: 'green'
+        color: 'green',
       },
       {
         verificationType: 'drivinglicense',
         oneTimePrice: 89,
         title: 'Driving License Verification',
         description: 'Driving license verification and OCR services',
-        oneTimeFeatures: [
-          'OCR Data Extraction',
-          'Basic Verification',
-          'Email Support'
-        ],
+        oneTimeFeatures: ['OCR Data Extraction', 'Basic Verification', 'Email Support'],
         highlighted: false,
         popular: false,
-        color: 'purple'
+        color: 'purple',
       },
       {
         verificationType: 'gstin',
         oneTimePrice: 69,
         title: 'GSTIN Verification',
         description: 'GSTIN verification and business data services',
-        oneTimeFeatures: [
-          'GSTIN Validation',
-          'Basic Business Details',
-          'Email Support'
-        ],
+        oneTimeFeatures: ['GSTIN Validation', 'Basic Business Details', 'Email Support'],
         highlighted: false,
         popular: false,
-        color: 'orange'
+        color: 'orange',
       },
       {
         verificationType: 'voterid',
@@ -80,13 +64,13 @@ const seedPricingData = async () => {
           'Direct Fetch (Boson)',
           'Captcha Flow (Meson)',
           'OCR Data Extraction',
-          'Email Support'
+          'Email Support',
         ],
         // Quotas for display in UI
         oneTimeQuota: { count: 1, validityDays: 30 },
         highlighted: false,
         popular: true,
-        color: 'indigo'
+        color: 'indigo',
       },
       {
         verificationType: 'company',
@@ -97,27 +81,23 @@ const seedPricingData = async () => {
           'MCA Company Details',
           'CIN Lookup',
           'Directors (DIN) Lookup',
-          'Email Support'
+          'Email Support',
         ],
         oneTimeQuota: { count: 1, validityDays: 30 },
         highlighted: false,
         popular: false,
-        color: 'emerald'
+        color: 'emerald',
       },
       {
         verificationType: 'vehicle',
         oneTimePrice: 99,
         title: 'RC Verification',
         description: 'Vehicle RC, eChallan and FASTag verification',
-        oneTimeFeatures: [
-          'Fetch RC Lite',
-          'Basic Verification',
-          'Email Support'
-        ],
+        oneTimeFeatures: ['Fetch RC Lite', 'Basic Verification', 'Email Support'],
         oneTimeQuota: { count: 10, validityDays: 30 },
         highlighted: false,
         popular: true,
-        color: 'cyan'
+        color: 'cyan',
       },
       {
         verificationType: 'ccrv',
@@ -128,13 +108,13 @@ const seedPricingData = async () => {
           'Generate CCRV Report',
           'Search CCRV Records',
           'Fetch Verification Results',
-          'Email Support'
+          'Email Support',
         ],
         // Quotas for display in UI
         oneTimeQuota: { count: 1, validityDays: 30 },
         highlighted: false,
         popular: true,
-        color: 'indigo'
+        color: 'indigo',
       },
       {
         verificationType: 'epfo',
@@ -144,16 +124,16 @@ const seedPricingData = async () => {
         oneTimeFeatures: [
           'Fetch UAN by Mobile/PAN',
           'Employment History by UAN',
-          'Employer Verification'
+          'Employer Verification',
         ],
         highlighted: false,
         popular: true,
-        color: 'rose'
+        color: 'rose',
       },
-    ]
+    ];
 
-    await VerificationPricing.insertMany(verificationPricingData)
-    console.log('✅ Verification pricing seeded successfully')
+    await VerificationPricing.insertMany(verificationPricingData);
+    console.log('✅ Verification pricing seeded successfully');
 
     // Seed homepage plans
     const homepagePlansData = [
@@ -169,12 +149,12 @@ const seedPricingData = async () => {
           '100 GB Free Storage',
           'Unlimited Visitors',
           '10 Agents',
-          'Live Chat Support'
+          'Live Chat Support',
         ],
         highlighted: false,
         popular: false,
         color: 'blue',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc'],
       },
       {
         planType: 'yearly',
@@ -188,12 +168,12 @@ const seedPricingData = async () => {
           'Unlimited Visitors',
           '10 Agents',
           'Live Chat Support',
-          '2 Months Free'
+          '2 Months Free',
         ],
         highlighted: false,
         popular: false,
         color: 'blue',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc'],
       },
 
       // Professional Plans
@@ -209,12 +189,12 @@ const seedPricingData = async () => {
           'Unlimited Visitors',
           '50 Agents',
           'Priority Live Chat Support',
-          'Advanced Analytics'
+          'Advanced Analytics',
         ],
         highlighted: false,
         popular: true,
         color: 'purple',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc'],
       },
       {
         planType: 'yearly',
@@ -229,12 +209,12 @@ const seedPricingData = async () => {
           '50 Agents',
           'Priority Live Chat Support',
           'Advanced Analytics',
-          '2 Months Free'
+          '2 Months Free',
         ],
         highlighted: false,
         popular: true,
         color: 'purple',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc'],
       },
 
       // Business Plans
@@ -251,12 +231,12 @@ const seedPricingData = async () => {
           'Unlimited Agents',
           '24/7 Priority Support',
           'Advanced Analytics',
-          'Custom Integrations'
+          'Custom Integrations',
         ],
         highlighted: true,
         popular: false,
         color: 'green',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc'],
       },
       {
         planType: 'yearly',
@@ -272,25 +252,25 @@ const seedPricingData = async () => {
           '24/7 Priority Support',
           'Advanced Analytics',
           'Custom Integrations',
-          '2 Months Free'
+          '2 Months Free',
         ],
         highlighted: true,
         popular: false,
         color: 'green',
-        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc']
-      }
-    ]
+        includesVerifications: ['aadhaar', 'pan', 'drivinglicense', 'gstin', 'rc'],
+      },
+    ];
 
-    await HomepagePlan.insertMany(homepagePlansData)
-    console.log('✅ Homepage plans seeded successfully')
+    await HomepagePlan.insertMany(homepagePlansData);
+    console.log('✅ Homepage plans seeded successfully');
 
-    console.log('🎉 All pricing data seeded successfully!')
-    process.exit(0)
+    console.log('🎉 All pricing data seeded successfully!');
+    process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding pricing data:', error)
-    process.exit(1)
+    console.error('❌ Error seeding pricing data:', error);
+    process.exit(1);
   }
-}
+};
 
 // Run the seed function
-seedPricingData() 
+seedPricingData();

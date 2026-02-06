@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { logger } from './src/common/utils/logger';
 dotenv.config();
 import express from 'express';
 import cors from 'cors';
@@ -12,8 +13,20 @@ connectDB();
 const app = express();
 
 // ✅ CORS — allow multiple origins incl. localhost; can override via CORS_ORIGINS env
-const defaultOrigins = ['https://verifymykyc.com', 'https://www.verifymykyc.com', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'https://admin.verifymykyc.com', 'https://fanglike-santa-boredly.ngrok-free.dev/'];
-const envOrigins = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const defaultOrigins = [
+  'https://verifymykyc.com',
+  'https://www.verifymykyc.com',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://admin.verifymykyc.com',
+  'https://fanglike-santa-boredly.ngrok-free.dev/',
+];
+const envOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
 const corsOptions: cors.CorsOptions = {
@@ -40,14 +53,16 @@ app.use('/api', router);
 
 // Global error handler middleware for logging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('GLOBAL ERROR HANDLER:', {
+  logger.error('GLOBAL ERROR HANDLER:', {
     message: err.message,
     stack: err.stack,
     responseData: err.response?.data,
     status: err.status,
     statusCode: err.statusCode,
     details: err.details,
-    fullError: err
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
   });
 
   // Use status from HTTPError or default to 500
@@ -56,7 +71,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(status).json({
     message: err.message || 'Internal Server Error',
     ...(err.details ? { details: err.details } : {}),
-    ...(err.response?.data ? { apiError: err.response.data } : {})
+    ...(err.response?.data ? { apiError: err.response.data } : {}),
   });
 });
 

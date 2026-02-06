@@ -13,42 +13,57 @@ class AadhaarController extends BaseController {
   aadhaarOcrV1Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { base64_data, consent } = req.body;
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'aadhaar',
-      requireConsent: true,
-      requiredFields: ['base64_data']
-    }, async () => {
-      return service.ocrV1(base64_data, consent);
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'aadhaar',
+        requireConsent: true,
+        requiredFields: ['base64_data'],
+      },
+      async () => {
+        return service.ocrV1(base64_data, consent);
+      },
+    );
   });
 
   // POST /api/aadhaar/ocr-v2
   aadhaarOcrV2Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    await this.handleFileUploadRequest(req, res, {
-      verificationType: 'aadhaar',
-      requireConsent: true
-    }, async (files) => {
-      const { consent } = req.body;
-      return service.ocrV2(
-        files.file_front.buffer,
-        files.file_front.originalname,
-        consent,
-        files.file_back?.buffer,
-        files.file_back?.originalname
-      );
-    });
+    await this.handleFileUploadRequest(
+      req,
+      res,
+      {
+        verificationType: 'aadhaar',
+        requireConsent: true,
+      },
+      async (files) => {
+        const { consent } = req.body;
+        return service.ocrV2(
+          files.file_front.buffer,
+          files.file_front.originalname,
+          consent,
+          files.file_back?.buffer,
+          files.file_back?.originalname,
+        );
+      },
+    );
   });
 
   // POST /api/aadhaar/e-aadhaar
   fetchEAadhaarHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { transaction_id, json } = req.body;
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'aadhaar',
-      requiredFields: ['transaction_id']
-    }, async () => {
-      return service.fetchEAadhaar({ transaction_id, json });
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'aadhaar',
+        requiredFields: ['transaction_id'],
+      },
+      async () => {
+        return service.fetchEAadhaar({ transaction_id, json });
+      },
+    );
   });
 
   // POST /api/aadhaar/v2/generate-otp - QuickEKYC Aadhaar V2
@@ -85,7 +100,7 @@ class AadhaarController extends BaseController {
 
       // Log request
       this.logRequest('Aadhaar V2 Generate OTP', userId, {
-        aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X')
+        aadhaar_number: id_number.replace(/.(?=.{4})/g, 'X'),
       });
 
       // Generate OTP without consuming quota
@@ -93,12 +108,14 @@ class AadhaarController extends BaseController {
       res.json(result);
     } catch (error: any) {
       // Log error for debugging
+      /*
       console.error('Aadhaar V2 Generate OTP Handler Error:', {
         message: error?.message,
         stack: error?.stack,
         status: error?.status,
         response: error?.response?.data
       });
+      */
 
       // Re-throw to let asyncHandler handle it properly
       throw error;

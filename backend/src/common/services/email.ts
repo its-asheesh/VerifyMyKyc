@@ -35,7 +35,9 @@ export async function sendEmail(to: string, subject: string, html: string) {
   if (smtpHost) {
     try {
       console.log(`[Email Service] Attempting to send email to: ${to}, subject: "${subject}"`);
-      console.log(`[Email Service] Using configuration: Host=${smtpHost}, Port=${smtpPort}, Secure=${smtpPort === 465}, User=${smtpUser ? '***' : 'None'}`);
+      console.log(
+        `[Email Service] Using configuration: Host=${smtpHost}, Port=${smtpPort}, Secure=${smtpPort === 465}, User=${smtpUser ? '***' : 'None'}`,
+      );
 
       const info = await mailer.sendMail({
         from: fromEmail,
@@ -55,13 +57,15 @@ export async function sendEmail(to: string, subject: string, html: string) {
         code: err?.code,
         command: err?.command,
         response: err?.response,
-        stack: err?.stack
+        stack: err?.stack,
       });
       throw err;
     }
   }
 
-  throw new Error('Email configuration missing. Set GMAIL_DELEGATED_USER (for Gmail API) or SMTP_HOST/SMTP_USER/etc (for SMTP).');
+  throw new Error(
+    'Email configuration missing. Set GMAIL_DELEGATED_USER (for Gmail API) or SMTP_HOST/SMTP_USER/etc (for SMTP).',
+  );
 }
 
 export function buildOtpEmailHtml(name: string, code: string) {
@@ -75,5 +79,3 @@ export function buildOtpEmailHtml(name: string, code: string) {
     <p style="margin-top:24px; color:#6b7280;">Thanks,<br/>VerifyMyKyc Team</p>
   </div>`;
 }
-
-

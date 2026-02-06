@@ -39,5 +39,3 @@ export class EpfoService {
     return employerVerifyProvider(payload);
   }
 }
-
-

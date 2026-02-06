@@ -1,4 +1,7 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 import { VoterMesonInitResponse } from '../../../common/types/voter';
 
 export async function voterMesonInitProvider(): Promise<VoterMesonInitResponse> {
@@ -7,6 +10,6 @@ export async function voterMesonInitProvider(): Promise<VoterMesonInitResponse> 
     payload: {},
     operationName: 'Voter Meson Init',
     method: 'GET',
-    customErrorMapper: createStandardErrorMapper('Voter Meson init failed')
+    customErrorMapper: createStandardErrorMapper('Voter Meson init failed'),
   });
 }

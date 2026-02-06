@@ -1,6 +1,10 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { ensureVerificationQuota, consumeVerificationQuota } from '../../modules/orders/quota.service';
+import {
+  ensureVerificationQuota,
+  consumeVerificationQuota,
+} from '../../modules/orders/quota.service';
+import { logger } from '../utils/logger';
 
 export interface FileUploadData {
   file_front: Express.Multer.File;
@@ -27,22 +31,22 @@ export abstract class BaseController {
     req: AuthenticatedRequest,
     res: Response,
     options: VerificationRequestOptions,
-    serviceMethod: () => Promise<T>
+    serviceMethod: () => Promise<T>,
   ): Promise<void> {
     const userId = req.user._id;
-    
+
     // Try primary verification type first, then fallbacks
     let order = await ensureVerificationQuota(userId, options.verificationType);
-    
+
     if (!order && options.fallbackTypes) {
       for (const fallbackType of options.fallbackTypes) {
         order = await ensureVerificationQuota(userId, fallbackType);
         if (order) break;
       }
     }
-    
+
     if (!order) {
-      const fallbackMessage = options.fallbackTypes 
+      const fallbackMessage = options.fallbackTypes
         ? `Verification quota exhausted or expired for ${options.verificationType} or ${options.fallbackTypes.join(', ')}`
         : 'Verification quota exhausted or expired';
       res.status(403).json({ message: fallbackMessage });
@@ -51,10 +55,10 @@ export abstract class BaseController {
 
     // Validate required fields if specified
     if (options.requiredFields) {
-      const missingFields = options.requiredFields.filter(field => !req.body[field]);
+      const missingFields = options.requiredFields.filter((field) => !req.body[field]);
       if (missingFields.length > 0) {
-        res.status(400).json({ 
-          message: `${missingFields.join(', ')} are required` 
+        res.status(400).json({
+          message: `${missingFields.join(', ')} are required`,
         });
         return;
       }
@@ -83,7 +87,7 @@ export abstract class BaseController {
     req: AuthenticatedRequest,
     res: Response,
     options: VerificationRequestOptions,
-    serviceMethod: (files: FileUploadData) => Promise<T>
+    serviceMethod: (files: FileUploadData) => Promise<T>,
   ): Promise<void> {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
     const file_front = files?.file_front?.[0];
@@ -95,7 +99,7 @@ export abstract class BaseController {
     }
 
     return this.handleVerificationRequest(req, res, options, () =>
-      serviceMethod({ file_front, file_back })
+      serviceMethod({ file_front, file_back }),
     );
   }
 
@@ -107,7 +111,7 @@ export abstract class BaseController {
     req: AuthenticatedRequest,
     res: Response,
     verificationType: string,
-    serviceMethod: () => Promise<T>
+    serviceMethod: () => Promise<T>,
   ): Promise<void> {
     return this.handleVerificationRequest(req, res, { verificationType }, serviceMethod);
   }
@@ -121,12 +125,17 @@ export abstract class BaseController {
     res: Response,
     primaryType: string,
     fallbackTypes: string[],
-    serviceMethod: () => Promise<T>
+    serviceMethod: () => Promise<T>,
   ): Promise<void> {
-    return this.handleVerificationRequest(req, res, {
-      verificationType: primaryType,
-      fallbackTypes
-    }, serviceMethod);
+    return this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: primaryType,
+        fallbackTypes,
+      },
+      serviceMethod,
+    );
   }
 
   /**
@@ -134,7 +143,7 @@ export abstract class BaseController {
    * Maintains existing validation patterns
    */
   protected validateRequiredFields(req: any, fields: string[]): string | null {
-    const missingFields = fields.filter(field => !req.body[field]);
+    const missingFields = fields.filter((field) => !req.body[field]);
     return missingFields.length > 0 ? `${missingFields.join(', ')} are required` : null;
   }
 
@@ -146,7 +155,7 @@ export abstract class BaseController {
     return {
       success: true,
       ...(message && { message }),
-      ...(data && { data })
+      ...(data && { data }),
     };
   }
 
@@ -154,10 +163,14 @@ export abstract class BaseController {
    * Logs request details for debugging
    * Maintains existing logging patterns
    */
+  /**
+   * Logs request details for debugging
+   * Maintains existing logging patterns
+   */
   protected logRequest(operationName: string, userId: string, additionalData?: any) {
-    console.log(`${operationName} Controller: incoming request`, {
+    logger.info(`${operationName} Controller: incoming request`, {
       userId,
-      ...additionalData
+      ...additionalData,
     });
   }
 
@@ -166,7 +179,7 @@ export abstract class BaseController {
    * Maintains existing quota logging patterns
    */
   protected logQuotaConsumption(order: any, operationName: string) {
-    console.log(`${operationName} Controller: consumed 1 verification`, {
+    logger.info(`${operationName} Controller: consumed 1 verification`, {
       orderId: order.orderId,
       newRemaining: order?.verificationQuota?.remaining,
     });

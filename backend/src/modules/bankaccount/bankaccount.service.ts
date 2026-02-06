@@ -1,10 +1,10 @@
-import { 
-  BankAccountVerifyRequest, 
+import {
+  BankAccountVerifyRequest,
   BankAccountVerifyResponse,
   IfscValidateRequest,
   IfscValidateResponse,
   UpiVerifyRequest,
-  UpiVerifyResponse
+  UpiVerifyResponse,
 } from '../../common/types/bank';
 import { verifyBankAccountProvider } from './providers/verify.provider';
 import { verifyIfscProvider } from './providers/verify-ifsc.provider';
@@ -23,5 +23,3 @@ export class BankAccountService {
     return verifyUpiProvider(payload);
   }
 }
-
-

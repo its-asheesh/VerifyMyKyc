@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
 import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import { logger } from '../../../common/utils/logger';
 
 export interface SubmitOtpV2Request {
   request_id: string | number;
@@ -48,7 +49,7 @@ export interface SubmitOtpV2Response {
  * Submit OTP for Aadhaar V2 verification using QuickEKYC API
  */
 export async function submitOtpV2Provider(
-  payload: SubmitOtpV2Request
+  payload: SubmitOtpV2Request,
 ): Promise<SubmitOtpV2Response> {
   const apiKey = process.env.QUICKEKYC_API_KEY;
   const baseURL = process.env.QUICKEKYC_BASE_URL || 'https://api.quickekyc.com';
@@ -58,11 +59,7 @@ export async function submitOtpV2Provider(
   }
 
   try {
-    console.log('Aadhaar V2 Submit OTP Request:', {
-      request_id: payload.request_id,
-      has_otp: !!payload.otp,
-      url: `${baseURL}/api/v1/aadhaar-v2/submit-otp`,
-    });
+    logger.info(`[Aadhaar V2] Submitting OTP for RequestID: ${payload.request_id}`);
 
     const response = await axios.post<SubmitOtpV2Response>(
       `${baseURL}/api/v1/aadhaar-v2/submit-otp`,
@@ -77,15 +74,20 @@ export async function submitOtpV2Provider(
           'Content-Type': 'application/json',
         },
         timeout: 30000,
-      }
+      },
     );
 
+    logger.info(
+      `[Aadhaar V2] Submit OTP Response: Status ${response.status}, RequestID: ${response.data.request_id || 'N/A'}, Success: ${response.data.status === 'success'}`,
+    );
+    /*
     console.log('Aadhaar V2 Submit OTP Response:', {
       status: response.status,
       success: response.data.status === 'success',
       has_data: !!response.data.data,
       request_id: response.data.request_id,
     });
+    */
 
     // Handle API errors (200 OK with error status)
     if (response.data.status === 'error') {
@@ -94,14 +96,14 @@ export async function submitOtpV2Provider(
         throw new HTTPError(
           'An error occurred while verifying OTP. Please try again.',
           502,
-          response.data
+          response.data,
         );
       }
 
       throw new HTTPError(
         response.data.message || 'QuickEKYC API Error',
         response.data.status_code || 502,
-        response.data
+        response.data,
       );
     }
 
@@ -123,7 +125,7 @@ export async function submitOtpV2Provider(
       throw new HTTPError(
         'Upstream service authentication failed. Please contact support.',
         502,
-        error.response?.data
+        error.response?.data,
       );
     }
 
@@ -132,12 +134,13 @@ export async function submitOtpV2Provider(
       throw new HTTPError(
         error.response.data.message || 'Invalid OTP or request ID',
         400,
-        error.response.data
+        error.response.data,
       );
     }
 
-    const { message, statusCode } = createStandardErrorMapper('Aadhaar V2 OTP submission failed')(error);
+    const { message, statusCode } = createStandardErrorMapper('Aadhaar V2 OTP submission failed')(
+      error,
+    );
     throw new HTTPError(message, statusCode, error.response?.data);
   }
 }
-

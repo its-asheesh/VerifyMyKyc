@@ -8,9 +8,8 @@ router.get('/health', (req: Request, res: Response) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    message: 'Server is running'
+    message: 'Server is running',
   });
 });
 
 export default router;
-

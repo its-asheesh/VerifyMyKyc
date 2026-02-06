@@ -22,7 +22,7 @@ export class VoterService {
     file_front_name: string,
     consent: string,
     file_back?: Buffer,
-    file_back_name?: string
+    file_back_name?: string,
   ) {
     return voterOcrProvider(file_front, file_front_name, consent, file_back, file_back_name);
   }

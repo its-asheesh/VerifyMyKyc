@@ -11,10 +11,10 @@ export const validate = (schema: ZodSchema) => {
     try {
       // Validate request body
       const validatedData = await schema.parseAsync(req.body);
-      
+
       // Replace request body with validated data (sanitized)
       req.body = validatedData;
-      
+
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -107,7 +107,7 @@ export const validateParams = (schema: ZodSchema) => {
  */
 export const safeValidate = async (
   schema: ZodSchema,
-  data: any
+  data: any,
 ): Promise<{ success: boolean; data?: any; errors?: any }> => {
   try {
     const validatedData = await schema.parseAsync(data);
@@ -129,4 +129,3 @@ export const safeValidate = async (
     };
   }
 };
-

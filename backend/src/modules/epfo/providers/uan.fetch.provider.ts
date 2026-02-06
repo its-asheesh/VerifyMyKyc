@@ -1,6 +1,13 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 
-export async function fetchUanProvider(payload: { mobile_number: string; pan?: string; consent: string }) {
+export async function fetchUanProvider(payload: {
+  mobile_number: string;
+  pan?: string;
+  consent: string;
+}) {
   const externalPayload = {
     mobile_number: payload.mobile_number,
     pan: payload.pan,
@@ -10,7 +17,6 @@ export async function fetchUanProvider(payload: { mobile_number: string; pan?: s
     endpoint: '/epfo-api/fetch-uan',
     payload: externalPayload,
     operationName: 'EPFO Fetch UAN',
-    customErrorMapper: createStandardErrorMapper('Fetch UAN failed')
+    customErrorMapper: createStandardErrorMapper('Fetch UAN failed'),
   });
 }
-

@@ -17,31 +17,44 @@ class PassportController extends BaseController {
       gender,
       date_of_birth,
       date_of_expiry,
-      consent
+      consent,
     } = req.body || {};
 
     this.logRequest('Generate MRZ', req.user._id.toString(), {
       country_code,
       passport_number,
-      surname
+      surname,
     });
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'passport',
-      requireConsent: true,
-      requiredFields: ['country_code', 'passport_number', 'surname', 'given_name', 'gender', 'date_of_birth', 'date_of_expiry']
-    }, async () => {
-      return service.generateMrz({
-        country_code,
-        passport_number,
-        surname,
-        given_name,
-        gender,
-        date_of_birth,
-        date_of_expiry,
-        consent,
-      });
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'passport',
+        requireConsent: true,
+        requiredFields: [
+          'country_code',
+          'passport_number',
+          'surname',
+          'given_name',
+          'gender',
+          'date_of_birth',
+          'date_of_expiry',
+        ],
+      },
+      async () => {
+        return service.generateMrz({
+          country_code,
+          passport_number,
+          surname,
+          given_name,
+          gender,
+          date_of_birth,
+          date_of_expiry,
+          consent,
+        });
+      },
+    );
   });
 
   // POST /api/passport/mrz/verify
@@ -56,66 +69,86 @@ class PassportController extends BaseController {
       date_of_expiry,
       mrz_first_line,
       mrz_second_line,
-      consent
+      consent,
     } = req.body || {};
 
     this.logRequest('Verify MRZ', req.user._id.toString(), {
       country_code,
       passport_number,
-      surname
+      surname,
     });
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'passport',
-      requireConsent: true,
-      requiredFields: ['country_code', 'passport_number', 'surname', 'given_name', 'gender', 'date_of_birth', 'date_of_expiry', 'mrz_first_line', 'mrz_second_line']
-    }, async () => {
-      return service.verifyMrz({
-        country_code,
-        passport_number,
-        surname,
-        given_name,
-        gender,
-        date_of_birth,
-        date_of_expiry,
-        mrz_first_line,
-        mrz_second_line,
-        consent,
-      });
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'passport',
+        requireConsent: true,
+        requiredFields: [
+          'country_code',
+          'passport_number',
+          'surname',
+          'given_name',
+          'gender',
+          'date_of_birth',
+          'date_of_expiry',
+          'mrz_first_line',
+          'mrz_second_line',
+        ],
+      },
+      async () => {
+        return service.verifyMrz({
+          country_code,
+          passport_number,
+          surname,
+          given_name,
+          gender,
+          date_of_birth,
+          date_of_expiry,
+          mrz_first_line,
+          mrz_second_line,
+          consent,
+        });
+      },
+    );
   });
 
   // POST /api/passport/verify
   verifyPassportHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const {
-      file_number,
-      passport_number,
-      surname,
-      given_name,
-      date_of_birth,
-      consent
-    } = req.body || {};
+    const { file_number, passport_number, surname, given_name, date_of_birth, consent } =
+      req.body || {};
 
     this.logRequest('Verify Passport', req.user._id.toString(), {
       file_number,
       passport_number,
-      surname
+      surname,
     });
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'passport',
-      requireConsent: true,
-      requiredFields: ['file_number', 'passport_number', 'surname', 'given_name', 'date_of_birth']
-    }, async () => {
-      return service.verifyPassport({
-        file_number,
-        passport_number,
-        surname,
-        given_name,
-        date_of_birth,
-        consent,
-      });
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'passport',
+        requireConsent: true,
+        requiredFields: [
+          'file_number',
+          'passport_number',
+          'surname',
+          'given_name',
+          'date_of_birth',
+        ],
+      },
+      async () => {
+        return service.verifyPassport({
+          file_number,
+          passport_number,
+          surname,
+          given_name,
+          date_of_birth,
+          consent,
+        });
+      },
+    );
   });
 
   // POST /api/passport/fetch
@@ -124,29 +157,34 @@ class PassportController extends BaseController {
 
     this.logRequest('Fetch Passport Details', req.user._id.toString(), {
       file_number,
-      date_of_birth
+      date_of_birth,
     });
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'passport',
-      requireConsent: true,
-      requiredFields: ['file_number', 'date_of_birth']
-    }, async () => {
-      return service.fetchPassportDetails({
-        file_number,
-        date_of_birth,
-        consent,
-      });
-    });
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'passport',
+        requireConsent: true,
+        requiredFields: ['file_number', 'date_of_birth'],
+      },
+      async () => {
+        return service.fetchPassportDetails({
+          file_number,
+          date_of_birth,
+          consent,
+        });
+      },
+    );
   });
 
   // POST /api/passport/ocr - Special handler with blob conversion
   extractPassportOcrDataHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { consent } = req.body;
-    
+
     // Handle multer files properly
     const files = req.files as any;
-    
+
     let file_front: any = undefined;
     let file_back: any = undefined;
 
@@ -160,7 +198,7 @@ class PassportController extends BaseController {
 
     if (!file_front || !consent) {
       return res.status(400).json({
-        message: 'file_front and consent are required'
+        message: 'file_front and consent are required',
       });
     }
 
@@ -170,26 +208,31 @@ class PassportController extends BaseController {
       hasConsent: Boolean(consent),
     });
 
-    await this.handleVerificationRequest(req, res, {
-      verificationType: 'passport'
-    }, async () => {
-      // Simplified buffer to blob conversion
-      const convertToBlob = (file: any): Blob => {
-        if (file.buffer instanceof Buffer) {
-          return new Blob([file.buffer], { type: file.mimetype });
-        } else if (file.buffer instanceof ArrayBuffer) {
-          return new Blob([file.buffer], { type: file.mimetype });
-        } else {
-          return new Blob([Buffer.from(file.buffer)], { type: file.mimetype });
-        }
-      };
+    await this.handleVerificationRequest(
+      req,
+      res,
+      {
+        verificationType: 'passport',
+      },
+      async () => {
+        // Simplified buffer to blob conversion
+        const convertToBlob = (file: any): Blob => {
+          if (file.buffer instanceof Buffer) {
+            return new Blob([file.buffer], { type: file.mimetype });
+          } else if (file.buffer instanceof ArrayBuffer) {
+            return new Blob([file.buffer], { type: file.mimetype });
+          } else {
+            return new Blob([Buffer.from(file.buffer)], { type: file.mimetype });
+          }
+        };
 
-      return service.extractPassportOcrData({
-        file_front: convertToBlob(file_front),
-        file_back: file_back ? convertToBlob(file_back) : undefined,
-        consent,
-      });
-    });
+        return service.extractPassportOcrData({
+          file_front: convertToBlob(file_front),
+          file_back: file_back ? convertToBlob(file_back) : undefined,
+          consent,
+        });
+      },
+    );
   });
 }
 
@@ -200,4 +243,5 @@ export const generateMrzHandler = controller.generateMrzHandler.bind(controller)
 export const verifyMrzHandler = controller.verifyMrzHandler.bind(controller);
 export const verifyPassportHandler = controller.verifyPassportHandler.bind(controller);
 export const fetchPassportDetailsHandler = controller.fetchPassportDetailsHandler.bind(controller);
-export const extractPassportOcrDataHandler = controller.extractPassportOcrDataHandler.bind(controller);
+export const extractPassportOcrDataHandler =
+  controller.extractPassportOcrDataHandler.bind(controller);

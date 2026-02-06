@@ -37,7 +37,7 @@ export const getRecentActivity = asyncHandler(async (req: Request, res: Response
       company: order.userId?.company || '',
       amount: order.finalAmount,
       status: order.paymentStatus,
-      orderId: order.orderId
+      orderId: order.orderId,
     });
   });
 
@@ -50,7 +50,7 @@ export const getRecentActivity = asyncHandler(async (req: Request, res: Response
       time: user.createdAt,
       user: user.email,
       userName: user.name,
-      company: user.company || ''
+      company: user.company || '',
     });
   });
 
@@ -62,7 +62,7 @@ export const getRecentActivity = asyncHandler(async (req: Request, res: Response
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - new Date(date).getTime()) / 1000);
-    
+
     if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
@@ -70,14 +70,14 @@ export const getRecentActivity = asyncHandler(async (req: Request, res: Response
     return `${Math.floor(diffInSeconds / 2592000)} months ago`;
   };
 
-  const formattedActivity = recentActivity.map(activity => ({
+  const formattedActivity = recentActivity.map((activity) => ({
     ...activity,
-    timeAgo: formatTimeAgo(activity.time)
+    timeAgo: formatTimeAgo(activity.time),
   }));
 
   res.json({
     success: true,
-    data: formattedActivity
+    data: formattedActivity,
   });
 });
 
@@ -100,34 +100,34 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
     activeOrders,
     completedOrders,
     pendingOrders,
-    failedOrders
+    failedOrders,
   ] = await Promise.all([
     // Total revenue
     Order.aggregate([
       { $match: { paymentStatus: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+      { $group: { _id: null, total: { $sum: '$finalAmount' } } },
     ]),
     // Last month revenue
     Order.aggregate([
-      { 
-        $match: { 
+      {
+        $match: {
           paymentStatus: 'completed',
-          createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }
-        } 
+          createdAt: { $gte: startOfLastMonth, $lt: startOfMonth },
+        },
       },
-      { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+      { $group: { _id: null, total: { $sum: '$finalAmount' } } },
     ]),
     // Total orders
     Order.countDocuments(),
     // Last month orders
     Order.countDocuments({
-      createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }
+      createdAt: { $gte: startOfLastMonth, $lt: startOfMonth },
     }),
     // Total users
     User.countDocuments(),
     // Last month users
     User.countDocuments({
-      createdAt: { $gte: startOfLastMonth, $lt: startOfMonth }
+      createdAt: { $gte: startOfLastMonth, $lt: startOfMonth },
     }),
     // Active orders
     Order.countDocuments({ status: 'active' }),
@@ -136,7 +136,7 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
     // Pending orders
     Order.countDocuments({ paymentStatus: 'pending' }),
     // Failed orders
-    Order.countDocuments({ paymentStatus: 'failed' })
+    Order.countDocuments({ paymentStatus: 'failed' }),
   ]);
 
   // Calculate revenue trend (last 6 months) with order statistics
@@ -145,35 +145,38 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
       $match: {
         createdAt: {
           $gte: new Date(now.getFullYear(), now.getMonth() - 5, 1), // Last 6 months
-          $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1)   // End of current month
-        }
-      }
+          $lt: new Date(now.getFullYear(), now.getMonth() + 1, 1), // End of current month
+        },
+      },
     },
     {
       $group: {
         _id: {
           year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' }
+          month: { $month: '$createdAt' },
         },
         revenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, '$finalAmount', 0] } },
         totalOrders: { $sum: 1 },
         completedOrders: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, 1, 0] } },
         pendingOrders: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, 1, 0] } },
         activeOrders: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
-        expiredOrders: { $sum: { $cond: [{ $eq: ['$status', 'expired'] }, 1, 0] } }
-      }
+        expiredOrders: { $sum: { $cond: [{ $eq: ['$status', 'expired'] }, 1, 0] } },
+      },
     },
-    { $sort: { '_id.year': 1, '_id.month': 1 } }
+    { $sort: { '_id.year': 1, '_id.month': 1 } },
   ]);
 
   // Debug: Check August orders specifically
   const augustOrders = await Order.find({
     createdAt: {
       $gte: new Date(now.getFullYear(), 7, 1), // August 1st
-      $lt: new Date(now.getFullYear(), 8, 1)   // September 1st
-    }
-  }).select('orderId paymentStatus status createdAt finalAmount').lean();
-  
+      $lt: new Date(now.getFullYear(), 8, 1), // September 1st
+    },
+  })
+    .select('orderId paymentStatus status createdAt finalAmount')
+    .lean();
+
+  /*
   console.log('August Orders Debug:', {
     totalAugustOrders: augustOrders.length,
     augustOrders: augustOrders.map(o => ({
@@ -184,6 +187,7 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
       date: o.createdAt
     }))
   });
+  */
 
   // Calculate service distribution
   const serviceDistribution = await Order.aggregate([
@@ -192,10 +196,10 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
       $group: {
         _id: '$serviceName',
         count: { $sum: 1 },
-        revenue: { $sum: '$finalAmount' }
-      }
+        revenue: { $sum: '$finalAmount' },
+      },
     },
-    { $sort: { count: -1 } }
+    { $sort: { count: -1 } },
   ]);
 
   // Calculate top performing plans
@@ -205,14 +209,14 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
       $group: {
         _id: {
           planName: '$serviceDetails.planName',
-          planType: '$serviceDetails.planType'
+          planType: '$serviceDetails.planType',
         },
         revenue: { $sum: '$finalAmount' },
-        count: { $sum: 1 }
-      }
+        count: { $sum: 1 },
+      },
     },
     { $sort: { revenue: -1 } },
-    { $limit: 5 }
+    { $limit: 5 },
   ]);
 
   // Calculate user growth metrics
@@ -221,59 +225,67 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
       $group: {
         _id: {
           year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' }
+          month: { $month: '$createdAt' },
         },
-        newUsers: { $sum: 1 }
-      }
+        newUsers: { $sum: 1 },
+      },
     },
     { $sort: { '_id.year': 1, '_id.month': 1 } },
-    { $limit: 6 }
+    { $limit: 6 },
   ]);
 
   // Calculate success rate
   const totalCompletedOrders = completedOrders;
   const totalFailedOrders = failedOrders;
-  const successRate = totalCompletedOrders + totalFailedOrders > 0 
-    ? ((totalCompletedOrders / (totalCompletedOrders + totalFailedOrders)) * 100).toFixed(1)
-    : '100.0';
+  const successRate =
+    totalCompletedOrders + totalFailedOrders > 0
+      ? ((totalCompletedOrders / (totalCompletedOrders + totalFailedOrders)) * 100).toFixed(1)
+      : '100.0';
 
   // Calculate percentage changes
-  const revenueChange = lastMonthRevenue[0]?.total 
-    ? (((totalRevenue[0]?.total || 0) - lastMonthRevenue[0].total) / lastMonthRevenue[0].total * 100).toFixed(1)
-    : '0.0';
-  
-  const ordersChange = lastMonthOrders > 0 
-    ? (((totalOrders - lastMonthOrders) / lastMonthOrders) * 100).toFixed(1)
-    : '0.0';
-  
-  const usersChange = lastMonthUsers > 0 
-    ? (((totalUsers - lastMonthUsers) / lastMonthUsers) * 100).toFixed(1)
+  const revenueChange = lastMonthRevenue[0]?.total
+    ? (
+        (((totalRevenue[0]?.total || 0) - lastMonthRevenue[0].total) / lastMonthRevenue[0].total) *
+        100
+      ).toFixed(1)
     : '0.0';
 
+  const ordersChange =
+    lastMonthOrders > 0
+      ? (((totalOrders - lastMonthOrders) / lastMonthOrders) * 100).toFixed(1)
+      : '0.0';
+
+  const usersChange =
+    lastMonthUsers > 0
+      ? (((totalUsers - lastMonthUsers) / lastMonthUsers) * 100).toFixed(1)
+      : '0.0';
+
   // Format revenue trend data with order statistics
-  const formattedRevenueTrend = revenueTrend.map(item => ({
-    month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', { month: 'short' }),
+  const formattedRevenueTrend = revenueTrend.map((item) => ({
+    month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', {
+      month: 'short',
+    }),
     value: item.revenue,
     totalOrders: item.totalOrders,
     completedOrders: item.completedOrders,
     pendingOrders: item.pendingOrders,
     activeOrders: item.activeOrders,
-    expiredOrders: item.expiredOrders
+    expiredOrders: item.expiredOrders,
   }));
 
   // Format service distribution data
   const totalServiceOrders = serviceDistribution.reduce((sum, service) => sum + service.count, 0);
-  const formattedServiceDistribution = serviceDistribution.map(service => ({
+  const formattedServiceDistribution = serviceDistribution.map((service) => ({
     service: service._id,
     count: service.count,
-    percentage: totalServiceOrders > 0 ? Math.round((service.count / totalServiceOrders) * 100) : 0
+    percentage: totalServiceOrders > 0 ? Math.round((service.count / totalServiceOrders) * 100) : 0,
   }));
 
   // Format top plans data
-  const formattedTopPlans = topPlans.map(plan => ({
+  const formattedTopPlans = topPlans.map((plan) => ({
     name: `${plan._id.planName} ${plan._id.planType}`,
     revenue: plan.revenue,
-    count: plan.count
+    count: plan.count,
   }));
 
   res.json({
@@ -287,27 +299,29 @@ export const getAnalyticsOverview = asyncHandler(async (req: Request, res: Respo
         successRate: parseFloat(successRate),
         revenueChange: parseFloat(revenueChange),
         ordersChange: parseFloat(ordersChange),
-        usersChange: parseFloat(usersChange)
+        usersChange: parseFloat(usersChange),
       },
       revenueTrend: formattedRevenueTrend,
       serviceDistribution: formattedServiceDistribution,
       topPlans: formattedTopPlans,
-      userGrowth: userGrowth.map(item => ({
-        month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', { month: 'short' }),
-        newUsers: item.newUsers
-      }))
-    }
+      userGrowth: userGrowth.map((item) => ({
+        month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', {
+          month: 'short',
+        }),
+        newUsers: item.newUsers,
+      })),
+    },
   });
 });
 
 // Get detailed analytics by date range
 export const getAnalyticsByDateRange = asyncHandler(async (req: Request, res: Response) => {
   const { startDate, endDate } = req.query;
-  
+
   if (!startDate || !endDate) {
     return res.status(400).json({
       success: false,
-      message: 'Start date and end date are required'
+      message: 'Start date and end date are required',
     });
   }
 
@@ -322,111 +336,114 @@ export const getAnalyticsByDateRange = asyncHandler(async (req: Request, res: Re
     pendingOrders,
     activeOrders,
     expiredOrders,
-    failedOrders
+    failedOrders,
   ] = await Promise.all([
     // Total revenue
     Order.aggregate([
-      { 
-        $match: { 
+      {
+        $match: {
           paymentStatus: 'completed',
-          createdAt: { $gte: start, $lte: end }
-        } 
+          createdAt: { $gte: start, $lte: end },
+        },
       },
-      { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+      { $group: { _id: null, total: { $sum: '$finalAmount' } } },
     ]),
     // Total orders
     Order.countDocuments({ createdAt: { $gte: start, $lte: end } }),
     // Completed orders
-    Order.countDocuments({ 
+    Order.countDocuments({
       paymentStatus: 'completed',
-      createdAt: { $gte: start, $lte: end }
+      createdAt: { $gte: start, $lte: end },
     }),
     // Pending orders
-    Order.countDocuments({ 
+    Order.countDocuments({
       paymentStatus: 'pending',
-      createdAt: { $gte: start, $lte: end }
+      createdAt: { $gte: start, $lte: end },
     }),
     // Active orders
-    Order.countDocuments({ 
+    Order.countDocuments({
       status: 'active',
-      createdAt: { $gte: start, $lte: end }
+      createdAt: { $gte: start, $lte: end },
     }),
     // Expired orders
-    Order.countDocuments({ 
+    Order.countDocuments({
       status: 'expired',
-      createdAt: { $gte: start, $lte: end }
+      createdAt: { $gte: start, $lte: end },
     }),
     // Failed orders
-    Order.countDocuments({ 
+    Order.countDocuments({
       paymentStatus: 'failed',
-      createdAt: { $gte: start, $lte: end }
-    })
+      createdAt: { $gte: start, $lte: end },
+    }),
   ]);
 
   // Calculate revenue trend by month for the date range
   const revenueTrend = await Order.aggregate([
     {
       $match: {
-        createdAt: { $gte: start, $lte: end }
-      }
+        createdAt: { $gte: start, $lte: end },
+      },
     },
     {
       $group: {
         _id: {
           year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' }
+          month: { $month: '$createdAt' },
         },
         revenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, '$finalAmount', 0] } },
         totalOrders: { $sum: 1 },
         completedOrders: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, 1, 0] } },
         pendingOrders: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'pending'] }, 1, 0] } },
         activeOrders: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
-        expiredOrders: { $sum: { $cond: [{ $eq: ['$status', 'expired'] }, 1, 0] } }
-      }
+        expiredOrders: { $sum: { $cond: [{ $eq: ['$status', 'expired'] }, 1, 0] } },
+      },
     },
-    { $sort: { '_id.year': 1, '_id.month': 1 } }
+    { $sort: { '_id.year': 1, '_id.month': 1 } },
   ]);
 
   // Calculate service distribution for the date range
   const serviceDistribution = await Order.aggregate([
-    { 
-      $match: { 
+    {
+      $match: {
         paymentStatus: 'completed',
-        createdAt: { $gte: start, $lte: end }
-      } 
+        createdAt: { $gte: start, $lte: end },
+      },
     },
     {
       $group: {
         _id: '$serviceName',
         count: { $sum: 1 },
-        revenue: { $sum: '$finalAmount' }
-      }
+        revenue: { $sum: '$finalAmount' },
+      },
     },
-    { $sort: { count: -1 } }
+    { $sort: { count: -1 } },
   ]);
 
   // Calculate success rate
-  const successRate = completedOrders + failedOrders > 0 
-    ? ((completedOrders / (completedOrders + failedOrders)) * 100).toFixed(1)
-    : '100.0';
+  const successRate =
+    completedOrders + failedOrders > 0
+      ? ((completedOrders / (completedOrders + failedOrders)) * 100).toFixed(1)
+      : '100.0';
 
   // Format revenue trend data
-  const formattedRevenueTrend = revenueTrend.map(item => ({
-    month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', { month: 'short' }),
+  const formattedRevenueTrend = revenueTrend.map((item) => ({
+    month: new Date(item._id.year, item._id.month - 1).toLocaleDateString('en-US', {
+      month: 'short',
+    }),
     value: item.revenue,
     totalOrders: item.totalOrders,
     completedOrders: item.completedOrders,
     pendingOrders: item.pendingOrders,
     activeOrders: item.activeOrders,
-    expiredOrders: item.expiredOrders
+    expiredOrders: item.expiredOrders,
   }));
 
   // Format service distribution data
   const totalServiceOrders = serviceDistribution.reduce((sum, service) => sum + service.count, 0);
-  const formattedServiceDistribution = serviceDistribution.map(service => ({
+  const formattedServiceDistribution = serviceDistribution.map((service) => ({
     service: service._id,
     count: service.count,
-    percentage: totalServiceOrders > 0 ? Math.round((service.count / totalServiceOrders) * 100) : 0
+    percentage: totalServiceOrders > 0 ? Math.round((service.count / totalServiceOrders) * 100) : 0,
   }));
 
   res.json({
@@ -434,7 +451,7 @@ export const getAnalyticsByDateRange = asyncHandler(async (req: Request, res: Re
     data: {
       dateRange: {
         startDate: start.toISOString(),
-        endDate: end.toISOString()
+        endDate: end.toISOString(),
       },
       metrics: {
         totalRevenue: totalRevenue[0]?.total || 0,
@@ -444,10 +461,10 @@ export const getAnalyticsByDateRange = asyncHandler(async (req: Request, res: Re
         activeOrders,
         expiredOrders,
         failedOrders,
-        successRate: parseFloat(successRate)
+        successRate: parseFloat(successRate),
       },
       revenueTrend: formattedRevenueTrend,
-      serviceDistribution: formattedServiceDistribution
-    }
+      serviceDistribution: formattedServiceDistribution,
+    },
   });
-}); 
+});

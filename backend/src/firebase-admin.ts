@@ -1,6 +1,7 @@
 // src/firebase-admin.ts
-import * as admin from "firebase-admin";
-import * as serviceAccount from "./modules/auth/verifymykyc-5f02e-firebase-adminsdk-fbsvc-41079032c4.json"; // ✅ Direct JSON import
+import * as admin from 'firebase-admin';
+import { logger } from './common/utils/logger';
+import * as serviceAccount from './modules/auth/verifymykyc-5f02e-firebase-adminsdk-fbsvc-41079032c4.json'; // ✅ Direct JSON import
 
 // Initialize only once
 if (!admin.apps.length) {
@@ -12,13 +13,12 @@ if (!admin.apps.length) {
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-      projectId: "verifymykyc-5f02e",
+      projectId: 'verifymykyc-5f02e',
     });
 
-    console.log("✅ Firebase Admin SDK initialized successfully");
+    logger.info('✅ Firebase Admin SDK initialized successfully');
   } catch (error) {
-    console.error("❌ Firebase Admin SDK initialization failed:", error);
-    process.exit(1);
+    logger.error('❌ Firebase Admin SDK initialization failed:', error);
   }
 }
 

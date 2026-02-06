@@ -21,7 +21,7 @@ import subscriberRouter from './modules/subscriber/subscriber.routes';
 import blogRouter from './modules/blog/blog.router';
 import epfoRouter from './modules/epfo/epfo.router';
 
-import callbackRouter from "./common/middleware/callback-handler";
+import callbackRouter from './common/middleware/callback-handler';
 const router = Router();
 
 // Callback handler route

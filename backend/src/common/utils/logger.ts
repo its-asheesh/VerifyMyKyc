@@ -1,24 +1,46 @@
 // src/utils/logger.ts
-import fs from 'fs';
+import winston from 'winston';
 import path from 'path';
 
-const LOG_DIR = path.join(__dirname, '../logs');
+// Define log directory
+const LOG_DIR = 'logs';
 
-// Ensure logs directory exists
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
-}
-
-export const logToFile = (fileName: string, data: any) => {
-  const filePath = path.join(LOG_DIR, `${fileName}.jsonl`); // .jsonl = JSON Lines
-  const logEntry = JSON.stringify({
-    timestamp: new Date().toISOString(),
-    ...data,
-  }) + '\n'; // Append newline for JSONL format
-
-  try {
-    fs.appendFileSync(filePath, logEntry, 'utf-8');
-  } catch (err) {
-    console.error('Failed to write log:', err);
+// Define log format
+const logFormat = winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+  let msg = `${timestamp} [${level}]: ${message}`;
+  if (Object.keys(metadata).length > 0) {
+    msg += ` ${JSON.stringify(metadata)}`;
   }
+  return msg;
+});
+
+// Create Winston logger instance
+export const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp'] }),
+  ),
+  transports: [
+    // Console transport for development (readable)
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize(), logFormat),
+    }),
+    // File transport for all logs (JSON format for easier parsing)
+    new winston.transports.File({
+      filename: path.join(LOG_DIR, 'combined.log'),
+      format: winston.format.combine(winston.format.json()),
+    }),
+    // File transport for errors only
+    new winston.transports.File({
+      filename: path.join(LOG_DIR, 'error.log'),
+      level: 'error',
+      format: winston.format.combine(winston.format.json()),
+    }),
+  ],
+});
+
+// Legacy support for logToFile (maps to info level)
+export const logToFile = (fileName: string, data: any) => {
+  logger.info(`Log to ${fileName}`, { fileName, ...data });
 };

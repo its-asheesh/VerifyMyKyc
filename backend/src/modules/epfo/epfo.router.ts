@@ -34,5 +34,3 @@ router.post('/uan/fetch-by-pan', authenticate, requireUser, uanByPanHandler);
 router.post('/employer-verify', authenticate, requireUser, employerVerifyHandler);
 
 export default router;
-
-

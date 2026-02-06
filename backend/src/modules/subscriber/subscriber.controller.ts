@@ -20,17 +20,17 @@ export const subscribe = async (req: Request, res: Response) => {
     const subscriber = new Subscriber({ email });
     await subscriber.save();
 
-    return res.status(201).json({ 
-      success: true, 
+    return res.status(201).json({
+      success: true,
       message: 'Thank you for subscribing!',
-      data: subscriber 
+      data: subscriber,
     });
   } catch (error: any) {
     console.error('Subscription error:', error);
-    return res.status(500).json({ 
-      success: false, 
+    return res.status(500).json({
+      success: false,
       message: 'Failed to process subscription',
-      error: error?.message 
+      error: error?.message,
     });
   }
 };
@@ -41,11 +41,8 @@ export const getAllSubscribers = async (req: Request, res: Response) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [subscribers, total] = await Promise.all([
-      Subscriber.find()
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Subscriber.countDocuments()
+      Subscriber.find().sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+      Subscriber.countDocuments(),
     ]);
 
     return res.status(200).json({
@@ -54,15 +51,15 @@ export const getAllSubscribers = async (req: Request, res: Response) => {
       pagination: {
         total,
         page: Number(page),
-        totalPages: Math.ceil(total / Number(limit))
-      }
+        totalPages: Math.ceil(total / Number(limit)),
+      },
     });
   } catch (error: any) {
     console.error('Error fetching subscribers:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch subscribers',
-      error: error?.message
+      error: error?.message,
     });
   }
 };
@@ -75,20 +72,20 @@ export const deleteSubscriber = async (req: Request, res: Response) => {
     if (!subscriber) {
       return res.status(404).json({
         success: false,
-        message: 'Subscriber not found'
+        message: 'Subscriber not found',
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Subscriber deleted successfully'
+      message: 'Subscriber deleted successfully',
     });
   } catch (error: any) {
     console.error('Error deleting subscriber:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to delete subscriber',
-      error: error?.message
+      error: error?.message,
     });
   }
 };
@@ -105,63 +102,53 @@ export const exportSubscribers = async (req: Request, res: Response) => {
       // Add headers
       worksheet.columns = [
         { header: 'Email', key: 'email', width: 40 },
-        { header: 'Subscribed On', key: 'createdAt', width: 30 }
+        { header: 'Subscribed On', key: 'createdAt', width: 30 },
       ];
 
       // Add data
-      subscribers.forEach(subscriber => {
+      subscribers.forEach((subscriber) => {
         worksheet.addRow({
           email: subscriber.email,
-          createdAt: subscriber.createdAt.toLocaleString()
+          createdAt: subscriber.createdAt.toLocaleString(),
         });
       });
 
       // Set response headers
       res.setHeader(
         'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       );
-      res.setHeader(
-        'Content-Disposition',
-        'attachment; filename=subscribers.xlsx'
-      );
+      res.setHeader('Content-Disposition', 'attachment; filename=subscribers.xlsx');
 
       // Send the file
       await workbook.xlsx.write(res);
       res.end();
-
     } else if (format === 'csv') {
       // Build CSV manually (csv-writer doesn't support stringify to string)
       const header = ['Email', 'Subscribed On'];
-      const rows = subscribers.map(s => [
-        s.email,
-        s.createdAt.toLocaleString()
-      ]);
+      const rows = subscribers.map((s) => [s.email, s.createdAt.toLocaleString()]);
 
       // Escape CSV fields: wrap in quotes and escape quotes
       const escape = (val: string) => `"${String(val).replace(/"/g, '""')}"`;
-      const csv = [
-        header.map(escape).join(','),
-        ...rows.map(r => r.map(escape).join(','))
-      ].join('\n');
+      const csv = [header.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join(
+        '\n',
+      );
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=subscribers.csv');
       res.send(csv);
-
     } else {
       // Default to JSON if format is not specified or invalid
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', 'attachment; filename=subscribers.json');
       res.send(JSON.stringify(subscribers, null, 2));
     }
-
   } catch (error: any) {
     console.error('Error exporting subscribers:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to export subscribers',
-      error: error?.message
+      error: error?.message,
     });
   }
 };

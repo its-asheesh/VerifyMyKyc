@@ -4,12 +4,10 @@ import { Router } from 'express';
 import {
   generateCCRVReportHandler,
   fetchCCRVResultHandler,
-  searchCCRVHandler,ccrvCallbackHandler
+  searchCCRVHandler,
+  ccrvCallbackHandler,
 } from './ccrv.controller';
 import { authenticate, requireUser } from '../../common/middleware/auth';
-
-
-
 
 const router = Router();
 

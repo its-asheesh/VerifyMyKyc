@@ -12,7 +12,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !orderId) {
     return res.status(400).json({
       success: false,
-      message: 'Missing required payment details'
+      message: 'Missing required payment details',
     });
   }
 
@@ -25,7 +25,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   if (generatedSignature !== razorpay_signature) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid payment signature'
+      message: 'Invalid payment signature',
     });
   }
 
@@ -35,7 +35,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   if (!order) {
     return res.status(404).json({
       success: false,
-      message: 'Order not found or already processed'
+      message: 'Order not found or already processed',
     });
   }
 
@@ -47,7 +47,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
 
   // Recalculate endDate
   const start = new Date(order.startDate);
-  let newEnd = new Date(start);
+  const newEnd = new Date(start);
 
   if (order.orderType === 'verification' && order.verificationQuota?.validityDays) {
     newEnd.setDate(newEnd.getDate() + order.verificationQuota.validityDays);
@@ -83,6 +83,6 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   res.json({
     success: true,
     message: 'Payment verified and order activated',
-    data: { order }
+    data: { order },
   });
 });

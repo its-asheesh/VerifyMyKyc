@@ -1,15 +1,16 @@
-import dotenv from 'dotenv'
-import { connectDB } from '../../config/db'
-import { BlogPost } from './blog.model'
+import dotenv from 'dotenv';
+import { connectDB } from '../../config/db';
+import { BlogPost } from './blog.model';
 
 // Load env
-dotenv.config()
+dotenv.config();
 
 const posts = [
   {
     title: 'How to Use Government ID Verification',
     slug: 'government-id-verification-guide',
-    excerpt: 'Learn how to verify PAN, Aadhaar, Voter ID, Driving Licence, and Passport securely and quickly using VerifyMyKyc.',
+    excerpt:
+      'Learn how to verify PAN, Aadhaar, Voter ID, Driving Licence, and Passport securely and quickly using VerifyMyKyc.',
     content: `Overview
 Government ID verification helps you validate a user’s identity by checking official documents (PAN, Aadhaar, Voter ID, Driving Licence, Passport) against trusted sources.
 
@@ -41,7 +42,8 @@ Next steps
   {
     title: 'How to Use Company & Credential Verification',
     slug: 'company-credential-verification-guide',
-    excerpt: 'Verify GST, FSSAI, MSME, and company registration to ensure legitimate partnerships and vendor trust.',
+    excerpt:
+      'Verify GST, FSSAI, MSME, and company registration to ensure legitimate partnerships and vendor trust.',
     content: `Overview
 Company & credential verification validates business identity and licenses, reducing vendor risk.
 
@@ -69,7 +71,8 @@ Next steps
   {
     title: 'How to Run Legal & Background Checks',
     slug: 'legal-background-checks-guide',
-    excerpt: 'Screen for criminal records, court cases, and FIRs to maintain platform integrity and safety.',
+    excerpt:
+      'Screen for criminal records, court cases, and FIRs to maintain platform integrity and safety.',
     content: `Overview
 Background checks help you assess legal risk by screening across official records.
 
@@ -121,7 +124,8 @@ Next steps
   {
     title: 'How to Use Specialized Checks',
     slug: 'specialized-verifications-guide',
-    excerpt: 'Verify domain-specific credentials like health and travel certificates quickly and reliably.',
+    excerpt:
+      'Verify domain-specific credentials like health and travel certificates quickly and reliably.',
     content: `Overview
 Specialized checks cover niche credentials (e.g., health, travel).
 
@@ -142,36 +146,36 @@ Next steps
     status: 'published' as const,
     author: 'VerifyMyKyc Team',
   },
-]
+];
 
 async function upsertPosts() {
   for (const p of posts) {
-    const existing = await BlogPost.findOne({ slug: p.slug })
+    const existing = await BlogPost.findOne({ slug: p.slug });
     if (existing) {
-      existing.title = p.title
-      existing.excerpt = p.excerpt
-      existing.content = p.content
-      existing.coverImage = p.coverImage
-      existing.tags = p.tags as any
-      existing.status = p.status as any
-      existing.author = p.author
-      await existing.save()
-      console.log(`🔁 Updated: ${p.slug}`)
+      existing.title = p.title;
+      existing.excerpt = p.excerpt;
+      existing.content = p.content;
+      existing.coverImage = p.coverImage;
+      existing.tags = p.tags as any;
+      existing.status = p.status as any;
+      existing.author = p.author;
+      await existing.save();
+      console.log(`🔁 Updated: ${p.slug}`);
     } else {
-      await BlogPost.create(p as any)
-      console.log(`✅ Created: ${p.slug}`)
+      await BlogPost.create(p as any);
+      console.log(`✅ Created: ${p.slug}`);
     }
   }
 }
 
-;(async () => {
+(async () => {
   try {
-    await connectDB()
-    await upsertPosts()
-    console.log('🎉 Blog posts seeded successfully')
-    process.exit(0)
+    await connectDB();
+    await upsertPosts();
+    console.log('🎉 Blog posts seeded successfully');
+    process.exit(0);
   } catch (err) {
-    console.error('❌ Failed to seed blog posts', err)
-    process.exit(1)
+    console.error('❌ Failed to seed blog posts', err);
+    process.exit(1);
   }
-})()
+})();

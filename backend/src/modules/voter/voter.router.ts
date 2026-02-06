@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { 
-  voterBosonFetchHandler, 
-  voterMesonInitHandler, 
+import {
+  voterBosonFetchHandler,
+  voterMesonInitHandler,
   voterMesonFetchHandler,
-  voterOcrHandler
+  voterOcrHandler,
 } from './voter.controller';
 import { authenticate, requireUser } from '../../common/middleware/auth';
 
@@ -25,8 +25,11 @@ router.post(
   '/ocr',
   authenticate,
   requireUser,
-  upload.fields([{ name: 'file_front', maxCount: 1 }, { name: 'file_back', maxCount: 1 }]),
-  voterOcrHandler
+  upload.fields([
+    { name: 'file_front', maxCount: 1 },
+    { name: 'file_back', maxCount: 1 },
+  ]),
+  voterOcrHandler,
 );
 
 export default router;

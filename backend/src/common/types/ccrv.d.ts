@@ -147,7 +147,11 @@ export interface CCRVFetchResultResponse {
     };
   };
   error?: {
-    code: 'INVALID_INPUT' | 'PRODUCT_CONFIGURATION_REQUIRED' | 'TRANSACTION_NOT_FOUND' | 'INVALID_TOKEN';
+    code:
+      | 'INVALID_INPUT'
+      | 'PRODUCT_CONFIGURATION_REQUIRED'
+      | 'TRANSACTION_NOT_FOUND'
+      | 'INVALID_TOKEN';
     message: string;
     type?: string;
   };
@@ -166,7 +170,12 @@ export interface CCRVSearchRequest {
   case_category?: 'CIVIL' | 'CRIMINAL';
   type?: 'PETITIONER' | 'RESPONDENT';
   name_match_type?: 'EXACT_MATCH' | 'EXACT_FUZZY' | 'PARTIAL_EXACT' | 'PARTIAL_FUZZY' | 'NO_MATCH';
-  father_match_type?: 'EXACT_MATCH' | 'EXACT_FUZZY' | 'PARTIAL_EXACT' | 'PARTIAL_FUZZY' | 'NO_MATCH';
+  father_match_type?:
+    | 'EXACT_MATCH'
+    | 'EXACT_FUZZY'
+    | 'PARTIAL_EXACT'
+    | 'PARTIAL_FUZZY'
+    | 'NO_MATCH';
   jurisdiction_type?: 'STATE' | 'DISTRICT' | 'NEAREST_DISTRICTS' | 'PAN_INDIA';
   consent: 'Y' | 'N';
 }

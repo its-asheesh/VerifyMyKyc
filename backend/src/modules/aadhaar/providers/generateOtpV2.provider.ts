@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { HTTPError } from '../../../common/http/error';
 import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import { logger } from '../../../common/utils/logger';
 
 export interface GenerateOtpV2Request {
   id_number: string; // Aadhaar Number
@@ -24,7 +25,7 @@ export interface GenerateOtpV2Response {
  * Waits 45 seconds to generate OTP for same Aadhaar Number
  */
 export async function generateOtpV2Provider(
-  payload: GenerateOtpV2Request
+  payload: GenerateOtpV2Request,
 ): Promise<GenerateOtpV2Response> {
   const apiKey = process.env.QUICKEKYC_API_KEY;
   const baseURL = process.env.QUICKEKYC_BASE_URL || 'https://api.quickekyc.com';
@@ -34,10 +35,7 @@ export async function generateOtpV2Provider(
   }
 
   try {
-    console.log('Aadhaar V2 Generate OTP Request:', {
-      aadhaar_number: payload.id_number.replace(/.(?=.{4})/g, 'X'), // Mask Aadhaar
-      url: `${baseURL}/api/v1/aadhaar-v2/generate-otp`,
-    });
+    logger.info(`[Aadhaar V2] Generating OTP for ${payload.id_number.slice(-4).padStart(12, 'X')}`);
 
     const response = await axios.post<GenerateOtpV2Response>(
       `${baseURL}/api/v1/aadhaar-v2/generate-otp`,
@@ -50,15 +48,20 @@ export async function generateOtpV2Provider(
           'Content-Type': 'application/json',
         },
         timeout: 30000,
-      }
+      },
     );
 
+    logger.info(
+      `[Aadhaar V2] OTP Generation Response: Status ${response.status}, RequestID: ${response.data.request_id || 'N/A'}`,
+    );
+    /*
     console.log('Aadhaar V2 Generate OTP Response:', {
       status: response.status,
       otp_sent: response.data.data?.otp_sent,
       valid_aadhaar: response.data.data?.valid_aadhaar,
       request_id: response.data.request_id,
     });
+    */
 
     // Handle API errors (200 OK with error status)
     if (response.data.status === 'error') {
@@ -67,14 +70,14 @@ export async function generateOtpV2Provider(
         throw new HTTPError(
           'An error occurred while sending OTP. Please check the Aadhaar number and try again.',
           502,
-          response.data
+          response.data,
         );
       }
 
       throw new HTTPError(
         response.data.message || 'QuickEKYC API Error',
         response.data.status_code || 502,
-        response.data
+        response.data,
       );
     }
 
@@ -99,12 +102,15 @@ export async function generateOtpV2Provider(
       config: {
         url: error.config?.url,
         method: error.config?.method,
-      }
+      },
     });
 
     // Handle network errors
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-      throw new HTTPError('Unable to connect to QuickEKYC API. Please check your network connection.', 503);
+      throw new HTTPError(
+        'Unable to connect to QuickEKYC API. Please check your network connection.',
+        503,
+      );
     }
 
     // Handle timeout
@@ -117,7 +123,7 @@ export async function generateOtpV2Provider(
       throw new HTTPError(
         'Please wait 45 seconds before requesting another OTP for the same Aadhaar number',
         429,
-        error.response?.data
+        error.response?.data,
       );
     }
 
@@ -129,7 +135,7 @@ export async function generateOtpV2Provider(
           ? 'IP address not whitelisted. Please contact support.'
           : errorMessage,
         502,
-        error.response?.data
+        error.response?.data,
       );
     }
 
@@ -138,13 +144,14 @@ export async function generateOtpV2Provider(
       throw new HTTPError(
         'QuickEKYC API server error. Please try again later.',
         502,
-        error.response?.data
+        error.response?.data,
       );
     }
 
     // Use standard error mapper for other errors
-    const { message, statusCode } = createStandardErrorMapper('Aadhaar V2 OTP generation failed')(error);
+    const { message, statusCode } = createStandardErrorMapper('Aadhaar V2 OTP generation failed')(
+      error,
+    );
     throw new HTTPError(message, statusCode, error.response?.data);
   }
 }
-

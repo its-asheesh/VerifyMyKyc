@@ -4,8 +4,8 @@ import { createStandardErrorMapper } from '../../../common/providers/BaseProvide
 import { PanDigilockerPullRequest, PanDigilockerPullResponse } from '../../../common/types/pan';
 
 export async function digilockerPullPanProvider(
-  payload: PanDigilockerPullRequest, 
-  transactionId: string
+  payload: PanDigilockerPullRequest,
+  transactionId: string,
 ): Promise<PanDigilockerPullResponse> {
   try {
     // Custom API client for Digilocker endpoints with transaction ID
@@ -13,7 +13,7 @@ export async function digilockerPullPanProvider(
       baseURL: process.env.GRIDLINES_BASE_URL,
       timeout: 10000,
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
         'X-API-Key': process.env.GRIDLINES_API_KEY || '',
         'X-Auth-Type': 'API-Key',
@@ -25,16 +25,16 @@ export async function digilockerPullPanProvider(
       url: '/digilocker/pan/pull-document',
       payload,
       transactionId,
-      baseURL: process.env.GRIDLINES_BASE_URL
+      baseURL: process.env.GRIDLINES_BASE_URL,
     });
-    
+
     const response = await digilockerApiClient.post('/digilocker/pan/pull-document', payload);
-    
+
     console.log('Digilocker Pull PAN API Response:', {
       status: response.status,
-      data: response.data
+      data: response.data,
     });
-    
+
     return response.data;
   } catch (error: any) {
     console.error('Digilocker Pull PAN API Error:', {
@@ -45,10 +45,10 @@ export async function digilockerPullPanProvider(
         url: error.config?.url,
         method: error.config?.method,
         baseURL: error.config?.baseURL,
-        headers: error.config?.headers
-      }
+        headers: error.config?.headers,
+      },
     });
-    
+
     // Handle specific DigiLocker authorization error
     if (error.response?.data?.error?.code === 'DIGILOCKER_AUTHORIZATION_NOT_COMPLETED') {
       throw new HTTPError(
@@ -57,15 +57,16 @@ export async function digilockerPullPanProvider(
         {
           error: {
             code: 'DIGILOCKER_AUTHORIZATION_NOT_COMPLETED',
-            message: 'Please complete the DigiLocker authorization by visiting the authorization URL from the init API.',
-            details: error.response?.data?.error
-          }
-        }
+            message:
+              'Please complete the DigiLocker authorization by visiting the authorization URL from the init API.',
+            details: error.response?.data?.error,
+          },
+        },
       );
     }
-    
+
     // Use standard error mapper if no special handling needed
     const { message, statusCode } = createStandardErrorMapper('Digilocker Pull PAN failed')(error);
     throw new HTTPError(message, statusCode, error.response?.data);
   }
-} 
+}

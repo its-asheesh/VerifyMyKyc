@@ -2,20 +2,27 @@ import { fetchFatherNameByPanProvider } from './providers/fatherName.provider';
 import { checkPanAadhaarLinkProvider } from './providers/linkCheck.provider';
 import { digilockerPullPanProvider } from './providers/digilockerPull.provider';
 import { digilockerInitProvider } from './providers/digilockerInit.provider';
-import { digilockerFetchDocumentProvider, DigilockerFetchDocumentRequest } from './providers/digilockerFetchDocument.provider';
+import {
+  digilockerFetchDocumentProvider,
+  DigilockerFetchDocumentRequest,
+} from './providers/digilockerFetchDocument.provider';
 import { fetchPanAdvanceProvider } from './providers/fetchPanAdvance.provider';
 
-import { 
-  PanFatherNameRequest, 
-  PanAadhaarLinkRequest, 
-  FetchPanAdvanceRequest, 
+import {
+  PanFatherNameRequest,
+  PanAadhaarLinkRequest,
+  FetchPanAdvanceRequest,
   PanDigilockerPullRequest,
-  DigilockerInitRequest 
+  DigilockerInitRequest,
 } from '../../common/types/pan';
 import { fetchDinByPanProvider } from '../mca/providers/dinByPan.provider';
 import { fetchCinByPanProvider } from '../mca/providers/cinByPan.provider';
 import { fetchGstinByPanProvider } from '../gstin/providers/fetchByPan.provider';
-import type { DinByPanRequest, FetchPanDetailsRequest, GstinByPanRequest } from '../../common/types/pan';
+import type {
+  DinByPanRequest,
+  FetchPanDetailsRequest,
+  GstinByPanRequest,
+} from '../../common/types/pan';
 import type { CinByPanRequest } from '../../common/types/mca';
 import { fetchPanDetailedProvider } from './providers/fetchPanDetailed.provider';
 

@@ -1,5 +1,6 @@
 import apiClient from '../http/apiClient';
 import { HTTPError } from '../http/error';
+import { logger } from '../utils/logger';
 
 export interface ApiCallOptions {
   endpoint: string;
@@ -37,40 +38,51 @@ export abstract class BaseProvider {
    * Preserves exact same behavior as existing providers
    */
   protected async makeApiCall<T>(options: ApiCallOptions): Promise<T> {
-    const { endpoint, payload, operationName, baseURL, logRequest, logResponse, customErrorMapper } = options;
-    
+    const {
+      endpoint,
+      payload,
+      operationName,
+      baseURL,
+      logRequest,
+      logResponse,
+      customErrorMapper,
+    } = options;
+
     try {
       // Optional: Log request (default: true)
       if (logRequest !== false) {
-        console.log(`${operationName} API Request:`, {
+        logger.info(`${operationName} API Request:`, {
           url: endpoint,
           payload,
-          baseURL: baseURL || process.env.GRIDLINES_BASE_URL
+          baseURL: baseURL || process.env.GRIDLINES_BASE_URL,
         });
       }
-      
+
       const response = await apiClient.post(endpoint, payload);
-      
+
       // Optional: Log response (default: true)
       if (logResponse !== false) {
-        console.log(`${operationName} API Response:`, {
+        logger.info(`${operationName} API Response:`, {
           status: response.status,
-          data: response.data
+          data: response.data,
         });
       }
-      
+
       return response.data;
     } catch (error: any) {
       this.handleApiError(error, operationName, customErrorMapper);
     }
   }
 
-
   /**
    * Maps errors to consistent format
    * Maintains exact same error mapping logic as existing providers
    */
-  private mapError(error: any, operationName: string, customMapper?: (error: any) => ErrorMappingResult): ErrorMappingResult {
+  private mapError(
+    error: any,
+    operationName: string,
+    customMapper?: (error: any) => ErrorMappingResult,
+  ): ErrorMappingResult {
     // Use custom mapper if provided
     if (customMapper) {
       return customMapper(error);
@@ -79,7 +91,10 @@ export abstract class BaseProvider {
     let errorMessage = `${operationName} failed`;
     let statusCode = 500;
 
-    if (error.code === 'ECONNABORTED' || (typeof error.message === 'string' && error.message.includes('timeout'))) {
+    if (
+      error.code === 'ECONNABORTED' ||
+      (typeof error.message === 'string' && error.message.includes('timeout'))
+    ) {
       errorMessage = 'Request to Gridlines API timed out. Please try again.';
       statusCode = 408;
     } else if (error.response?.status === 401) {
@@ -89,9 +104,13 @@ export abstract class BaseProvider {
       // Handle 403 Forbidden Access (product access denied)
       const errorData = error.response?.data?.error;
       if (errorData?.code === 'FORBIDDEN_ACCESS' || errorData?.message) {
-        errorMessage = errorData.message || 'Access denied. This product is not available with your current credentials.';
+        errorMessage =
+          errorData.message ||
+          'Access denied. This product is not available with your current credentials.';
       } else {
-        errorMessage = error.response?.data?.message || 'Access denied. This product is not available with your current credentials.';
+        errorMessage =
+          error.response?.data?.message ||
+          'Access denied. This product is not available with your current credentials.';
       }
       statusCode = 403;
     } else if (error.response?.status === 404) {
@@ -103,7 +122,8 @@ export abstract class BaseProvider {
     } else if (error.response?.status === 500) {
       // External API 500 - distinguish upstream errors when available
       if (error.response?.data?.error?.code === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
-        errorMessage = 'Government source temporarily unavailable. Please try again in a few minutes.';
+        errorMessage =
+          'Government source temporarily unavailable. Please try again in a few minutes.';
         statusCode = 503;
       } else {
         errorMessage = 'External API server error. Please try again.';
@@ -120,9 +140,13 @@ export abstract class BaseProvider {
   /**
    * Handles API errors with support for custom error mapper
    */
-  private handleApiError(error: any, operationName: string, customMapper?: (error: any) => ErrorMappingResult): never {
-    // Structured error logging for faster diagnostics (maintains existing pattern)
-    console.error(`${operationName} API Error:`, {
+  private handleApiError(
+    error: any,
+    operationName: string,
+    customMapper?: (error: any) => ErrorMappingResult,
+  ): never {
+    // Structured error logging for faster diagnostics
+    logger.error(`${operationName} API Error:`, {
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
@@ -130,8 +154,8 @@ export abstract class BaseProvider {
         url: error.config?.url,
         method: error.config?.method,
         baseURL: error.config?.baseURL,
-        headers: error.config?.headers
-      }
+        headers: error.config?.headers,
+      },
     });
 
     const { message, statusCode } = this.mapError(error, operationName, customMapper);
@@ -164,15 +188,15 @@ export abstract class BaseProvider {
   protected async makeTransformedApiCall<T>(
     endpoint: string,
     payload: any,
-    operationName: string
+    operationName: string,
   ): Promise<T> {
     this.validatePayload(payload);
     const transformedPayload = this.transformPayload(payload);
-    
+
     return this.makeApiCall<T>({
       endpoint,
       payload: transformedPayload,
-      operationName
+      operationName,
     });
   }
 }
@@ -181,60 +205,75 @@ export abstract class BaseProvider {
  * Functional version of makeApiCall - can be used without extending BaseProvider
  * Provides the same functionality with a simpler functional interface
  */
-export async function makeProviderApiCall<T>(
-  options: FunctionalApiCallOptions
-): Promise<T> {
-  const { endpoint, payload, operationName, logRequest, logResponse, customErrorMapper, headers, method = 'POST' } = options;
-  
+export async function makeProviderApiCall<T>(options: FunctionalApiCallOptions): Promise<T> {
+  const {
+    endpoint,
+    payload,
+    operationName,
+    logRequest,
+    logResponse,
+    customErrorMapper,
+    headers,
+    method = 'POST',
+  } = options;
+
   try {
     // Optional: Log request (default: true)
     if (logRequest !== false) {
-      console.log(`${operationName} Request:`, {
+      logger.info(`${operationName} Request:`, {
         url: endpoint,
         payload,
         method,
-        headers: headers ? Object.keys(headers).reduce((acc, key) => {
-          acc[key] = key.includes('Key') || key.includes('Auth') ? '***' : headers[key];
-          return acc;
-        }, {} as Record<string, string>) : undefined,
-        baseURL: process.env.GRIDLINES_BASE_URL
+        headers: headers
+          ? Object.keys(headers).reduce(
+              (acc, key) => {
+                acc[key] = key.includes('Key') || key.includes('Auth') ? '***' : headers[key];
+                return acc;
+              },
+              {} as Record<string, string>,
+            )
+          : undefined,
+        baseURL: process.env.GRIDLINES_BASE_URL,
       });
     }
-    
+
     let response;
     if (method === 'GET') {
-      response = await apiClient.get(endpoint, headers ? { headers, params: payload } : { params: payload });
+      response = await apiClient.get(
+        endpoint,
+        headers ? { headers, params: payload } : { params: payload },
+      );
     } else {
       response = await apiClient.post(endpoint, payload, headers ? { headers } : undefined);
     }
-    
+
     // Optional: Log response (default: true)
     if (logResponse !== false) {
-      console.log(`${operationName} Response:`, {
+      logger.info(`${operationName} Response:`, {
         status: response.status,
-        data: response.data
+        data: response.data,
       });
     }
-    
+
     return response.data as T;
   } catch (error: any) {
     // Structured error logging
-    console.error(`${operationName} Error:`, {
+    logger.error(`${operationName} Error:`, {
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
       config: {
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL
-      }
+        baseURL: error.config?.baseURL,
+      },
     });
 
     // Use custom error mapper if provided, otherwise use standard mapper
-    const { message, statusCode } = customErrorMapper 
+    const { message, statusCode } = customErrorMapper
       ? customErrorMapper(error)
       : createStandardErrorMapper(`${operationName} failed`)(error);
-    
+
     throw new HTTPError(message, statusCode, error.response?.data);
   }
 }
@@ -243,7 +282,9 @@ export async function makeProviderApiCall<T>(
  * Creates a standardized error mapper with custom default message
  * Returns an error mapping function with consistent behavior
  */
-export function createStandardErrorMapper(defaultMessage: string): (error: any) => ErrorMappingResult {
+export function createStandardErrorMapper(
+  defaultMessage: string,
+): (error: any) => ErrorMappingResult {
   return (error: any) => {
     let errorMessage = defaultMessage;
     let statusCode = 500;
@@ -258,9 +299,13 @@ export function createStandardErrorMapper(defaultMessage: string): (error: any) 
       // Handle 403 Forbidden Access (product access denied)
       const errorData = error.response?.data?.error;
       if (errorData?.code === 'FORBIDDEN_ACCESS' || errorData?.message) {
-        errorMessage = errorData.message || 'Access denied. This product is not available with your current credentials.';
+        errorMessage =
+          errorData.message ||
+          'Access denied. This product is not available with your current credentials.';
       } else {
-        errorMessage = error.response?.data?.message || 'Access denied. This product is not available with your current credentials.';
+        errorMessage =
+          error.response?.data?.message ||
+          'Access denied. This product is not available with your current credentials.';
       }
       statusCode = 403;
     } else if (error.response?.status === 404) {
@@ -271,7 +316,8 @@ export function createStandardErrorMapper(defaultMessage: string): (error: any) 
       statusCode = 429;
     } else if (error.response?.status === 500) {
       if (error.response?.data?.error?.code === 'UPSTREAM_INTERNAL_SERVER_ERROR') {
-        errorMessage = 'Government source temporarily unavailable. Please try again in a few minutes.';
+        errorMessage =
+          'Government source temporarily unavailable. Please try again in a few minutes.';
         statusCode = 503;
       } else {
         errorMessage = 'External API server error. Please try again.';
@@ -285,4 +331,3 @@ export function createStandardErrorMapper(defaultMessage: string): (error: any) 
     return { message: errorMessage, statusCode };
   };
 }
-

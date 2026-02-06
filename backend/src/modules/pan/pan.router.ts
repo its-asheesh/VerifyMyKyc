@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { 
-  fetchFatherNameHandler, 
-  checkPanAadhaarLinkHandler, 
+import {
+  fetchFatherNameHandler,
+  checkPanAadhaarLinkHandler,
   fetchPanAdvanceHandler,
-  digilockerPullHandler, 
-  digilockerInitHandler, 
+  digilockerPullHandler,
+  digilockerInitHandler,
   digilockerFetchDocumentHandler,
   fetchGstinByPanHandler,
   fetchDinByPanHandler,
@@ -37,7 +37,12 @@ router.post('/digilocker-init', authenticate, requireUser, digilockerInitHandler
 router.post('/digilocker-pull', authenticate, requireUser, digilockerPullHandler);
 
 // Digilocker Fetch Document
-router.post('/digilocker-fetch-document', authenticate, requireUser, digilockerFetchDocumentHandler);
+router.post(
+  '/digilocker-fetch-document',
+  authenticate,
+  requireUser,
+  digilockerFetchDocumentHandler,
+);
 
 // Fetch PAN Advance
 router.post('/fetch-pan-advance', authenticate, requireUser, fetchPanAdvanceHandler);

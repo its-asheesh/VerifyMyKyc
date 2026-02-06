@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
+import { logger } from '../common/utils/logger';
+
 // Load environment variables
 dotenv.config();
 
@@ -15,9 +17,9 @@ export const connectDB = async () => {
     await mongoose.connect(mongoUri, {
       family: 4, // Force IPv4 to resolve querySrv ETIMEOUT
     });
-    console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
+    logger.info('MongoDB connected successfully');
+  } catch (err: any) {
+    logger.error('MongoDB connection error:', { message: err.message, stack: err.stack });
     process.exit(1);
   }
-}; 
+};

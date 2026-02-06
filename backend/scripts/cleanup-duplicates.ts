@@ -18,14 +18,14 @@ const modulesDir = path.join(__dirname, '..', 'src', 'modules');
  */
 function findDuplicateJsFiles(dir: string): string[] {
   const duplicates: string[] = [];
-  
+
   function scanDirectory(currentDir: string) {
     const items = fs.readdirSync(currentDir);
-    
+
     for (const item of items) {
       const fullPath = path.join(currentDir, item);
       const stat = fs.statSync(fullPath);
-      
+
       if (stat.isDirectory()) {
         // Skip node_modules and other non-source directories
         if (!item.startsWith('.') && item !== 'node_modules') {
@@ -40,7 +40,7 @@ function findDuplicateJsFiles(dir: string): string[] {
       }
     }
   }
-  
+
   scanDirectory(dir);
   return duplicates;
 }
@@ -50,7 +50,7 @@ function findDuplicateJsFiles(dir: string): string[] {
  */
 function removeDuplicateFiles(files: string[]): void {
   console.log(`Found ${files.length} duplicate JavaScript files:`);
-  
+
   for (const file of files) {
     try {
       fs.unlinkSync(file);
@@ -66,30 +66,30 @@ function removeDuplicateFiles(files: string[]): void {
  */
 function cleanupDuplicates(): void {
   console.log('🧹 Starting cleanup of duplicate JavaScript files...');
-  
+
   if (!fs.existsSync(modulesDir)) {
     console.error('❌ Modules directory not found:', modulesDir);
     process.exit(1);
   }
-  
+
   const duplicateFiles = findDuplicateJsFiles(modulesDir);
-  
+
   if (duplicateFiles.length === 0) {
     console.log('✅ No duplicate JavaScript files found.');
     return;
   }
-  
+
   console.log('\nDuplicate files found:');
-  duplicateFiles.forEach(file => console.log(`  - ${file}`));
-  
+  duplicateFiles.forEach((file) => console.log(`  - ${file}`));
+
   console.log('\n⚠️  WARNING: This will permanently delete the above JavaScript files.');
   console.log('Make sure you have a backup and that these are compilation artifacts.');
-  
+
   // In a real implementation, you might want to add a confirmation prompt
   // For now, we'll just log what would be removed
   console.log('\n🔍 Analysis complete. To actually remove files, uncomment the line below:');
   console.log('// removeDuplicateFiles(duplicateFiles);');
-  
+
   // Uncomment the line below to actually remove the files
   // removeDuplicateFiles(duplicateFiles);
 }

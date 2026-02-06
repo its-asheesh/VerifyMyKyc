@@ -22,4 +22,4 @@ export interface DrivingLicenseOcrResponse {
   message: string;
   ocr_data?: any;
   [key: string]: any;
-} 
+}

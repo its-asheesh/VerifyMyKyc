@@ -1,9 +1,9 @@
-import { 
+import {
   generateMrzProvider,
   verifyMrzProvider,
   verifyPassportProvider,
   fetchPassportDetailsProvider,
-  extractPassportOcrDataProvider
+  extractPassportOcrDataProvider,
 } from './provider/fetch.PassportProvider';
 
 // Import request types

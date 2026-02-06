@@ -102,5 +102,3 @@ export interface UpiVerifyResponse {
   path: string;
   [key: string]: any;
 }
-
-

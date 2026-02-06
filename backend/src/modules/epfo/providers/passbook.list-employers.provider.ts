@@ -1,4 +1,7 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 
 export async function listEmployersProvider(transactionId: string) {
   return makeProviderApiCall({
@@ -7,7 +10,6 @@ export async function listEmployersProvider(transactionId: string) {
     operationName: 'EPFO List Employers',
     method: 'GET',
     headers: { 'X-Transaction-ID': transactionId },
-    customErrorMapper: createStandardErrorMapper('List employers failed')
+    customErrorMapper: createStandardErrorMapper('List employers failed'),
   });
 }
-

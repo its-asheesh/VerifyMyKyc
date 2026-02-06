@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { 
-  fetchGstinByPanHandler, 
-  fetchGstinLiteHandler, 
-  fetchGstinContactHandler 
+import {
+  fetchGstinByPanHandler,
+  fetchGstinLiteHandler,
+  fetchGstinContactHandler,
 } from './gstin.controller';
 import { authenticate, requireUser } from '../../common/middleware/auth';
 

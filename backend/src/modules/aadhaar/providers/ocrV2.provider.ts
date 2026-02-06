@@ -3,7 +3,13 @@ import { HTTPError } from '../../../common/http/error';
 import { createStandardErrorMapper } from '../../../common/providers/BaseProvider';
 import FormData from 'form-data';
 
-export async function aadhaarOcrV2Provider(file_front: Buffer, file_front_name: string, consent: string, file_back?: Buffer, file_back_name?: string) {
+export async function aadhaarOcrV2Provider(
+  file_front: Buffer,
+  file_front_name: string,
+  consent: string,
+  file_back?: Buffer,
+  file_back_name?: string,
+) {
   try {
     const form = new FormData();
     form.append('file_front', file_front, file_front_name);
@@ -25,8 +31,8 @@ export async function aadhaarOcrV2Provider(file_front: Buffer, file_front_name: 
       config: {
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL
-      }
+        baseURL: error.config?.baseURL,
+      },
     });
 
     const { message, statusCode } = createStandardErrorMapper('Aadhaar OCR V2 failed')(error);

@@ -4,7 +4,7 @@ import { connectDB } from '../../config/db';
 const seedUsers = async () => {
   try {
     await connectDB();
-    
+
     // Check if users already exist
     const existingUsers = await User.countDocuments();
     if (existingUsers > 0) {
@@ -22,7 +22,7 @@ const seedUsers = async () => {
         phone: '919876543210',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-01-15')
+        createdAt: new Date('2023-01-15'),
       },
       {
         name: 'Demo User',
@@ -33,7 +33,7 @@ const seedUsers = async () => {
         phone: '919876543211',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-02-20')
+        createdAt: new Date('2023-02-20'),
       },
       {
         name: 'Rahul Sharma',
@@ -44,7 +44,7 @@ const seedUsers = async () => {
         phone: '919876543212',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-03-10')
+        createdAt: new Date('2023-03-10'),
       },
       {
         name: 'Priya Patel',
@@ -55,7 +55,7 @@ const seedUsers = async () => {
         phone: '919876543213',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-04-05')
+        createdAt: new Date('2023-04-05'),
       },
       {
         name: 'Amit Kumar',
@@ -66,7 +66,7 @@ const seedUsers = async () => {
         phone: '919876543214',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-05-15')
+        createdAt: new Date('2023-05-15'),
       },
       {
         name: 'Neha Singh',
@@ -77,7 +77,7 @@ const seedUsers = async () => {
         phone: '919876543215',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-06-20')
+        createdAt: new Date('2023-06-20'),
       },
       {
         name: 'Vikram Mehta',
@@ -88,7 +88,7 @@ const seedUsers = async () => {
         phone: '919876543216',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-07-12')
+        createdAt: new Date('2023-07-12'),
       },
       {
         name: 'Anjali Desai',
@@ -99,7 +99,7 @@ const seedUsers = async () => {
         phone: '919876543217',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-08-25')
+        createdAt: new Date('2023-08-25'),
       },
       {
         name: 'Suresh Reddy',
@@ -110,7 +110,7 @@ const seedUsers = async () => {
         phone: '919876543218',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-09-30')
+        createdAt: new Date('2023-09-30'),
       },
       {
         name: 'Kavita Verma',
@@ -121,7 +121,7 @@ const seedUsers = async () => {
         phone: '919876543219',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-10-15')
+        createdAt: new Date('2023-10-15'),
       },
       {
         name: 'Rajesh Gupta',
@@ -132,7 +132,7 @@ const seedUsers = async () => {
         phone: '919876543220',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-11-08')
+        createdAt: new Date('2023-11-08'),
       },
       {
         name: 'Meera Iyer',
@@ -143,7 +143,7 @@ const seedUsers = async () => {
         phone: '919876543221',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2023-12-03')
+        createdAt: new Date('2023-12-03'),
       },
       {
         name: 'Arjun Malhotra',
@@ -154,7 +154,7 @@ const seedUsers = async () => {
         phone: '919876543222',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2024-01-10')
+        createdAt: new Date('2024-01-10'),
       },
       {
         name: 'Pooja Sharma',
@@ -165,7 +165,7 @@ const seedUsers = async () => {
         phone: '919876543223',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2024-01-25')
+        createdAt: new Date('2024-01-25'),
       },
       {
         name: 'Deepak Joshi',
@@ -176,8 +176,8 @@ const seedUsers = async () => {
         phone: '919876543224',
         emailVerified: true,
         isActive: true,
-        createdAt: new Date('2024-02-05')
-      }
+        createdAt: new Date('2024-02-05'),
+      },
     ];
 
     await User.insertMany(users);
@@ -192,4 +192,4 @@ const seedUsers = async () => {
   }
 };
 
-seedUsers(); 
+seedUsers();

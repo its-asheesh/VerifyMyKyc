@@ -24,7 +24,7 @@ import {
  */
 async function handleProviderRequest<T>(
   requestPromise: Promise<AxiosResponse<T>>,
-  defaultErrorMessage: string
+  defaultErrorMessage: string,
 ): Promise<T> {
   try {
     const response = await requestPromise;
@@ -33,7 +33,7 @@ async function handleProviderRequest<T>(
     throw new HTTPError(
       error.response?.data?.message || defaultErrorMessage,
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }
@@ -42,33 +42,48 @@ async function handleProviderRequest<T>(
  * Generates MRZ (Machine Readable Zone) from passport details.
  */
 export async function generateMrzProvider(
-  payload: PassportGenerateMrzRequest
+  payload: PassportGenerateMrzRequest,
 ): Promise<PassportGenerateMrzResponse> {
   return handleProviderRequest(
     apiClient.post('/passport-api/generate-mrz', payload),
-    'Failed to generate MRZ'
+    'Failed to generate MRZ',
   );
 }
 
 /**
  * Verifies if the provided MRZ matches the given passport details.
  */
-export async function verifyMrzProvider(payload: PassportVerifyMrzRequest): Promise<PassportVerifyMrzResponse> {
-  return handleProviderRequest(apiClient.post('/passport-api/verify-mrz', payload), 'MRZ verification failed');
+export async function verifyMrzProvider(
+  payload: PassportVerifyMrzRequest,
+): Promise<PassportVerifyMrzResponse> {
+  return handleProviderRequest(
+    apiClient.post('/passport-api/verify-mrz', payload),
+    'MRZ verification failed',
+  );
 }
 
 /**
  * Verifies passport details (file number, DOB, name, etc.) against government database.
  */
-export async function verifyPassportProvider(payload: PassportVerifyRequest): Promise<PassportVerifyResponse> {
-  return handleProviderRequest(apiClient.post('/passport-api/verify', payload), 'Passport verification failed');
+export async function verifyPassportProvider(
+  payload: PassportVerifyRequest,
+): Promise<PassportVerifyResponse> {
+  return handleProviderRequest(
+    apiClient.post('/passport-api/verify', payload),
+    'Passport verification failed',
+  );
 }
 
 /**
  * Fetches passport details using file number and date of birth.
  */
-export async function fetchPassportDetailsProvider(payload: PassportFetchRequest): Promise<PassportFetchResponse> {
-  return handleProviderRequest(apiClient.post('/passport-api/fetch', payload), 'Failed to fetch passport details');
+export async function fetchPassportDetailsProvider(
+  payload: PassportFetchRequest,
+): Promise<PassportFetchResponse> {
+  return handleProviderRequest(
+    apiClient.post('/passport-api/fetch', payload),
+    'Failed to fetch passport details',
+  );
 }
 
 /**
@@ -76,7 +91,7 @@ export async function fetchPassportDetailsProvider(payload: PassportFetchRequest
  * Uses multipart/form-data for file upload.
  */
 export async function extractPassportOcrDataProvider(
-  payload: PassportOcrRequest
+  payload: PassportOcrRequest,
 ): Promise<PassportOcrResponse> {
   const formData = new FormData();
 
@@ -94,6 +109,6 @@ export async function extractPassportOcrDataProvider(
         'Content-Type': 'multipart/form-data',
       },
     }),
-    'OCR extraction failed'
+    'OCR extraction failed',
   );
 }

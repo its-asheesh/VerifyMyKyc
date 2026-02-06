@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { 
-  aadhaarOcrV1Handler, 
-  aadhaarOcrV2Handler, 
+import {
+  aadhaarOcrV1Handler,
+  aadhaarOcrV2Handler,
   fetchEAadhaarHandler,
   generateOtpV2Handler,
-  submitOtpV2Handler
+  submitOtpV2Handler,
 } from './aadhaar.controller';
 import { authenticate, requireUser } from '../../common/middleware/auth';
 import { validate } from '../../common/validation/middleware';
@@ -28,7 +28,7 @@ router.post(
     { name: 'file_front', maxCount: 1 },
     { name: 'file_back', maxCount: 1 },
   ]),
-  aadhaarOcrV2Handler
+  aadhaarOcrV2Handler,
 );
 
 router.post('/fetch-eaadhaar', authenticate, requireUser, fetchEAadhaarHandler);
@@ -39,7 +39,7 @@ router.post(
   authenticate,
   requireUser,
   validate(aadhaarGenerateOtpV2Schema),
-  generateOtpV2Handler
+  generateOtpV2Handler,
 );
 
 router.post(
@@ -47,7 +47,7 @@ router.post(
   authenticate,
   requireUser,
   validate(aadhaarSubmitOtpV2Schema),
-  submitOtpV2Handler
+  submitOtpV2Handler,
 );
 
 export default router;

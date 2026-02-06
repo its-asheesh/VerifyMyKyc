@@ -1,11 +1,11 @@
-import mongoose, { Document, Schema } from "mongoose";
-import bcrypt from "bcryptjs";
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   name: string;
   email?: string; // Make optional
   password: string;
-  role: "user" | "admin";
+  role: 'user' | 'admin';
   company?: string;
   phone?: string;
   avatar?: string;
@@ -36,10 +36,10 @@ const userSchema = new Schema<IUser>(
   {
     name: {
       type: String,
-      required: [true, "Name is required"],
+      required: [true, 'Name is required'],
       trim: true,
-      minlength: [2, "Name must be at least 2 characters long"],
-      maxlength: [50, "Name cannot exceed 50 characters"],
+      minlength: [2, 'Name must be at least 2 characters long'],
+      maxlength: [50, 'Name cannot exceed 50 characters'],
     },
     email: {
       type: String,
@@ -52,10 +52,7 @@ const userSchema = new Schema<IUser>(
         const trimmed = value.trim();
         return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
       },
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email",
-      ],
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email'],
     },
     phone: {
       type: String,
@@ -63,23 +60,23 @@ const userSchema = new Schema<IUser>(
       unique: true,
       trim: true,
       sparse: true, // ← critical
-      match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
+      match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number'],
     },
     password: {
       type: String,
-      required: [false, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
+      required: [false, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters long'],
       select: false, // Don't include password in queries by default
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ['user', 'admin'],
+      default: 'user',
     },
     company: {
       type: String,
       trim: true,
-      maxlength: [100, "Company name cannot exceed 100 characters"],
+      maxlength: [100, 'Company name cannot exceed 100 characters'],
     },
     avatar: {
       type: String,
@@ -107,27 +104,27 @@ const userSchema = new Schema<IUser>(
       ipAddress: String,
     },
     phoneVerified: { type: Boolean, default: false },
-    phoneOtpCode: String, 
-    phoneOtpExpires: Date, 
+    phoneOtpCode: String,
+    phoneOtpExpires: Date,
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes
 // Make email UNIQUE only when it's a non-empty string
 userSchema.index(
   { email: 1 },
-  { unique: true, partialFilterExpression: { email: { $exists: true, $type: "string", $ne: "" } } }
+  { unique: true, partialFilterExpression: { email: { $exists: true, $type: 'string', $ne: '' } } },
 );
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
 // Hash password before saving
-userSchema.pre("save", async function (next) {
+userSchema.pre('save', async function (next) {
   // Only hash the password if it has been modified (or is new)
-  if (!this.isModified("password")) return next();
+  if (!this.isModified('password')) return next();
 
   try {
     // Hash password with cost of 12
@@ -140,9 +137,7 @@ userSchema.pre("save", async function (next) {
 });
 
 // Compare password method
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -153,4 +148,4 @@ userSchema.methods.toJSON = function () {
   return userObject;
 };
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export const User = mongoose.model<IUser>('User', userSchema);

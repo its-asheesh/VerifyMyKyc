@@ -1,8 +1,13 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 import { HTTPError } from '../../../common/http/error';
 import { VoterMesonFetchRequest, VoterMesonFetchResponse } from '../../../common/types/voter';
 
-export async function voterMesonFetchProvider(payload: VoterMesonFetchRequest): Promise<VoterMesonFetchResponse> {
+export async function voterMesonFetchProvider(
+  payload: VoterMesonFetchRequest,
+): Promise<VoterMesonFetchResponse> {
   // Validation
   if (payload.consent !== 'Y') {
     throw new HTTPError('Consent is required to fetch Voter details', 400);
@@ -19,6 +24,6 @@ export async function voterMesonFetchProvider(payload: VoterMesonFetchRequest): 
     endpoint: '/voter-api/meson/fetch',
     payload,
     operationName: 'Voter Meson Fetch',
-    customErrorMapper: createStandardErrorMapper('Fetch Voter details (Meson) failed')
+    customErrorMapper: createStandardErrorMapper('Fetch Voter details (Meson) failed'),
   });
 }

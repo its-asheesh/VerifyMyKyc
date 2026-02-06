@@ -21,7 +21,7 @@ import {
  * Fetches basic RC (Registration Certificate) details.
  */
 export async function fetchRcLiteDetailsProvider(
-  payload: RcFetchLiteRequest
+  payload: RcFetchLiteRequest,
 ): Promise<RcFetchLiteResponse> {
   try {
     const response = await apiClient.post('/rc-api/fetch-lite', payload);
@@ -30,7 +30,7 @@ export async function fetchRcLiteDetailsProvider(
     throw new HTTPError(
       error.response?.data?.message || 'Fetch RC Lite Details failed',
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }
@@ -39,7 +39,7 @@ export async function fetchRcLiteDetailsProvider(
  * Fetches detailed RC registration information.
  */
 export async function fetchRcDetailedProvider(
-  payload: RcFetchDetailedRequest
+  payload: RcFetchDetailedRequest,
 ): Promise<RcFetchDetailedResponse> {
   try {
     const response = await apiClient.post('/rc-api/fetch-detailed', payload);
@@ -48,7 +48,7 @@ export async function fetchRcDetailedProvider(
     throw new HTTPError(
       error.response?.data?.message || 'Fetch RC Detailed Details failed',
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }
@@ -57,7 +57,7 @@ export async function fetchRcDetailedProvider(
  * Fetches detailed RC information along with linked challans.
  */
 export async function fetchRcDetailedWithChallanProvider(
-  payload: RcFetchDetailedChallanRequest
+  payload: RcFetchDetailedChallanRequest,
 ): Promise<RcFetchDetailedChallanResponse> {
   try {
     const response = await apiClient.post('/rc-api/fetch-detailed-challan', payload);
@@ -66,7 +66,7 @@ export async function fetchRcDetailedWithChallanProvider(
     throw new HTTPError(
       error.response?.data?.message || 'Fetch RC Detailed With Challan failed',
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }
@@ -75,7 +75,7 @@ export async function fetchRcDetailedWithChallanProvider(
  * Fetches e-challan details using RC, chassis, and engine number.
  */
 export async function fetchEChallanProvider(
-  payload: RcEchallanFetchRequest
+  payload: RcEchallanFetchRequest,
 ): Promise<RcEchallanFetchResponse> {
   try {
     const response = await apiClient.post('/rc-api/echallan/fetch', payload);
@@ -84,7 +84,7 @@ export async function fetchEChallanProvider(
     throw new HTTPError(
       error.response?.data?.message || 'Fetch E-Challan failed',
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }
@@ -93,7 +93,7 @@ export async function fetchEChallanProvider(
  * Fetches vehicle registration number using chassis number.
  */
 export async function fetchRegNumByChassisProvider(
-  payload: RcFetchRegNumByChassisRequest
+  payload: RcFetchRegNumByChassisRequest,
 ): Promise<RcFetchRegNumByChassisResponse> {
   try {
     const response = await apiClient.post('/rc-api/fetch-reg-num-by-chassis', payload);
@@ -102,7 +102,7 @@ export async function fetchRegNumByChassisProvider(
     throw new HTTPError(
       error.response?.data?.message || 'Fetch Registration Number by Chassis failed',
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }
@@ -111,7 +111,7 @@ export async function fetchRegNumByChassisProvider(
  * Fetches FASTag details using RC number or Tag ID.
  */
 export async function fetchFastagDetailsProvider(
-  payload: RcFastagFetchRequest
+  payload: RcFastagFetchRequest,
 ): Promise<RcFastagFetchResponse> {
   try {
     const response = await apiClient.post('/rc-api/fastag/fetch-detailed', payload);
@@ -120,7 +120,7 @@ export async function fetchFastagDetailsProvider(
     throw new HTTPError(
       error.response?.data?.message || 'Fetch FASTag Details failed',
       error.response?.status || 500,
-      error.response?.data
+      error.response?.data,
     );
   }
 }

@@ -1,4 +1,7 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 
 export async function aadhaarOcrV1Provider(base64_data: string, consent: string) {
   return makeProviderApiCall({
@@ -8,6 +11,6 @@ export async function aadhaarOcrV1Provider(base64_data: string, consent: string)
       consent,
     },
     operationName: 'Aadhaar OCR V1',
-    customErrorMapper: createStandardErrorMapper('Aadhaar OCR V1 failed')
+    customErrorMapper: createStandardErrorMapper('Aadhaar OCR V1 failed'),
   });
 }

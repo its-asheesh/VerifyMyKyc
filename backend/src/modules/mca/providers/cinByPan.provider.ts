@@ -1,4 +1,7 @@
-import { makeProviderApiCall, createStandardErrorMapper } from '../../../common/providers/BaseProvider';
+import {
+  makeProviderApiCall,
+  createStandardErrorMapper,
+} from '../../../common/providers/BaseProvider';
 import { HTTPError } from '../../../common/http/error';
 import { CinByPanRequest, CinByPanResponse } from '../../../common/types/mca';
 
@@ -22,6 +25,6 @@ export async function fetchCinByPanProvider(payload: CinByPanRequest): Promise<C
     endpoint: '/mca-api/cin-by-pan',
     payload: externalPayload,
     operationName: 'MCA CIN by PAN',
-    customErrorMapper: createStandardErrorMapper('Fetch CIN by PAN failed')
+    customErrorMapper: createStandardErrorMapper('Fetch CIN by PAN failed'),
   });
 }

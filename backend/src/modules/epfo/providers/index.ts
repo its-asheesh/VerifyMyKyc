@@ -7,5 +7,3 @@ export { employmentByUanProvider } from './employment.fetch-by-uan.provider';
 export { employmentLatestProvider } from './employment.fetch-latest.provider';
 export { uanByPanProvider } from './uan.fetch-by-pan.provider';
 export { employerVerifyProvider } from './employer.verify.provider';
-
-

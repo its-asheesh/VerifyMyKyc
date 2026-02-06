@@ -30,11 +30,11 @@ export const handleOptions = (req: Request, res: Response, next: NextFunction) =
 // Middleware to authenticate user
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log('AUTH REQUEST FROM:', req.headers['user-agent']);
-    console.log('AUTHORIZATION HEADER:', req.headers.authorization);
+    // console.log('AUTH REQUEST FROM:', req.headers['user-agent']);
+    // console.log('AUTHORIZATION HEADER:', req.headers.authorization);
 
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
       return res.status(401).json({ message: 'Access denied. No token provided.' });
     }
@@ -43,7 +43,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const decoded = verifyToken(token) as JWTPayload;
 
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid token. User not found.' });
     }
@@ -68,8 +68,8 @@ export const authorize = (...roles: string[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        message: 'Access denied. Insufficient permissions.' 
+      return res.status(403).json({
+        message: 'Access denied. Insufficient permissions.',
       });
     }
 
@@ -86,7 +86,7 @@ export const requireAnyRole = authorize('user', 'admin');
 export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
       return next(); // Continue without user
     }
@@ -95,7 +95,7 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
     const decoded = verifyToken(token) as JWTPayload;
 
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (user && user.isActive) {
       req.user = user;
     }

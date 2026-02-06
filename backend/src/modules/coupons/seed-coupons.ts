@@ -1,21 +1,21 @@
-import mongoose from 'mongoose'
-import { Coupon } from './coupon.model'
-import { User } from '../auth/auth.model'
+import mongoose from 'mongoose';
+import { Coupon } from './coupon.model';
+import { User } from '../auth/auth.model';
 
 const seedCoupons = async () => {
   try {
     // Get admin user for createdBy field
-    const adminUser = await User.findOne({ role: 'admin' })
+    const adminUser = await User.findOne({ role: 'admin' });
     if (!adminUser) {
-      console.log('No admin user found. Please create an admin user first.')
-      return
+      console.log('No admin user found. Please create an admin user first.');
+      return;
     }
 
     // Check if coupons already exist
-    const existingCoupons = await Coupon.countDocuments()
+    const existingCoupons = await Coupon.countDocuments();
     if (existingCoupons > 0) {
-      console.log('Coupons already seeded. Skipping...')
-      return
+      console.log('Coupons already seeded. Skipping...');
+      return;
     }
 
     const sampleCoupons = [
@@ -35,10 +35,10 @@ const seedCoupons = async () => {
         userRestrictions: {
           newUsersOnly: true,
           specificUsers: [],
-          minimumOrders: 0
+          minimumOrders: 0,
         },
         isActive: true,
-        createdBy: adminUser._id
+        createdBy: adminUser._id,
       },
       {
         code: 'SUMMER50',
@@ -55,10 +55,10 @@ const seedCoupons = async () => {
         userRestrictions: {
           newUsersOnly: false,
           specificUsers: [],
-          minimumOrders: 0
+          minimumOrders: 0,
         },
         isActive: true,
-        createdBy: adminUser._id
+        createdBy: adminUser._id,
       },
       {
         code: 'PAN10',
@@ -76,22 +76,22 @@ const seedCoupons = async () => {
         userRestrictions: {
           newUsersOnly: false,
           specificUsers: [],
-          minimumOrders: 0
+          minimumOrders: 0,
         },
         isActive: true,
-        createdBy: adminUser._id
-      }
-    ]
+        createdBy: adminUser._id,
+      },
+    ];
 
-    await Coupon.insertMany(sampleCoupons)
-    console.log('✅ Sample coupons seeded successfully!')
-    console.log('📋 Available coupon codes:')
-    sampleCoupons.forEach(coupon => {
-      console.log(`   • ${coupon.code} - ${coupon.name}`)
-    })
+    await Coupon.insertMany(sampleCoupons);
+    console.log('✅ Sample coupons seeded successfully!');
+    console.log('📋 Available coupon codes:');
+    sampleCoupons.forEach((coupon) => {
+      console.log(`   • ${coupon.code} - ${coupon.name}`);
+    });
   } catch (error) {
-    console.error('❌ Error seeding coupons:', error)
+    console.error('❌ Error seeding coupons:', error);
   }
-}
+};
 
-export default seedCoupons 
+export default seedCoupons;

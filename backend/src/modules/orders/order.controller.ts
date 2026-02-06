@@ -16,7 +16,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     finalAmount,
     billingPeriod,
     paymentMethod,
-    couponApplied
+    couponApplied,
   } = req.body;
 
   console.log('Creating order with data:', {
@@ -27,7 +27,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     finalAmount,
     billingPeriod,
     paymentMethod,
-    couponApplied
+    couponApplied,
   });
 
   const userId = req.user._id;
@@ -36,16 +36,20 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   console.log('Generated orderId:', orderId);
 
   // Prepare verification quota if this is a verification order
-  let verificationQuota: {
-    totalAllowed: number;
-    used: number;
-    remaining: number;
-    validityDays: number;
-  } | undefined = undefined;
+  let verificationQuota:
+    | {
+        totalAllowed: number;
+        used: number;
+        remaining: number;
+        validityDays: number;
+      }
+    | undefined = undefined;
 
   if (orderType === 'verification' && serviceDetails?.verificationType) {
     try {
-      const pricing = await VerificationPricing.findOne({ verificationType: serviceDetails.verificationType });
+      const pricing = await VerificationPricing.findOne({
+        verificationType: serviceDetails.verificationType,
+      });
       if (pricing) {
         let quotaCfg: { count: number; validityDays: number } | undefined;
         // One-time pricing only
@@ -96,7 +100,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     paymentMethod,
     paymentStatus: 'pending',
     status: 'pending',
-    startDate: new Date() // Add this to ensure startDate is set
+    startDate: new Date(), // Add this to ensure startDate is set
   };
 
   if (verificationQuota) {
@@ -108,7 +112,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     orderData.couponApplied = couponApplied;
   }
 
-  let order = await Order.create(orderData);
+  const order = await Order.create(orderData);
 
   // GA4: order_created
   try {
@@ -119,20 +123,20 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
       order_type: order.orderType,
       service: (order.serviceDetails as any)?.verificationType || order.serviceName,
     });
-  } catch { }
+  } catch {}
 
   // Razorpay order creation starts here
   // make sure to import at top
 
   const paymentCapture = 1; // 1 for automatic capture
-  const currency = "INR";
+  const currency = 'INR';
 
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    console.error("Razorpay env missing: RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET not set");
+    console.error('Razorpay env missing: RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET not set');
     return res.status(500).json({
       success: false,
       message: 'Payment gateway is not configured. Please contact support.',
-      code: 'RAZORPAY_CONFIG_MISSING'
+      code: 'RAZORPAY_CONFIG_MISSING',
     });
   }
 
@@ -159,7 +163,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Payment initialization failed',
-      code: 'RAZORPAY_ORDER_CREATE_FAILED'
+      code: 'RAZORPAY_ORDER_CREATE_FAILED',
     });
   }
 
@@ -173,7 +177,7 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
           userId: req.user._id,
           orderId: order._id,
           usedAt: new Date(),
-          discountApplied: couponApplied.discount
+          discountApplied: couponApplied.discount,
         });
         await coupon.save();
         console.log('Coupon usage updated successfully');
@@ -192,8 +196,8 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
       order,
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency
-    }
+      currency: razorpayOrder.currency,
+    },
   });
   return; // prevent double response
 });
@@ -221,7 +225,7 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
   // Recompute end date using quota validity if available, otherwise by billing period
   try {
     const start = order.startDate ? new Date(order.startDate) : new Date();
-    let newEnd = new Date(start);
+    const newEnd = new Date(start);
     if (order.orderType === 'verification' && order.verificationQuota?.validityDays) {
       newEnd.setDate(newEnd.getDate() + order.verificationQuota.validityDays);
       order.endDate = newEnd;
@@ -255,7 +259,7 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
   res.json({
     success: true,
     message: 'Payment processed successfully',
-    data: { order }
+    data: { order },
   });
 
   // GA4: payment_verified (fire and forget)
@@ -266,7 +270,7 @@ export const processPayment = asyncHandler(async (req: Request, res: Response) =
       currency: order.currency || 'INR',
       payment_method: order.paymentMethod,
     });
-  } catch { }
+  } catch {}
 });
 
 // Get user's orders
@@ -279,13 +283,11 @@ export const getUserOrders = asyncHandler(async (req: Request, res: Response) =>
   if (status) filter.status = status;
   if (orderType) filter.orderType = orderType;
 
-  const orders = await Order.find(filter)
-    .sort({ createdAt: -1 })
-    .populate('userId', 'name email');
+  const orders = await Order.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
 
   res.json({
     success: true,
-    data: { orders }
+    data: { orders },
   });
 });
 
@@ -294,8 +296,7 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
   const { orderId } = req.params;
   const userId = req.user._id;
 
-  const order = await Order.findOne({ orderId, userId })
-    .populate('userId', 'name email');
+  const order = await Order.findOne({ orderId, userId }).populate('userId', 'name email');
 
   if (!order) {
     return res.status(404).json({ message: 'Order not found' });
@@ -303,7 +304,7 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
 
   res.json({
     success: true,
-    data: { order }
+    data: { order },
   });
 });
 
@@ -315,7 +316,7 @@ export const getActiveServices = asyncHandler(async (req: Request, res: Response
   // Get all orders that were active and payment completed
   const orders = await Order.find({
     userId,
-    paymentStatus: 'completed'
+    paymentStatus: 'completed',
   }).sort({ endDate: 1 });
 
   // Check and update expired orders
@@ -331,21 +332,19 @@ export const getActiveServices = asyncHandler(async (req: Request, res: Response
   }
 
   // Filter for truly active services (not expired)
-  const activeOrders = updatedOrders.filter(order =>
-    order.status === 'active' &&
-    order.endDate &&
-    new Date(order.endDate) >= now
+  const activeOrders = updatedOrders.filter(
+    (order) => order.status === 'active' && order.endDate && new Date(order.endDate) >= now,
   );
 
   // Group by order type
   const services = {
-    verifications: activeOrders.filter(order => order.orderType === 'verification'),
-    plans: activeOrders.filter(order => order.orderType === 'plan')
+    verifications: activeOrders.filter((order) => order.orderType === 'verification'),
+    plans: activeOrders.filter((order) => order.orderType === 'plan'),
   };
 
   res.json({
     success: true,
-    data: { services }
+    data: { services },
   });
 });
 
@@ -370,7 +369,7 @@ export const cancelOrder = asyncHandler(async (req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Order cancelled successfully',
-    data: { order }
+    data: { order },
   });
 });
 
@@ -384,13 +383,11 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
   if (orderType) filter.orderType = orderType;
   if (userId) filter.userId = userId;
 
-  const orders = await Order.find(filter)
-    .populate('userId', 'name email')
-    .sort({ createdAt: -1 });
+  const orders = await Order.find(filter).populate('userId', 'name email').sort({ createdAt: -1 });
 
   res.json({
     success: true,
-    data: { orders }
+    data: { orders },
   });
 });
 
@@ -411,12 +408,11 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   res.json({
     success: true,
     message: 'Order status updated successfully',
-    data: { order }
+    data: { order },
   });
 });
 
 // controllers/order/verifyPayment.ts
-
 
 export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature, orderId } = req.body;
@@ -424,7 +420,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !orderId) {
     return res.status(400).json({
       success: false,
-      message: 'Missing required payment details'
+      message: 'Missing required payment details',
     });
   }
 
@@ -437,7 +433,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   if (generatedSignature !== razorpay_signature) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid payment signature'
+      message: 'Invalid payment signature',
     });
   }
 
@@ -447,7 +443,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   if (!order) {
     return res.status(404).json({
       success: false,
-      message: 'Order not found or already processed'
+      message: 'Order not found or already processed',
     });
   }
 
@@ -460,7 +456,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   // Recompute endDate (already in your processPayment logic)
   try {
     const start = new Date(order.startDate);
-    let newEnd = new Date(start);
+    const newEnd = new Date(start);
 
     if (order.orderType === 'verification' && order.verificationQuota?.validityDays) {
       newEnd.setDate(newEnd.getDate() + order.verificationQuota.validityDays);
@@ -495,7 +491,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   res.json({
     success: true,
     message: 'Payment verified and order activated',
-    data: { order }
+    data: { order },
   });
 });
 
@@ -509,7 +505,7 @@ export const getOrderStats = asyncHandler(async (req: Request, res: Response) =>
 
   const totalRevenue = await Order.aggregate([
     { $match: { paymentStatus: 'completed' } },
-    { $group: { _id: null, total: { $sum: '$finalAmount' } } }
+    { $group: { _id: null, total: { $sum: '$finalAmount' } } },
   ]);
 
   res.json({
@@ -520,7 +516,7 @@ export const getOrderStats = asyncHandler(async (req: Request, res: Response) =>
       pendingOrders,
       activeOrders,
       expiredOrders,
-      totalRevenue: totalRevenue[0]?.total || 0
-    }
+      totalRevenue: totalRevenue[0]?.total || 0,
+    },
   });
-}); 
+});
