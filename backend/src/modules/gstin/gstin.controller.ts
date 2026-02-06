@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import asyncHandler from '../../common/middleware/asyncHandler';
 import { GstinService } from './gstin.service';
+import { GstinFetchRequest, GstinByPanRequest } from '../../common/validation/schemas';
 import { AuthenticatedRequest } from '../../common/middleware/auth';
 import { BaseController } from '../../common/controllers/BaseController';
 
@@ -9,7 +10,10 @@ const service = new GstinService();
 class GstinController extends BaseController {
   // POST /api/gstin/fetch-by-pan
   // Uses gstin quota with pan as fallback
-  fetchGstinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  // POST /api/gstin/fetch-by-pan
+  // Uses gstin quota with pan as fallback
+  fetchGstinByPanHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, GstinByPanRequest>, res: Response) => {
+    // Validation handled by Zod
     await this.handleVerificationWithFallback(req, res, 'gstin', ['pan'], async () => {
       return service.fetchByPan(req.body);
     });
@@ -17,14 +21,16 @@ class GstinController extends BaseController {
 
   // POST /api/gstin/fetch-lite
   // Expects body: { gstin: string, consent: string }
-  fetchGstinLiteHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  // POST /api/gstin/fetch-lite
+  // Expects body: { gstin: string, consent: string }
+  fetchGstinLiteHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, GstinFetchRequest>, res: Response) => {
     await this.handleVerificationRequest(
       req,
       res,
       {
         verificationType: 'gstin',
-        requireConsent: true,
-        requiredFields: ['gstin'],
+        requireConsent: false, // Handled by Zod
+        requiredFields: [], // Handled by Zod
       },
       async () => {
         return service.fetchLite(req.body);
@@ -34,14 +40,16 @@ class GstinController extends BaseController {
 
   // POST /api/gstin/fetch-contact
   // Expects body: { gstin: string, consent: string }
-  fetchGstinContactHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  // POST /api/gstin/fetch-contact
+  // Expects body: { gstin: string, consent: string }
+  fetchGstinContactHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, GstinFetchRequest>, res: Response) => {
     await this.handleVerificationRequest(
       req,
       res,
       {
         verificationType: 'gstin',
-        requireConsent: true,
-        requiredFields: ['gstin'],
+        requireConsent: false,
+        requiredFields: [],
       },
       async () => {
         return service.fetchContact(req.body);

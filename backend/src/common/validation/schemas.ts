@@ -225,6 +225,7 @@ export const gstinSchema = z
 
 export const gstinFetchSchema = z.object({
   gstin: gstinSchema,
+  consent: z.enum(['Y', 'N']),
 });
 
 export const gstinByPanSchema = z.object({
@@ -240,6 +241,10 @@ export const drivingLicenseSchema = z.object({
 });
 
 // Voter ID Schemas
+export const ocrSchema = z.object({
+  consent: z.enum(['Y', 'N']),
+});
+
 export const voterOcrSchema = z.object({
   consent: z.enum(['Y', 'N']),
 });
@@ -408,3 +413,11 @@ export type FetchEAadhaarRequest = z.infer<typeof fetchEAadhaarSchema>;
 export type AadhaarOcrV1Request = z.infer<typeof aadhaarOcrV1Schema>;
 export type AadhaarGenerateOtpV2Request = z.infer<typeof aadhaarGenerateOtpV2Schema>;
 export type AadhaarSubmitOtpV2Request = z.infer<typeof aadhaarSubmitOtpV2Schema>;
+
+export type GstinFetchRequest = z.infer<typeof gstinFetchSchema>;
+export type GstinByPanRequest = z.infer<typeof gstinByPanSchema>;
+export type DrivingLicenseRequest = z.infer<typeof drivingLicenseSchema>;
+export type BankAccountVerifyRequest = z.infer<typeof bankAccountVerifySchema>;
+export type IfscValidateRequest = z.infer<typeof ifscValidateSchema>;
+export type UpiVerifyRequest = z.infer<typeof upiVerifySchema>;
+export type OcrRequest = z.infer<typeof ocrSchema>;
