@@ -4,18 +4,22 @@ import { VehicleService } from './vehicle.service';
 import { AuthenticatedRequest } from '../../common/middleware/auth';
 import { ensureVerificationQuota, consumeVerificationQuota } from '../orders/quota.service';
 import { logger } from '../../common/utils/logger';
+import {
+  RcLiteRequest,
+  RcDetailedRequest,
+  RcDetailedWithChallanRequest,
+  EChallanRequest,
+  RegNumByChassisRequest,
+  FastagRequest
+} from '../../common/validation/schemas';
 
 const service = new VehicleService();
 
 // POST /api/vehicle/rc/fetch-lite
 // Expects body: { rc_number: string, consent: 'Y' | 'N' }
-export const fetchRcLiteHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const fetchRcLiteHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, RcLiteRequest>, res: Response) => {
   const userId = req.user._id;
-  const { rc_number, consent } = req.body || {};
-
-  if (!rc_number || !consent) {
-    return res.status(400).json({ message: 'rc_number and consent are required' });
-  }
+  const { rc_number, consent } = req.body;
 
   logger.info('RC Lite Controller: incoming request', {
     userId,
@@ -46,14 +50,9 @@ export const fetchRcLiteHandler = asyncHandler(async (req: AuthenticatedRequest,
 // POST /api/vehicle/rc/fetch-detailed
 // Expects body: { rc_number: string, extract_variant?: boolean, extract_mapping?: string, extract_insurer?: string, consent: 'Y' | 'N' }
 export const fetchRcDetailedHandler = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest<{}, {}, RcDetailedRequest>, res: Response) => {
     const userId = req.user._id;
-    const { rc_number, extract_variant, extract_mapping, extract_insurer, consent } =
-      req.body || {};
-
-    if (!rc_number || !consent) {
-      return res.status(400).json({ message: 'rc_number and consent are required' });
-    }
+    const { rc_number, extract_variant, extract_mapping, extract_insurer, consent } = req.body;
 
     logger.info('RC Detailed Controller: incoming request', {
       userId,
@@ -83,13 +82,9 @@ export const fetchRcDetailedHandler = asyncHandler(
 // POST /api/vehicle/rc/fetch-detailed-challan
 // Expects body: { rc_number: string, extract_variant?: boolean, extract_mapping?: string, consent: 'Y' | 'N' }
 export const fetchRcDetailedWithChallanHandler = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest<{}, {}, RcDetailedWithChallanRequest>, res: Response) => {
     const userId = req.user._id;
-    const { rc_number, extract_variant, extract_mapping, consent } = req.body || {};
-
-    if (!rc_number || !consent) {
-      return res.status(400).json({ message: 'rc_number and consent are required' });
-    }
+    const { rc_number, extract_variant, extract_mapping, consent } = req.body;
 
     logger.info('RC Detailed With Challan Controller: incoming request', {
       userId,
@@ -117,15 +112,9 @@ export const fetchRcDetailedWithChallanHandler = asyncHandler(
 // POST /api/vehicle/challan/fetch
 // Expects body: { rc_number: string, chassis_number: string, engine_number: string, state_portals?: string[], consent: 'Y' | 'N' }
 export const fetchEChallanHandler = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest<{}, {}, EChallanRequest>, res: Response) => {
     const userId = req.user._id;
-    const { rc_number, chassis_number, engine_number, state_portals, consent } = req.body || {};
-
-    if (!rc_number || !chassis_number || !engine_number || !consent) {
-      return res.status(400).json({
-        message: 'rc_number, chassis_number, engine_number, and consent are required',
-      });
-    }
+    const { rc_number, chassis_number, engine_number, state_portals, consent } = req.body;
 
     logger.info('E-Challan Controller: incoming request', {
       userId,
@@ -155,13 +144,9 @@ export const fetchEChallanHandler = asyncHandler(
 // POST /api/vehicle/rc/fetch-reg-num-by-chassis
 // Expects body: { chassis_number: string, consent: 'Y' | 'N' }
 export const fetchRegNumByChassisHandler = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest<{}, {}, RegNumByChassisRequest>, res: Response) => {
     const userId = req.user._id;
-    const { chassis_number, consent } = req.body || {};
-
-    if (!chassis_number || !consent) {
-      return res.status(400).json({ message: 'chassis_number and consent are required' });
-    }
+    const { chassis_number, consent } = req.body;
 
     logger.info('Fetch Reg Num By Chassis Controller: incoming request', {
       userId,
@@ -182,19 +167,9 @@ export const fetchRegNumByChassisHandler = asyncHandler(
 // POST /api/vehicle/fastag/fetch-detailed
 // Expects body: { rc_number?: string, tag_id?: string, consent: 'Y' | 'N' }
 export const fetchFastagDetailsHandler = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest<{}, {}, FastagRequest>, res: Response) => {
     const userId = req.user._id;
-    const { rc_number, tag_id, consent } = req.body || {};
-
-    if (!rc_number && !tag_id) {
-      return res.status(400).json({
-        message: 'At least one of rc_number or tag_id is required',
-      });
-    }
-
-    if (!consent) {
-      return res.status(400).json({ message: 'consent is required' });
-    }
+    const { rc_number, tag_id, consent } = req.body;
 
     logger.info('FASTag Details Controller: incoming request', {
       userId,

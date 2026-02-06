@@ -293,3 +293,52 @@ export const cinByPanSchema = z.object({
 export const consentSchema = z
   .enum(['Y', 'N'])
   .refine((val) => val === 'Y' || val === 'N', { message: 'Consent must be Y or N' });
+
+// Vehicle Schemas
+export const rcLiteSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const rcDetailedSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  extract_variant: z.boolean().optional(),
+  extract_mapping: z.string().optional(),
+  extract_insurer: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const rcDetailedWithChallanSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  extract_variant: z.boolean().optional(),
+  extract_mapping: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const eChallanSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  chassis_number: z.string().min(5, 'Chassis number is required'),
+  engine_number: z.string().min(5, 'Engine number is required'),
+  state_portals: z.array(z.string()).optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const regNumByChassisSchema = z.object({
+  chassis_number: z.string().min(1, 'Chassis number is required'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const fastagSchema = z.object({
+  rc_number: z.string().optional(),
+  tag_id: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+}).refine(data => data.rc_number || data.tag_id, {
+  message: 'At least one of rc_number or tag_id is required'
+});
+
+export type RcLiteRequest = z.infer<typeof rcLiteSchema>;
+export type RcDetailedRequest = z.infer<typeof rcDetailedSchema>;
+export type RcDetailedWithChallanRequest = z.infer<typeof rcDetailedWithChallanSchema>;
+export type EChallanRequest = z.infer<typeof eChallanSchema>;
+export type RegNumByChassisRequest = z.infer<typeof regNumByChassisSchema>;
+export type FastagRequest = z.infer<typeof fastagSchema>;
