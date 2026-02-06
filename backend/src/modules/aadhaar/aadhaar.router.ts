@@ -10,15 +10,17 @@ import {
 import { authenticate, requireUser } from '../../common/middleware/auth';
 import { validate } from '../../common/validation/middleware';
 import {
+  aadhaarOcrV1Schema,
   aadhaarGenerateOtpV2Schema,
   aadhaarSubmitOtpV2Schema,
+  fetchEAadhaarSchema,
 } from '../../common/validation/schemas';
 
 const router = Router();
 const upload = multer();
 
 // Legacy Aadhaar OCR endpoints (kept for backward compatibility)
-router.post('/ocr-v1', authenticate, requireUser, aadhaarOcrV1Handler);
+router.post('/ocr-v1', authenticate, requireUser, validate(aadhaarOcrV1Schema), aadhaarOcrV1Handler);
 
 router.post(
   '/ocr-v2',
@@ -31,7 +33,7 @@ router.post(
   aadhaarOcrV2Handler,
 );
 
-router.post('/fetch-eaadhaar', authenticate, requireUser, fetchEAadhaarHandler);
+router.post('/fetch-eaadhaar', authenticate, requireUser, validate(fetchEAadhaarSchema), fetchEAadhaarHandler);
 
 // QuickEKYC Aadhaar V2 Endpoints (New Implementation)
 router.post(

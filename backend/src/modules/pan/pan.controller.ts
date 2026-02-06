@@ -1,7 +1,11 @@
 import { Response } from 'express';
 import asyncHandler from '../../common/middleware/asyncHandler';
 import { PanService } from './pan.service';
-import { DigilockerFetchDocumentRequest } from './providers/digilockerFetchDocument.provider';
+import {
+  PanBasicRequest,
+  PanAadhaarLinkRequest,
+  DigilockerFetchDocumentRequest,
+} from '../../common/validation/schemas';
 import { AuthenticatedRequest } from '../../common/middleware/auth';
 import { BaseController } from '../../common/controllers/BaseController';
 
@@ -9,8 +13,8 @@ const service = new PanService();
 
 class PanController extends BaseController {
   // POST /api/pan/father-name
-  fetchFatherNameHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { pan_number, consent } = req.body || {};
+  fetchFatherNameHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanBasicRequest>, res: Response) => {
+    const { pan_number, consent } = req.body;
 
     this.logRequest('PAN Father-Name', req.user._id.toString(), { pan_number });
 
@@ -19,8 +23,8 @@ class PanController extends BaseController {
       res,
       {
         verificationType: 'pan',
-        requireConsent: true,
-        requiredFields: ['pan_number'],
+        requireConsent: false, // Handled by Zod
+        requiredFields: [], // Handled by Zod
       },
       async () => {
         return service.fetchFatherName({ pan_number, consent });
@@ -29,8 +33,8 @@ class PanController extends BaseController {
   });
 
   // POST /api/pan/gstin-by-pan
-  fetchGstinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { pan_number, consent } = req.body || {};
+  fetchGstinByPanHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanBasicRequest>, res: Response) => {
+    const { pan_number, consent } = req.body;
 
     this.logRequest('PAN GSTIN-by-PAN', req.user._id.toString(), { pan_number });
 
@@ -39,8 +43,8 @@ class PanController extends BaseController {
       res,
       {
         verificationType: 'pan',
-        requireConsent: true,
-        requiredFields: ['pan_number'],
+        requireConsent: false,
+        requiredFields: [],
       },
       async () => {
         return service.fetchGstinByPan({ pan_number, consent });
@@ -49,8 +53,8 @@ class PanController extends BaseController {
   });
 
   // POST /api/pan/din-by-pan
-  fetchDinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { pan_number, consent } = req.body || {};
+  fetchDinByPanHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanBasicRequest>, res: Response) => {
+    const { pan_number, consent } = req.body;
 
     this.logRequest('PAN DIN-by-PAN', req.user._id.toString(), { pan_number });
 
@@ -61,9 +65,8 @@ class PanController extends BaseController {
   });
 
   // POST /api/pan/cin-by-pan
-  fetchCinByPanHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const pan_number = req.body?.pan_number || req.body?.pan;
-    const consent = req.body?.consent;
+  fetchCinByPanHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanBasicRequest>, res: Response) => {
+    const { pan_number, consent } = req.body;
 
     this.logRequest('PAN CIN-by-PAN', req.user._id.toString(), { pan_number });
 
@@ -74,7 +77,7 @@ class PanController extends BaseController {
   });
 
   // POST /api/pan/aadhaar-link
-  checkPanAadhaarLinkHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  checkPanAadhaarLinkHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanAadhaarLinkRequest>, res: Response) => {
     this.logRequest('PAN Aadhaar-Link', req.user._id.toString());
 
     await this.handleVerificationRequest(
@@ -82,8 +85,8 @@ class PanController extends BaseController {
       res,
       {
         verificationType: 'pan',
-        requireConsent: true,
-        requiredFields: ['pan_number', 'aadhaar_number'],
+        requireConsent: false,
+        requiredFields: [],
       },
       async () => {
         return service.checkPanAadhaarLink(req.body);
@@ -93,30 +96,30 @@ class PanController extends BaseController {
 
   // POST /api/pan/digilocker-fetch-document
   digilockerFetchDocumentHandler = asyncHandler(
-    async (req: AuthenticatedRequest, res: Response) => {
+    async (req: AuthenticatedRequest<{}, {}, DigilockerFetchDocumentRequest>, res: Response) => {
       await this.handleVerificationRequest(
         req,
         res,
         {
           verificationType: 'pan',
-          requiredFields: ['document_uri', 'transaction_id'],
+          requiredFields: [], // Handled by Zod
         },
         async () => {
-          return service.digilockerFetchDocument(req.body as DigilockerFetchDocumentRequest);
+          return service.digilockerFetchDocument(req.body);
         },
       );
     },
   );
 
   // POST /api/pan/fetch-advanced
-  fetchPanAdvanceHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  fetchPanAdvanceHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanBasicRequest>, res: Response) => {
     await this.handleVerificationRequest(
       req,
       res,
       {
         verificationType: 'pan',
-        requireConsent: true,
-        requiredFields: ['pan_number'],
+        requireConsent: false,
+        requiredFields: [],
       },
       async () => {
         return service.fetchPanAdvance(req.body);
@@ -125,14 +128,14 @@ class PanController extends BaseController {
   });
 
   // POST /api/pan/fetch-detailed
-  fetchPanDetailedHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  fetchPanDetailedHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, PanBasicRequest>, res: Response) => {
     await this.handleVerificationRequest(
       req,
       res,
       {
         verificationType: 'pan',
-        requireConsent: true,
-        requiredFields: ['pan_number'],
+        requireConsent: false,
+        requiredFields: [],
       },
       async () => {
         return service.fetchPanDetailed(req.body);

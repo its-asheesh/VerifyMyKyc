@@ -149,7 +149,32 @@ export const panAadhaarLinkSchema = z.object({
   consent: z.enum(['Y', 'N']),
 });
 
+export const panBasicSchema = z.object({
+  pan_number: panNumberSchema,
+  consent: z.enum(['Y', 'N']),
+});
+
+export const digilockerFetchDocumentSchema = z.object({
+  document_uri: z.string().min(1, 'Document URI is required'),
+  transaction_id: z.string().min(1, 'Transaction ID is required'),
+});
+
+export const digilockerInitSchema = z.object({
+  redirectUrl: z.string().url().optional(),
+});
+
+export const digilockerPullSchema = z.object({
+  transactionId: z.string().min(1, 'Transaction ID is required'),
+  code: z.string().optional(), // Often required for OAuth
+  requestId: z.string().optional(),
+});
+
 // Aadhaar Schemas
+export const fetchEAadhaarSchema = z.object({
+  transaction_id: z.string().min(1, 'Transaction ID is required'),
+  json: z.any().optional(),
+});
+
 export const aadhaarOcrV1Schema = z.object({
   base64_data: z
     .string()
@@ -375,3 +400,11 @@ export type FastagRequest = z.infer<typeof fastagSchema>;
 export type CreateOrderRequest = z.infer<typeof createOrderSchema>;
 export type VerifyPaymentRequest = z.infer<typeof verifyPaymentSchema>;
 export type ProcessPaymentRequest = z.infer<typeof processPaymentSchema>;
+export type PanBasicRequest = z.infer<typeof panBasicSchema>;
+export type PanAadhaarLinkRequest = z.infer<typeof panAadhaarLinkSchema>;
+export type DigilockerFetchDocumentRequest = z.infer<typeof digilockerFetchDocumentSchema>;
+export type DigilockerPullRequest = z.infer<typeof digilockerPullSchema>;
+export type FetchEAadhaarRequest = z.infer<typeof fetchEAadhaarSchema>;
+export type AadhaarOcrV1Request = z.infer<typeof aadhaarOcrV1Schema>;
+export type AadhaarGenerateOtpV2Request = z.infer<typeof aadhaarGenerateOtpV2Schema>;
+export type AadhaarSubmitOtpV2Request = z.infer<typeof aadhaarSubmitOtpV2Schema>;

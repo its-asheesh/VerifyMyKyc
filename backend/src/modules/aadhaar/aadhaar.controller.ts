@@ -1,7 +1,12 @@
 import { Response } from 'express';
 import { AadhaarService } from './aadhaar.service';
 import asyncHandler from '../../common/middleware/asyncHandler';
-import { FetchEAadhaarRequest } from '../../common/types/eaadhaar';
+import {
+  FetchEAadhaarRequest,
+  AadhaarOcrV1Request,
+  AadhaarGenerateOtpV2Request,
+  AadhaarSubmitOtpV2Request,
+} from '../../common/validation/schemas';
 import { AuthenticatedRequest } from '../../common/middleware/auth';
 import { BaseController } from '../../common/controllers/BaseController';
 import { ensureVerificationQuota, consumeVerificationQuota } from '../orders/quota.service';
@@ -10,7 +15,7 @@ const service = new AadhaarService();
 
 class AadhaarController extends BaseController {
   // POST /api/aadhaar/ocr-v1
-  aadhaarOcrV1Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  aadhaarOcrV1Handler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, AadhaarOcrV1Request>, res: Response) => {
     const { base64_data, consent } = req.body;
 
     await this.handleVerificationRequest(
@@ -18,8 +23,8 @@ class AadhaarController extends BaseController {
       res,
       {
         verificationType: 'aadhaar',
-        requireConsent: true,
-        requiredFields: ['base64_data'],
+        requireConsent: false,
+        requiredFields: [],
       },
       async () => {
         return service.ocrV1(base64_data, consent);
@@ -50,7 +55,7 @@ class AadhaarController extends BaseController {
   });
 
   // POST /api/aadhaar/e-aadhaar
-  fetchEAadhaarHandler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  fetchEAadhaarHandler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, FetchEAadhaarRequest>, res: Response) => {
     const { transaction_id, json } = req.body;
 
     await this.handleVerificationRequest(
@@ -58,7 +63,7 @@ class AadhaarController extends BaseController {
       res,
       {
         verificationType: 'aadhaar',
-        requiredFields: ['transaction_id'],
+        requiredFields: [],
       },
       async () => {
         return service.fetchEAadhaar({ transaction_id, json });
@@ -68,28 +73,15 @@ class AadhaarController extends BaseController {
 
   // POST /api/aadhaar/v2/generate-otp - QuickEKYC Aadhaar V2
   // NOTE: Does NOT consume quota - only checks quota exists
-  generateOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  generateOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, AadhaarGenerateOtpV2Request>, res: Response) => {
     try {
-      const { id_number } = req.body;
+      const { id_number, consent } = req.body; // Types from Zod
       const userId = req.user?._id;
 
-      // Validate user authentication
-      if (!userId) {
-        res.status(401).json({ message: 'User not authenticated' });
-        return;
-      }
+      // Validate user authentication (Already handled by middleware, but types allow optional user? generic auth request uses any)
+      // Actually AuthenticatedRequest ensures user exists.
 
-      // Validate required fields
-      if (!id_number) {
-        res.status(400).json({ message: 'id_number is required' });
-        return;
-      }
-
-      // Validate consent
-      if (!req.body.consent) {
-        res.status(400).json({ message: 'consent is required' });
-        return;
-      }
+      // Validate required fields (Handled by Zod)
 
       // Check quota exists (but don't consume yet)
       const order = await ensureVerificationQuota(userId, 'aadhaar');
@@ -124,21 +116,11 @@ class AadhaarController extends BaseController {
 
   // POST /api/aadhaar/v2/submit-otp - QuickEKYC Aadhaar V2
   // NOTE: Consumes quota ONLY after successful OTP verification
-  submitOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  submitOtpV2Handler = asyncHandler(async (req: AuthenticatedRequest<{}, {}, AadhaarSubmitOtpV2Request>, res: Response) => {
     const { request_id, otp, client_id, consent } = req.body;
     const userId = req.user._id;
 
-    // Validate required fields
-    if (!request_id || !otp) {
-      res.status(400).json({ message: 'request_id and otp are required' });
-      return;
-    }
-
-    // Validate consent
-    if (!req.body.consent) {
-      res.status(400).json({ message: 'consent is required' });
-      return;
-    }
+    // Validation handled by Zod
 
     // Check quota exists
     const order = await ensureVerificationQuota(userId, 'aadhaar');
