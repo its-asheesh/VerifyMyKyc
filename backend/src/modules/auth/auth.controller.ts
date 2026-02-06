@@ -6,6 +6,14 @@ import { buildOtpEmailHtml, sendEmail } from '../../common/services/email';
 import admin from '../../firebase-admin';
 import { sendGaEvent } from '../../common/services/ga4';
 import { logger } from '../../common/utils/logger';
+import {
+  RegisterRequest,
+  LoginRequest,
+  SendOtpRequest,
+  VerifyOtpRequest,
+  ChangePasswordRequest,
+  ResetPasswordRequest
+} from '../../common/validation/schemas';
 
 // Helper: notify admins about new user sign-ups
 async function notifyAdminsOfNewUser(
@@ -34,7 +42,7 @@ async function notifyAdminsOfNewUser(
 }
 
 // Register new user
-export const register = asyncHandler(async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request<{}, {}, RegisterRequest>, res: Response) => {
   const { name, email, password, company, phone, location } = req.body;
 
   // Check if user already exists
@@ -76,20 +84,23 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       email_verified: !!user.emailVerified,
       phone_verified: !!user.phoneVerified,
     });
-  } catch {}
+  } catch { }
 
   // Notify admins (successful registration)
   void notifyAdminsOfNewUser(user, 'email', 'successful');
 
   // Send email (non-blocking – client can always use resend endpoint)
-  let otpSent = true;
-  try {
-    await sendEmail(email, 'Verify your email', buildOtpEmailHtml(name, code));
-  } catch (e: any) {
-    otpSent = false;
-    logger.error('Email send failed during registration:', e?.message || e);
-    if (process.env.NODE_ENV === 'development') {
-      throw new Error(`Email send failed: ${e?.message || 'Unknown error'}`);
+  let otpSent = false;
+  if (email) {
+    try {
+      await sendEmail(email, 'Verify your email', buildOtpEmailHtml(name, code));
+      otpSent = true;
+    } catch (e: any) {
+      otpSent = false;
+      logger.error('Email send failed during registration:', e?.message || e);
+      if (process.env.NODE_ENV === 'development') {
+        throw new Error(`Email send failed: ${e?.message || 'Unknown error'}`);
+      }
     }
   }
 
@@ -117,7 +128,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Login user — supports email OR phone number in the "email" field
-export const login = asyncHandler(async (req: Request, res: Response) => {
+export const login = asyncHandler(async (req: Request<{}, {}, LoginRequest>, res: Response) => {
   const { email, password, location } = req.body;
 
   // 🔍 Find user by email OR phone
@@ -185,8 +196,9 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Send/Resend email OTP
-export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => {
+export const sendEmailOtp = asyncHandler(async (req: Request<{}, {}, SendOtpRequest>, res: Response) => {
   const { email } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email is required' });
   const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: 'User not found' });
   const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -210,8 +222,9 @@ export const sendEmailOtp = asyncHandler(async (req: Request, res: Response) => 
 });
 
 // Verify email OTP
-export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { email, otp } = req.body as { email: string; otp: string };
+export const verifyEmailOtp = asyncHandler(async (req: Request<{}, {}, VerifyOtpRequest>, res: Response) => {
+  const { email, otp } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email is required' });
   const user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: 'User not found' });
   if (!user.emailOtpCode || !user.emailOtpExpires || user.emailOtpExpires < new Date()) {
@@ -250,6 +263,7 @@ export const verifyEmailOtp = asyncHandler(async (req: Request, res: Response) =
 
 // Send password reset OTP (non-enumerating)
 export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Response) => {
+  // TODO: Add strict typing and validation middleware
   const { email } = req.body as { email: string };
   const user = await User.findOne({ email });
   if (user) {
@@ -273,12 +287,8 @@ export const sendPasswordResetOtp = asyncHandler(async (req: Request, res: Respo
 });
 
 // Reset password with OTP
-export const resetPasswordWithOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { email, otp, newPassword } = req.body as {
-    email: string;
-    otp: string;
-    newPassword: string;
-  };
+export const resetPasswordWithOtp = asyncHandler(async (req: Request<{}, {}, ResetPasswordRequest>, res: Response) => {
+  const { email, otp, newPassword } = req.body;
   const user = await User.findOne({ email }).select('+password');
 
   if (
@@ -454,7 +464,7 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
 });
 
 // Change password
-export const changePassword = asyncHandler(async (req: Request, res: Response) => {
+export const changePassword = asyncHandler(async (req: Request<{}, {}, ChangePasswordRequest>, res: Response) => {
   const { currentPassword, newPassword } = req.body;
 
   // Get user with password
@@ -989,7 +999,7 @@ export const firebasePhoneRegister = asyncHandler(async (req: Request, res: Resp
         email_verified: !!newUser.emailVerified,
         phone_verified: !!newUser.phoneVerified,
       });
-    } catch {}
+    } catch { }
 
     // Notify admins (successful registration)
     void notifyAdminsOfNewUser(newUser, 'phone', 'successful');

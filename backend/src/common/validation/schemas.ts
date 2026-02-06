@@ -123,6 +123,12 @@ export const verifyOtpSchema = z
     message: 'Either email or phone is required',
     path: ['email'],
   });
+export type RegisterRequest = z.infer<typeof registerSchema>;
+export type LoginRequest = z.infer<typeof loginSchema>;
+export type ChangePasswordRequest = z.infer<typeof changePasswordSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
+export type SendOtpRequest = z.infer<typeof sendOtpSchema>;
+export type VerifyOtpRequest = z.infer<typeof verifyOtpSchema>;
 
 // PAN Schemas
 export const panNumberSchema = z
