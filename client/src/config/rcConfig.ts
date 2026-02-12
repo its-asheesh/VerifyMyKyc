@@ -40,43 +40,13 @@ export interface RcServiceMeta {
 
 export const rcServices: RcServiceMeta[] = [
   {
-    key: 'fetch-lite',
-    name: 'Fetch RC Lite',
-    description: 'Get basic RC details like owner name, expiry date, and vehicle info.',
-    apiEndpoint: '/vehicle/rc/fetch-lite',
-    formFields: [
-      { name: 'rc_number', label: 'RC Number', type: 'text', required: true, placeholder: 'Enter RC Number (e.g. MH01AB1234)' },
-      {
-        name: 'consent',
-        label: 'Consent',
-        type: 'radio',
-        required: true,
-        options: [
-          { label: 'Yes', value: 'Y' },
-          { label: 'No', value: 'N' },
-        ],
-      },
-    ],
-    icon: FileText,
-  },
-  {
     key: 'fetch-detailed',
-    name: 'Fetch Detailed RC',
-    description: 'Get comprehensive vehicle details including insurance, permit, and fitness data.',
+    name: 'Fetch RC Details',
+    description: 'Get comprehensive vehicle details including owner name, insurance, permit, and fitness data.',
     apiEndpoint: '/vehicle/rc/fetch-detailed',
     formFields: [
       { name: 'rc_number', label: 'RC Number', type: 'text', required: true, placeholder: 'Enter RC Number (e.g. MH01AB1234)' },
       {
-        name: 'extract_variant',
-        label: 'Extract Variant?',
-        type: 'radio',
-        required: false,
-        options: [
-          { label: 'Yes', value: 'true' },
-          { label: 'No', value: 'false' },
-        ],
-      },
-      {
         name: 'consent',
         label: 'Consent',
         type: 'radio',
@@ -88,36 +58,6 @@ export const rcServices: RcServiceMeta[] = [
       },
     ],
     icon: FileText,
-  },
-  {
-    key: 'fetch-detailed-challan',
-    name: 'Fetch Detailed RC + Challan',
-    description: 'Get detailed vehicle information along with any pending challans.',
-    apiEndpoint: '/vehicle/rc/fetch-detailed-challan',
-    formFields: [
-      { name: 'rc_number', label: 'RC Number', type: 'text', required: true, placeholder: 'Enter RC Number (e.g. MH01AB1234)' },
-      {
-        name: 'extract_variant',
-        label: 'Extract Variant?',
-        type: 'radio',
-        required: false,
-        options: [
-          { label: 'Yes', value: 'true' },
-          { label: 'No', value: 'false' },
-        ],
-      },
-      {
-        name: 'consent',
-        label: 'Consent',
-        type: 'radio',
-        required: true,
-        options: [
-          { label: 'Yes', value: 'Y' },
-          { label: 'No', value: 'N' },
-        ],
-      },
-    ],
-    icon: AlertTriangle,
   },
   {
     key: 'echallan-fetch',
