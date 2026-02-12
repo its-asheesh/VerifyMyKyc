@@ -23,3 +23,6 @@ yarn-error.log*
 
 # OS
 .DS_Store
+
+# Backend Logs
+backend/logs/
