@@ -10,6 +10,7 @@ interface RcFormData {
   tag_id?: string;
   chassis_number?: string;
   engine_number?: string;
+  extract_variant?: string | boolean;
   consent: string | boolean;
   [key: string]: unknown;
 }
@@ -19,6 +20,7 @@ interface RcApiPayload {
   tag_id?: string;
   chassis_number?: string;
   engine_number?: string;
+  extract_variant?: string | boolean;
   consent: string; // Transformed from boolean/string to "Y" | "N"
   [key: string]: any;
 }
@@ -62,6 +64,20 @@ export const RcSection: React.FC<{ productId?: string }> = ({ productId }) => {
         return await vehicleApi.rcFetchLite({
           rc_number: payload.rc_number,
           consent: payload.consent,
+        })
+      case "fetch-detailed":
+        if (!payload.rc_number) throw new Error("RC Number is required");
+        return await vehicleApi.rcFetchDetailed({
+          rc_number: payload.rc_number,
+          extract_variant: payload.extract_variant === 'true' || payload.extract_variant === true,
+          consent: payload.consent as "Y" | "N",
+        })
+      case "fetch-detailed-challan":
+        if (!payload.rc_number) throw new Error("RC Number is required");
+        return await vehicleApi.rcFetchDetailedWithChallan({
+          rc_number: payload.rc_number,
+          extract_variant: payload.extract_variant === 'true' || payload.extract_variant === true,
+          consent: payload.consent as "Y" | "N",
         })
       case "echallan-fetch":
         if (!payload.rc_number) throw new Error("RC Number is required");

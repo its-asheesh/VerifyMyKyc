@@ -60,6 +60,66 @@ export const rcServices: RcServiceMeta[] = [
     icon: FileText,
   },
   {
+    key: 'fetch-detailed',
+    name: 'Fetch Detailed RC',
+    description: 'Get comprehensive vehicle details including insurance, permit, and fitness data.',
+    apiEndpoint: '/vehicle/rc/fetch-detailed',
+    formFields: [
+      { name: 'rc_number', label: 'RC Number', type: 'text', required: true, placeholder: 'Enter RC Number (e.g. MH01AB1234)' },
+      {
+        name: 'extract_variant',
+        label: 'Extract Variant?',
+        type: 'radio',
+        required: false,
+        options: [
+          { label: 'Yes', value: 'true' },
+          { label: 'No', value: 'false' },
+        ],
+      },
+      {
+        name: 'consent',
+        label: 'Consent',
+        type: 'radio',
+        required: true,
+        options: [
+          { label: 'Yes', value: 'Y' },
+          { label: 'No', value: 'N' },
+        ],
+      },
+    ],
+    icon: FileText,
+  },
+  {
+    key: 'fetch-detailed-challan',
+    name: 'Fetch Detailed RC + Challan',
+    description: 'Get detailed vehicle information along with any pending challans.',
+    apiEndpoint: '/vehicle/rc/fetch-detailed-challan',
+    formFields: [
+      { name: 'rc_number', label: 'RC Number', type: 'text', required: true, placeholder: 'Enter RC Number (e.g. MH01AB1234)' },
+      {
+        name: 'extract_variant',
+        label: 'Extract Variant?',
+        type: 'radio',
+        required: false,
+        options: [
+          { label: 'Yes', value: 'true' },
+          { label: 'No', value: 'false' },
+        ],
+      },
+      {
+        name: 'consent',
+        label: 'Consent',
+        type: 'radio',
+        required: true,
+        options: [
+          { label: 'Yes', value: 'Y' },
+          { label: 'No', value: 'N' },
+        ],
+      },
+    ],
+    icon: AlertTriangle,
+  },
+  {
     key: 'echallan-fetch',
     name: 'Fetch E-Challan by RC & Engine',
     description: 'Fetch e-challans using RC number, chassis, and engine number. You can filter by date range and limit results.',

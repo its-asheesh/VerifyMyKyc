@@ -3,6 +3,10 @@ import type { AxiosRequestConfig } from 'axios';
 import type {
     RcFetchLiteRequest,
     RcFetchLiteResponse,
+    RcFetchDetailedRequest,
+    RcFetchDetailedResponse,
+    RcFetchDetailedChallanRequest,
+    RcFetchDetailedChallanResponse,
     RcEchallanFetchRequest,
     RcEchallanFetchResponse,
     RcFetchRegNumByChassisRequest,
@@ -26,6 +30,22 @@ class VehicleApi extends BaseApi {
      */
     async rcFetchLite(data: RcFetchLiteRequest): Promise<RcFetchLiteResponse> {
         return this.post('/vehicle/rc/fetch-lite', data);
+    }
+
+    /**
+     * Fetch detailed RC registration information.
+     */
+    async rcFetchDetailed(data: RcFetchDetailedRequest): Promise<RcFetchDetailedResponse> {
+        return this.post('/vehicle/rc/fetch-detailed', data);
+    }
+
+    /**
+     * Fetch detailed RC information along with linked challans.
+     */
+    async rcFetchDetailedWithChallan(
+        data: RcFetchDetailedChallanRequest
+    ): Promise<RcFetchDetailedChallanResponse> {
+        return this.post('/vehicle/rc/fetch-detailed-challan', data);
     }
 
     /**
