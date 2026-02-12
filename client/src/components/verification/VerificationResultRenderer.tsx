@@ -185,7 +185,23 @@ export const VerificationResultRenderer: React.FC<VerificationResultRendererProp
     const txnId = payload.transaction_id || mainData.transaction_id;
 
     // Flatten data for display to avoid nested JSON strings
-    const flatDisplayData = flattenObject(displayData);
+    const flatDisplayDataRaw = flattenObject(displayData);
+
+    // Clean up redundant prefixes from keys
+    const flatDisplayData: Record<string, unknown> = {};
+    Object.entries(flatDisplayDataRaw).forEach(([key, value]) => {
+        // Remove common redundant prefixes that clutter the UI
+        let newKey = key
+            .replace(/^vehicle_data\s+/i, "")
+            .replace(/^rc_data\s+/i, "")
+            .replace(/^data\s+/i, "")
+            .replace(/^result\s+/i, "");
+
+        // For insurance/pucc/permit, we might keep the prefix to distinguish "Expiry Date" 
+        // but "Vehicle Data" is almost always redundant in this context.
+
+        flatDisplayData[newKey] = value;
+    });
 
     // Build PDF export lines
     const pdfLines: string[] = [];
