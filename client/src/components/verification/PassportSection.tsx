@@ -7,7 +7,7 @@ import { GenericVerificationSection } from "./GenericVerificationSection";
 
 interface PassportFormData {
   file_number: string;
-  dob: string;
+  date_of_birth: string;
   consent: string | boolean;
   [key: string]: unknown;
 }
@@ -22,7 +22,7 @@ export const PassportSection: React.FC<{ productId?: string }> = ({ productId })
   const transformFormData = (formData: PassportFormData): PassportApiPayload => {
     return {
       file_number: formData.file_number,
-      date_of_birth: formData.dob,
+      date_of_birth: formData.date_of_birth,
       consent: formData.consent === true || formData.consent === 'Y' ? 'Y' : 'N'
     };
   }
