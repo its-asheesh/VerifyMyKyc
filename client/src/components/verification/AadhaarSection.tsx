@@ -25,7 +25,7 @@ interface AadhaarFormData {
 export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const {
     selectedService,
-    isLoading,
+    isLoading: isMainLoading,
     result,
     error,
     showConfirmDialog,
@@ -38,7 +38,7 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
     confirmSubmit,
     setError,
     setResult,
-    setIsLoading,
+    setIsLoading: _setIsLoading,
   } = useVerificationLogic<typeof aadhaarServices[number], AadhaarFormData>({
     services: aadhaarServices,
   })
@@ -49,6 +49,9 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
   const [requestId, setRequestId] = useState<number | null>(null)
   const [aadhaarNumber, setAadhaarNumber] = useState("")
   const [consent, setConsent] = useState("Y")
+  const [isOtpLoading, setIsOtpLoading] = useState(false)
+
+  const isLoading = isMainLoading || isOtpLoading
 
   // Get Aadhaar pricing from backend
   // const { getVerificationPricingByType } = usePricingContext()
@@ -61,6 +64,7 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
     setOtpValue("")
     setRequestId(null)
     setAadhaarNumber("")
+    setIsOtpLoading(false)
   }
 
   const getFormFields = (service: typeof aadhaarServices[number]) => {
@@ -148,6 +152,8 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
   }
 
   const handleSubmitOtp = async () => {
+    if (isOtpLoading) return;
+
     if (!otpValue || otpValue.length !== 6) {
       setError("Please enter a valid 6-digit OTP")
       return
@@ -159,7 +165,7 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
       return
     }
 
-    setIsLoading(true)
+    setIsOtpLoading(true)
     setError(null)
 
     try {
@@ -185,11 +191,13 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
         "Invalid OTP. Please try again."
       setError(errorMessage)
     } finally {
-      setIsLoading(false)
+      setIsOtpLoading(false)
     }
   }
 
   const handleResendOtp = async () => {
+    if (isOtpLoading) return;
+
     if (!aadhaarNumber) {
       setError("Aadhaar number not found. Please start again.")
       setOtpStep("enter-aadhaar")
@@ -197,7 +205,7 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
     }
 
     // Manually trigger generate OTP without dialog
-    setIsLoading(true)
+    setIsOtpLoading(true)
     setError(null)
     try {
       const response = await identityApi.aadhaarGenerateOtpV2({
@@ -216,7 +224,7 @@ export const AadhaarSection: React.FC<{ productId?: string }> = ({ productId }) 
     } catch (err: any) {
       setError(err.message || "Failed to resend OTP")
     } finally {
-      setIsLoading(false)
+      setIsOtpLoading(false)
     }
   }
 
