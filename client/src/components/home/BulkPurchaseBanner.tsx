@@ -10,8 +10,7 @@ const BulkPurchaseBanner: React.FC = () => {
     const benefits = [
         "Volume Discounts",
         "Priority Support",
-        "Custom API Integration",
-        "Dedicated Account Manager",
+        "Custom Verification Tokens",
     ]
 
     return (
