@@ -1,6 +1,7 @@
 import type React from "react"
 import HeroCarousel from "../components/carousel/HeroCarousel"
 import VerificationFeatures from "../components/home/VerificationFeatures"
+import BulkPurchaseBanner from "../components/home/BulkPurchaseBanner"
 import FeaturesSection from "../components/home/FeaturesSection"
 import TrustSection from "../components/home/TrustSection"
 import FaqSection from "../components/home/FaqSection"
@@ -67,6 +68,7 @@ const Home: React.FC = () => {
       <div className="bg-gray-50 min-h-screen">
         <HeroCarousel />
         <VerificationFeatures />
+        <BulkPurchaseBanner />
         <FeaturesSection />
         <TrustSection />
         <FaqSection />
