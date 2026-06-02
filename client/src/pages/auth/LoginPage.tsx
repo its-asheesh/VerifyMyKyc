@@ -298,7 +298,7 @@ const LoginPage: React.FC = () => {
           </FormProvider>
         )}
       </motion.div>
-      <div id="recaptcha-container" ref={recaptchaRef} className="hidden" />
+      <div id="recaptcha-container" ref={recaptchaRef} />
     </AuthCardLayout>
   );
 };

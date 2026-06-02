@@ -2,6 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function() {
+        const originalParse = JSON.parse;
+        JSON.parse = function(text, reviver) {
+          if (text === 'recaptcha-setup' || text === 'recaptcha-acknowledgement-sent') {
+            return { type: text };
+          }
+          try {
+            return originalParse(text, reviver);
+          } catch (e) {
+            if (typeof text === 'string' && (text.startsWith('recaptcha-') || text.includes('firebase'))) {
+              return { type: text };
+            }
+            throw e;
+          }
+        };
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
