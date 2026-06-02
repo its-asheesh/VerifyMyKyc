@@ -1,9 +1,6 @@
-import dotenv from 'dotenv';
+import '../../config/dotenv';
 import { connectDB } from '../../config/db';
 import { BlogPost } from './blog.model';
-
-// Load env
-dotenv.config();
 
 const posts = [
   {

@@ -1,3 +1,4 @@
+import '../../config/dotenv';
 import nodemailer from 'nodemailer';
 import { gmailSend } from './gmailMailer';
 

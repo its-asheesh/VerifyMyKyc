@@ -1,10 +1,7 @@
+import './dotenv';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 
 import { logger } from '../common/utils/logger';
-
-// Load environment variables
-dotenv.config();
 
 const mongoUri = process.env.MONGO_URI;
 

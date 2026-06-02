@@ -1,6 +1,4 @@
-// backend/config/payment.ts
-import dotenv from 'dotenv';
-dotenv.config();
+import './dotenv';
 
 export const razorpayConfig = {
   key_id: process.env.RAZORPAY_KEY_ID!,
