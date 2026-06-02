@@ -6,7 +6,7 @@ import { ToastProvider } from "./components/common/ToastProvider"
 const App: React.FC = () => {
   return (
     <ToastProvider>
-      <div id="recaptcha-container" className="hidden" />
+      <div id="recaptcha-container" />
       <AppRoutes />
     </ToastProvider>
   )
