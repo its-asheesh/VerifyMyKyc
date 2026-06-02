@@ -1,6 +1,5 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import { logger } from './src/common/utils/logger';
-dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import router from './src/routes';
