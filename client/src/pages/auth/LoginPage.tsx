@@ -11,7 +11,6 @@ import {
   clearError,
   sendPasswordOtp,
   resetPasswordWithOtp,
-  loginWithPhoneAndPassword,
   resetPasswordWithPhoneToken,
 } from "../../redux/slices/authSlice";
 import { Lock, Loader2 } from "lucide-react";
@@ -110,10 +109,10 @@ const LoginPage: React.FC = () => {
         result = await dispatch(loginUser({ email: value, password: data.password }));
       } else {
         const e164 = formatToE164(value, data.dialCode || "91");
-        result = await dispatch(loginWithPhoneAndPassword({ phone: e164, password: data.password }));
+        result = await dispatch(loginUser({ email: e164, password: data.password }));
       }
 
-      if (loginUser.fulfilled.match(result) || loginWithPhoneAndPassword.fulfilled.match(result)) {
+      if (loginUser.fulfilled.match(result)) {
         // navigation handled by useEffect
       } else {
         const msg = (result.payload as string) || "Login failed";
