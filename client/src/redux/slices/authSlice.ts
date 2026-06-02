@@ -237,13 +237,19 @@ export const loginWithPhoneAndPassword = createAsyncThunk<AuthResponse, { phone:
     { rejectWithValue }
   ) => {
     try {
-      // ... existing code ...
+      let locationData;
+      try {
+        locationData = await getUserLocationData();
+      } catch (error) {
+        console.warn("Could not get location data, using fallback:", error);
+        locationData = getFallbackLocationData();
+      }
 
       const response = await apiCall<{ user: User; token: string }>("/auth/login/phone-password", {
         method: "POST",
         body: JSON.stringify({
           ...credentials,
-          location: Location,
+          location: locationData,
         }),
       });
 
