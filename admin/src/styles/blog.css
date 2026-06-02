@@ -1,0 +1,17 @@
+/* Admin preview: reuse same basic typography for blog content */
+.blog-content {
+  color: #111827;
+}
+.blog-content h1 { margin-top: 1.25rem; margin-bottom: 0.75rem; font-size: 2rem; line-height: 2.25rem; font-weight: 700; }
+.blog-content h2 { margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+.blog-content h3 { margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; }
+.blog-content p { margin: 0.75rem 0; color: #374151; }
+.blog-content ul, .blog-content ol { margin: 0.75rem 0 0.75rem 1.25rem; padding-left: 1.25rem; }
+.blog-content ul { list-style-type: disc; }
+.blog-content ol { list-style-type: decimal; }
+.blog-content li { margin: 0.25rem 0; }
+.blog-content li > p { margin: 0; }
+.blog-content a { color: #2563eb; text-decoration: underline; }
+.blog-content img { display: block; max-width: 100%; border-radius: 0.5rem; border: 1px solid #e5e7eb; margin: 1rem 0; }
+
+

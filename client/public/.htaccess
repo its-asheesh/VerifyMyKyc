@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Reverse Proxy /api/ requests to the Node.js backend on port 5000
+  # Note: This requires mod_proxy and mod_proxy_http enabled on Apache/cPanel
+  RewriteCond %{REQUEST_URI} ^/api/ [NC]
+  RewriteRule ^api/(.*) http://127.0.0.1:5000/api/$1 [P,L]
+
+  # 2. Support client-side routing fallback (SPA fallback)
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>

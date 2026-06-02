@@ -1,0 +1,288 @@
+import { Users, Zap, Shield } from "lucide-react";
+
+
+export const verificationFeatures = [
+  {
+    id: "1",
+    title: "GOVERNMENT ID VERIFICATION",
+    description:
+      "PAN Card, Aadhaar Card,\nVoter ID, Driving Licence,\nPassport",
+    image: "/cat1.png",
+    detailedText:
+      "We authenticate each document against its issuing authority to prevent identity fraud and ensure complete compliance with regulatory standards.",
+    ctaText: "Explore Government IDs",
+    ctaLink: "/blog",
+  },
+  {
+    id: 2,
+    title: "COMPANY & CREDENTIAL VERIFICATION",
+    description:
+      "GST Registration, FSSAI,\nLicense, MSME Certification,\nCompany Registration",
+    image: "/cat2.jpg",
+    detailedText:
+      "We verify business credentials to help you trust your business associates and ensure legitimate partnerships with verified entities.",
+    ctaText: "Verify Business Credentials",
+    ctaLink: "/blog",
+  },
+  {
+    id: 3,
+    title: "LEGAL & BACKGROUND CHECKS",
+    description: "Criminal Records,\nCourt Cases,\nPolice FIR Checks",
+    image: "/cat3.png",
+    detailedText:
+      "Ensure candidate or entity credibility with thorough legal record checks across multiple databases and jurisdictions.",
+    ctaText: "Check Legal Records",
+    ctaLink: "/blog",
+  },
+  // {
+  //   id: 4,
+  //   title: "BIOMETRIC & LIVENESS CHECKS",
+  //   description: "Face Match,\nLiveness Detection",
+  //   image: "/cat4.png",
+  //   detailedText:
+  //     "AI-based facial recognition and liveness detection to avoid spoofing and ensure authentic identity verification.",
+  //   ctaText: "Try Biometric Verification",
+  //   ctaLink: "/blog/biometric-liveness-checks-guide",
+  // },
+  // {
+  //   id: 5,
+  //   title: "SPECIALIZED CHECKS",
+  //   description: "Covid Certificate,\nOther Niche Verifications",
+  //   image: "/cat5.png",
+  //   detailedText:
+  //     "From health to travel, verify specialized credentials quickly and reliably with our comprehensive verification network.",
+  //   ctaText: "Explore Specialized Services",
+  //   ctaLink: "/blog/specialized-verifications-guide",
+  // },
+];
+
+export const pricingPlans = [
+  {
+    title: "Personal",
+    price: "₹190",
+    description: "Perfect for individuals getting started",
+    features: [
+      "Full Access to VerifyMyKyc",
+      "100 GB Free Storage",
+      "Unlimited Visitors",
+      "10 Agents",
+      "Live Chat Support",
+    ],
+    icon: Users,
+    color: "blue" as const,
+  },
+  {
+    title: "Professional",
+    price: "₹495",
+    description: "Best for growing businesses",
+    features: [
+      "Full Access to VerifyMyKyc",
+      "500 GB Free Storage",
+      "Unlimited Visitors",
+      "50 Agents",
+      "Priority Live Chat Support",
+      "Advanced Analytics",
+    ],
+    highlighted: true,
+    popular: true,
+    icon: Zap,
+    color: "purple" as const,
+  },
+  {
+    title: "Business",
+    price: "₹998",
+    description: "For large scale operations",
+    features: [
+      "Full Access to VerifyMyKyc",
+      "Unlimited Storage",
+      "Unlimited Visitors",
+      "Unlimited Agents",
+      "24/7 Priority Support",
+      "Advanced Analytics",
+      "Custom Integrations",
+    ],
+    icon: Shield,
+    color: "green" as const,
+  },
+];
+
+export const verificationStats = [
+  { value: 95, label: "Coverage for Indians", suffix: "%" },
+  { value: 0.5, label: "Seconds - Speed to Verification", prefix: "~" },
+  { value: 3, label: "Seconds. Same speed as phone OTP", prefix: "~" },
+  { value: 1, label: "OTP-based solution in India", prefix: "#" },
+];
+
+export const trustPillars = [
+  {
+    title: "SPEED",
+    icon: "/speed.png",
+    brandLogo: "/verifymykyc.jpg",
+  },
+  {
+    title: "ACCURACY",
+    icon: "/dart.png",
+    brandLogo: "/verifymykyc.jpg",
+  },
+  {
+    title: "COMPLIANCE",
+    icon: "/file.png",
+    brandLogo: "/verifymykyc.jpg",
+  },
+];
+
+export const partnerLogos = [
+  { src: "/gartner.png", alt: "Gartner" },
+  { src: "/forrester.png", alt: "Forrester" },
+  { src: "/liminal.png", alt: "Liminal" },
+  { src: "/acuity.png", alt: "Acuity" },
+  { src: "/chartis.png", alt: "Chartis" },
+  { src: "/qksgroup.png", alt: "QKS Group" },
+];
+
+export const featuredContent = {
+  badge: "FEATURED",
+  title: "CATEGORY LEADER",
+  description:
+    "VerifyMyKyc: a leader in the QKS 2025 SPARK Matrix for Identity Capture and Verification solutions.",
+  ctaText: "Learn more",
+  ctaLink: "#",
+};
+
+export const expertContent = {
+  title: "Here's what the experts say",
+  description:
+    "Recognition for our tech innovation, leadership, and mission to make the internet a safer place for everyone.",
+  ctaText: "Awards & recognition",
+  ctaLink: "#",
+};
+
+export const customerReviews = [
+  {
+    text: "VerifyMyKyc has completely transformed our onboarding process. The speed and accuracy of verification is outstanding, and our customers love the seamless experience.",
+    name: "Sarah Johnson",
+    position: "Product Manager",
+    company: "TechCorp",
+    image: "/ashley.png",
+    stars: 5,
+    verified: true,
+  },
+  {
+    text: "The API integration was smooth and the documentation is excellent. We've reduced our verification time from hours to seconds. Highly recommended!",
+    name: "Michael Chen",
+    position: "CTO",
+    company: "StartupXYZ",
+    image: "/jackline.png",
+    stars: 5,
+    verified: true,
+  },
+  {
+    text: "Outstanding customer support and reliable service. The verification accuracy is impressive and has helped us maintain compliance effortlessly.",
+    name: "Priya Sharma",
+    position: "Compliance Officer",
+    company: "FinanceHub",
+    image: "/ashley2.png",
+    stars: 5,
+    verified: true,
+  },
+  {
+    text: "Best KYC solution we've used. The user interface is intuitive and the verification process is lightning fast. Our conversion rates have improved significantly.",
+    name: "David Wilson",
+    position: "Head of Operations",
+    company: "E-commerce Plus",
+    image: "/sophia.png",
+    stars: 4,
+    verified: true,
+  },
+  {
+    text: "Reliable, secure, and efficient. VerifyMyKyc has become an essential part of our business operations. The team is responsive and always helpful.",
+    name: "Lisa Rodriguez",
+    position: "Business Analyst",
+    company: "DataFlow Inc",
+    image: "/ashley.png",
+    stars: 5,
+    verified: true,
+  },
+];
+
+export const reviewStats = [
+  { value: 4.9, label: "Average Rating", suffix: "/5", decimals: 1 },
+  { value: 10000, label: "Happy Customers", suffix: "+" },
+  { value: 99.9, label: "Uptime", suffix: "%", decimals: 1 },
+  { value: 24, label: "Support", suffix: "/7" },
+];
+
+export const faqData = [
+  {
+    question: "What is Verify My KYC?",
+    answer:
+      "Verify My KYC is an online platform where you can verify documents like Aadhaar, PAN, Passport, Driving Licence, GST, Company details, and more — in a fast, secure, and reliable way.",
+  },
+  {
+    question: "Who can use Verify My KYC?",
+    answer:
+      "Verify My KYC is designed for individuals who want to verify their own or someone else's documents — such as tenants, maids, drivers, employees, or anyone for background verification purposes.",
+  },
+  {
+    question: "What types of verifications are available?",
+    answer:
+      "You can perform Aadhaar, PAN, Voter ID, Passport, Driving Licence, EPFO, Vehicle RC, GSTIN, Company, Criminal Record, and Bank Account verifications — all in one platform.",
+  },
+  {
+    question: "Is API or bulk verification available?",
+    answer:
+      "No, Verify My KYC currently provides only dashboard based verification. Each check is performed individually — API or bulk upload features are not yet available.",
+  },
+  {
+    question: "Is my data secure?",
+    answer:
+      "Absolutely. All your data is fully encrypted and visible only on your secure dashboard. We never share your information with any third party.",
+  },
+  {
+    question: "Are verification results instant?",
+    answer:
+      "Yes, most verifications provide instant results within 2–3 seconds.",
+  },
+];
+
+export const footerData = {
+  legalLinks: [
+    { label: "Terms and conditions", href: "/terms" },
+    { label: "Privacy", href: "/privacy-policy" },
+    { label: "Cookies", href: "#" },
+  ],
+  importantLinks: [
+    { label: "Get help", href: "#" },
+    // { label: "Add your restaurant", href: "#" },
+    // { label: "Sign up to deliver", href: "#" },
+    // { label: "Create a business account", href: "#" },
+  ],
+  socialLinks: [
+    {
+      name: "facebook" as const,
+      href: "https://www.facebook.com/people/Verify-My-KYC/61576760613090/",
+      color: "#1877F2",
+    },
+    {
+      name: "instagram" as const,
+      href: "https://www.instagram.com/verifymykyc/",
+      color: "#C13584",
+    },
+    {
+      name: "x" as const, // formerly Twitter
+      href: "#", // replace with your actual X.com link
+      color: "#000000", // X.com black
+    },
+    {
+      name: "linkedin" as const,
+      href: "#",
+      color: "#0A66C2",
+    },
+  ],
+  bottomLinks: [
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms and Conditions", href: "/terms" },
+    { label: "Disclaimer", href: "/disclaimer" },
+    // { label: "Do not sell or share my personal information", href: "#" },
+  ],
+};

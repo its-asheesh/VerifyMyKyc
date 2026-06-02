@@ -1,0 +1,554 @@
+"use client"
+
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useNavigate } from "react-router-dom"
+import { useAppSelector } from "../../redux/hooks"
+import {
+  Search,
+  ChevronDown,
+  MenuIcon,
+  X,
+  Shield,
+  Users,
+  CreditCard,
+  FileText,
+  Building,
+  Zap,
+  Award,
+  BookOpen,
+  HelpCircle,
+  User,
+  Briefcase,
+} from "lucide-react"
+import { Button } from "../common/Button"
+
+
+
+const IconButton = ({
+  children,
+  className = "",
+  onClick,
+  ...props
+}: {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+  [key: string]: any
+}) => (
+  <motion.button
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.9 }}
+    className={`p-3 rounded-xl text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 ${className}`}
+    onClick={onClick}
+    {...props}
+  >
+    {children}
+  </motion.button>
+)
+
+const Menu = ({
+  isOpen,
+  onClose,
+  children,
+  className = "",
+}: {
+  isOpen: boolean
+  onClose: () => void
+  children: React.ReactNode
+  className?: string
+}) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className={`absolute top-full left-0 mt-3  rounded-2xl shadow-2xl border border-gray-100 min-w-[280px] py-3 z-50 backdrop-blur-lg bg-white/95 ${className}`}
+      >
+        {children}
+      </motion.div>
+    )}
+  </AnimatePresence>
+)
+
+const MenuItem = ({
+  children,
+  onClick,
+  icon: Icon,
+  description,
+  className = "",
+  href,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  icon?: any
+  description?: string
+  className?: string
+  href?: string
+}) => {
+  const navigate = useNavigate()
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    // Navigate if href is provided
+    if (href) {
+      navigate(href)
+    }
+
+    // Call additional onClick if provided
+    if (onClick) {
+      onClick()
+    }
+  }
+
+  return (
+    <motion.div
+      whileHover={{ backgroundColor: "#f8fafc", x: 6 }}
+      className={`px-5 py-4 cursor-pointer flex items-start gap-4 text-gray-700 hover:text-blue-600 transition-all duration-300 ${className}`}
+      onClick={handleClick}
+    >
+      {Icon && (
+        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+          <Icon className="w-5 h-5 text-blue-600" />
+        </div>
+      )}
+      <div className="flex-1">
+        <div className="font-semibold text-sm">{children}</div>
+        {description && <div className="text-xs text-gray-500 mt-1">{description}</div>}
+      </div>
+    </motion.div>
+  )
+}
+
+const navItems = [
+  {
+    label: "Products",
+    href: "/products",
+  },
+  {
+    label: "About Us",
+    icon: Users,
+    description: "Our story and mission",
+    href: "/about",
+  },
+  {
+    label: "Blog",
+    icon: BookOpen,
+    description: "Insights on KYC and compliance",
+    href: "/blog",
+  },
+
+  { label: "Contact Us", href: "/contact" },
+]
+
+export default function Navbar() {
+  const navigate = useNavigate()
+  const { isAuthenticated, user, token } = useAppSelector((state) => state.auth)
+
+  const [openMenus, setOpenMenus] = useState<{ [key: number]: boolean }>({})
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [logoAvailable, setLogoAvailable] = useState(true)
+  const menuTimeouts = useRef<{ [key: number]: NodeJS.Timeout }>({})
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(menuTimeouts.current).forEach(clearTimeout)
+    }
+  }, [])
+
+  const handleMenuToggle = (index: number) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }))
+  }
+
+  const handleMenuClose = (index: number) => {
+    // Clear any existing timeout
+    if (menuTimeouts.current[index]) {
+      clearTimeout(menuTimeouts.current[index])
+    }
+
+    // Set a delay before closing to allow mouse movement to dropdown
+    menuTimeouts.current[index] = setTimeout(() => {
+      setOpenMenus((prev) => ({
+        ...prev,
+        [index]: false,
+      }))
+    }, 150) // 150ms delay
+  }
+
+  const handleMenuEnter = (index: number) => {
+    // Clear any pending close timeout
+    if (menuTimeouts.current[index]) {
+      clearTimeout(menuTimeouts.current[index])
+    }
+
+    setOpenMenus((prev) => ({ ...prev, [index]: true }))
+  }
+
+  const handleMenuLeave = (index: number) => {
+    // Set a delay before closing
+    menuTimeouts.current[index] = setTimeout(() => {
+      setOpenMenus((prev) => ({ ...prev, [index]: false }))
+    }, 200) // 200ms delay
+  }
+
+  const handleDropdownEnter = (index: number) => {
+    // Clear any pending close timeout when entering dropdown
+    if (menuTimeouts.current[index]) {
+      clearTimeout(menuTimeouts.current[index])
+    }
+  }
+
+  const handleDropdownLeave = (index: number) => {
+    // Close immediately when leaving dropdown area
+    setOpenMenus((prev) => ({ ...prev, [index]: false }))
+  }
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  const toggleSearch = () => {
+    setSearchOpen(!searchOpen)
+  }
+
+  const handleNavItemClick = (item: any) => {
+    if (item.label === "Pricing") {
+      if (window.location.pathname === "/") {
+        const el = document.getElementById("pricing");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      } else {
+        navigate("/", { replace: false });
+        setTimeout(() => {
+          const el = document.getElementById("pricing");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 400); // Wait for navigation
+      }
+    } else if (item.href) {
+      navigate(item.href)
+    }
+  }
+
+  const handleMobileNavItemClick = (item: any, index: number) => {
+    if (item.label === "Pricing") {
+      if (window.location.pathname === "/") {
+        const el = document.getElementById("pricing");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+        handleMenuClose(index);
+
+      } else {
+        navigate("/", { replace: false });
+        setTimeout(() => {
+          const el = document.getElementById("pricing");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 400); // Wait for navigation
+        handleMenuClose(index);
+      }
+    } else if (item.href) {
+      navigate(item.href)
+      setMobileMenuOpen(false)
+    } else if (item.dropdown) {
+      handleMenuToggle(index)
+    }
+  }
+
+  return (
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
+        ? "bg-gradient-to-r from-[#dbeafe] via-white to-[#e0f2fe] backdrop-blur-lg shadow-lg border-b border-blue-100"
+        : "bg-gradient-to-r from-[#e0f2ff] via-white to-[#dbeafe] shadow-sm border-b-2 border-blue-200"
+        }`}
+    >
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 ">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo and Brand */}
+          {/* Logo and Brand */}
+          <motion.div
+            className="flex items-center cursor-pointer pl-2 md:pl-4"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => navigate("/")}
+          >
+            {logoAvailable ? (
+              <img
+                src="/verifymykyclogo.svg"
+                alt="VerifyMyKyc"
+                className="h-16 md:h-16 w-auto"
+                onError={() => setLogoAvailable(false)}
+              />
+            ) : (
+              <div className="font-extrabold tracking-tight leading-none flex items-baseline">
+                <span className="text-2xl md:text-3xl bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Verify</span>
+                <span className="ml-1 text-2xl md:text-3xl bg-gradient-to-r from-orange-500 to-amber-600 bg-clip-text text-transparent">MyKyc</span>
+              </div>
+            )}
+          </motion.div>
+
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
+            {navItems.map((item, index) => (
+              <div key={item.label} className="relative">
+                {'dropdown' in item && item.dropdown ? (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => handleMenuEnter(index)}
+                    onMouseLeave={() => handleMenuLeave(index)}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl"
+                      onClick={() => handleMenuToggle(index)}
+                    >
+                      {item.label}
+                      <motion.div animate={{ rotate: openMenus[index] ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronDown className="w-4 h-4" />
+                      </motion.div>
+                    </Button>
+                    <div
+                      onMouseEnter={() => handleDropdownEnter(index)}
+                      onMouseLeave={() => handleDropdownLeave(index)}
+                    >
+                      <Menu
+                        isOpen={openMenus[index]}
+                        onClose={() => setOpenMenus((prev) => ({ ...prev, [index]: false }))}
+                      >
+                        {'items' in item && Array.isArray(item.items) && item.items.map((subItem: any, subIndex: number) => (
+                          <MenuItem
+                            key={subIndex}
+                            icon={subItem.icon}
+                            description={subItem.description}
+                            href={subItem.href}
+                          >
+                            {subItem.label}
+                          </MenuItem>
+                        ))}
+                      </Menu>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    className="px-5 py-3 rounded-xl"
+                    onClick={() => item.href && navigate(item.href)}>
+                    {item.label}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          {/* Right Section */}
+          <div className="flex items-center gap-4">
+
+            {/* CTA Buttons */}
+            <div className="hidden sm:flex items-center gap-3">
+              {isAuthenticated && token ? (
+                <>
+
+                  <Button
+                    variant="outlined"
+                    size="default"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Account
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outlined"
+                    size="default"
+                    onClick={() => navigate('/login')}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    variant="gradient"
+                    size="default"
+                    onClick={() => navigate('/register')}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <IconButton className="lg:hidden" onClick={toggleMobileMenu}>
+              <AnimatePresence mode="wait">
+                {mobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-6 h-6" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <MenuIcon className="w-6 h-6" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </IconButton>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="lg:hidden bg-white/95 backdrop-blur-lg border-t border-gray-100 overflow-hidden"
+          >
+            <div className="px-6 py-8 space-y-6 max-h-[80vh] overflow-y-auto">
+              {navItems.map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="space-y-3"
+                >
+                  <div
+                    className="flex items-center justify-between cursor-pointer py-2"
+                    onClick={() => handleMobileNavItemClick(item, index)}
+                  >
+                    <span className="font-semibold text-gray-900 text-lg">{item.label}</span>
+                    {'dropdown' in item && item.dropdown ? (
+                      <motion.div animate={{ rotate: openMenus[index] ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronDown className="w-5 h-5 text-gray-500" />
+                      </motion.div>
+                    ) : null}
+                  </div>
+                  <AnimatePresence>
+                    {'dropdown' in item && item.dropdown && openMenus[index] ? (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="pl-4 space-y-3 overflow-hidden border-l-2 border-blue-100"
+                      >
+                        {'items' in item && Array.isArray(item.items) && item.items.map((subItem: any, subIndex: number) => (
+                          <motion.div
+                            key={subIndex}
+                            initial={{ x: -10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: subIndex * 0.05 }}
+                            className="flex items-center gap-3 py-3 text-gray-600 hover:text-blue-600 transition-colors duration-200 cursor-pointer"
+                            onClick={() => {
+                              if (subItem.href) {
+                                navigate(subItem.href)
+                                setMobileMenuOpen(false)
+                                setOpenMenus({}) // Close all menus
+                              }
+                            }}
+                          >
+                            {subItem.icon && (
+                              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <subItem.icon className="w-4 h-4 text-blue-600" />
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium text-sm">{subItem.label}</div>
+                              {subItem.description && (
+                                <div className="text-xs text-gray-500">{subItem.description}</div>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+
+              {/* Mobile CTA Buttons */}
+              <div className="pt-6 border-t border-gray-100 space-y-3">
+                {isAuthenticated ? (
+                  <>
+
+                    <Button
+                      variant="outlined"
+                      className="w-full justify-center"
+                      onClick={() => {
+                        navigate('/profile')
+                        setMobileMenuOpen(false)
+                      }}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Account
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outlined"
+                      className="w-full justify-center"
+                      onClick={() => {
+                        navigate('/login')
+                        setMobileMenuOpen(false)
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      variant="gradient"
+                      className="w-full justify-center"
+                      onClick={() => {
+                        navigate('/register')
+                        setMobileMenuOpen(false)
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Sign Up
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
+  )
+}

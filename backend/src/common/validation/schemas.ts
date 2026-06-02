@@ -1,0 +1,423 @@
+import { z } from 'zod';
+
+// Environment Variables Schema
+export const envSchema = z.object({
+  // MongoDB
+  MONGO_URI: z.string().url('MONGO_URI must be a valid URL'),
+
+  // JWT
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+
+  // Gridlines API
+  GRIDLINES_BASE_URL: z.string().url('GRIDLINES_BASE_URL must be a valid URL'),
+  GRIDLINES_API_KEY: z.string().min(1, 'GRIDLINES_API_KEY is required'),
+
+  // Node Environment
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.string().regex(/^\d+$/).optional(),
+
+  // Razorpay
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+
+  // Firebase
+  FIREBASE_PROJECT_ID: z.string().optional(),
+  FIREBASE_PRIVATE_KEY: z.string().optional(),
+  FIREBASE_CLIENT_EMAIL: z.string().optional(),
+
+  // QuickEKYC API
+  QUICKEKYC_API_KEY: z.string().optional(),
+  QUICKEKYC_BASE_URL: z.string().url().optional(),
+});
+
+export type EnvConfig = z.infer<typeof envSchema>;
+
+// Auth Schemas
+export const registerSchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, 'Name must be at least 2 characters')
+      .max(50, 'Name cannot exceed 50 characters')
+      .trim(),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    phone: z
+      .string()
+      .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number')
+      .optional()
+      .or(z.literal('')),
+    password: z
+      .string()
+      .min(6, 'Password must be at least 6 characters')
+      .max(128, 'Password cannot exceed 128 characters'),
+    company: z.string().max(100, 'Company name cannot exceed 100 characters').optional(),
+    location: z
+      .object({
+        country: z.string().optional(),
+        city: z.string().optional(),
+        region: z.string().optional(),
+        timezone: z.string().optional(),
+        ipAddress: z.string().optional(),
+      })
+      .optional(),
+  })
+  .refine((data) => data.email || data.phone, {
+    message: 'Either email or phone number is required',
+    path: ['email'],
+  });
+
+export const loginSchema = z.object({
+  email: z.string().min(1, 'Email or phone is required'),
+  password: z.string().min(1, 'Password is required'),
+  location: z
+    .object({
+      country: z.string().optional(),
+      city: z.string().optional(),
+      region: z.string().optional(),
+      timezone: z.string().optional(),
+      ipAddress: z.string().optional(),
+    })
+    .optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(128, 'Password cannot exceed 128 characters'),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+  newPassword: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(128, 'Password cannot exceed 128 characters'),
+});
+
+export const sendOtpSchema = z
+  .object({
+    email: z.string().email('Invalid email address').optional(),
+    phone: z
+      .string()
+      .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number')
+      .optional(),
+  })
+  .refine((data) => data.email || data.phone, {
+    message: 'Either email or phone is required',
+    path: ['email'],
+  });
+
+export const verifyOtpSchema = z
+  .object({
+    email: z.string().email('Invalid email address').optional(),
+    phone: z
+      .string()
+      .regex(/^[\+]?[1-9][\d]{0,15}$/, 'Invalid phone number')
+      .optional(),
+    otp: z.string().length(6, 'OTP must be 6 digits'),
+  })
+  .refine((data) => data.email || data.phone, {
+    message: 'Either email or phone is required',
+    path: ['email'],
+  });
+export type RegisterRequest = z.infer<typeof registerSchema>;
+export type LoginRequest = z.infer<typeof loginSchema>;
+export type ChangePasswordRequest = z.infer<typeof changePasswordSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
+export type SendOtpRequest = z.infer<typeof sendOtpSchema>;
+export type VerifyOtpRequest = z.infer<typeof verifyOtpSchema>;
+
+// PAN Schemas
+export const panNumberSchema = z
+  .string()
+  .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format')
+  .transform((val) => val.toUpperCase());
+
+export const panFatherNameSchema = z.object({
+  pan_number: panNumberSchema,
+  consent: z
+    .enum(['Y', 'N'])
+    .refine((val) => val === 'Y' || val === 'N', { message: 'Consent must be Y or N' }),
+});
+
+export const panAadhaarLinkSchema = z.object({
+  pan_number: panNumberSchema,
+  aadhaar_number: z.string().regex(/^[0-9]{12}$/, 'Aadhaar must be 12 digits'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const panBasicSchema = z.object({
+  pan_number: panNumberSchema,
+  consent: z.enum(['Y', 'N']),
+});
+
+export const digilockerFetchDocumentSchema = z.object({
+  document_uri: z.string().min(1, 'Document URI is required'),
+  transaction_id: z.string().min(1, 'Transaction ID is required'),
+});
+
+export const digilockerInitSchema = z.object({
+  redirectUrl: z.string().url().optional(),
+});
+
+export const digilockerPullSchema = z.object({
+  transactionId: z.string().min(1, 'Transaction ID is required'),
+  code: z.string().optional(), // Often required for OAuth
+  requestId: z.string().optional(),
+});
+
+// Aadhaar Schemas
+export const fetchEAadhaarSchema = z.object({
+  transaction_id: z.string().min(1, 'Transaction ID is required'),
+  json: z.any().optional(),
+});
+
+export const aadhaarOcrV1Schema = z.object({
+  base64_data: z
+    .string()
+    .min(1, 'Base64 data is required')
+    .refine(
+      (val) => {
+        try {
+          // Basic base64 validation
+          const matches = val.match(/^data:image\/(png|jpg|jpeg);base64,/);
+          return matches !== null;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'Invalid base64 image format' },
+    ),
+  consent: z.enum(['Y', 'N']),
+});
+
+// Aadhaar V2 Schemas (QuickEKYC)
+export const aadhaarNumberSchema = z
+  .string()
+  .regex(/^[0-9]{12}$/, 'Aadhaar number must be exactly 12 digits')
+  .transform((val) => val.trim());
+
+export const aadhaarGenerateOtpV2Schema = z.object({
+  id_number: aadhaarNumberSchema,
+  consent: z.enum(['Y', 'N']),
+});
+
+export const aadhaarSubmitOtpV2Schema = z.object({
+  request_id: z
+    .union([
+      z.string().min(1, 'Request ID is required'),
+      z.number().positive('Request ID must be positive'),
+    ])
+    .transform((val) => String(val)),
+  otp: z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
+  client_id: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+// GSTIN Schemas
+export const gstinSchema = z
+  .string()
+  .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GSTIN format')
+  .transform((val) => val.toUpperCase());
+
+export const gstinFetchSchema = z.object({
+  gstin: gstinSchema,
+  consent: z.enum(['Y', 'N']),
+});
+
+export const gstinByPanSchema = z.object({
+  pan_number: panNumberSchema,
+  consent: z.enum(['Y', 'N']),
+});
+
+// Driving License Schemas
+export const drivingLicenseSchema = z.object({
+  dl_number: z.string().min(1, 'Driving license number is required'),
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format'),
+  consent: z.enum(['Y', 'N']),
+});
+
+// Voter ID Schemas
+export const ocrSchema = z.object({
+  consent: z.enum(['Y', 'N']),
+});
+
+export const voterOcrSchema = z.object({
+  consent: z.enum(['Y', 'N']),
+});
+
+// Voter Fetch Schemas
+export const voterBosonFetchSchema = z.object({
+  epi_number: z.string().min(1, 'EPIC number is required'),
+});
+
+// Bank Account Schemas
+export const bankAccountVerifySchema = z.object({
+  account_number: z.string().min(9, 'Account number must be at least 9 digits'),
+  ifsc: z
+    .string()
+    .transform((val) => val.toUpperCase().trim())
+    .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)',
+    }),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const ifscValidateSchema = z.object({
+  ifsc: z
+    .string()
+    .transform((val) => val.toUpperCase().trim())
+    .refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+      message: 'Invalid IFSC code. Format: AAAA0XXXXXX (e.g., HDFC0001234)',
+    }),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const upiVerifySchema = z.preprocess(
+  (data: any) => {
+    // Normalize 'vpa' to 'upi' for compatibility with frontend
+    if (data && typeof data === 'object') {
+      if (data.vpa && !data.upi) {
+        data.upi = data.vpa;
+      }
+    }
+    return data;
+  },
+  z.object({
+    upi: z
+      .string()
+      .min(1, 'UPI ID is required')
+      .transform((val) => val.toLowerCase().trim())
+      .refine((val) => /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(val), {
+        message: 'Invalid UPI ID format. Expected format: username@bankname (e.g., user@paytm)',
+      }),
+    consent: z.enum(['Y', 'N']),
+  }),
+);
+
+// EPFO Schemas
+export const epfoFetchUanSchema = z.object({
+  aadhaar_number: z.string().regex(/^[0-9]{12}$/, 'Aadhaar must be 12 digits'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const epfoGenerateOtpSchema = z.object({
+  uan: z.string().min(12, 'UAN must be at least 12 digits'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const epfoValidateOtpSchema = z.object({
+  otp: z.string().length(6, 'OTP must be 6 digits'),
+});
+
+// MCA Schemas
+export const cinByPanSchema = z.object({
+  pan_number: panNumberSchema,
+  consent: z.enum(['Y', 'N']),
+});
+
+// Common Schemas
+export const consentSchema = z
+  .enum(['Y', 'N'])
+  .refine((val) => val === 'Y' || val === 'N', { message: 'Consent must be Y or N' });
+
+// Vehicle Schemas
+export const rcLiteSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const rcDetailedSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  extract_variant: z.boolean().optional(),
+  extract_mapping: z.string().optional(),
+  extract_insurer: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const rcDetailedWithChallanSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  extract_variant: z.boolean().optional(),
+  extract_mapping: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const eChallanSchema = z.object({
+  rc_number: z.string().min(1, 'RC number is required'),
+  chassis_number: z.string().min(5, 'Chassis number is required'),
+  engine_number: z.string().min(5, 'Engine number is required'),
+  state_portals: z.array(z.string()).optional(),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const regNumByChassisSchema = z.object({
+  chassis_number: z.string().min(1, 'Chassis number is required'),
+  consent: z.enum(['Y', 'N']),
+});
+
+export const fastagSchema = z.object({
+  rc_number: z.string().optional(),
+  tag_id: z.string().optional(),
+  consent: z.enum(['Y', 'N']),
+}).refine(data => data.rc_number || data.tag_id, {
+  message: 'At least one of rc_number or tag_id is required'
+});
+
+// Order Schemas
+export const createOrderSchema = z.object({
+  orderType: z.enum(['verification', 'plan', 'credit']), // Adjusted based on code
+  serviceName: z.string().optional(),
+  serviceDetails: z.record(z.string(), z.any()).optional(),
+  totalAmount: z.number().min(0, 'Total amount must be positive'),
+  finalAmount: z.number().min(0, 'Final amount must be positive'),
+  billingPeriod: z.enum(['one-time', 'monthly', 'yearly']).optional(),
+  paymentMethod: z.string().optional(),
+  couponApplied: z.object({
+    couponId: z.string(),
+    code: z.string(),
+    discount: z.number(),
+    discountType: z.string(),
+    discountValue: z.number()
+  }).optional(),
+});
+
+export const verifyPaymentSchema = z.object({
+  razorpay_payment_id: z.string().min(1, 'Payment ID is required'),
+  razorpay_order_id: z.string().min(1, 'Order ID is required'),
+  razorpay_signature: z.string().min(1, 'Signature is required'),
+  orderId: z.string().min(1, 'Internal Order ID is required'),
+});
+
+export const processPaymentSchema = z.object({
+  orderId: z.string().min(1, 'Order ID is required'),
+  transactionId: z.string().min(1, 'Transaction ID is required'),
+});
+
+export type RcLiteRequest = z.infer<typeof rcLiteSchema>;
+export type RcDetailedRequest = z.infer<typeof rcDetailedSchema>;
+export type RcDetailedWithChallanRequest = z.infer<typeof rcDetailedWithChallanSchema>;
+export type EChallanRequest = z.infer<typeof eChallanSchema>;
+export type RegNumByChassisRequest = z.infer<typeof regNumByChassisSchema>;
+export type FastagRequest = z.infer<typeof fastagSchema>;
+export type CreateOrderRequest = z.infer<typeof createOrderSchema>;
+export type VerifyPaymentRequest = z.infer<typeof verifyPaymentSchema>;
+export type ProcessPaymentRequest = z.infer<typeof processPaymentSchema>;
+export type PanBasicRequest = z.infer<typeof panBasicSchema>;
+export type PanAadhaarLinkRequest = z.infer<typeof panAadhaarLinkSchema>;
+export type DigilockerFetchDocumentRequest = z.infer<typeof digilockerFetchDocumentSchema>;
+export type DigilockerPullRequest = z.infer<typeof digilockerPullSchema>;
+export type FetchEAadhaarRequest = z.infer<typeof fetchEAadhaarSchema>;
+export type AadhaarOcrV1Request = z.infer<typeof aadhaarOcrV1Schema>;
+export type AadhaarGenerateOtpV2Request = z.infer<typeof aadhaarGenerateOtpV2Schema>;
+export type AadhaarSubmitOtpV2Request = z.infer<typeof aadhaarSubmitOtpV2Schema>;
+
+export type GstinFetchRequest = z.infer<typeof gstinFetchSchema>;
+export type GstinByPanRequest = z.infer<typeof gstinByPanSchema>;
+export type DrivingLicenseRequest = z.infer<typeof drivingLicenseSchema>;
+export type BankAccountVerifyRequest = z.infer<typeof bankAccountVerifySchema>;
+export type IfscValidateRequest = z.infer<typeof ifscValidateSchema>;
+export type UpiVerifyRequest = z.infer<typeof upiVerifySchema>;
+export type OcrRequest = z.infer<typeof ocrSchema>;
