@@ -39,6 +39,8 @@ const resetSchema = yup.object({
 type LoginFormData = yup.InferType<typeof loginSchema>;
 type ResetFormData = yup.InferType<typeof resetSchema>;
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -132,9 +134,47 @@ const LoginPage: React.FC = () => {
 
     try {
       if (isResetPhone) {
+        let formattedPhone = values.identifier.trim();
+        if (!formattedPhone.startsWith('+')) {
+          const dial = values.dialCode || "91";
+          const cleanDialCode = dial.replace(/\D/g, '');
+          const cleanPhone = formattedPhone.replace(/\D/g, '');
+          formattedPhone = `+${cleanDialCode}${cleanPhone}`;
+        }
+
+        setIsEmailSending(true);
+        // Check if user exists on the backend
+        const checkResponse = await fetch(`${API_BASE_URL}/auth/check-exists`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: formattedPhone })
+        });
+        const checkData = await checkResponse.json();
+
+        if (!checkData.exists) {
+          showToast("No account found with this phone number.", { type: "error" });
+          setIsEmailSending(false);
+          return;
+        }
+        setIsEmailSending(false);
+
         await sendPhoneHelper(values.identifier, values.dialCode || "91");
       } else {
         setIsEmailSending(true);
+        // Check if user exists on the backend
+        const checkResponse = await fetch(`${API_BASE_URL}/auth/check-exists`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: values.identifier })
+        });
+        const checkData = await checkResponse.json();
+
+        if (!checkData.exists) {
+          showToast("No account found with this email address.", { type: "error" });
+          setIsEmailSending(false);
+          return;
+        }
+
         await dispatch(sendPasswordOtp(values.identifier));
         showToast("OTP sent to email", { type: "success" });
         setIsEmailSending(false);
@@ -298,7 +338,6 @@ const LoginPage: React.FC = () => {
           </FormProvider>
         )}
       </motion.div>
-      <div id="recaptcha-container" ref={recaptchaRef} />
     </AuthCardLayout>
   );
 };

@@ -137,8 +137,6 @@ const RegisterPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div id="recaptcha-container" ref={recaptchaRef} />
-
           {step === 1 && (
             <form onSubmit={handleSubmit(onSubmitStep1)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
