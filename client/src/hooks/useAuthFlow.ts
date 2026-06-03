@@ -5,6 +5,8 @@ import { isValidEmail } from '../utils/validators';
 import { registerUser, sendEmailOtp, verifyEmailOtp, verifyPhoneOtp } from '../redux/slices/authSlice';
 import { usePhoneAuth } from './usePhoneAuth';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 interface UseAuthFlowProps {
     onStepChange: (step: 1 | 2) => void;
 }
@@ -53,6 +55,33 @@ export const useAuthFlow = ({ onStepChange }: UseAuthFlowProps) => {
                 setIsSendingEmailOtp(false);
             } else {
                 // Phone flow
+                setIsSendingEmailOtp(true);
+                try {
+                    let formattedPhone = trimmedIdentifier;
+                    if (!formattedPhone.startsWith('+')) {
+                        const cleanDialCode = dialCode.replace(/\D/g, '');
+                        const cleanPhone = formattedPhone.replace(/\D/g, '');
+                        formattedPhone = `+${cleanDialCode}${cleanPhone}`;
+                    }
+
+                    const checkResponse = await fetch(`${API_BASE_URL}/auth/check-exists`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: formattedPhone })
+                    });
+                    const checkData = await checkResponse.json();
+
+                    if (checkData.exists) {
+                        showToast("User with this phone number already exists. Please log in instead.", { type: "error" });
+                        setIsSendingEmailOtp(false);
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Check exists failed, proceeding with OTP", err);
+                }
+
+                setIsSendingEmailOtp(false);
+
                 const success = await sendPhoneOtp(trimmedIdentifier, dialCode);
                 if (success) {
                     setPendingPhoneIdent(trimmedIdentifier);

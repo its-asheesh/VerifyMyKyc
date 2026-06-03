@@ -1193,3 +1193,33 @@ export const loginWithPhoneAndPassword = asyncHandler(async (req: Request, res: 
     },
   });
 });
+
+export const checkUserExists = asyncHandler(async (req: Request, res: Response) => {
+  const { email, phone, dialCode } = req.body;
+
+  if (email) {
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    if (existingUser) {
+      return res.json({ exists: true, type: 'email' });
+    }
+  }
+
+  if (phone) {
+    let formattedPhone = phone.trim();
+    if (dialCode && !formattedPhone.startsWith('+')) {
+      const cleanDialCode = dialCode.replace(/\D/g, '');
+      const cleanPhone = formattedPhone.replace(/\D/g, '');
+      formattedPhone = `+${cleanDialCode}${cleanPhone}`;
+    } else if (!formattedPhone.startsWith('+')) {
+      formattedPhone = `+${formattedPhone.replace(/\D/g, '')}`;
+    }
+
+    const existingUser = await User.findOne({ phone: formattedPhone });
+    if (existingUser) {
+      return res.json({ exists: true, type: 'phone' });
+    }
+  }
+
+  res.json({ exists: false });
+});
+

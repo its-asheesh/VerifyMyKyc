@@ -24,6 +24,7 @@ import {
   firebasePhoneRegister,
   firebasePhoneLogin,
   loginWithPhoneAndPassword,
+  checkUserExists,
 } from './auth.controller';
 import {
   authenticate,
@@ -78,5 +79,6 @@ router.put('/users/:userId/location', authenticate, requireAnyRole, updateUserLo
 router.post('/phone/register', firebasePhoneRegister);
 router.post('/phone/login', firebasePhoneLogin);
 router.post('/login/phone-password', loginWithPhoneAndPassword);
+router.post('/check-exists', checkUserExists);
 
 export default router;
