@@ -235,8 +235,8 @@ export const gstinByPanSchema = z.object({
 
 // Driving License Schemas
 export const drivingLicenseSchema = z.object({
-  dl_number: z.string().min(1, 'Driving license number is required'),
-  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format'),
+  driving_license_number: z.string().min(1, 'Driving license number is required'),
+  date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format'),
   consent: z.enum(['Y', 'N']),
 });
 

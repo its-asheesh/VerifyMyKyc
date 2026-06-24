@@ -6,8 +6,8 @@ import { identityApi } from "../../services/api/identityApi"
 import { GenericVerificationSection } from "./GenericVerificationSection"
 
 interface DlFormData {
-  dl_number: string;
-  dob: string;
+  driving_license_number: string;
+  date_of_birth: string;
   consent: string | boolean;
   [key: string]: unknown;
 }
@@ -22,8 +22,8 @@ interface DlApiPayload {
 export const DrivingLicenseSection: React.FC<{ productId?: string }> = ({ productId }) => {
   const transformFormData = (formData: DlFormData): DlApiPayload => {
     return {
-      driving_license_number: formData.dl_number,
-      date_of_birth: formData.dob,
+      driving_license_number: formData.driving_license_number,
+      date_of_birth: formData.date_of_birth,
       consent: formData.consent === true || formData.consent === 'Y' ? 'Y' : 'N'
     } as DlApiPayload;
   }

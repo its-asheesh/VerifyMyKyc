@@ -46,8 +46,8 @@ class DrivingLicenseController extends BaseController {
         },
         async () => {
           return service.fetchDetails({
-            driving_license_number: req.body.dl_number,
-            date_of_birth: req.body.dob,
+            driving_license_number: req.body.driving_license_number,
+            date_of_birth: req.body.date_of_birth,
             consent: req.body.consent,
           });
         },

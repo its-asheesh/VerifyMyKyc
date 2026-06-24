@@ -8,6 +8,35 @@ import { formatLabel, flattenObject } from "../../lib/utils";
 import { CompanyRenderer } from "./renderers/CompanyRenderer";
 import { BankRenderer } from "./renderers/BankRenderer";
 
+const isImageValue = (key: string, value: any): boolean => {
+    if (typeof value !== "string") return false;
+    const cleanValue = value.trim();
+    if (cleanValue.startsWith("data:image/")) return true;
+    
+    const isImageKey = /photo|image|avatar|signature|pic/i.test(key);
+    const isBase64 = cleanValue.length > 50 && /^[A-Za-z0-9+/=\s]+$/.test(cleanValue);
+    
+    return isImageKey && isBase64;
+};
+
+const getImageUrl = (value: string): string => {
+    const cleanValue = value.trim().replace(/\s/g, "");
+    if (cleanValue.startsWith("data:image/")) {
+        return cleanValue;
+    }
+    let mimeType = "image/jpeg";
+    if (cleanValue.startsWith("/9j/")) {
+        mimeType = "image/jpeg";
+    } else if (cleanValue.startsWith("iVBORw")) {
+        mimeType = "image/png";
+    } else if (cleanValue.startsWith("R0lGOD")) {
+        mimeType = "image/gif";
+    } else if (cleanValue.startsWith("UklGR")) {
+        mimeType = "image/webp";
+    }
+    return `data:${mimeType};base64,${cleanValue}`;
+};
+
 interface VerificationResult {
     success?: boolean;
     status?: string | number;
@@ -212,7 +241,7 @@ export const VerificationResultRenderer: React.FC<VerificationResultRendererProp
 
     Object.entries(flatDisplayData).forEach(([key, value]) => {
         const label = formatLabel(key);
-        const valStr = renderValue(value);
+        const valStr = isImageValue(key, value) ? "[Image Data]" : renderValue(value);
         pdfLines.push(`${label}: ${valStr}`);
     });
 
@@ -232,16 +261,29 @@ export const VerificationResultRenderer: React.FC<VerificationResultRendererProp
             <div ref={shareTargetRef} className="bg-white rounded-lg p-6 border border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.entries(flatDisplayData).map(([key, value]) => {
+                        const isImage = isImageValue(key, value);
                         return (
                             <div
                                 key={key}
-                                className="p-4 rounded-xl border bg-white border-gray-200"
+                                className={`p-4 rounded-xl border bg-white border-gray-200 ${
+                                    isImage ? "col-span-1 md:col-span-2" : ""
+                                }`}
                             >
-                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                <div className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1">
                                     {formatLabel(key)}
                                 </div>
                                 <div className="mt-1 font-medium text-gray-900 break-words">
-                                    {renderValue(value)}
+                                    {isImage ? (
+                                        <div className="mt-2 flex justify-start">
+                                            <img
+                                                src={getImageUrl(value as string)}
+                                                alt={formatLabel(key)}
+                                                className="max-h-48 rounded-lg object-contain border border-gray-200 shadow-sm"
+                                            />
+                                        </div>
+                                    ) : (
+                                        renderValue(value)
+                                    )}
                                 </div>
                             </div>
                         );
