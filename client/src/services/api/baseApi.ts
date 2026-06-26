@@ -89,6 +89,13 @@ class BaseApi {
     this.api.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
+        if (error.response?.status === 503) {
+          if (window.location.pathname !== "/maintenance") {
+            window.location.href = "/maintenance";
+          }
+          return Promise.reject(error);
+        }
+
         if (error.response?.status === 401) {
           // Invalid token - clear auth state and redirect to login
           localStorage.removeItem("token")

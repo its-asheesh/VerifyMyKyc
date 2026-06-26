@@ -15,6 +15,10 @@ export const connectDB = async () => {
       family: 4, // Force IPv4 to resolve querySrv ETIMEOUT
     });
     logger.info('MongoDB connected successfully');
+
+    // Initialize maintenance settings cache
+    const { loadMaintenanceSettings } = await import('../modules/system/maintenance-cache');
+    await loadMaintenanceSettings();
   } catch (err: any) {
     logger.error('MongoDB connection error:', { message: err.message, stack: err.stack });
     process.exit(1);

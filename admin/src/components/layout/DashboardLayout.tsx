@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import systemApi from '../../services/api/systemApi'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -18,6 +19,7 @@ import {
   Mail,
   MessageSquare,
   FileText,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import SearchBar from '../common/SearchBar'
 
@@ -28,7 +30,22 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
+  const [maintenanceActive, setMaintenanceActive] = useState(false)
   const location = useLocation()
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      try {
+        const settings = await systemApi.getSettings()
+        setMaintenanceActive(settings.maintenanceMode)
+      } catch (error) {
+        console.error('Failed to check maintenance settings:', error)
+      }
+    }
+    checkMaintenance()
+    const interval = setInterval(checkMaintenance, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
@@ -42,6 +59,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Reviews', href: '/reviews', icon: MessageSquare },
     { name: 'Blog', href: '/blog', icon: FileText },
     { name: 'Subscribers', href: '/subscribers', icon: Mail },
+    { name: 'Settings', href: '/settings', icon: SettingsIcon },
   ]
 
   const isActive = (href: string) => {
@@ -156,6 +174,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden bg-slate-50/50">
+        {maintenanceActive && (
+          <div className="bg-red-600 text-white text-center py-2.5 px-4 text-xs md:text-sm font-semibold tracking-wide flex items-center justify-center gap-2 animate-pulse select-none z-40 shadow-md">
+            <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
+            Maintenance Mode Active: The public application is currently offline.
+          </div>
+        )}
         {/* Header */}
         <header className="glass sticky top-0 z-30 border-b border-indigo-100/50">
           <div className="flex items-center justify-between h-20 px-8">

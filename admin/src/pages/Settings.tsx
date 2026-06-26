@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   User, 
@@ -8,18 +8,82 @@ import {
   Save,
   Eye,
   EyeOff,
-  Check
+  Check,
+  Server
 } from 'lucide-react'
+import systemApi from '../services/api/systemApi'
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Maintenance Settings State
+  const [maintenanceSettings, setMaintenanceSettings] = useState({
+    maintenanceMode: false,
+    maintenanceTitle: 'Scheduled Maintenance',
+    maintenanceMessage: 'We are currently upgrading our systems. Please check back shortly.',
+    estimatedEndTime: '',
+    showCountdown: false
+  })
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [settingsMessage, setSettingsMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+
+  useEffect(() => {
+    if (activeTab === 'maintenance') {
+      const fetchSettings = async () => {
+        setIsLoadingSettings(true)
+        setSettingsMessage(null)
+        try {
+          const settings = await systemApi.getSettings()
+          let formattedTime = ''
+          if (settings.estimatedEndTime) {
+            const date = new Date(settings.estimatedEndTime)
+            const offset = date.getTimezoneOffset()
+            const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000))
+            formattedTime = adjustedDate.toISOString().slice(0, 16)
+          }
+          
+          setMaintenanceSettings({
+            maintenanceMode: settings.maintenanceMode,
+            maintenanceTitle: settings.maintenanceTitle,
+            maintenanceMessage: settings.maintenanceMessage,
+            estimatedEndTime: formattedTime,
+            showCountdown: settings.showCountdown
+          })
+        } catch (error) {
+          console.error('Failed to load settings:', error)
+        } finally {
+          setIsLoadingSettings(false)
+        }
+      }
+      fetchSettings()
+    }
+  }, [activeTab])
+
+  const handleSaveMaintenance = async () => {
+    setIsSavingSettings(true)
+    setSettingsMessage(null)
+    try {
+      const payload = {
+        ...maintenanceSettings,
+        estimatedEndTime: maintenanceSettings.estimatedEndTime ? new Date(maintenanceSettings.estimatedEndTime).toISOString() : null
+      }
+      await systemApi.updateSettings(payload)
+      setSettingsMessage({ text: 'Maintenance mode settings saved successfully.', type: 'success' })
+    } catch (error: any) {
+      setSettingsMessage({ text: error.message || 'Failed to save maintenance settings.', type: 'error' })
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
+
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'security', name: 'Security', icon: Shield },
     { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'integrations', name: 'Integrations', icon: Globe }
+    { id: 'integrations', name: 'Integrations', icon: Globe },
+    { id: 'maintenance', name: 'Maintenance Mode', icon: Server }
   ]
 
   return (
@@ -205,6 +269,112 @@ const Settings: React.FC = () => {
                 </span>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'maintenance' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <h2 className="text-lg font-semibold text-gray-900">Maintenance Mode Settings</h2>
+            
+            {isLoadingSettings ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {settingsMessage && (
+                  <div className={`p-4 rounded-lg border ${
+                    settingsMessage.type === 'success' 
+                      ? 'bg-green-50 border-green-200 text-green-800' 
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}>
+                    {settingsMessage.text}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">Enable Maintenance Mode</h3>
+                    <p className="text-sm text-gray-500">
+                      When active, blocks all public users and client-facing API requests with an HTTP 503 response.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setMaintenanceSettings(prev => ({ ...prev, maintenanceMode: !prev.maintenanceMode }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+                      maintenanceSettings.maintenanceMode ? 'bg-red-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                      maintenanceSettings.maintenanceMode ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Maintenance Title</label>
+                    <input
+                      type="text"
+                      value={maintenanceSettings.maintenanceTitle}
+                      onChange={(e) => setMaintenanceSettings(prev => ({ ...prev, maintenanceTitle: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800"
+                      placeholder="e.g. Scheduled Maintenance"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Maintenance Message</label>
+                    <textarea
+                      rows={3}
+                      value={maintenanceSettings.maintenanceMessage}
+                      onChange={(e) => setMaintenanceSettings(prev => ({ ...prev, maintenanceMessage: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800"
+                      placeholder="Explain to users why the site is offline and when it will be back."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Restoration Time (Local Time)</label>
+                      <input
+                        type="datetime-local"
+                        value={maintenanceSettings.estimatedEndTime}
+                        onChange={(e) => setMaintenanceSettings(prev => ({ ...prev, estimatedEndTime: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800"
+                      />
+                    </div>
+
+                    <div className="flex items-end pb-2">
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={maintenanceSettings.showCountdown}
+                          onChange={(e) => setMaintenanceSettings(prev => ({ ...prev, showCountdown: e.target.checked }))}
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Show Countdown Clock to Users</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-gray-100">
+                  <button
+                    onClick={handleSaveMaintenance}
+                    disabled={isSavingSettings}
+                    className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-400"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSavingSettings ? 'Saving...' : 'Save Maintenance Settings'}
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </div>

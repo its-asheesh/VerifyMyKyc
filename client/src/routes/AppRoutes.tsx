@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom
 import { Provider } from "react-redux"
 import { store } from "../redux/store"
 import { AppProvider } from "../context/AppContext"
+import { MaintenanceProvider } from "../context/MaintenanceContext"
 import { ErrorBoundary } from "../components/common/ErrorBoundary"
 import NotFoundPage from "../pages/NotFoundPage"
 import { UserRoute, AnyRoleRoute } from "../components/auth/ProtectedRoute"
@@ -34,6 +35,7 @@ const LoginPage = lazy(() => import("../pages/auth/LoginPage"))
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"))
 const ProfilePage = lazy(() => import("../pages/user/ProfilePage"))
 const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"))
+const MaintenancePage = lazy(() => import("../pages/MaintenancePage"))
 
 
 // Payment Pages
@@ -68,21 +70,23 @@ const AppRoutes: React.FC = () => {
     <ErrorBoundary>
       <Provider store={store}>
         <AppProvider>
-          <Router>
-            <ScrollToTop />
-            <Suspense fallback={
-              <Section variant="white" className="min-h-[60vh] flex items-center justify-center">
-                <LoadingSpinner />
-              </Section>
-            }>
-              <Routes>
-                {/* Standalone Routes (No Navbar/Footer) */}
-                <Route path="/verification/:type" element={<VerificationPage />} />
+          <MaintenanceProvider>
+            <Router>
+              <ScrollToTop />
+              <Suspense fallback={
+                <Section variant="white" className="min-h-[60vh] flex items-center justify-center">
+                  <LoadingSpinner />
+                </Section>
+              }>
+                <Routes>
+                  {/* Standalone Routes (No Navbar/Footer) */}
+                  <Route path="/verification/:type" element={<VerificationPage />} />
+                  <Route path="/maintenance" element={<MaintenancePage />} />
 
-                {/* Main Application Routes (With Navbar/Footer) */}
-                <Route element={<MainLayout />}>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Home />} />
+                  {/* Main Application Routes (With Navbar/Footer) */}
+                  <Route element={<MainLayout />}>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Home />} />
                   <Route path="/reviews" element={<ReviewsPage />} />
                   <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
@@ -150,6 +154,7 @@ const AppRoutes: React.FC = () => {
               </Routes>
             </Suspense>
           </Router>
+          </MaintenanceProvider>
         </AppProvider>
       </Provider>
     </ErrorBoundary>

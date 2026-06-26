@@ -20,6 +20,7 @@ import ccrvRouter from './modules/ccrv/ccrv.routes';
 import subscriberRouter from './modules/subscriber/subscriber.routes';
 import blogRouter from './modules/blog/blog.router';
 import epfoRouter from './modules/epfo/epfo.router';
+import systemRouter from './modules/system/system.router';
 
 import callbackRouter from './common/middleware/callback-handler';
 const router = Router();
@@ -55,5 +56,8 @@ router.use('/blog', blogRouter);
 
 // Subscriber routes
 router.use('/subscribers', subscriberRouter);
+
+// System settings routes
+router.use('/system', systemRouter);
 
 export default router;

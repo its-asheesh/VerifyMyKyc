@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import router from './src/routes';
 import healthRouter from './src/routes/health.router';
+import { maintenanceMiddleware } from './src/common/middleware/maintenance';
 import { Request, Response, NextFunction } from 'express';
 import { connectDB } from './src/config/db';
 // Connect to MongoDB
@@ -19,8 +20,10 @@ const defaultOrigins = [
   'http://127.0.0.1:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
   'https://admin.verifymykyc.com',
-  'https://fanglike-santa-boredly.ngrok-free.dev/',
+  'https://fanglike-santa-boredly.ngrok-free.dev',
 ];
 const envOrigins = (process.env.CORS_ORIGINS || '')
   .split(',')
@@ -47,8 +50,8 @@ app.use(express.json({ limit: '10mb' }));
 // Health check endpoint - before API routes for independent monitoring
 app.use('/', healthRouter);
 
-// Mount all API routes under /api
-app.use('/api', router);
+// Mount all API routes under /api - wrap with maintenanceMode middleware
+app.use('/api', maintenanceMiddleware, router);
 
 // Global error handler middleware for logging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
