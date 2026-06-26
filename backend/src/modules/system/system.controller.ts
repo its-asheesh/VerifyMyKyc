@@ -36,8 +36,8 @@ export const updateSettings = asyncHandler(async (req: Request, res: Response) =
   if (estimatedEndTime !== undefined) settings.estimatedEndTime = estimatedEndTime;
   if (showCountdown !== undefined) settings.showCountdown = showCountdown;
   
-  if (req.user) {
-    settings.updatedBy = req.user._id;
+  if ((req as any).user) {
+    settings.updatedBy = (req as any).user._id;
   }
 
   await settings.save();
@@ -45,7 +45,7 @@ export const updateSettings = asyncHandler(async (req: Request, res: Response) =
   // Refresh in-memory cache immediately
   const updatedCache = await refreshMaintenanceCache();
 
-  logger.info(`System settings updated by admin: ${req.user?._id || 'unknown'}`, updatedCache);
+  logger.info(`System settings updated by admin: ${(req as any).user?._id || 'unknown'}`, updatedCache);
 
   return res.status(200).json({
     success: true,
